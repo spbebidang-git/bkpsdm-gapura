@@ -1,0 +1,82 @@
+import App from "@/Layouts/Instructor/App"
+import { Link, router, usePage } from "@inertiajs/react"
+
+const Dashboard = ({ courses }) => {
+    const { auth } = usePage().props
+
+    const handleSubmitDelete = (e, slug) => {
+        e.preventDefault()
+        router.delete(`/instructor/course/${slug}`)
+    }
+
+    return (
+        <App>
+            <div className="text-2xl max-w-7xl mx-auto font-bold text-gray-700 mb-5">Hi, {auth.user.name}</div>
+
+            <div className="max-w-7xl mx-auto bg-gray-100 border overflow-hidden rounded-xl shadow">
+                <div className="p-5 text-lg font-bold flex justify-between items-center">Courses List
+                    <Link href="/instructor/course/create" className="px-4 py-2 bg-purple-500 text-white rounded-xl shadow text-sm">Add New Course</Link>
+                </div>
+                <div className="relative overflow-x-auto max-h-[512px] overflow-auto">
+                    <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                            <tr className="sticky top-0 z-10">
+                                <th scope="col" className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap">
+                                    #
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap">
+                                    Type
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap">
+                                    Title
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap">
+                                    Quota
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap">
+                                    Total Participant
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap">
+                                    Status
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap">
+                                    Action
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {courses.map((item, index) => (
+                                <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700" key={index}>
+                                    <td className="px-6 py-4 text-center">{index + 1}</td>
+                                    <td className="px-6 py-4 text-center">{item.type}</td>
+                                    <th scope="row" className="px-6 py-4 text-center font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                        {item.title}
+                                    </th>
+                                    <td className="px-6 py-4 text-center">{item.quota}</td>
+                                    <td className="px-6 py-4 text-center">{item.total_participant}</td>
+                                    <td className="px-6 py-4 text-center">{item.status}</td>
+                                    <td className="px-6 py-4 text-center">
+                                        <div className="flex gap-2 justify-center">
+                                            <Link href={`/instructor/course/${item.slug}`} className="button-primary">
+                                                Detail
+                                            </Link>
+                                            <Link href={`/instructor/course/${item.slug}/edit`}>
+                                                <button className="button-warning">
+                                                    Edit
+                                                </button>
+                                            </Link>
+                                            <button onClick={(e) => handleSubmitDelete(e, item.slug)} className="button-danger">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </App>
+
+    )
+}
+
+export default Dashboard

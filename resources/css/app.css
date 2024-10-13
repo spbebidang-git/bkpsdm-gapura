@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.form-label {
+    @apply block mb-2 text-sm font-medium text-gray-900 dark:text-white capitalize
+}
+
+.form-control {
+    @apply bg-gray-50 border border-gray-300 placeholder:capitalize text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500;
+}
+
+.button-primary {
+   @apply bg-purple-500 text-sm shadow text-white font-medium  px-5 py-2.5 rounded-full w-full
+}
+
+.button-secondary {
+    @apply bg-white block text-center border text-sm shadow text-gray-600 font-medium  px-5 py-2.5 rounded-full w-full
+ }
+
+ .button-danger {
+    @apply w-20 h-7 text-sm font-medium bg-red-500 text-white rounded-full shadow
+ }
+
+ .button-warning {
+    @apply w-20 h-7 text-sm font-medium bg-yellow-500 text-white rounded-full shadow
+ }
+
+ .title-card {
+    @apply font-bold text-xl text-gray-700
+ }
