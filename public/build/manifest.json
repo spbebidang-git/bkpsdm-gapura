@@ -1,0 +1,623 @@
+{
+  "_App-AaywQPfR.js": {
+    "file": "assets/App-AaywQPfR.js",
+    "name": "App",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "_App-DZOQvwJT.js": {
+    "file": "assets/App-DZOQvwJT.js",
+    "name": "App",
+    "imports": [
+      "resources/js/app.jsx",
+      "_Dropdown-D3X8qbzf.js"
+    ]
+  },
+  "_ApplicationLogo-D3NAuRgQ.js": {
+    "file": "assets/ApplicationLogo-D3NAuRgQ.js",
+    "name": "ApplicationLogo",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "_AuthenticatedLayout-DriNzUf8.js": {
+    "file": "assets/AuthenticatedLayout-DriNzUf8.js",
+    "name": "AuthenticatedLayout",
+    "imports": [
+      "resources/js/app.jsx",
+      "_ApplicationLogo-D3NAuRgQ.js",
+      "_Dropdown-D3X8qbzf.js"
+    ]
+  },
+  "_Dropdown-D3X8qbzf.js": {
+    "file": "assets/Dropdown-D3X8qbzf.js",
+    "name": "Dropdown",
+    "imports": [
+      "resources/js/app.jsx",
+      "_transition-Dq4xgv3K.js"
+    ]
+  },
+  "_FormCheckbox-DqLdmb9N.js": {
+    "file": "assets/FormCheckbox-DqLdmb9N.js",
+    "name": "FormCheckbox",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "_FormInput-Dn781Jp7.js": {
+    "file": "assets/FormInput-Dn781Jp7.js",
+    "name": "FormInput",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "_FormLabel-DTfNH1RW.js": {
+    "file": "assets/FormLabel-DTfNH1RW.js",
+    "name": "FormLabel",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "_FormSelect-BUG-cyOi.js": {
+    "file": "assets/FormSelect-BUG-cyOi.js",
+    "name": "FormSelect",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "_FormTextArea-DBiu4-jK.js": {
+    "file": "assets/FormTextArea-DBiu4-jK.js",
+    "name": "FormTextArea",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "_GuestLayout-DhVlVyeq.js": {
+    "file": "assets/GuestLayout-DhVlVyeq.js",
+    "name": "GuestLayout",
+    "imports": [
+      "resources/js/app.jsx",
+      "_ApplicationLogo-D3NAuRgQ.js"
+    ]
+  },
+  "_InputLabel-C7D623ms.js": {
+    "file": "assets/InputLabel-C7D623ms.js",
+    "name": "InputLabel",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "_PrimaryButton-50fHifxv.js": {
+    "file": "assets/PrimaryButton-50fHifxv.js",
+    "name": "PrimaryButton",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "_TextInput-w-aaKMel.js": {
+    "file": "assets/TextInput-w-aaKMel.js",
+    "name": "TextInput",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "_TitleActivity-BmRF6Wxr.js": {
+    "file": "assets/TitleActivity-BmRF6Wxr.js",
+    "name": "TitleActivity",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "_transition-Dq4xgv3K.js": {
+    "file": "assets/transition-Dq4xgv3K.js",
+    "name": "transition",
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "resources/js/Pages/Auth/ConfirmPassword.jsx": {
+    "file": "assets/ConfirmPassword-C3sXT4Mc.js",
+    "name": "ConfirmPassword",
+    "src": "resources/js/Pages/Auth/ConfirmPassword.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_GuestLayout-DhVlVyeq.js",
+      "_TextInput-w-aaKMel.js",
+      "_InputLabel-C7D623ms.js",
+      "_PrimaryButton-50fHifxv.js",
+      "_ApplicationLogo-D3NAuRgQ.js"
+    ]
+  },
+  "resources/js/Pages/Auth/ForgotPassword.jsx": {
+    "file": "assets/ForgotPassword-7WJd5axf.js",
+    "name": "ForgotPassword",
+    "src": "resources/js/Pages/Auth/ForgotPassword.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_GuestLayout-DhVlVyeq.js",
+      "_TextInput-w-aaKMel.js",
+      "_PrimaryButton-50fHifxv.js",
+      "_ApplicationLogo-D3NAuRgQ.js"
+    ]
+  },
+  "resources/js/Pages/Auth/Login.jsx": {
+    "file": "assets/Login-MfEap5gC.js",
+    "name": "Login",
+    "src": "resources/js/Pages/Auth/Login.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_GuestLayout-DhVlVyeq.js",
+      "_TextInput-w-aaKMel.js",
+      "_InputLabel-C7D623ms.js",
+      "_PrimaryButton-50fHifxv.js",
+      "_ApplicationLogo-D3NAuRgQ.js"
+    ]
+  },
+  "resources/js/Pages/Auth/LoginInstructor.jsx": {
+    "file": "assets/LoginInstructor-B8PMplth.js",
+    "name": "LoginInstructor",
+    "src": "resources/js/Pages/Auth/LoginInstructor.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_FormInput-Dn781Jp7.js"
+    ]
+  },
+  "resources/js/Pages/Auth/LoginParticipant.jsx": {
+    "file": "assets/LoginParticipant-QG2I8DKq.js",
+    "name": "LoginParticipant",
+    "src": "resources/js/Pages/Auth/LoginParticipant.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_FormInput-Dn781Jp7.js"
+    ]
+  },
+  "resources/js/Pages/Auth/Register.jsx": {
+    "file": "assets/Register-D8P7f8Nm.js",
+    "name": "Register",
+    "src": "resources/js/Pages/Auth/Register.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_GuestLayout-DhVlVyeq.js",
+      "_TextInput-w-aaKMel.js",
+      "_InputLabel-C7D623ms.js",
+      "_PrimaryButton-50fHifxv.js",
+      "_ApplicationLogo-D3NAuRgQ.js"
+    ]
+  },
+  "resources/js/Pages/Auth/ResetPassword.jsx": {
+    "file": "assets/ResetPassword-BEJGPYlX.js",
+    "name": "ResetPassword",
+    "src": "resources/js/Pages/Auth/ResetPassword.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_GuestLayout-DhVlVyeq.js",
+      "_TextInput-w-aaKMel.js",
+      "_InputLabel-C7D623ms.js",
+      "_PrimaryButton-50fHifxv.js",
+      "_ApplicationLogo-D3NAuRgQ.js"
+    ]
+  },
+  "resources/js/Pages/Auth/VerifyEmail.jsx": {
+    "file": "assets/VerifyEmail-CT61pNFs.js",
+    "name": "VerifyEmail",
+    "src": "resources/js/Pages/Auth/VerifyEmail.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_GuestLayout-DhVlVyeq.js",
+      "_PrimaryButton-50fHifxv.js",
+      "_ApplicationLogo-D3NAuRgQ.js"
+    ]
+  },
+  "resources/js/Pages/Category/Index.jsx": {
+    "file": "assets/Index-BGC-CMaU.js",
+    "name": "Index",
+    "src": "resources/js/Pages/Category/Index.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_App-DZOQvwJT.js",
+      "_Dropdown-D3X8qbzf.js",
+      "_transition-Dq4xgv3K.js"
+    ]
+  },
+  "resources/js/Pages/Course/Show.jsx": {
+    "file": "assets/Show-U6TndifN.js",
+    "name": "Show",
+    "src": "resources/js/Pages/Course/Show.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_App-DZOQvwJT.js",
+      "_Dropdown-D3X8qbzf.js",
+      "_transition-Dq4xgv3K.js"
+    ],
+    "css": [
+      "assets/Show-BTGsrsBX.css"
+    ]
+  },
+  "resources/js/Pages/Dashboard.jsx": {
+    "file": "assets/Dashboard-BRF3VPDM.js",
+    "name": "Dashboard",
+    "src": "resources/js/Pages/Dashboard.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_AuthenticatedLayout-DriNzUf8.js",
+      "_ApplicationLogo-D3NAuRgQ.js",
+      "_Dropdown-D3X8qbzf.js",
+      "_transition-Dq4xgv3K.js"
+    ]
+  },
+  "resources/js/Pages/Home/Index.jsx": {
+    "file": "assets/Index-CTsdXqMs.js",
+    "name": "Index",
+    "src": "resources/js/Pages/Home/Index.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_App-DZOQvwJT.js",
+      "_Dropdown-D3X8qbzf.js",
+      "_transition-Dq4xgv3K.js"
+    ]
+  },
+  "resources/js/Pages/Instructor/Course/Activity.jsx": {
+    "file": "assets/Activity-zjwibC36.js",
+    "name": "Activity",
+    "src": "resources/js/Pages/Instructor/Course/Activity.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_TitleActivity-BmRF6Wxr.js",
+      "_App-AaywQPfR.js"
+    ]
+  },
+  "resources/js/Pages/Instructor/Course/Create.jsx": {
+    "file": "assets/Create-DPBDZfhA.js",
+    "name": "Create",
+    "src": "resources/js/Pages/Instructor/Course/Create.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_FormInput-Dn781Jp7.js",
+      "_FormLabel-DTfNH1RW.js",
+      "_FormSelect-BUG-cyOi.js",
+      "_FormTextArea-DBiu4-jK.js",
+      "_App-AaywQPfR.js",
+      "resources/js/Pages/Instructor/Course/Partials/ModalAddSchedule.jsx"
+    ]
+  },
+  "resources/js/Pages/Instructor/Course/Edit.jsx": {
+    "file": "assets/Edit-CB1FqpSI.js",
+    "name": "Edit",
+    "src": "resources/js/Pages/Instructor/Course/Edit.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_FormInput-Dn781Jp7.js",
+      "_FormLabel-DTfNH1RW.js",
+      "_FormSelect-BUG-cyOi.js",
+      "_FormTextArea-DBiu4-jK.js",
+      "_App-AaywQPfR.js",
+      "resources/js/Pages/Instructor/Course/Partials/ModalAddSchedule.jsx"
+    ]
+  },
+  "resources/js/Pages/Instructor/Course/Literature/Create.jsx": {
+    "file": "assets/Create-Cg2ARS1J.js",
+    "name": "Create",
+    "src": "resources/js/Pages/Instructor/Course/Literature/Create.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_FormInput-Dn781Jp7.js",
+      "_FormLabel-DTfNH1RW.js",
+      "_TitleActivity-BmRF6Wxr.js",
+      "_App-AaywQPfR.js"
+    ]
+  },
+  "resources/js/Pages/Instructor/Course/Meeting/Create.jsx": {
+    "file": "assets/Create-DZz0qTMu.js",
+    "name": "Create",
+    "src": "resources/js/Pages/Instructor/Course/Meeting/Create.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_FormInput-Dn781Jp7.js",
+      "_FormTextArea-DBiu4-jK.js",
+      "_TitleActivity-BmRF6Wxr.js",
+      "_App-AaywQPfR.js"
+    ]
+  },
+  "resources/js/Pages/Instructor/Course/Partials/ModalAddSchedule.jsx": {
+    "file": "assets/ModalAddSchedule-DWMJ1aR6.js",
+    "name": "ModalAddSchedule",
+    "src": "resources/js/Pages/Instructor/Course/Partials/ModalAddSchedule.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_FormInput-Dn781Jp7.js"
+    ]
+  },
+  "resources/js/Pages/Instructor/Course/PostTest/Create.jsx": {
+    "file": "assets/Create-BQ0oVQxA.js",
+    "name": "Create",
+    "src": "resources/js/Pages/Instructor/Course/PostTest/Create.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_FormCheckbox-DqLdmb9N.js",
+      "_FormInput-Dn781Jp7.js",
+      "_FormTextArea-DBiu4-jK.js",
+      "_TitleActivity-BmRF6Wxr.js",
+      "_App-AaywQPfR.js"
+    ]
+  },
+  "resources/js/Pages/Instructor/Course/PreTest/Create.jsx": {
+    "file": "assets/Create-DF7kkgK0.js",
+    "name": "Create",
+    "src": "resources/js/Pages/Instructor/Course/PreTest/Create.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_FormCheckbox-DqLdmb9N.js",
+      "_FormInput-Dn781Jp7.js",
+      "_FormTextArea-DBiu4-jK.js",
+      "_TitleActivity-BmRF6Wxr.js",
+      "_App-AaywQPfR.js"
+    ]
+  },
+  "resources/js/Pages/Instructor/Course/Show.jsx": {
+    "file": "assets/Show-BNqFlbFv.js",
+    "name": "Show",
+    "src": "resources/js/Pages/Instructor/Course/Show.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_App-AaywQPfR.js"
+    ]
+  },
+  "resources/js/Pages/Instructor/Course/Task/Create.jsx": {
+    "file": "assets/Create-aD6E2hZW.js",
+    "name": "Create",
+    "src": "resources/js/Pages/Instructor/Course/Task/Create.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_FormInput-Dn781Jp7.js",
+      "_FormTextArea-DBiu4-jK.js",
+      "_TitleActivity-BmRF6Wxr.js",
+      "_App-AaywQPfR.js"
+    ]
+  },
+  "resources/js/Pages/Instructor/Course/Variant/Create.jsx": {
+    "file": "assets/Create-LV-Luxng.js",
+    "name": "Create",
+    "src": "resources/js/Pages/Instructor/Course/Variant/Create.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_FormSelect-BUG-cyOi.js",
+      "_App-AaywQPfR.js"
+    ]
+  },
+  "resources/js/Pages/Instructor/Course/Variant/Edit.jsx": {
+    "file": "assets/Edit-DH3xaAde.js",
+    "name": "Edit",
+    "src": "resources/js/Pages/Instructor/Course/Variant/Edit.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_FormSelect-BUG-cyOi.js",
+      "_App-AaywQPfR.js"
+    ]
+  },
+  "resources/js/Pages/Instructor/Course/Variant/Index.jsx": {
+    "file": "assets/Index-CZBRUgYz.js",
+    "name": "Index",
+    "src": "resources/js/Pages/Instructor/Course/Variant/Index.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_App-AaywQPfR.js"
+    ]
+  },
+  "resources/js/Pages/Instructor/Course/Variant/QuestionItem/Create.jsx": {
+    "file": "assets/Create-DUNSk1Av.js",
+    "name": "Create",
+    "src": "resources/js/Pages/Instructor/Course/Variant/QuestionItem/Create.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_App-AaywQPfR.js"
+    ]
+  },
+  "resources/js/Pages/Instructor/Course/Variant/QuestionItem/Index.jsx": {
+    "file": "assets/Index-D0hvEyig.js",
+    "name": "Index",
+    "src": "resources/js/Pages/Instructor/Course/Variant/QuestionItem/Index.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_App-AaywQPfR.js"
+    ]
+  },
+  "resources/js/Pages/Instructor/Course/VideoPresentation/Create.jsx": {
+    "file": "assets/Create-DF6oXiXD.js",
+    "name": "Create",
+    "src": "resources/js/Pages/Instructor/Course/VideoPresentation/Create.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_FormInput-Dn781Jp7.js",
+      "_FormTextArea-DBiu4-jK.js",
+      "_TitleActivity-BmRF6Wxr.js",
+      "_App-AaywQPfR.js"
+    ]
+  },
+  "resources/js/Pages/Instructor/Dashboard.jsx": {
+    "file": "assets/Dashboard-CakJlQ9T.js",
+    "name": "Dashboard",
+    "src": "resources/js/Pages/Instructor/Dashboard.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_App-AaywQPfR.js"
+    ]
+  },
+  "resources/js/Pages/Learn/Index.jsx": {
+    "file": "assets/Index-D1ap1lMi.js",
+    "name": "Index",
+    "src": "resources/js/Pages/Learn/Index.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "resources/js/Pages/Learn/Show.jsx": {
+    "file": "assets/Show-DpgpzJZy.js",
+    "name": "Show",
+    "src": "resources/js/Pages/Learn/Show.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx"
+    ],
+    "dynamicImports": [
+      "resources/js/app.jsx",
+      "resources/js/app.jsx",
+      "resources/js/app.jsx",
+      "resources/js/app.jsx"
+    ]
+  },
+  "resources/js/Pages/Participant/Course/Index.jsx": {
+    "file": "assets/Index-71wPmhs0.js",
+    "name": "Index",
+    "src": "resources/js/Pages/Participant/Course/Index.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "resources/js/Pages/Profile/Edit.jsx": {
+    "file": "assets/Edit-iRo4Ytgg.js",
+    "name": "Edit",
+    "src": "resources/js/Pages/Profile/Edit.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_AuthenticatedLayout-DriNzUf8.js",
+      "resources/js/Pages/Profile/Partials/DeleteUserForm.jsx",
+      "resources/js/Pages/Profile/Partials/UpdatePasswordForm.jsx",
+      "resources/js/Pages/Profile/Partials/UpdateProfileInformationForm.jsx",
+      "_ApplicationLogo-D3NAuRgQ.js",
+      "_Dropdown-D3X8qbzf.js",
+      "_transition-Dq4xgv3K.js",
+      "_TextInput-w-aaKMel.js",
+      "_InputLabel-C7D623ms.js",
+      "_PrimaryButton-50fHifxv.js"
+    ]
+  },
+  "resources/js/Pages/Profile/Partials/DeleteUserForm.jsx": {
+    "file": "assets/DeleteUserForm-C7ZbSswc.js",
+    "name": "DeleteUserForm",
+    "src": "resources/js/Pages/Profile/Partials/DeleteUserForm.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_TextInput-w-aaKMel.js",
+      "_InputLabel-C7D623ms.js",
+      "_transition-Dq4xgv3K.js"
+    ]
+  },
+  "resources/js/Pages/Profile/Partials/UpdatePasswordForm.jsx": {
+    "file": "assets/UpdatePasswordForm-FMAtt6BP.js",
+    "name": "UpdatePasswordForm",
+    "src": "resources/js/Pages/Profile/Partials/UpdatePasswordForm.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_TextInput-w-aaKMel.js",
+      "_InputLabel-C7D623ms.js",
+      "_PrimaryButton-50fHifxv.js",
+      "_transition-Dq4xgv3K.js"
+    ]
+  },
+  "resources/js/Pages/Profile/Partials/UpdateProfileInformationForm.jsx": {
+    "file": "assets/UpdateProfileInformationForm-BvqLbnCp.js",
+    "name": "UpdateProfileInformationForm",
+    "src": "resources/js/Pages/Profile/Partials/UpdateProfileInformationForm.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx",
+      "_TextInput-w-aaKMel.js",
+      "_InputLabel-C7D623ms.js",
+      "_PrimaryButton-50fHifxv.js",
+      "_transition-Dq4xgv3K.js"
+    ]
+  },
+  "resources/js/Pages/Welcome.jsx": {
+    "file": "assets/Welcome-2lKaYqYo.js",
+    "name": "Welcome",
+    "src": "resources/js/Pages/Welcome.jsx",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/app.jsx"
+    ]
+  },
+  "resources/js/app.jsx": {
+    "file": "assets/app-CJyiR247.js",
+    "name": "app",
+    "src": "resources/js/app.jsx",
+    "isEntry": true,
+    "isDynamicEntry": true,
+    "dynamicImports": [
+      "resources/js/Pages/Auth/ConfirmPassword.jsx",
+      "resources/js/Pages/Auth/ForgotPassword.jsx",
+      "resources/js/Pages/Auth/Login.jsx",
+      "resources/js/Pages/Auth/LoginInstructor.jsx",
+      "resources/js/Pages/Auth/LoginParticipant.jsx",
+      "resources/js/Pages/Auth/Register.jsx",
+      "resources/js/Pages/Auth/ResetPassword.jsx",
+      "resources/js/Pages/Auth/VerifyEmail.jsx",
+      "resources/js/Pages/Category/Index.jsx",
+      "resources/js/Pages/Course/Show.jsx",
+      "resources/js/Pages/Dashboard.jsx",
+      "resources/js/Pages/Home/Index.jsx",
+      "resources/js/Pages/Instructor/Course/Activity.jsx",
+      "resources/js/Pages/Instructor/Course/Create.jsx",
+      "resources/js/Pages/Instructor/Course/Edit.jsx",
+      "resources/js/Pages/Instructor/Course/Literature/Create.jsx",
+      "resources/js/Pages/Instructor/Course/Meeting/Create.jsx",
+      "resources/js/Pages/Instructor/Course/Partials/ModalAddSchedule.jsx",
+      "resources/js/Pages/Instructor/Course/PostTest/Create.jsx",
+      "resources/js/Pages/Instructor/Course/PreTest/Create.jsx",
+      "resources/js/Pages/Instructor/Course/Show.jsx",
+      "resources/js/Pages/Instructor/Course/Task/Create.jsx",
+      "resources/js/Pages/Instructor/Course/Variant/Create.jsx",
+      "resources/js/Pages/Instructor/Course/Variant/Edit.jsx",
+      "resources/js/Pages/Instructor/Course/Variant/Index.jsx",
+      "resources/js/Pages/Instructor/Course/Variant/QuestionItem/Create.jsx",
+      "resources/js/Pages/Instructor/Course/Variant/QuestionItem/Index.jsx",
+      "resources/js/Pages/Instructor/Course/VideoPresentation/Create.jsx",
+      "resources/js/Pages/Instructor/Dashboard.jsx",
+      "resources/js/Pages/Learn/Index.jsx",
+      "resources/js/Pages/Learn/Show.jsx",
+      "resources/js/Pages/Participant/Course/Index.jsx",
+      "resources/js/Pages/Profile/Edit.jsx",
+      "resources/js/Pages/Profile/Partials/DeleteUserForm.jsx",
+      "resources/js/Pages/Profile/Partials/UpdatePasswordForm.jsx",
+      "resources/js/Pages/Profile/Partials/UpdateProfileInformationForm.jsx",
+      "resources/js/Pages/Welcome.jsx"
+    ],
+    "css": [
+      "assets/app-DkTzszJH.css"
+    ]
+  }
+}
