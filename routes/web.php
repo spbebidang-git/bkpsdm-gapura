@@ -25,8 +25,12 @@ Route::post('/sign-out', [\App\Http\Controllers\Web\AuthController::class, 'logo
     ->name('logout')
     ->middleware('auth');
 
-// Home
+// Home Page
 Route::get('/', \App\Http\Controllers\Web\HomeController::class)->name('home');
+# About Page
+Route::get('/about', [\App\Http\Controllers\Web\StaticPageController::class, 'about'])->name('about');
+# Contact Page
+Route::get('/contact', [\App\Http\Controllers\Web\StaticPageController::class, 'contact'])->name('contact');
 // Course
 Route::get('/course/{course:slug}', [\App\Http\Controllers\Web\CourseController::class, 'show'])->name('course.show');
 Route::post('/course/{schedule}', [\App\Http\Controllers\Web\CourseController::class, 'store'])->name('course.store');
