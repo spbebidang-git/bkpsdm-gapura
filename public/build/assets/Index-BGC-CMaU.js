@@ -1,1 +1,0 @@
-import{j as r}from"./app-CJyiR247.js";import{A as s}from"./App-DZOQvwJT.js";import"./Dropdown-D3X8qbzf.js";import"./transition-Dq4xgv3K.js";const m=()=>r.jsx(s,{children:r.jsx("div",{className:"grid grid-cols-3 gap-3"})});export{m as default};
