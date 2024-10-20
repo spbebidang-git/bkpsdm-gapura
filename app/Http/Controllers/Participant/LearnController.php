@@ -38,15 +38,23 @@ class LearnController extends Controller
 
     public function store(Request $request, Course $course, $scheduleId, $activityId)
     {
-        $this->activity->storeActivity($this->participantId, $course->id, $activityId, $request->all());
+        $nextActivity =  $this->activity->nextActivity($course->id, $activityId);
+        if (!$nextActivity) {
+            return to_route('participant.course.index');
+        }
 
         try {
             DB::beginTransaction();
 
+            $this->activity->storeActivity($this->participantId, $course->id, $activityId, $request->all());
 
             DB::commit();
+
+            return to_route('participant.learn.index', [$course->slug, 1, $nextActivity]);
         } catch (\Throwable $th) {
             DB::rollBack();
+
+            return to_route('participant.learn.index', [$course->slug, 1, $activityId]);
         }
     }
 }

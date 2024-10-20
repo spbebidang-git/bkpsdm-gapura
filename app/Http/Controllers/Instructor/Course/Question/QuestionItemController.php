@@ -8,6 +8,7 @@ use App\Services\Course\Activity\Question\QuestionItemService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use PhpParser\Node\Stmt\TryCatch;
 
 class QuestionItemController
 {
@@ -40,14 +41,16 @@ class QuestionItemController
 
     public function store($slug, $activityId, $questionId, Request $request)
     {
-        // $request->validate([
-        //     'description' => 'required',
-        //     'options.*' => 'required',
-        //     'score' => 'required',
-        //     'correct_answer' => 'required'
-        // ]);
-
-        // dd($request->options);
+        $request->validate([
+            'description' => 'required|string|max:255',
+            'options' => 'required|array',
+            'options.option1' => 'required|string|max:255',
+            'options.option2' => 'required|string|max:255',
+            'options.option3' => 'required|string|max:255',
+            'options.option4' => 'required|string|max:255',
+            'correct_answer' => 'required|string',
+            'score' => 'required|integer|min:0',
+        ]);
 
         try {
             DB::beginTransaction();
@@ -59,13 +62,11 @@ class QuestionItemController
             ]);
 
             $option = [];
-            // dd($request->options['option1']);
             for ($i = 1; $i <= count($request->options); $i++) {
-
                 $option[] = [
                     'question_item_id' => $questionItem->id,
                     'option' => $request->options['option' . $i],
-                    'is_correct' => $i + 1 == $request->correct_answer ? true : false
+                    'is_correct' => $i == $request->correct_answer ? true : false
                 ];
             }
 
@@ -79,6 +80,109 @@ class QuestionItemController
             dd($th);
 
             return to_route('instructor.course.activity.variant.question-item.index', [$slug, $activityId, $questionId]);
+        }
+    }
+
+    public function edit($slug, $activityId, $questionId, QuestionItem $question_item)
+    {
+        return Inertia::render('Instructor/Course/Variant/QuestionItem/Edit', [
+            'question' => [
+                'id' => $question_item->id,
+                'description' => $question_item->description,
+                'score' => $question_item->score,
+                'option1' => $question_item->questionOptions[0]->option,
+                'option2' => $question_item->questionOptions[1]->option,
+                'option3' =>  $question_item->questionOptions[2]->option,
+                'option4' =>  $question_item->questionOptions[3]->option,
+                'is_correct' => $question_item->questionOptions->where('is_correct', 1)->first()->option
+            ],
+            'slug' => $slug,
+            'activityId' => $activityId,
+            'questionId' => $questionId,
+        ]);
+    }
+
+    public function update($slug, $activityId, $questionId, QuestionItem $question_item, Request $request)
+    {
+        $request->validate([
+            'description' => 'required|string|max:255',
+            'options' => 'required|array',
+            'options.option1' => 'required|string|max:255',
+            'options.option2' => 'required|string|max:255',
+            'options.option3' => 'required|string|max:255',
+            'options.option4' => 'required|string|max:255',
+            'correct_answer' => 'required|string',
+            'score' => 'required|integer|min:0',
+        ]);
+
+        try {
+            DB::beginTransaction();
+            $question_item->update([
+                'description' => $request->description,
+                'score' => $request->score
+            ]);
+
+            $option = [];
+            for ($i = 1; $i <= count($request->options); $i++) {
+                $option[] = [
+                    'question_item_id' => $question_item->id,
+                    'option' => $request->options['option' . $i],
+                    'is_correct' => $request->options['option' . $i] == $request->correct_answer ? true : false
+                ];
+            }
+
+            $existingOptions = QuestionOption::where('question_item_id', $question_item->id)->get();
+
+            foreach ($existingOptions as $index => $existingOption) {
+                $optionKey = 'option' . ($index + 1);
+
+                $existingOption->update([
+                    'option' => $request->options[$optionKey],
+                    'is_correct' => $request->options[$optionKey] == $request->correct_answer,
+                ]);
+            }
+
+            DB::commit();
+
+            return to_route('instructor.course.activity.variant.question-item.index', [
+                $slug,
+                $activityId,
+                $questionId
+            ]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            dd($th);
+
+            return to_route('instructor.course.activity.variant.question-item.index', [
+                $slug,
+                $activityId,
+                $questionId
+            ]);
+        }
+    }
+
+    public function destroy($slug, $activityId, $questionId, QuestionItem $question_item)
+    {
+        try {
+            DB::beginTransaction();
+
+            $question_item->delete();
+
+            DB::commit();
+
+            return to_route('instructor.course.activity.variant.question-item.index', [
+                $slug,
+                $activityId,
+                $questionId
+            ]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            return to_route('instructor.course.activity.variant.question-item.index', [
+                $slug,
+                $activityId,
+                $questionId
+            ]);
         }
     }
 }

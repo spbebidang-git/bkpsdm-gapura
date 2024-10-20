@@ -46,7 +46,7 @@ if (!function_exists('update_setting_meta')) {
 if (!function_exists('get_user_meta')) {
     function get_user_meta($user_id, $key)
     {
-        $setting = \App\Models\User\UserMeta::where('user_id', $user_id)->where('key', $key)->first();
+        $setting = \App\Models\Management\UserMeta::where('user_id', $user_id)->where('key', $key)->first();
         return $setting ? $setting->value : false;
     }
 }
@@ -54,12 +54,12 @@ if (!function_exists('get_user_meta')) {
 if (!function_exists('update_user_meta')) {
     function update_user_meta($user_id, $key, $value)
     {
-        $meta = \App\Models\User\UserMeta::where('user_id', $user_id)->where('key', $key)->first();
+        $meta = \App\Models\Management\UserMeta::where('user_id', $user_id)->where('key', $key)->first();
         if ($meta) {
             $meta->value = $value;
             $meta->save();
         } else {
-            $meta = new \App\Models\User\UserMeta();
+            $meta = new \App\Models\Management\UserMeta();
             $meta->user_id  = $user_id;
             $meta->key      = $key;
             $meta->value    = $value;
@@ -72,7 +72,7 @@ if (!function_exists('update_user_meta')) {
 if (!function_exists('remove_user_meta')) {
     function remove_user_meta($user_id, $key)
     {
-        $meta = \App\Models\User\UserMeta::where('user_id', $user_id)->where('key', $key)->first();
+        $meta = \App\Models\Management\UserMeta::where('user_id', $user_id)->where('key', $key)->first();
 
         if ($meta) {
             $deleted_id = $meta->delete();

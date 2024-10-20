@@ -25,6 +25,8 @@
         "pdfjs-dist": "^4.7.76",
         "react-pdf": "^9.1.1",
         "react-toastify": "^10.0.5",
-        "sweetalert2": "^11.14.1"
+        "sweetalert2": "^11.14.1",
+        "video.js": "^8.18.1",
+        "videojs-youtube": "^3.0.1"
     }
 }

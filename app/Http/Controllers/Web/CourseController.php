@@ -13,16 +13,25 @@ use Inertia\Inertia;
 
 class CourseController extends Controller
 {
-    protected $course;
+    protected $course, $participantId;
 
     public function __construct(CourseService $courseService)
     {
         $this->course = $courseService;
+        $this->participantId = Auth::user()->id ?? null;
+    }
+
+    public function index()
+    {
+        return Inertia::render('Course/Index', [
+            'courses' => $this->course->getAllCourse()
+        ]);
     }
 
     public function show($course)
     {
         $course = $this->course->findBySlug($course);
+        $reviews = $course->reviews->load('user');
 
         return Inertia::render('Course/Show', [
             'course' => [
@@ -40,15 +49,24 @@ class CourseController extends Controller
                 'status' => $course->status,
             ],
             'schedules' => $course->schedules->map(function ($row) {
+                // dd($row->participants()->where('participant_id', $this->participantId)->count());
                 return [
                     'id' => $row->id,
                     'date' => $row->date,
                     'time' => $row->time,
                     'quota' => $row->quota,
-                    'is_active' => $row->participants->count() == 1 ? 1 : 0,
+                    'is_active' => $row->participants()->where('participant_id', $this->participantId)->count() == 1 ? 1 : 0,
                 ];
             }),
-            'review' => $course->reviews
+            'reviews' => $reviews->map(function ($row) {
+                // dd($row);
+                return [
+                    'name' => $row->user->name,
+                    'star' => $row->user->star,
+                    'description' => $row->description,
+                    'created_at' => \Carbon\Carbon::parse($row->created_at)->diffForhumans()
+                ];
+            })
         ]);
     }
 
@@ -69,7 +87,7 @@ class CourseController extends Controller
             ], 200);
         } catch (\Throwable $th) {
             DB::rollBack();
-
+            dd($th);
             return response()->json([
                 'message' => 'Something went wrong.',
                 'data' => [],

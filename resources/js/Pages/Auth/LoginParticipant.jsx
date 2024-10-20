@@ -1,11 +1,11 @@
 import FormInput from "@/Components/FormInput"
-import { useForm, usePage } from "@inertiajs/react"
+import { Link, useForm, usePage } from "@inertiajs/react"
 
 const LoginParticipant = () => {
     const { site } = usePage().props
 
     const { data, setData, post, processing, errors } = useForm({
-        email: "",
+        username: "",
         password: "",
     })
 
@@ -22,12 +22,12 @@ const LoginParticipant = () => {
 
     return (
         <section className="min-h-screen flex flex-col bg-gray-100">
-            <div className="bg-purple-600 h-2"></div>
+            <div className="bg-primary h-2"></div>
 
             <div className="flex-1 flex flex-col justify-center items-center">
-                <a href="/" className="flex items-center mb-6 text-2xl font-semibold text-gray-900">
+                <Link href="/" className="flex items-center mb-6 text-2xl font-semibold text-gray-900">
                     <img src={site.logo} alt="" className='w-full h-full object-fill' />
-                </a>
+                </Link>
                 <div className="w-full bg-white rounded-lg shadow md:mt-0 sm:max-w-md xl:p-0">
                     <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
                         <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">
@@ -35,14 +35,14 @@ const LoginParticipant = () => {
                         </h1>
                         <form onSubmit={handleSubmit}>
                             <div className="mb-1">
-                                {/* email */}
+                                {/* username */}
                                 <FormInput
-                                    title={'email'}
+                                    title={'username'}
                                     isRequired={true}
-                                    placeholder={'Your Email'}
-                                    value={data.email}
+                                    placeholder={'Username'}
+                                    value={data.username}
                                     onChange={handleChange}
-                                    error={errors.email}
+                                    error={errors.username}
                                 />
                                 {/* password */}
                                 <FormInput

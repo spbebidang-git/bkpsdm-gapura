@@ -1,6 +1,5 @@
-import DatePicker from '@/Components/DatePicker';
 import FormInput from '@/Components/FormInput';
-import TimePicker from '@/Components/TimePicker';
+import FormLabel from '@/Components/FormLabel';
 import { Modal } from 'flowbite';
 import { useEffect, useRef, useState } from 'react';
 
@@ -8,10 +7,10 @@ const ModalAddSchedule = ({ isOpen, onClose, onScheduleAdded }) => {
     const modalRef = useRef(null);
 
     const [values, setValues] = useState({
-        date: "1",
-        start_time: "2",
-        end_time: "3",
-        quota: "4",
+        date: "",
+        time_from: "",
+        time_to: "",
+        quota: "",
     })
 
     const handleChange = (e) => {
@@ -34,8 +33,8 @@ const ModalAddSchedule = ({ isOpen, onClose, onScheduleAdded }) => {
         const newSchedule = {
             id: Date.now(),
             date: values.date,
-            start_time: values.start_time,
-            end_time: values.end_time,
+            time_from: values.time_from,
+            time_to: values.time_to,
             quota: values.quota,
         };
 
@@ -80,9 +79,8 @@ const ModalAddSchedule = ({ isOpen, onClose, onScheduleAdded }) => {
         return () => {
             modal.hide();
         };
+
     }, [isOpen, onClose]);
-
-
 
     return (
         <div
@@ -97,7 +95,7 @@ const ModalAddSchedule = ({ isOpen, onClose, onScheduleAdded }) => {
                     <div className="relative rounded-lg bg-white shadow">
                         <div className="flex items-start justify-between rounded-t border-b p-5">
                             <h4 className="text-lg font-semibold text-gray-900 flex items-center">
-                                Add New Course
+                                Set Schedules
                             </h4>
                             <button
                                 type="button"
@@ -126,14 +124,25 @@ const ModalAddSchedule = ({ isOpen, onClose, onScheduleAdded }) => {
                             <p className="text-base leading-relaxed text-gray-500">
                                 <form onSubmit={handleSubmit}>
                                     {/* date */}
-                                    <DatePicker
-                                        title={'Date'}
-                                        isRequired={true}
-                                        handleChange={handleChange}
-                                        value={values.date} // Pass current date value
-                                    />
-                                    {/* time picker */}
-                                    <TimePicker />
+                                    <div className="mb-3">
+                                        <FormLabel title={'date'} />
+                                        <input
+                                            type="date"
+                                            id="date"
+                                            className='form-control'
+                                            value={values.date}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                    {/* <TimePicker /> */}
+                                    <div className='flex gap-5 w-full'>
+                                        <div className="w-full">
+                                            <FormInput placeholder={'09:00'} title={'time from'} value={values.time_from} onChange={handleChange} />
+                                        </div>
+                                        <div className="w-full">
+                                            <FormInput placeholder={'11:00'} title={'time to'} value={values.time_to} onChange={handleChange} />
+                                        </div>
+                                    </div>
                                     {/* quota */}
                                     <FormInput title={'quota'} value={values.quota} onChange={handleChange} isRequired={true} />
                                     <button type='submit' className='button-primary'>Add Schedule</button>

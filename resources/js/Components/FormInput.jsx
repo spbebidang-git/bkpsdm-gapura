@@ -8,7 +8,7 @@ const FormInput = ({ title, value, onChange, isRequired, placeholder = null, err
                 type={type ? type : 'text'}
                 id={title.replace(/\s+/g, '_')}
                 value={value}
-                className={`form-control ${error ? 'border-red-500' : ''}`}
+                className={`${error ? 'error' : ''} form-control`}
                 placeholder={placeholder ? placeholder : title}
                 onChange={onChange}
             />

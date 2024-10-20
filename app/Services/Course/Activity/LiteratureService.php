@@ -28,4 +28,29 @@ class LiteratureService
     }
 
     public function storeLiterature() {}
+
+    public function updateLiterature($request)
+    {
+        $literature = Literature::where('activity_id', $request['activity_id'])->first();
+
+        $literature->sub_title = $request['sub_title'];
+
+        remove_file(Literature::$directoryDocument);
+        $literature->content = UploadMedia::file($request['content'], Literature::$directoryDocument);
+        $literature->save();
+
+        return true;
+    }
+
+    public function getLiteratureForEdit($activity)
+    {
+        $literature = Literature::where('activity_id', $activity->id)->first();
+
+        return [
+            'id' => $activity->id,
+            'title' => $activity->title,
+            'value' => $activity->value,
+            'sub_title' => $literature->sub_title,
+        ];
+    }
 }

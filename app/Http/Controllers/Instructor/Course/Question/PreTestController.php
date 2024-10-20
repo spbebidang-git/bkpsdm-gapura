@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Instructor\Course\Question;
 
-
+use App\Models\Course\Activity;
 use App\Models\Course\Course;
 use App\Services\Course\Activity\ActivityService;
 use App\Services\Course\Activity\QuestionService;
@@ -33,8 +33,9 @@ class PreTestController
     public function store(Request $request, Course $course)
     {
         $request->validate([
-            'title' => 'required',
-            'description' => 'required',
+            'title' => 'required|string',
+            'description' => 'required|string',
+            'value' => 'required|numeric'
         ]);
 
         try {
@@ -45,6 +46,7 @@ class PreTestController
                 'course_id' => $course->id,
                 'type' => 'pre-test',
                 'title' => $request->title,
+                'value' => $request->value,
             ]);
 
             # Insert Pre Test
@@ -60,7 +62,51 @@ class PreTestController
             return to_route('instructor.course.show', $course->slug);
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
+
+            return to_route('instructor.course.show', $course->slug);
+        }
+    }
+
+    public function edit($slug, Activity $pre_test)
+    {
+        return Inertia::render('Instructor/Course/PreTest/Edit', [
+            'slug' => $slug,
+            'activity' => $this->question->getQuestion($pre_test),
+        ]);
+    }
+
+    public function update(Course $course, Activity $pre_test, Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string',
+            'description' => 'required|string',
+            'value' => 'required|numeric'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            # Update Activity
+            $activity = $this->activity->updateActivity([
+                'activity_id' => $pre_test->id,
+                'title' => $request->title,
+                'value' => $request->value,
+            ]);
+
+            # Update Pre Test
+            $this->question->updateQuestion([
+                'activity_id' => $pre_test->id,
+                'type' => 'pre',
+                'description' => $request->description,
+                'is_loop' => $request->repetable ? 1 : 0
+            ]);
+
+            DB::commit();
+
+            return to_route('instructor.course.show', $course->slug);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
             return to_route('instructor.course.show', $course->slug);
         }
     }

@@ -28,6 +28,27 @@ class CourseService
                 ];
             });
     }
+
+    public function getAllCourse()
+    {
+        return Course::OrderBy('id')
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'id' => $row->id,
+                    'type' => $row->type,
+                    'title' => $row->title,
+                    'slug' => $row->slug,
+                    'quota' => $row->quota,
+                    'thumbnail' => $row->thumbnail_src,
+                    'category' => $row->category->title,
+                    'instructor' => $row->instructor->name,
+                    'total_participant' => $row->total_participant,
+                    'status' => $row->status,
+                ];
+            });
+    }
+
     public function getByInstructor($instructodId)
     {
         return Course::where('instructor_id', $instructodId)
@@ -123,10 +144,10 @@ class CourseService
             foreach ($schedules as $item) {
                 Schedule::create([
                     'course_id' => $course->id,
-                    'date' => $item->date,
-                    'time_from' => $item->time_from,
-                    'time_to' => $item->time_to,
-                    'quota' => $item->quota,
+                    'date' => $item['date'],
+                    'time_from' => $item['time_from'],
+                    'time_to' => $item['time_to'],
+                    'quota' => $item['quota'],
                 ]);
             }
 

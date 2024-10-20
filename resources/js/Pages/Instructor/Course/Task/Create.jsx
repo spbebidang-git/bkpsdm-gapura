@@ -3,14 +3,16 @@ import FormTextArea from "@/Components/FormTextArea";
 import NumberActivity from "@/Components/NumberActivity";
 import TitleActivity from "@/Components/TitleActivity";
 import App from "@/Layouts/Instructor/App";
-import { Link, router } from "@inertiajs/react";
+import { Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
 
 const Create = ({ slug }) => {
+    const { errors } = usePage().props
 
     const [values, setValues] = useState({
         title: "",
         description: "",
+        value: ""
     })
 
     function handleChange(e) {
@@ -34,9 +36,10 @@ const Create = ({ slug }) => {
             <form onSubmit={handleSubmit}>
                 <div className="max-w-2xl mx-auto shadow bg-white rounded-xl">
                     <div className="p-6">
-                        <FormInput title={'title'} isRequired={true} onChange={handleChange} value={values.title} />
+                        <FormInput title={'title'} isRequired={true} onChange={handleChange} value={values.title} error={errors.title} />
+                        <FormInput title={'value'} isRequired={true} onChange={handleChange} value={values.value} error={errors.value} />
                         <div className="-mb-3">
-                            <FormTextArea title={'description'} isRequired={true} onChange={handleChange} value={values.description} />
+                            <FormTextArea title={'description'} isRequired={true} onChange={handleChange} value={values.description} error={errors.description} />
                         </div>
                         <small className="italic text-gray-600">Bisa diisi soal atau deskripsi tugas yang harus dikerjakan oleh peserta berikut standart pengumpulannya</small>
                     </div>
@@ -45,7 +48,7 @@ const Create = ({ slug }) => {
                 <div className="flex gap-3 max-w-lg mx-auto pt-8">
                     <button className="button-primary">Save</button>
                     <Link className="w-full" href={`/instructor/course/${slug}/activity`}>
-                        <button className="button-secondary">Back to Activity</button>
+                        <button className="button-secondary">Back</button>
                     </Link>
                 </div>
             </form>

@@ -45,20 +45,20 @@ const Dashboard = ({ courses }) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {courses.map((item, index) => (
+                            {courses.length > 0 ? courses.map((item, index) => (
                                 <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700" key={index}>
                                     <td className="px-6 py-4 text-center">{index + 1}</td>
                                     <td className="px-6 py-4 text-center">{item.type}</td>
-                                    <th scope="row" className="px-6 py-4 text-center font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                    <th scope="row" className="px-6 py-4 text-center font-medium text-gray-900 dark:text-white">
                                         {item.title}
                                     </th>
                                     <td className="px-6 py-4 text-center">{item.quota}</td>
                                     <td className="px-6 py-4 text-center">{item.total_participant}</td>
                                     <td className="px-6 py-4 text-center">{item.status}</td>
                                     <td className="px-6 py-4 text-center">
-                                        <div className="flex gap-2 justify-center">
-                                            <Link href={`/instructor/course/${item.slug}`} className="button-primary">
-                                                Detail
+                                        <div className="flex justify-center items-center gap-2">
+                                            <Link href={`/instructor/course/${item.slug}`}>
+                                                <button className="w-24 h-7 text-sm font-medium bg-primary text-white rounded-full shadow">Detail</button>
                                             </Link>
                                             <Link href={`/instructor/course/${item.slug}/edit`}>
                                                 <button className="button-warning">
@@ -69,7 +69,9 @@ const Dashboard = ({ courses }) => {
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                            )) : (<tr className="bg-white border-b">
+                                <td className="p-3 text-center" colspan="100%">Data not available.</td>
+                            </tr>)}
                         </tbody>
                     </table>
                 </div>

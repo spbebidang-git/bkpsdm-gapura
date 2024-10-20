@@ -37,8 +37,9 @@ class CourseController
             'title' => 'required',
             'short_description' => 'required',
             'description' => 'required',
-            'thumbnail' => 'required|image|mimes:png.jpg|max:1024',
+            'thumbnail' => 'required|image|max:1024|mimes:png,jpg',
             'teaser_video' => 'required',
+            'status' => 'required',
         ]);
 
         try {
@@ -51,8 +52,12 @@ class CourseController
             );
 
             DB::commit();
+
+            return to_route('instructor.dashboard');
         } catch (\Throwable $th) {
             DB::rollBack();
+            dd($th);
+            return to_route('instructor.dashboard');
         }
     }
 
@@ -65,7 +70,7 @@ class CourseController
                 'instructor' => $course->instructor->name,
                 'short_description' => $course->short_description,
                 'description' => $course->description,
-                'thumbnail' => $course->thumbnail
+                'thumbnail' => $course->thumbnail_src
             ],
             'activities' => $this->activity->getActivityByCourse($course->id)
         ]);

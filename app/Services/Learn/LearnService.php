@@ -33,6 +33,7 @@ class LearnService
             'title' => 'title',
             'type' => $learnItems['type'],
             'response' => $learnItems['response'] ? serialize($learnItems['response']) : null,
+            'status' => $learnItems['status']
         ]);
     }
 }

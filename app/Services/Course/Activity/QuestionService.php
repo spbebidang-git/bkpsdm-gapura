@@ -20,10 +20,41 @@ class QuestionService
         return Question::create($data);
     }
 
-    public function getPreTest($activityId)
+    public function getPreTest($activity)
     {
         $question = Question::with('questionVariant.questionItems.questionOptions')
-            ->where('activity_id', $activityId)
+            ->where('activity_id', $activity->id)
+            ->first();
+
+        // $questionVariants = $question->questionVariant->first()->questionItems;
+
+        // $questionItems = $questionVariants->map(function ($row) {
+        //     return [
+        //         'question_id' => $row->id,
+        //         'question' => $row->description,
+        //         'option' => [
+        //             'a' => $row->questionOptions[0]->option,
+        //             'b' => $row->questionOptions[1]->option,
+        //             'c' => $row->questionOptions[2]->option,
+        //             'd' => $row->questionOptions[3]->option,
+        //         ]
+        //     ];
+        // });
+
+        return [
+            'activity_id' => $activity->id,
+            'title' => $activity->title,
+            'description' => $question->description,
+            'type' => 'pre-test',
+            // 'status' => 0,
+            // 'data' => $questionItems
+        ];
+    }
+
+    public function getPreTestParticipant($activity)
+    {
+        $question = Question::with('questionVariant.questionItems.questionOptions')
+            ->where('activity_id', $activity->id)
             ->first();
 
         $questionVariants = $question->questionVariant->first()->questionItems;
@@ -42,8 +73,11 @@ class QuestionService
         });
 
         return [
-            'activity_id' => $question->id,
+            'activity_id' => $activity->id,
+            'title' => $activity->title,
+            'description' => $question->description,
             'type' => 'pre-test',
+            'status' => 0,
             'data' => $questionItems
         ];
     }
@@ -133,5 +167,42 @@ class QuestionService
         }
 
         return 0;
+    }
+
+    public function updateQuestion($request)
+    {
+        $question = Question::where('activity_id', $request['activity_id'])->first();
+
+        if ($request['type'] == 'pre') {
+            $question->update([
+                'description' => $request['description'],
+                'is_loop' => $request['is_loop'],
+            ]);
+
+            return true;
+        }
+
+        $question->update([
+            'description' => $request['description'],
+            'min_score' => $request['min_score'],
+            'show_result' => $request['show_result'],
+        ]);
+
+        return true;
+    }
+
+    public function getQuestion($activity)
+    {
+        $question = Question::where('activity_id', $activity->id)->first();
+
+        return [
+            'id' => $activity->id,
+            'title' => $activity->title,
+            'value' => $activity->value,
+            'description' => $question->description,
+            'min_score' => $question->min_score,
+            'is_loop' => $question->is_loop,
+            'show_result' => $question->show_result,
+        ];
     }
 }

@@ -1,7 +1,13 @@
 import App from "@/Layouts/Instructor/App"
-import { Link } from "@inertiajs/react"
+import { Link, router } from "@inertiajs/react"
 
 const Index = ({ slug, activityId, questionId, questionItems }) => {
+
+    const handleSubmitDelete = (e, questionItemId) => {
+        e.preventDefault()
+        router.delete(`/instructor/course/${slug}/activity/variant/${activityId}/${questionId}/question-item/${questionItemId}`)
+    }
+
     return (
         <App>
             <div className="text-center text-2xl font-bold text-gray-700 mb-5">Question Sets</div>
@@ -52,7 +58,7 @@ const Index = ({ slug, activityId, questionId, questionItems }) => {
                                     <td className="px-6 py-4 text-center">{item.score}</td>
                                     <td>
                                         <div className="flex gap-2 justify-center">
-                                            <Link href={`/instructor/course/${slug}/activity/variant/${activityId}/${item.id}/edit`}>
+                                            <Link href={`/instructor/course/${slug}/activity/variant/${activityId}/${questionId}/question-item/${item.id}/edit`}>
                                                 <button className="button-warning">Edit</button>
                                             </Link>
                                             <button onClick={(e) => handleSubmitDelete(e, item.id)} className="button-danger">Delete</button>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Instructor\Course\Literature;
 
+use App\Models\Course\Activity;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use App\Models\Course\Course;
@@ -30,10 +31,10 @@ class LiteratureController
 
     public function store(Request $request, Course $course)
     {
-        // dd($request->all());
         $request->validate([
             'title' => 'required',
             'sub_title' => 'required',
+            'value' => 'required|numeric',
             'content' => 'required|mimes:pdf|max:1024',
         ]);
 
@@ -45,6 +46,7 @@ class LiteratureController
                 'course_id' => $course->id,
                 'type' => 'literature',
                 'title' => $request->title,
+                'value' => $request->value,
             ]);
 
             # Insert Literature
@@ -60,6 +62,50 @@ class LiteratureController
         } catch (\Throwable $th) {
             DB::rollBack();
             dd($th);
+            return to_route('instructor.course.show', $course->slug);
+        }
+    }
+
+    public function edit($slug, Activity $literature)
+    {
+        return Inertia::render('Instructor/Course/Literature/Edit', [
+            'slug' => $slug,
+            'activity' => $this->literature->getLiteratureForEdit($literature),
+        ]);
+    }
+
+    public function update(Course $course, Activity $literature, Request $request)
+    {
+        $request->validate([
+            'title' => 'required',
+            'sub_title' => 'required',
+            'value' => 'required|numeric',
+            'content' => 'nullable|mimes:pdf|max:1024',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            # Update Activity
+            $activity = $this->activity->updateActivity([
+                'activity_id' => $literature->id,
+                'title' => $request->title,
+                'value' => $request->value,
+            ]);
+
+            # Update Pre Test
+            $this->literature->updateLiterature([
+                'activity_id' => $activity->id,
+                'sub_title' => $request->sub_title,
+                'content' => $request->content,
+            ]);
+
+            DB::commit();
+
+            return to_route('instructor.course.show', $course->slug);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
             return to_route('instructor.course.show', $course->slug);
         }
     }

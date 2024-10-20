@@ -8,7 +8,6 @@ import { useEffect, useState } from "react";
 import ModalAddSchedule from "./Partials/ModalAddSchedule";
 
 const Edit = ({ course, categories }) => {
-    console.log(course.type)
     const [type, setType] = useState(course.type === 'schedule' ? 1 : 0); // Set type based on existing data
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -66,25 +65,8 @@ const Edit = ({ course, categories }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        const formData = new FormData();
-        formData.append('type', values.type);
-        formData.append('category', values.category);
-        formData.append('title', values.title);
-        formData.append('short_description', values.short_description);
-        formData.append('description', values.description);
-        if (values.thumbnail) {
-            formData.append('thumbnail', values.thumbnail);
-        }
-        formData.append('teaser_video', values.teaser_video);
-
-        const localData = localStorage.getItem('scheduleData');
-        if (values.type === 'schedule' && localData) {
-            formData.append('schedules', localData);
-        }
-        console.log(formData)
-
         // Send PUT request to update the course
-        router.put(`/instructor/course/${course.slug}`, formData);
+        router.post(`/instructor/course/${course.slug}`, { _method: 'put', values });
     };
 
     const [data, setData] = useState(course.schedules || []); // Prepopulate schedules

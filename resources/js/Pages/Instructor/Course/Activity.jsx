@@ -50,7 +50,7 @@ const Activity = ({ slug }) => {
                             description={'Digunakan untuk memasukkan detail deskripsi pertemuan Daring berikut Url : yang nanti digunakan oleh peserta untuk bergabung pada pertemuan daring.'}
                         />
                     </Link>
-                    <Link href={`/instructor/course/${slug}/activity/presentation-video/create`}>
+                    <Link href={`/instructor/course/${slug}/activity/video/create`}>
                         <CardActivity
                             title="Presentasi Video"
                             description={'Digunakan untuk memasukkan detail deskripsi Presentasi Video dan file Video yang nanti diakses oleh peserta.'}

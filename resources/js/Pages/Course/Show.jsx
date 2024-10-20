@@ -3,11 +3,14 @@ import { useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import App from '../../Layouts/App';
 
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import 'react-toastify/dist/ReactToastify.css';
 
 const Show = ({ course, schedules, reviews }) => {
-    const [activeSchedules, setActiveSchedules] = useState({});
+    const [activeSchedules, setActiveSchedules] = useState([]);
+
+    const { auth } = usePage().props
+
 
     const handleActivation = async (e, scheduleId) => {
         e.preventDefault()
@@ -15,26 +18,13 @@ const Show = ({ course, schedules, reviews }) => {
         try {
             const response = await axios.post(`/course/${scheduleId}`, []);
 
-            console.log(response.data.status)
             if (response.data.status === 200) {
-                // const notify = () => toast("Wow so easy !");
-                console.log('oke')
-
-                // Redirect to another page if successful
-                // window.location.href = '/success-page'; // Ganti dengan route tujuan
-                setActiveSchedules((prev) => ({ ...prev, [scheduleId]: true })); // Only update the specific schedule
+                setActiveSchedules(prevState => [...prevState, scheduleId]);
             }
-
-
         } catch (error) {
-            console.log('gak oke')
-
             console.log(error)
         }
     }
-
-
-    // console.log(course);
 
     return (
         <App>
@@ -138,7 +128,7 @@ const Show = ({ course, schedules, reviews }) => {
                                 <div className=' shadow rounded-lg overflow-hidden'>
                                     <div className='px-5 border-b-2 pb-4 font-medium text-lg flex justify-between items-center my-4'>{course.title}
                                         <div>
-                                            {activeSchedules[item.id] || item.is_active ? (
+                                            {activeSchedules.includes(item.id) || item.is_active ? (
                                                 <Link href={`/my-course`}>
                                                     <button className='bg-purple-500 text-sm shadow text-white font-bold px-5 py-2 rounded-full'>Lihat Kelas</button>
                                                 </Link>
@@ -162,15 +152,11 @@ const Show = ({ course, schedules, reviews }) => {
                                             <div className=''>{course.instructor}</div>
                                         </div>
                                         <div className='flex items-center gap-1.5  text-sm text-gray-600 font-medium'>
-                                            <box-icon name='calendar' color='#d8b4fe' size="sm"></box-icon>
-                                            <div className=''>Senin, 29 April 2024</div>
+                                            <box-icon name='check-circle' color='#d8b4fe' size="sm"></box-icon>
+                                            <div className='capitalize'>{course.quota}</div>
                                         </div>
                                     </div>
-                                    <div className='bg-gray-200 p-5'>
-                                        <div className="rounded-xl bg-green-100 text-green-600 border text-sm border-green-600 p-2 font-medium flex items-center gap-1 w-fit shadow">
-                                            <box-icon name='check-circle' color='#16a34a' size="sm"></box-icon>
-                                            Kuota Masih Tersedia
-                                        </div>
+                                    <div className='bg-gray-200 p-2'>
                                     </div>
                                 </div>
                             </div>
@@ -197,11 +183,11 @@ const Show = ({ course, schedules, reviews }) => {
                                         <StartRating />
                                     </div>
                                     <div className='text-gray-700'>
-                                        <span className='font-bold'>Arif Saifudin</span> | <span>9 hari yang lalu</span>
+                                        <span className='font-bold'>{item.name}</span> | <span>{item.created_at}</span>
                                     </div>
                                 </div>
                                 <div className=''>
-                                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Eius saepe, iusto sed beatae doloribus ratione incidunt? Neque sequi, autem iusto fugiat accusamus dolor! Delectus, quaerat rerum doloremque beatae tenetur ipsa.
+                                    {item.description}
                                 </div>
                             </div>
                         )

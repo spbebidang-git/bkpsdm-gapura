@@ -1,5 +1,5 @@
 import App from "@/Layouts/Instructor/App";
-import { Link } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 
 const Create = ({ course, activities }) => {
@@ -9,12 +9,17 @@ const Create = ({ course, activities }) => {
         setDataActivities(activities)
     }, [])
 
+    const handleSubmitDelete = (e, activityId) => {
+        e.preventDefault()
+        router.delete(`/instructor/course/${course.slug}/activity/${activityId}`)
+    }
+
     return (
         <App>
             <div className="max-w-6xl mx-auto">
                 <div className="grid grid-cols-3 gap-5 mb-5">
                     <div className='col-span-1'>
-                        <div className='h-48 bg-red-200 rounded-xl overflow-hidden shadow'>
+                        <div className='h-48 rounded-xl overflow-hidden shadow'>
                             <img src={course.thumbnail} alt={course.title} />
                         </div>
                     </div>
@@ -23,11 +28,6 @@ const Create = ({ course, activities }) => {
                         <div className='text-sm italic mb-1 text-gray-700'>oleh <span className='not-italic font-bold'>{course.instructor}</span></div>
 
                         <div className='mb-2.5 text-gray-700'>{course.short_description}</div>
-                        <div className='flex gap-3 max-w-lg'>
-                            <button className='button-primary'>Teaser Video</button>
-                            <button className='button-primary'>Description</button>
-                            <button className='button-primary'>Schedule</button>
-                        </div>
                     </div>
                 </div>
                 <div className="col-span-1 border-2 rounded-xl shadow">
@@ -64,17 +64,17 @@ const Create = ({ course, activities }) => {
                                             <div className=" w-full flex gap-2 justify-end h-8">
                                                 {item.type === 'pre-test' || item.type == 'post-test' ? (
                                                     <Link href={`/instructor/course/${course.slug}/activity/variant/${item.id}`}>
-                                                        <button className="bg-purple-500 w-20 py-2 text-white rounded-full text-xs font-bold">
+                                                        <button className="w-20 h-7 text-sm font-medium bg-primary text-white rounded-full shadow">
                                                             Variant
                                                         </button>
                                                     </Link>
                                                 ) : ''}
-                                                <button className="bg-purple-500 w-20 py-2 text-white rounded-full text-xs font-bold">
-                                                    Edit
-                                                </button>
-                                                <button className="bg-purple-500 w-20 py-2 text-white rounded-full text-xs font-bold">
-                                                    Delete
-                                                </button>
+                                                <Link href={`/instructor/course/${course.slug}/activity/${item.type}/${item.id}/edit`}>
+                                                    <button className="button-warning">
+                                                        Edit
+                                                    </button>
+                                                </Link>
+                                                <button onClick={(e) => handleSubmitDelete(e, item.id)} className="button-danger">Delete</button>
                                             </div>
                                         </td>
                                     </tr>

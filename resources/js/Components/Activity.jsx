@@ -1,10 +1,11 @@
 import { router } from "@inertiajs/react";
 import { useState } from "react";
 import { pdfjs } from 'react-pdf';
+import 'videojs-youtube'; // Import plugin YouTube
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-const Activity = ({ id, type, data }) => {
+const Activity = ({ id, type, data, slug }) => {
     // console.log(type)
     if (type === 'pre-test') {
         // State untuk menyimpan jawaban
@@ -24,7 +25,7 @@ const Activity = ({ id, type, data }) => {
         const handleSubmit = () => {
             // console.log(answers)
             const formattedAnswers = Object.values(answers);
-            router.post(`/learn/facilis-itaque-quia-id-assumenda-vero-sed/1/${id}`, formattedAnswers)
+            router.post(`/learn/${slug}/1/${id}`, formattedAnswers)
         }
 
         return (
@@ -45,7 +46,7 @@ const Activity = ({ id, type, data }) => {
                                 />
                                 <label
                                     htmlFor={`option-${index}-${index2}`}
-                                    className="flex gap-4 p-4 items-center w-full text-gray-500 bg-white border border-gray-200 rounded-xl cursor-pointer peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white hover:text-gray-600 hover:bg-gray-100"
+                                    className="flex gap-4 p-3 items-center w-full text-gray-500 bg-white border border-gray-200 rounded-xl cursor-pointer peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white hover:text-gray-600 hover:bg-gray-100"
                                 >
                                     <div className="font-bold border-2 rounded-full w-10 h-10 flex items-center justify-center uppercase">
                                         {key}
@@ -59,20 +60,22 @@ const Activity = ({ id, type, data }) => {
                     });
 
                     return (
-                        <div className="p-8" key={index}>
+                        <div className="mb-8 px-5" key={index}>
                             <h3 className="mb-5 text-lg font-medium text-gray-900 dark:text-white">
-                                {item.question}
+                                {index + 1 + '. ' + item.question}
                             </h3>
-                            <ul className="grid w-full gap-6 md:grid-cols-1">
+                            <ul className="grid w-full gap-4 md:grid-cols-1">
                                 {option}
                             </ul>
                         </div>
                     );
                 })}
 
-                <button onClick={handleSubmit} className="mt-6 bg-primary text-white p-4 rounded-lg">
-                    Submit
-                </button>
+                <div className="w-full flex justify-center mt-6">
+                    <button onClick={handleSubmit} className="button-primary max-w-56">
+                        Submit
+                    </button>
+                </div>
             </div>
         );
     }
@@ -162,17 +165,18 @@ const Activity = ({ id, type, data }) => {
     }
 
     if (type === 'video') {
-
         const handleSubmit = () => {
             // console.log(answers)
             // const formattedAnswers = Object.values(answers);
-            router.post(`/learn/facilis-itaque-quia-id-assumenda-vero-sed/1/${id}`, [])
+            router.post(`/learn/${slug}/1/${id}`, [])
         }
+
         return (
-            <div className="border-2 rounded-xl overflow-hidden">
+            <div className="flex flex-col items-center rounded-xl overflow-hidden p-6">
                 <iframe
                     width="1024px"
                     height="512px"
+                    className="aspect-video"
                     src={`${data.src_video}`}
                     title="YouTube video player"
                     frameBorder="0"
@@ -180,9 +184,11 @@ const Activity = ({ id, type, data }) => {
 
                 ></iframe>
 
-                <button onClick={handleSubmit} className="mt-6 bg-primary text-white p-4 rounded-lg">
-                    Submit
-                </button>
+                <div className="w-full flex justify-center mt-6">
+                    <button onClick={handleSubmit} className="button-primary max-w-56">
+                        Submit
+                    </button>
+                </div>
             </div>
         )
     }

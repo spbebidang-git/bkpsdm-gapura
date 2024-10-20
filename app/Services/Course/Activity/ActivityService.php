@@ -22,14 +22,20 @@ class ActivityService
 
     public function getActivityByCourse($courseId)
     {
-        return Activity::with('question')
+        return Activity::with('learnItem')
             ->where('course_id', $courseId)
-            ->get();
-        // ->map(function ($row) {
-        //     return [
-        //         $row->questions
-        //     ];
-        // });
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'id' => $row->id,
+                    'course_id' => $row->course_id,
+                    'type' => $row->type,
+                    'title' => $row->title,
+                    'timer' => $row->timer,
+                    'value' => $row->value,
+                    'status' => $row->learnItem && $row->learnItem->status == 'done' ? 1 : 0,
+                ];
+            });
     }
 
     public function createActivity($data)
@@ -45,13 +51,13 @@ class ActivityService
     public function getDetailActivity($activityId)
     {
         $activity = $this->findById($activityId);
-        // dd($activity);
+
         if ($activity->type === 'pre-test') {
-            return $this->question->getPreTest($activityId);
+            return $this->question->getPreTest($activity);
         }
 
         if ($activity->type === 'post-test') {
-            return $this->question->getPostTest($activityId);
+            return $this->question->getPostTest($activity);
         }
 
         if ($activity->type === 'task') {
@@ -63,7 +69,7 @@ class ActivityService
         }
 
         if ($activity->type === 'video') {
-            return $this->interactive->getVideo();
+            return $this->interactive->getVideo($activityId);
         }
 
         if ($activity->type === 'literature') {
@@ -74,7 +80,6 @@ class ActivityService
     public function storeActivity($participantId, $courseId, $activityId, $request)
     {
         $activity = $this->findById($activityId);
-        // dd($activity);
 
         if ($activity->type == 'pre-test') {
             return $this->question->storePreTest($participantId, $courseId, $activityId, $request);
@@ -98,6 +103,33 @@ class ActivityService
 
         if ($activity->type == 'literature') {
             return $this->literature->storeLiterature($activityId, $request);
+        }
+    }
+
+    public function updateActivity($request)
+    {
+        $activity = Activity::find($request['activity_id']);
+
+        $activity->update([
+            'title' => $request['title'],
+            'value' => $request['value'],
+        ]);
+
+        return $activity;
+    }
+
+    public function nextActivity($courseId, $activityId)
+    {
+        $activity = Activity::where('id', $activityId)->first();
+        $nextActivity = Activity::where('id', '>', $activity->id)
+            ->where('course_id', $courseId)
+            ->orderBy('id', 'asc')
+            ->first();
+        // dd($nextActivity);
+        if ($nextActivity) {
+            return $nextActivity->id;
+        } else {
+            return null;
         }
     }
 }

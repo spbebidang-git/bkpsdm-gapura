@@ -2,8 +2,14 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Models\Management\UserMeta;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Session;
 use Inertia\Inertia;
 
 class AuthController
@@ -61,20 +67,73 @@ class AuthController
 
     public function storeParticipant(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
+        $request->validate([
+            'username' => 'required|string',
+            'password' => 'required|string',
         ]);
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
+        $response = Http::withHeaders([
+            'apikey' => env('API_KEY')
+        ])->post(env('SSO_BASE_URL') . '/oauth/token', [
+            'username' => $request->username,
+            'password' => $request->password,
+            'grant_type'   => 'password',
+            'client_id'    => env('SSO_CLIENT_ID'),
+            'client_secret' => env('SSO_CLIENT_SECRET'),
+        ]);
 
-            return to_route('home');
+        if ($response->successful()) {
+            $token = 'Bearer ' . $response->json()['access_token'];
+
+            $participantApi = Http::withHeaders([
+                'apikey' => env('API_KEY'),
+                'auth' => $token
+            ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
+
+            try {
+                DB::beginTransaction();
+
+                $email = $request->username . '@elearning.gresikkab.go.id';
+
+                $user = User::where('email', $email)->first();
+
+                if (!$user) {
+                    $user = User::create([
+                        'name' => $participantApi->json()['nama'],
+                        'email' => $email,
+                        'password' => Hash::make(str()->random(12))
+                    ]);
+
+                    update_user_meta($user->id, 'nip', 123);
+
+                    $user->assignRole('Participant');
+
+                    Auth::login($user);
+
+                    DB::commit();
+
+                    return to_route('home');
+                }
+
+                Auth::login($user);
+
+                DB::commit();
+
+                Session::put('token', $token);
+
+                return to_route('home');
+            } catch (\Throwable $th) {
+                DB::rollBack();
+                dd($th);
+                return back()->withErrors([
+                    'username' => 'Something went wrong.',
+                ])->onlyInput('username');
+            }
         }
 
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->onlyInput('email');
+        dd(123);
+
+        return to_route('sign-in.participant.create')->with('danger', 'Something went wrong.');
     }
 
     public function logout(Request $request)

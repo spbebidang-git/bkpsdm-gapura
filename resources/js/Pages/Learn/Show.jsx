@@ -36,41 +36,26 @@ const Home = ({ course, activities, activity, activity_id }) => {
                                 {/* <div className="rounded-full border-2 bg-purple-100 w-fit px-10 py-2.5 font-semibold border-purple-500">
                                     Detail Aktivitas
                                 </div> */}
-                                <div className="rounded-full border-2 bg-purple-100 w-fit px-10 py-2.5 font-semibold border-purple-500 mb-5">
+                                {/* <div className="rounded-full border-2 bg-purple-100 w-fit px-10 py-2.5 font-semibold border-purple-500 mb-5">
                                     Materi
-                                </div>
+                                </div> */}
                             </div>
-                            <div className="overflow-scroll h-[550px] border-2 mb-5">
-                                <Activity id={activity_id} type={activity.type} data={activity.data} />
-                            </div>
-                            <div>
-                                <button className="button-primary">Submit</button>
+                            <div className="overflow-scroll h-[700px] border-2 p-5">
+                                <Activity slug={course.slug} id={activity_id} type={activity.type} data={activity.data} />
                             </div>
                         </div>
                     </div>
                 </div>
                 <div className="col-span-3 bg-white p-4">
                     <div className="h-14 border-b-2"></div>
-                    <div className="bg-white shadow rounded-xl border-2">
+                    <div className="bg-white">
                         <div className="text-lg font-medium">
                             <ul className="list-outside list-decimal">
                                 {activities && activities.map((item, index) => {
                                     return (
-                                        <ListActivity type={item.type} activity={item.title} isActive={0} />
+                                        <ListActivity type={item.type} slug={course.slug} activityId={item.id} activity={item.title} status={item.status} isActive={item.id == activity.activity_id ? 1 : 0} />
                                     )
                                 })}
-                                {/* <div className="pb-3 my-3 border-gray-200">
-                                    <div className="w-fit mb-1 px-4 flex items-center justify-center text-[10px] font-extrabold bg-purple-500 text-white rounded-full shadow">
-                                        MATERI
-                                    </div>
-                                    <li className="">
-                                        <div className="mb-0.5">Selamat Datang Di SEKOLAHMU!</div>
-                                        <div className="flex items-center gap-1 text-xs text-gray-500 italic">
-                                            <box-icon name='play-circle' size="sm" color="gray" ></box-icon>
-                                            Menonton Video Pemaparan
-                                        </div>
-                                    </li>
-                                </div> */}
                             </ul>
                         </div>
                     </div>

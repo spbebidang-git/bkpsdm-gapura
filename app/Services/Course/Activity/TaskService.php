@@ -23,5 +23,26 @@ class TaskService
         ];
     }
 
-    public function storeTask() {}
+    public function updateTask($request)
+    {
+        $task = Task::where('activity_id', $request['activity_id'])->first();
+
+        $task->update([
+            'description' => $request['description']
+        ]);
+
+        return true;
+    }
+
+    public function getTaskForEdit($activity)
+    {
+        $task = Task::where('activity_id', $activity->id)->first();
+
+        return [
+            'id' => $activity->id,
+            'title' => $activity->title,
+            'value' => $activity->value,
+            'description' => $task->description,
+        ];
+    }
 }

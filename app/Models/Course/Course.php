@@ -57,14 +57,16 @@ class Course extends Model
     public function quota(): Attribute
     {
         if ($this->type == 'schedule') {
-            return Attribute::get(fn() => 'limited');
+            return Attribute::get(fn() => 'Terbatas');
         }
 
-        return Attribute::get(fn() => 'unlimited');
+        return Attribute::get(fn() => 'Tidak Terbatas');
     }
 
     public function totalParticipant(): Attribute
     {
-        return Attribute::get(fn() => 'belum');
+        return Attribute::get(fn() => $this->schedules->sum(function ($schedule) {
+            return $schedule->participants()->count();
+        }));
     }
 }

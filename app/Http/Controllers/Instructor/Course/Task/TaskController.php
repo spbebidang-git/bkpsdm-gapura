@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Instructor\Course\Task;
 
+use App\Models\Course\Activity;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use App\Models\Course\Course;
@@ -31,8 +32,9 @@ class TaskController
     public function store(Request $request, Course $course)
     {
         $request->validate([
-            'title' => 'required',
-            'description' => 'required',
+            'title' => 'required|string',
+            'description' => 'required|string',
+            'value' => 'required|numeric'
         ]);
 
         try {
@@ -43,11 +45,54 @@ class TaskController
                 'course_id' => $course->id,
                 'type' => 'task',
                 'title' => $request->title,
+                'value' => $request->value,
             ]);
 
             # Insert Pre Test
             $this->task->createTask([
                 'activity_id' => $activity->id,
+                'description' => $request->description,
+            ]);
+
+            DB::commit();
+
+            return to_route('instructor.course.show', $course->slug);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            return to_route('instructor.course.show', $course->slug);
+        }
+    }
+
+    public function edit($slug, Activity $task)
+    {
+        return Inertia::render('Instructor/Course/Task/Edit', [
+            'slug' => $slug,
+            'activity' => $this->task->getTaskForEdit($task),
+        ]);
+    }
+
+    public function update(Course $course, Activity $task, Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string',
+            'description' => 'required|string',
+            'value' => 'required|numeric'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            # Update Activity
+            $activity = $this->activity->updateActivity([
+                'activity_id' => $task->id,
+                'title' => $request->title,
+                'value' => $request->value,
+            ]);
+
+            # Update Pre Test
+            $this->task->updateTask([
+                'activity_id' => $task->id,
                 'description' => $request->description,
             ]);
 

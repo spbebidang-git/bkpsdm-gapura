@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Instructor\Course\Question;
 
 use App\Models\Course\Question\QuestionVariant;
+use App\Services\Course\Activity\ActivityService;
 use App\Services\Course\Activity\Question\VariantService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -10,11 +11,12 @@ use Inertia\Inertia;
 
 class VariantController
 {
-    protected $variant;
+    protected $variant, $activity;
 
-    public function __construct(VariantService $variantService)
+    public function __construct(VariantService $variantService, ActivityService $activityService)
     {
         $this->variant = $variantService;
+        $this->activity = $activityService;
     }
 
     public function index($slug, $activityId)
@@ -25,7 +27,7 @@ class VariantController
 
         return Inertia::render('Instructor/Course/Variant/Index', [
             'slug' => $slug,
-            'activityId' => $activityId,
+            'activity' => $this->activity->getDetailActivity($activityId),
             'variants' => $this->variant->getVariant($activityId)
         ]);
     }
