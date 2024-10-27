@@ -789,6 +789,12 @@
       "resources/js/app.jsx"
     ]
   },
+  "resources/js/admin.js": {
+    "file": "assets/admin-R_aW0nts.js",
+    "name": "admin",
+    "src": "resources/js/admin.js",
+    "isEntry": true
+  },
   "resources/js/app.jsx": {
     "file": "assets/app-BhKLlFBW.js",
     "name": "app",
