@@ -56,7 +56,7 @@ export default function App({ children }) {
                 <div className="max-w-7xl mx-auto gap-5 border-b pb-5">
                     <div className="w-full">
                         <div className="w-56 mb-3 ">
-                            <img src={'/assets/media/images/static/site_logo.png'} alt="" />
+                            <img src={site.logo} alt="" />
                         </div>
                     </div>
                     <div className="flex gap-8">
