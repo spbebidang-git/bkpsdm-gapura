@@ -77,15 +77,36 @@ class QuestionService
             'title' => $activity->title,
             'description' => $question->description,
             'type' => 'pre-test',
-            'status' => 0,
-            'data' => $questionItems
+            'status' => $activity->learnItem ? $activity->learnItem->status : 0,
+            'data' => [
+                'question_items' => $questionItems,
+                'is_loop' => $question->is_loop
+            ]
         ];
     }
 
-    public function getPostTest($activityId)
+    public function getPostTest($activity)
     {
         $question = Question::with('questionVariant.questionItems.questionOptions')
-            ->where('activity_id', $activityId)
+            ->where('activity_id', $activity->id)
+            ->first();
+
+
+
+        return [
+            'activity_id' => $activity->id,
+            'title' => $activity->title,
+            'description' => $question->description,
+            'type' => 'pre-test',
+            // 'status' => 0,
+            // 'data' => $questionItems
+        ];
+    }
+
+    public function getPostTestParticipant($activity)
+    {
+        $question = Question::with('questionVariant.questionItems.questionOptions')
+            ->where('activity_id', $activity->id)
             ->first();
 
         $questionVariants = $question->questionVariant->first()->questionItems;
@@ -104,9 +125,15 @@ class QuestionService
         });
 
         return [
-            'activity_id' => $question->id,
-            'type' => 'post-test',
-            'data' => $questionItems
+            'activity_id' => $activity->id,
+            'title' => $activity->title,
+            'description' => $question->description,
+            'type' => 'pre-test',
+            'status' => $activity->learnItem ? $activity->learnItem->status : 0,
+            'data' => [
+                'question_items' => $questionItems,
+                'is_loop' => $question->is_loop
+            ]
         ];
     }
 

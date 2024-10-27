@@ -3,27 +3,26 @@ import { useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import App from '../../Layouts/App';
 
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import 'react-toastify/dist/ReactToastify.css';
+import StarRating from '@/Components/StarRating';
 
-const Show = ({ course, schedules, reviews }) => {
+const Show = ({ course, schedules, reviews, rating }) => {
     const [activeSchedules, setActiveSchedules] = useState([]);
 
     const { auth } = usePage().props
 
-
-    const handleActivation = async (e, scheduleId) => {
+    const handleActivation = (e, scheduleId) => {
         e.preventDefault()
 
-        try {
-            const response = await axios.post(`/course/${scheduleId}`, []);
-
-            if (response.data.status === 200) {
+        router.post(`/course/${scheduleId}`, [], {
+            onSuccess: page => {
                 setActiveSchedules(prevState => [...prevState, scheduleId]);
-            }
-        } catch (error) {
-            console.log(error)
-        }
+            },
+            onError: errors => {
+                console.log(123);
+            },
+        });
     }
 
     return (
@@ -69,99 +68,83 @@ const Show = ({ course, schedules, reviews }) => {
                     </div>
                     <div className='col-span-2'>
                         <div className='text-xl font-bold text-gray-800 mb-0.5 capitalize'>{course.title}</div>
-                        <div className='text-sm italic mb-1 text-gray-700'>oleh <span className='not-italic font-bold'>{course.instructor.name}</span></div>
+                        <div className='text-sm italic mb-1 text-gray-700'>oleh <span className='not-italic font-bold'>{course.instructor}</span></div>
                         <div className='text-base flex gap-1 items-center mb-1 '>
-                            <div className='flex'>
-                                <svg xmlns="http://www.w3.org/2000/svg"
-                                    class="h-5 w-5 lg:h-6 lg:w-6 font-bold text-gray-300" viewBox="0 0 20 20"
-                                    fill="currentColor">
-                                    <path
-                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                                <svg xmlns="http://www.w3.org/2000/svg"
-                                    class="h-5 w-5 lg:h-6 lg:w-6 font-bold text-gray-300" viewBox="0 0 20 20"
-                                    fill="currentColor">
-                                    <path
-                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                                <svg xmlns="http://www.w3.org/2000/svg"
-                                    class="h-5 w-5 lg:h-6 lg:w-6 font-bold text-gray-300" viewBox="0 0 20 20"
-                                    fill="currentColor">
-                                    <path
-                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                                <svg xmlns="http://www.w3.org/2000/svg"
-                                    class="h-5 w-5 lg:h-6 lg:w-6 font-bold text-gray-300" viewBox="0 0 20 20"
-                                    fill="currentColor">
-                                    <path
-                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                                <svg xmlns="http://www.w3.org/2000/svg"
-                                    class="h-5 w-5 lg:h-6 lg:w-6 font-bold text-gray-300" viewBox="0 0 20 20"
-                                    fill="currentColor">
-                                    <path
-                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                            </div>
+                            <StarRating value={rating.star} />
                             <div className='font-extrabold'>
-                                5.0
+                                {rating.value}
                             </div>
                             <div className='font-medium'>
-                                (1000 Rating)
+                                ({rating.total} Rating)
                             </div>
                         </div>
                         <div className='mb-2.5 text-gray-700 text-sm'>{course.short_description}</div>
-                        <div className='flex gap-3'>
-                            <button className='bg-purple-500 text-sm shadow text-white font-medium  px-5 py-2.5 rounded-full'>Teaser Video</button>
-                            <button className='bg-purple-500 text-sm shadow text-white font-medium  px-5 py-2.5 rounded-full'>Description</button>
-                            <button className='bg-purple-500 text-sm shadow text-white font-medium  px-5 py-2.5 rounded-full'>Schedule</button>
-                            <button className='bg-purple-500 text-sm shadow text-white font-medium  px-5 py-2.5 rounded-full'>Review</button>
+                        <div className='flex max-w-xl gap-3'>
+                            <button className='button-primary'>Schedule</button>
+                            <button className='button-primary'>Teaser Video</button>
+                            <button className='button-primary'>Description</button>
+                            <button className='button-primary'>Review</button>
                         </div>
                     </div>
                 </div>
                 {/* Jadwal Kegiatan */}
                 <div className="bg-white p-6 rounded-xl shadow mb-5">
                     <div className='text-lg font-bold mb-5'>Jadwal Kegiatan</div>
-                    {schedules.map((item, index) => {
-                        return (
-                            <div key={item.id} className='ring-8 ring-purple-300 rounded-xl overflow-hidden shadow'>
-                                <div className=' shadow rounded-lg overflow-hidden'>
+                    <div className='ring-8 ring-teal-200 rounded-xl overflow-hidden shadow'>
+                        {schedules.map((item, index) => {
+                            return (
+                                <div className='shadow overflow-hidden'>
                                     <div className='px-5 border-b-2 pb-4 font-medium text-lg flex justify-between items-center my-4'>{course.title}
                                         <div>
                                             {activeSchedules.includes(item.id) || item.is_active ? (
                                                 <Link href={`/my-course`}>
-                                                    <button className='bg-purple-500 text-sm shadow text-white font-bold px-5 py-2 rounded-full'>Lihat Kelas</button>
+                                                    <button className='button-primary'>Lihat Kelas</button>
                                                 </Link>
                                             ) : <form onSubmit={(e) => handleActivation(e, item.id)}
                                             >
-                                                <button className='bg-purple-500 text-sm shadow text-white font-bold px-5 py-2 rounded-full'>Aktivasi Kelas</button>
+                                                <button className='button-primary'>Aktivasi Kelas</button>
                                             </form>}
                                         </div>
                                     </div>
                                     <div className='mb-4 px-5 grid grid-cols-4 gap-5'>
                                         <div className='flex items-center gap-1.5  text-sm text-gray-600 font-medium'>
-                                            <box-icon name='calendar' color='#d8b4fe' size="sm"></box-icon>
+                                            <box-icon name='calendar' color='#5eead4' size="sm"></box-icon>
                                             <div className=''>{item.date}</div>
                                         </div>
                                         <div className='flex items-center gap-1.5  text-sm text-gray-600 font-medium'>
-                                            <box-icon name='time' color='#d8b4fe' size="sm"></box-icon>
+                                            <box-icon name='time' color='#5eead4' size="sm"></box-icon>
                                             <div className=''>{item.time}</div>
                                         </div>
                                         <div className='flex items-center gap-1.5  text-sm text-gray-600 font-medium'>
-                                            <box-icon name='user-circle' color='#d8b4fe' size="sm"></box-icon>
+                                            <box-icon name='user-circle' color='#5eead4' size="sm"></box-icon>
                                             <div className=''>{course.instructor}</div>
                                         </div>
                                         <div className='flex items-center gap-1.5  text-sm text-gray-600 font-medium'>
-                                            <box-icon name='check-circle' color='#d8b4fe' size="sm"></box-icon>
+                                            <box-icon name='check-circle' color='#5eead4' size="sm"></box-icon>
                                             <div className='capitalize'>{course.quota}</div>
                                         </div>
                                     </div>
                                     <div className='bg-gray-200 p-2'>
                                     </div>
                                 </div>
-                            </div>
-                        )
-                    })}
+                            )
+                        })}
+                    </div>
+                </div>
+
+                {/* Teaser Video */}
+                <div className="bg-white p-6 rounded-xl shadow mb-5">
+                    <div className='text-lg font-bold mb-3'>Teaser Video</div>
+                    <div className=" flex justify-center">
+                        <div className="w-full h-[512px] aspect-video rounded-xl shadow overflow-hidden">
+                            <iframe
+                                src={course.teaser_video}
+                                width="100%"
+                                height="100%"
+                                title="PDF Viewer"
+                            ></iframe>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Description */}
@@ -180,13 +163,13 @@ const Show = ({ course, schedules, reviews }) => {
                             <div className='text-gray-700 pb-4 mb-4'>
                                 <div className='flex gap-1.5 items-center mb-1'>
                                     <div className=''>
-                                        <StartRating />
+                                        <StarRating value={item.star} />
                                     </div>
                                     <div className='text-gray-700'>
-                                        <span className='font-bold'>{item.name}</span> | <span>{item.created_at}</span>
+                                        <span className='font-bold'>{item.name}</span> | <span className='text-gray-500 text-sm italic'>{item.created_at}</span>
                                     </div>
                                 </div>
-                                <div className=''>
+                                <div className='text-gray-600'>
                                     {item.description}
                                 </div>
                             </div>

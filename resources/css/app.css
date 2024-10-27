@@ -15,7 +15,7 @@
 }
 
 .button-primary {
-   @apply bg-purple-500 text-sm shadow text-white font-medium  px-5 py-2.5 rounded-full w-full
+   @apply bg-primary text-sm shadow text-white font-medium  px-5 py-2.5 rounded-full w-full
 }
 
 .button-secondary {

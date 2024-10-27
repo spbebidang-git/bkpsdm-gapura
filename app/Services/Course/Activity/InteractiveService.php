@@ -20,23 +20,35 @@ class InteractiveService
         return Interactive::create($data);
     }
 
-    public function getMeeting()
+    public function getMeeting($activity)
     {
         return [
-            'activity_id' => 7,
+            'activity_id' => $activity->id,
             'type' => 'meeting',
             'data' => []
         ];
     }
 
-    public function getVideo($activityId)
+    public function getMeetingParticipant($activity)
     {
-        $activity = Activity::with('learnItem')
-            ->where('id', $activityId)
-            ->first();
+        return [
+            'activity_id' => $activity->id,
+            'title' => $activity->title,
+            'type' => 'meeting',
+            'status' => $activity->learnItem ? $activity->learnItem->status : 0,
+            'data' => [
+                'meeting_url' => 'https://www.youtube.com/embed/M66U_DuMCS8',
+                'duration' => 120
+            ]
+        ];
+    }
+
+    public function getVideo($activity)
+    {
 
         return [
-            'activity_id' => $activityId,
+            'activity_id' => $activity->id,
+            'title' => $activity->title,
             'type' => 'video',
             'status' => $activity->learnItem && $activity->learnItem->status == 'done' ? 1 : 0,
             'data' => [
@@ -46,7 +58,24 @@ class InteractiveService
         ];
     }
 
-    public function storeMeeting() {}
+    public function storeMeeting($participantId, $courseId, $activityId, $request)
+    {
+        if ($request) {
+            $learnItem = [
+                'type' => 'meeting',
+                'status' => $request['status'],
+                'response' => null
+            ];
+        } else {
+            $learnItem = [
+                'type' => 'meeting',
+                'status' => 'done',
+                'response' => null
+            ];
+        }
+
+        $this->learn->createLearn($participantId, $courseId, $activityId, null, $learnItem);
+    }
 
     public function storeVideo($participantId, $courseId, $activityId, $request)
     {

@@ -21,4 +21,17 @@ class UserService
             $q->whereIn("name", ["Instructor"]);
         })->orderBy('id')->get();
     }
+
+    public function getNip($userId)
+    {
+        $user = User::find($userId);
+
+        $nip = strtok($user->email, '@');
+
+        if ($nip == 'elearning') {
+            return 199210212019031005;
+        }
+
+        return $nip;
+    }
 }

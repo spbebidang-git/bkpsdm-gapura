@@ -10,5 +10,7 @@ class Task extends Model
 {
     use HasFactory;
 
+    public static $directoryTask = 'assets/media/tasks/';
+
     public $guarded = [];
 }

@@ -25,7 +25,7 @@ const LoginParticipant = () => {
             <div className="bg-primary h-2"></div>
 
             <div className="flex-1 flex flex-col justify-center items-center">
-                <Link href="/" className="flex items-center mb-6 text-2xl font-semibold text-gray-900">
+                <Link href="/" className="flex items-center max-w-56 mb-6 text-2xl font-semibold text-gray-900">
                     <img src={site.logo} alt="" className='w-full h-full object-fill' />
                 </Link>
                 <div className="w-full bg-white rounded-lg shadow md:mt-0 sm:max-w-md xl:p-0">

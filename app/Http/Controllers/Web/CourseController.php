@@ -40,6 +40,7 @@ class CourseController extends Controller
                 'title' => $course->title,
                 'short_description' => $course->short_description,
                 'description' => $course->description,
+                'teaser_video' => $course->teaser_video,
                 'slug' => $course->slug,
                 'quota' => $course->quota,
                 'thumbnail' => $course->thumbnail_src,
@@ -49,7 +50,6 @@ class CourseController extends Controller
                 'status' => $course->status,
             ],
             'schedules' => $course->schedules->map(function ($row) {
-                // dd($row->participants()->where('participant_id', $this->participantId)->count());
                 return [
                     'id' => $row->id,
                     'date' => $row->date,
@@ -59,14 +59,14 @@ class CourseController extends Controller
                 ];
             }),
             'reviews' => $reviews->map(function ($row) {
-                // dd($row);
                 return [
                     'name' => $row->user->name,
-                    'star' => $row->user->star,
+                    'star' => $row->star,
                     'description' => $row->description,
                     'created_at' => \Carbon\Carbon::parse($row->created_at)->diffForhumans()
                 ];
-            })
+            }),
+            'rating' => $course->getRating()
         ]);
     }
 
@@ -80,19 +80,11 @@ class CourseController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'message' => 'Aktivasi kelas berhasil.',
-                'data' => [],
-                'status' => 200
-            ], 200);
+            return response(null, 200);
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
-            return response()->json([
-                'message' => 'Something went wrong.',
-                'data' => [],
-                'status' => 400
-            ], 400);
+
+            return response(null, 200);
         }
     }
 }

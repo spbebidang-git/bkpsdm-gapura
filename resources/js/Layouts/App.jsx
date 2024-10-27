@@ -7,7 +7,7 @@ export default function App({ children }) {
     return (
         <div className="flex flex-col justify-between min-h-screen">
             <header>
-                <div class="bg-purple-600 h-2"></div>
+                <div class="bg-primary h-2"></div>
                 <nav class="bg-white border-gray-200 dark:bg-gray-900">
                     <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
                         <Link href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
@@ -52,24 +52,43 @@ export default function App({ children }) {
                 {children}
             </main>
 
-
-            <footer class="bg-white rounded-lg shadow m-0 dark:bg-gray-800">
-                <div class="w-full mx-auto max-w-screen-xl py-8 px-5 md:flex md:items-center md:justify-between">
-                    <span class="text-sm text-gray-500 sm:text-center dark:text-gray-400">© 2024 <a href="/" class="hover:underline">Pemda</a>. All Rights Reserved.
-                    </span>
-                    <ul class="flex flex-wrap items-center mt-3 text-sm font-medium text-gray-500 dark:text-gray-400 sm:mt-0">
-                        <li>
-                            <a href="#" class="hover:underline me-4 md:me-6">Tentang Kami</a>
-                        </li>
-                        <li>
-                            <a href="#" class="hover:underline me-4 md:me-6">Materi Pilihan</a>
-                        </li>
-                        <li>
-                            <a href="#" class="hover:underline me-4 md:me-6">Kontak</a>
-                        </li>
-                    </ul>
+            <footer class="bg-primary p-8">
+                <div className="max-w-7xl mx-auto gap-5 border-b pb-5">
+                    <div className="w-full">
+                        <div className="w-56 mb-3 ">
+                            <img src={'/assets/media/images/static/site_logo.png'} alt="" />
+                        </div>
+                    </div>
+                    <div className="flex gap-8">
+                        <div className="flex w-1/2 flex-col">
+                            <div className="text-white font-medium">
+                                Magenta Learning Development Consulting Center hadir sebagai bentuk kepedulian kami terhadap pendidikan dan pengembangan manajemen, dimana persaingan dalam era bisnis dewasa ini menuntut untuk kita terus meningkatkan kompetensi kita. Program Edukasi kami yang selalu update dengan metode pembelajaran interaktif dan sesuai teknologi masa kini. Sebagai Learning Centre, yang membantu kebutuhan perusahaan dalam peningkatan pengembangan karyawannya, dengan pelatihan secara Tatap muka dan Digital Learning.
+                            </div>
+                        </div>
+                        <div className="w-1/2 text-white">
+                            <div class="mb-3">
+                                <h4 class="font-extrabold">Kantor Magenta Permata Jaya Gresik - Jawa Timur</h4>
+                                <h5>Jl. Baru Safir Ungu Block GG 03. Kota Baru Driyorejo, Gresik 611777</h5>
+                            </div>
+                            <div class="mb-3">
+                                <h4 class="font-extrabold">Kantor Magenta Permata Jawa Jakarta</h4>
+                                <h5>Plaza Indonesia, Lantai 5, Unit E021AB, Jl. M.H. Thamrin, Jakarta Pusat 10350</h5>
+                            </div>
+                            <div>
+                                <h4 class="font-extrabold">
+                                    <span><a target="_blank" href="https://magentajaya.com">magentajaya.com</a></span>
+                                    |
+                                    <span><a target="_blank" href="https://magentaldcc.com">magentaldcc.com</a></span>
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="max-w-7xl mx-auto text-center text-sm text-white font-medium pt-8">
+                    Copyright © 2024 PT. Magenta Permata Jaya. All Right Reserverd.
                 </div>
             </footer>
+
 
 
 

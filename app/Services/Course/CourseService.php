@@ -25,6 +25,7 @@ class CourseService
                     'instructor' => $row->instructor->name,
                     'total_participant' => $row->total_participant,
                     'status' => $row->status,
+                    'star' => $row->getRating()['star']
                 ];
             });
     }
@@ -45,6 +46,7 @@ class CourseService
                     'instructor' => $row->instructor->name,
                     'total_participant' => $row->total_participant,
                     'status' => $row->status,
+                    'star' => $row->getRating()['star']
                 ];
             });
     }
@@ -73,7 +75,9 @@ class CourseService
     public function getByParticipant($participantId)
     {
         return Schedule::whereRelation('participants', 'participant_id', '=', $participantId)
-            ->with('course', 'course.activities')
+            ->with(['course', 'course.learns' => function ($query) use ($participantId) {
+                $query->where('participant_id', $participantId);
+            }, 'course.activities'])
             ->get()
             ->map(function ($row) {
                 // dd($row->course->activities->first()->id);
@@ -92,6 +96,7 @@ class CourseService
                     'status' => $row->course->status,
                     'schedule_id' => 1,
                     'initial_activity' => $row->course->activities->first() ? $row->course->activities->first()->id : 0,
+                    'finished_at' => $row->course->learns->first()->finished_at
                 ];
             });
     }

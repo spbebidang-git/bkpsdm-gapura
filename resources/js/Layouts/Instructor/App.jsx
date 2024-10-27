@@ -9,7 +9,7 @@ export default function App({ children }) {
     return (
         <div className="flex flex-col justify-between min-h-screen">
             <header className="bg-gray-50 shadow border-b">
-                <div class="bg-purple-600 h-2"></div>
+                <div class="bg-primary h-2"></div>
                 <nav class="bg-white border-gray-200 ">
                     <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-2">
                         <Link href="/" className="flex h-8 items-center text-2xl font-semibold text-gray-900">

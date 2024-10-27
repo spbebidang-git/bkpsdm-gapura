@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-
+import { ToastContainer } from 'react-toastify';
 export default function App({ children }) {
     const { auth, site } = usePage().props
     const { url, component } = usePage()
@@ -7,7 +7,7 @@ export default function App({ children }) {
     return (
         <div className="flex flex-col justify-between min-h-screen">
             <header className="bg-gray-50 shadow border-b">
-                <div class="bg-purple-600 h-2"></div>
+                <div class="bg-primary h-2"></div>
                 <nav class="bg-white border-gray-200 dark:bg-gray-900">
                     <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
                         <Link href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
@@ -43,6 +43,7 @@ export default function App({ children }) {
             </header>
 
             <main className="flex-1 bg-gray-50 p-8">
+                <ToastContainer />
                 {children}
             </main>
             <footer className="bg-primary h-12">

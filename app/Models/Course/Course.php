@@ -2,6 +2,7 @@
 
 namespace App\Models\Course;
 
+use App\Models\Learn\Learn;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -45,6 +46,11 @@ class Course extends Model
         return $this->hasMany(Activity::class);
     }
 
+    public function learns()
+    {
+        return $this->hasMany(Learn::class, 'course_id');
+    }
+
     public function thumbnailSrc(): Attribute
     {
         if (!$this->thumbnail) {
@@ -68,5 +74,37 @@ class Course extends Model
         return Attribute::get(fn() => $this->schedules->sum(function ($schedule) {
             return $schedule->participants()->count();
         }));
+    }
+
+    public function getStar(): Attribute
+    {
+        $totalRating = $this->reviews()->count(); // Total pengguna yang memberikan rating
+
+        $totalStars = $this->reviews()->sum('star');
+        if ($totalRating > 0) {
+            $averageStar = $totalStars / $totalRating; // Rata-rata star
+        } else {
+            $averageStar = 0;
+        }
+
+        return Attribute::get(fn() => round($averageStar, 2));
+    }
+
+    public function getRating()
+    {
+        $totalRating = $this->reviews()->count(); // Total pengguna yang memberikan rating
+        $totalStars = $this->reviews()->sum('star'); // Jumlah total star
+
+        if ($totalRating > 0) {
+            $averageStar = $totalStars / $totalRating; // Rata-rata star
+        } else {
+            $averageStar = 0;
+        }
+
+        return [
+            'star' => round($averageStar, 2), // Nilai star (dibulatkan 2 desimal)
+            'value' => number_format($averageStar, 2), // Value adalah nilai star rata-rata yang sudah diformat
+            'total' => $totalRating, // Total jumlah rating
+        ];
     }
 }

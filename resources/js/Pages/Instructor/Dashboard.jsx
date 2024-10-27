@@ -15,7 +15,7 @@ const Dashboard = ({ courses }) => {
 
             <div className="max-w-7xl mx-auto bg-gray-100 border overflow-hidden rounded-xl shadow">
                 <div className="p-5 text-lg font-bold flex justify-between items-center">Courses List
-                    <Link href="/instructor/course/create" className="px-4 py-2 bg-purple-500 text-white rounded-xl shadow text-sm">Add New Course</Link>
+                    <Link href="/instructor/course/create" className="px-4 py-2 bg-primary text-white rounded-xl shadow text-sm">Add New Course</Link>
                 </div>
                 <div className="relative overflow-x-auto max-h-[512px] overflow-auto">
                     <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">

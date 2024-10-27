@@ -11,7 +11,9 @@ const Index = ({ courses }) => {
                 <div className="grid grid-cols-3 gap-5">
                     {courses.map((item, index) => {
                         return (<div className="rounded-xl overflow-hidden shadow ">
-                            <div className='bg-red-200 h-36'></div>
+                            <div className='bg-red-200 h-36'>
+                                <img src={item.thumbnail} className="w-full h-full object-fill" alt={item.title} />
+                            </div>
                             <div className="p-5 bg-white">
                                 <div className='mb-2.5'>
                                     <div className='text-lg text-gray-700 font-semibold'>{item.title}</div>
@@ -21,9 +23,9 @@ const Index = ({ courses }) => {
                                     <Link className="w-full" href={`/course/${item.slug}`}>
                                         <button className="button-primary">Detail</button>
                                     </Link>
-                                    <Link className="w-full" href={`/learn/${item.slug}/${item.schedule_id}/${item.initial_activity}`}>
+                                    {item.finished_at == null ? (<Link className="w-full" href={`/learn/${item.slug}/${item.schedule_id}/${item.initial_activity}`}>
                                         <button className="button-primary">Ikuti Kelas</button>
-                                    </Link>
+                                    </Link>) : <button className="button-primary">Unduh Sertifikat</button>}
                                 </div>
                             </div>
                         </div>)

@@ -33,7 +33,7 @@ class ActivityService
                     'title' => $row->title,
                     'timer' => $row->timer,
                     'value' => $row->value,
-                    'status' => $row->learnItem && $row->learnItem->status == 'done' ? 1 : 0,
+                    'status' => $row->learnItem ? $row->learnItem->status : 0,
                 ];
             });
     }
@@ -69,11 +69,40 @@ class ActivityService
         }
 
         if ($activity->type === 'video') {
-            return $this->interactive->getVideo($activityId);
+            return $this->interactive->getVideo($activity);
         }
 
         if ($activity->type === 'literature') {
-            return $this->literature->getLiterature();
+            return $this->literature->getLiterature($activity);
+        }
+    }
+
+    public function getDetailActivityParticipant($activityId)
+    {
+        $activity = $this->findById($activityId);
+
+        if ($activity->type === 'pre-test') {
+            return $this->question->getPreTestParticipant($activity);
+        }
+
+        if ($activity->type === 'post-test') {
+            return $this->question->getPostTestParticipant($activity);
+        }
+
+        if ($activity->type === 'task') {
+            return $this->task->getTask($activity);
+        }
+
+        if ($activity->type === 'meeting') {
+            return $this->interactive->getMeetingParticipant($activity);
+        }
+
+        if ($activity->type === 'video') {
+            return $this->interactive->getVideo($activity);
+        }
+
+        if ($activity->type === 'literature') {
+            return $this->literature->getLiterature($activity);
         }
     }
 
@@ -90,11 +119,11 @@ class ActivityService
         }
 
         if ($activity->type == 'task') {
-            return $this->task->storeTask($activityId, $request);
+            return $this->task->storeTaskParticipant($participantId, $courseId, $activityId, $request);
         }
 
         if ($activity->type == 'meeting') {
-            return $this->interactive->storeMeeting($activityId, $request);
+            return $this->interactive->storeMeeting($participantId, $courseId, $activityId, $request);
         }
 
         if ($activity->type == 'video') {
@@ -102,7 +131,7 @@ class ActivityService
         }
 
         if ($activity->type == 'literature') {
-            return $this->literature->storeLiterature($activityId, $request);
+            return $this->literature->storeLiterature($participantId, $courseId, $activityId, $request);
         }
     }
 

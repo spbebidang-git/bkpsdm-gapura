@@ -4,9 +4,17 @@ namespace App\Services\Course\Activity;
 
 use App\Helper\UploadMedia;
 use App\Models\Course\Literature;
+use App\Services\Learn\LearnService;
 
 class LiteratureService
 {
+    protected $learn;
+
+    public function __construct(LearnService $learnService)
+    {
+        $this->learn = $learnService;
+    }
+
     public function createLiterature($data)
     {
         return Literature::create([
@@ -16,10 +24,11 @@ class LiteratureService
         ]);
     }
 
-    public function getLiterature()
+    public function getLiterature($activity)
     {
         return [
-            'activity_id' => 10,
+            'activity_id' => $activity->id,
+            'title' => $activity->title,
             'type' => 'literature',
             'data' => [
                 'src_pdf' => Literature::$directoryDocument . 'BIWide-EES2023-Pure.pdf'
@@ -27,7 +36,17 @@ class LiteratureService
         ];
     }
 
-    public function storeLiterature() {}
+    public function storeLiterature($participantId, $courseId, $activityId, $request)
+    {
+        // dd(123);
+        $learnItem = [
+            'type' => 'video',
+            'status' => 'done',
+            'response' => null
+        ];
+
+        $this->learn->createLearn($participantId, $courseId, $activityId, null, $learnItem);
+    }
 
     public function updateLiterature($request)
     {

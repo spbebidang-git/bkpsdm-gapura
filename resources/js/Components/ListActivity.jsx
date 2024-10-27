@@ -51,20 +51,29 @@ const ListActivity = ({ type, activity, status, isActive, slug, scheduleId = 1, 
         <div className="mb-4 rounded-xl cursor-pointer shadow">
             <Link href={`/learn/${slug}/${scheduleId}/${activityId}`}>
                 <div className="flex rounded-xl overflow-hidden">
-                    <div className={`w-4 ${isActive ? 'bg-purple-500' : 'bg-white'}`}></div>
+                    <div className={`w-4 ${isActive ? 'bg-primary' : 'bg-white'}`}></div>
                     <div className={`w-full px-8 border-gray-200 py-3 ${isActive ? 'bg-purple-50' : 'bg-white'}`}>
                         <div className="flex gap-3">
-                            {status === 1 ? (<div className="w-fit mb-1 px-4 flex items-center justify-center text-[12px] font-extrabold bg-green-500 text-white rounded-full shadow">
-                                Selesai
-                            </div>) : (<div className="w-fit mb-1 px-4 flex items-center justify-center text-[12px] font-extrabold bg-gray-500 text-white rounded-full shadow">
-                                Belum Selesai
-                            </div>)}
-                            <div className="w-fit mb-1 px-4 flex items-center justify-center text-[12px] font-extrabold bg-purple-500 text-white rounded-full shadow">
+                            {status === 'done' ? (
+                                <div className="w-fit mb-1 px-4 flex items-center justify-center text-[12px] font-extrabold bg-green-500 text-white rounded-full shadow">
+                                    Selesai
+                                </div>
+                            ) : status === 'in_progress' ? (
+                                <div className="w-fit mb-1 px-4 flex items-center justify-center text-[12px] font-extrabold bg-yellow-500 text-white rounded-full shadow">
+                                    Sedang Berlangsung
+                                </div>
+                            ) : (
+                                <div className="w-fit mb-1 px-4 flex items-center justify-center text-[12px] font-extrabold bg-gray-500 text-white rounded-full shadow">
+                                    Belum Selesai
+                                </div>
+                            )}
+
+                            <div className="w-fit mb-1 px-4 flex items-center justify-center text-[12px] font-extrabold bg-primary text-white rounded-full shadow">
                                 {title}
                             </div>
                         </div>
                         <li className="">
-                            <div className={`mb-0.5 ${isActive ? 'text-purple-500' : ''}`}>{activity}</div>
+                            <div className={`mb-0.5 ${isActive ? 'text-primary' : ''}`}>{activity}</div>
                             <div className="flex items-center gap-1 text-xs text-gray-500 italic">
                                 <box-icon name={icon} size="sm" color="gray" ></box-icon>
                                 {description}

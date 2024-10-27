@@ -85,26 +85,24 @@ class AuthController
         if ($response->successful()) {
             $token = 'Bearer ' . $response->json()['access_token'];
 
-            $participantApi = Http::withHeaders([
-                'apikey' => env('API_KEY'),
-                'auth' => $token
-            ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
+            $email = $request->username . '@elearning.gresikkab.go.id';
 
-            try {
-                DB::beginTransaction();
+            $user = User::where('email', $email)->first();
 
-                $email = $request->username . '@elearning.gresikkab.go.id';
+            if (!$user) {
+                try {
+                    DB::beginTransaction();
 
-                $user = User::where('email', $email)->first();
+                    $participantApi = Http::withHeaders([
+                        'apikey' => env('API_KEY'),
+                        'auth' => $token
+                    ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
 
-                if (!$user) {
                     $user = User::create([
                         'name' => $participantApi->json()['nama'],
                         'email' => $email,
                         'password' => Hash::make(str()->random(12))
                     ]);
-
-                    update_user_meta($user->id, 'nip', 123);
 
                     $user->assignRole('Participant');
 
@@ -113,25 +111,19 @@ class AuthController
                     DB::commit();
 
                     return to_route('home');
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+
+                    return back()->withErrors([
+                        'username' => 'Something went wrong.',
+                    ])->onlyInput('username');
                 }
-
-                Auth::login($user);
-
-                DB::commit();
-
-                Session::put('token', $token);
-
-                return to_route('home');
-            } catch (\Throwable $th) {
-                DB::rollBack();
-                dd($th);
-                return back()->withErrors([
-                    'username' => 'Something went wrong.',
-                ])->onlyInput('username');
             }
-        }
 
-        dd(123);
+            Auth::login($user);
+
+            Session::put('token', $token);
+        }
 
         return to_route('sign-in.participant.create')->with('danger', 'Something went wrong.');
     }

@@ -22,7 +22,8 @@ export default {
             center: true,
         },
         colors: {
-            primary: '#a855f7'
+            primary: '#018083',
+            secondary: '#F68104'
         }
     },
 

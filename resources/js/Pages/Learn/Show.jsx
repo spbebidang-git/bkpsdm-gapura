@@ -2,14 +2,13 @@ import Activity from "@/Components/Activity"
 import ListActivity from "@/Components/ListActivity"
 import { Link, usePage } from "@inertiajs/react"
 
-const Home = ({ course, activities, activity, activity_id }) => {
+const Home = ({ course, progress, activities, activity, activity_id, question_result }) => {
     const { site } = usePage().props
 
-    console.log(activity)
     return (
         <>
             <div className="grid grid-cols-12 max-h-screen min-h-screen">
-                <div className="col-span-9 bg-purple-50 flex flex-col">
+                <div className="col-span-9 bg-teal-50 flex flex-col">
                     <div className="h-14 p-5 bg-white shadow flex items-center justify-between">
                         <div className="flex gap-8 items-center">
                             <div className="flex items-center">
@@ -23,32 +22,33 @@ const Home = ({ course, activities, activity, activity_id }) => {
                             </div>
                             <div className="text-xl font-bold">{course.title}</div>
                         </div>
-                        <div className="text-xl font-bold">58,88 %</div>
+                        <div className="text-xl font-bold text-gray-800 flex items-center gap-1">
+                            <box-icon name='hourglass-top' type='solid' color='#018083' ></box-icon>
+                            {progress}
+                        </div>
                     </div>
-                    <div className="flex-1 m-8 rounded-xl shadow-sm bg-white overflow-hidden">
-                        <div className="h-14 bg-purple-100 flex items-center px-6">
-                            <div className="text-xl font-bold">{course.title}</div>
+                    <div className="flex-1 m-8 rounded-xl shadow bg-white overflow-hidden">
+                        <div className="h-16 bg-orange-50  flex items-center px-6 justify-between">
+                            <div className="text-xl font-bold text-gray-800 capitalize">{activity.title}</div>
+                            <div className="rounded-full border-2 bg-teal-50 w-fit px-6 py-1.5 font-semibold text-primary border-primary flex items-center gap-1">
+                                <box-icon name='book-bookmark' color='#018083' ></box-icon>
+                                Materi
+                            </div>
                         </div>
 
                         {/* Detail Activity */}
                         <div className='m-8'>
-                            <div className="flex gap-3">
-                                {/* <div className="rounded-full border-2 bg-purple-100 w-fit px-10 py-2.5 font-semibold border-purple-500">
-                                    Detail Aktivitas
-                                </div> */}
-                                {/* <div className="rounded-full border-2 bg-purple-100 w-fit px-10 py-2.5 font-semibold border-purple-500 mb-5">
-                                    Materi
-                                </div> */}
-                            </div>
-                            <div className="overflow-scroll h-[700px] border-2 p-5">
-                                <Activity slug={course.slug} id={activity_id} type={activity.type} data={activity.data} />
+                            <div className="overflow-scroll h-[700px] px-3">
+                                <Activity question_result={question_result} slug={course.slug} id={activity_id} type={activity.type} data={activity.data} status={activity.status} />
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className="col-span-3 bg-white p-4">
-                    <div className="h-14 border-b-2"></div>
-                    <div className="bg-white">
+                <div className="col-span-3 bg-white">
+                    <div className="text-gray-800 flex justify-center items-center font-bold text-xl border-b-2 h-14 cursor-pointer">
+                        Agenda Kegiatan
+                    </div>
+                    <div className="bg-white p-5">
                         <div className="text-lg font-medium">
                             <ul className="list-outside list-decimal">
                                 {activities && activities.map((item, index) => {
