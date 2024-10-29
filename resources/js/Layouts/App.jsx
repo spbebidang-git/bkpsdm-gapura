@@ -54,15 +54,13 @@ export default function App({ children }) {
 
             <footer class="bg-primary p-5 xl:p-8">
                 <div className="max-w-7xl mx-auto gap-5 border-b pb-5">
-                    <div className="w-full">
-                        <div className="w-56 mb-3 ">
-                            <img src={site.logo} alt="" />
-                        </div>
-                    </div>
                     <div className="flex flex-col xl:flex-row gap-8">
                         <div className="flex w-full xl:w-1/2 flex-col">
+                            <div className="w-56 mb-3 ">
+                                <img src={site.logo} alt="" />
+                            </div>
                             <div className="text-white font-medium">
-                                Magenta Learning Development Consulting Center hadir sebagai bentuk kepedulian kami terhadap pendidikan dan pengembangan manajemen, dimana persaingan dalam era bisnis dewasa ini menuntut untuk kita terus meningkatkan kompetensi kita. Program Edukasi kami yang selalu update dengan metode pembelajaran interaktif dan sesuai teknologi masa kini. Sebagai Learning Centre, yang membantu kebutuhan perusahaan dalam peningkatan pengembangan karyawannya, dengan pelatihan secara Tatap muka dan Digital Learning.
+                                GAPURA (Gerbang Pengembangan Kompetensi menuju Smart ASN) merupakan Sistem Pembelajaran untuk meningkatkan Kompetensi Aparatur Sipil Negera di lingkungan Pemerintah Kabupaten Gresik melalui metode pembelajaran berbasis e-learning yang dapat diakses oleh seluruh pegawai dimanapun dan kapanpun
                             </div>
                         </div>
                         <div className="w-full xl:w-1/2 text-white">
