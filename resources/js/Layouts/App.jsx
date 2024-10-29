@@ -52,40 +52,57 @@ export default function App({ children }) {
                 {children}
             </main>
 
-            <footer class="bg-primary p-8">
+            <footer class="bg-primary p-5 xl:p-8">
                 <div className="max-w-7xl mx-auto gap-5 border-b pb-5">
                     <div className="w-full">
                         <div className="w-56 mb-3 ">
                             <img src={site.logo} alt="" />
                         </div>
                     </div>
-                    <div className="flex gap-8">
-                        <div className="flex w-1/2 flex-col">
+                    <div className="flex flex-col xl:flex-row gap-8">
+                        <div className="flex w-full xl:w-1/2 flex-col">
                             <div className="text-white font-medium">
                                 Magenta Learning Development Consulting Center hadir sebagai bentuk kepedulian kami terhadap pendidikan dan pengembangan manajemen, dimana persaingan dalam era bisnis dewasa ini menuntut untuk kita terus meningkatkan kompetensi kita. Program Edukasi kami yang selalu update dengan metode pembelajaran interaktif dan sesuai teknologi masa kini. Sebagai Learning Centre, yang membantu kebutuhan perusahaan dalam peningkatan pengembangan karyawannya, dengan pelatihan secara Tatap muka dan Digital Learning.
                             </div>
                         </div>
-                        <div className="w-1/2 text-white">
-                            <div class="mb-3">
-                                <h4 class="font-extrabold">Kantor Magenta Permata Jaya Gresik - Jawa Timur</h4>
-                                <h5>Jl. Baru Safir Ungu Block GG 03. Kota Baru Driyorejo, Gresik 611777</h5>
+                        <div className="w-full xl:w-1/2 text-white">
+                            <div class="mb-2.5">
+                                <h4 class="font-extrabold mb-2.5">Kantor BKPSDM Gresik - Jawa Timur</h4>
+                                <h5>
+                                    <div className="flex items-center gap-1 font-bold mb-1">
+                                        <box-icon name='map' color='white' ></box-icon>
+                                        Alamat
+                                    </div>
+                                    Lt. 3 Kantor Bupati Gresik Jl. Dr. Wahidin Sudirohusodo No.245
+                                </h5>
                             </div>
-                            <div class="mb-3">
-                                <h4 class="font-extrabold">Kantor Magenta Permata Jawa Jakarta</h4>
-                                <h5>Plaza Indonesia, Lantai 5, Unit E021AB, Jl. M.H. Thamrin, Jakarta Pusat 10350</h5>
-                            </div>
-                            <div>
-                                <h4 class="font-extrabold">
-                                    <span><a target="_blank" href="https://magentajaya.com">magentajaya.com</a></span>
-                                    |
-                                    <span><a target="_blank" href="https://magentaldcc.com">magentaldcc.com</a></span>
-                                </h4>
+                            <div className="flex flex-col xl:flex-row">
+                                <div className="w-full xl:w-1/2">
+                                    <div className="flex items-center gap-1 font-bold mb-1">
+                                        <box-icon name='phone' color='white'></box-icon>
+                                        Phone
+                                    </div>
+                                    <div>
+                                        Telephone : 3952825-30 ext : 307
+                                        <br />
+                                        Fax : 3952825-30 ext : 307
+                                    </div>
+                                </div>
+                                <div className="w-full xl:w-1/2">
+                                    <div className="flex items-center gap-1 font-bold mb-1">
+                                        <box-icon name='envelope' color='white'></box-icon>
+                                        Email
+                                    </div>
+                                    <div>
+                                        bkpsdm@gresikkab.go.id
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className="max-w-7xl mx-auto text-center text-sm text-white font-medium pt-8">
-                    Copyright © 2024 PT. Magenta Permata Jaya. All Right Reserverd.
+                <div className="max-w-7xl mx-auto text-center text-sm text-white font-medium pt-4 xl:pt-8">
+                    Copyright © 2024 <Link href="/" className="font-bold">bkpsdmkabupatengresik</Link>. All Right Reserverd.
                 </div>
             </footer>
 
