@@ -18,7 +18,7 @@ class SettingController
         $request->validate([
             'site_title' => ['required', 'string',],
             'site_description' => ['required', 'string',],
-            'site_logo' => ['nullable', 'image', 'mimes:png,jpg', 'max:1024'],
+            'site_logo' => ['nullable', 'image', 'mimes:png,jpg', 'max:10240'],
         ]);
 
         try {

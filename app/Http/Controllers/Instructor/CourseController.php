@@ -37,7 +37,7 @@ class CourseController
             'title' => 'required',
             'short_description' => 'required',
             'description' => 'required',
-            'thumbnail' => 'required|image|max:1024|mimes:png,jpg',
+            'thumbnail' => 'required|image|max:10240|mimes:png,jpg',
             'teaser_video' => 'required',
             'status' => 'required',
         ]);
@@ -86,15 +86,13 @@ class CourseController
 
     public function update(Course $course, Request $request)
     {
-        dd($request->all());
-
         $request->validate([
             'type' => 'required',
             'category' => 'required',
             'title' => 'required',
             'short_description' => 'required',
             'description' => 'required',
-            'thumbnail' => 'nullable|image|mimes:png.jpg|max:1024',
+            'thumbnail' => 'nullable|image|mimes:png.jpg|max:10240',
             'teaser_video' => 'required',
         ]);
 
