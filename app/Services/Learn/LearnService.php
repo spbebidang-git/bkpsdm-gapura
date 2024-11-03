@@ -51,7 +51,7 @@ class LearnService
             ->first();
 
 
-        if ($learn->learnItems->first()) {
+        if ($learn && $learn->learnItems->first()) {
             return [
                 'score' => $this->getTotalScore(unserialize($learn->learnItems->first()->response)),
                 'correct' => $this->getCorrectAnswer(unserialize($learn->learnItems->first()->response)),
