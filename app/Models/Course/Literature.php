@@ -10,7 +10,7 @@ class Literature extends Model
 {
     use HasFactory;
 
-    public static $directoryDocument = '/assets/media/documents/literatures/';
+    public static $directoryDocument = 'assets/media/documents/literatures/';
 
     public $guarded = [];
 }
