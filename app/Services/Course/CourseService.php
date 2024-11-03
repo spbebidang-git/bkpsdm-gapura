@@ -96,7 +96,7 @@ class CourseService
                     'status' => $row->course->status,
                     'schedule_id' => 1,
                     'initial_activity' => $row->course->activities->first() ? $row->course->activities->first()->id : 0,
-                    'finished_at' => $row->course->learns->first()->finished_at
+                    'finished_at' => $row->course->learns->first()->finished_at ?? null
                 ];
             });
     }

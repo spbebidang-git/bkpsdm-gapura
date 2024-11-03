@@ -4,6 +4,7 @@ namespace App\Services\Course\Activity;
 
 use App\Models\Course\Activity;
 use App\Models\Course\Interactive;
+use App\Models\Learn\Learn;
 use App\Services\Learn\LearnService;
 
 class InteractiveService
@@ -29,13 +30,27 @@ class InteractiveService
         ];
     }
 
-    public function getMeetingParticipant($activity)
+    public function getStatus($participantId, $activityId)
+    {
+        $learn = Learn::with(['learnItems' => function ($query) use ($activityId) {
+            return $query->where('activity_id', $activityId);
+        }])
+            ->where('participant_id', $participantId)->first();
+
+        if (!$learn || !$learn->learnItems->first()) {
+            return 0;
+        }
+
+        return $learn->learnItems->first()->status;
+    }
+
+    public function getMeetingParticipant($participantId, $activity)
     {
         return [
             'activity_id' => $activity->id,
             'title' => $activity->title,
             'type' => 'meeting',
-            'status' => $activity->learnItem ? $activity->learnItem->status : 0,
+            'status' => $this->getStatus($participantId, $activity->id),
             'data' => [
                 'meeting_url' => 'https://www.youtube.com/embed/M66U_DuMCS8',
                 'duration' => 120

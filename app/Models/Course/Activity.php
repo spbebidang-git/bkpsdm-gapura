@@ -2,6 +2,7 @@
 
 namespace App\Models\Course;
 
+use App\Models\Learn\Learn;
 use App\Models\Learn\LearnItem;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 

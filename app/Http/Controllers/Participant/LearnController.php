@@ -39,8 +39,8 @@ class LearnController extends Controller
             return Inertia::render('Learn/Show', [
                 'course' => $course,
                 'progress' => Learn::where('participant_id', $this->participantId)->first()->progress ?? '0 %',
-                'activities' => $this->activity->getActivityByCourse($course->id),
-                'activity' => $this->activity->getDetailActivityParticipant($activityId),
+                'activities' => $this->activity->getActivityByCourse($this->participantId, $course->id),
+                'activity' => $this->activity->getDetailActivityParticipant($this->participantId, $activityId),
                 'activity_id' => $activityId,
                 'question_result' => $questionResult ?? null
             ]);
@@ -49,8 +49,8 @@ class LearnController extends Controller
         return Inertia::render('Learn/Show', [
             'course' => $course,
             'progress' => Learn::where('participant_id', $this->participantId)->first()->progress ?? '0 %',
-            'activities' => $this->activity->getActivityByCourse($course->id),
-            'activity' => $this->activity->getDetailActivityParticipant($activityId),
+            'activities' => $this->activity->getActivityByCourse($this->participantId, $course->id),
+            'activity' => $this->activity->getDetailActivityParticipant($this->participantId, $activityId),
             'activity_id' => $activityId,
         ]);
     }

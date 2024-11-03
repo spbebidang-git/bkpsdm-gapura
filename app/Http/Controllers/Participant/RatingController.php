@@ -83,7 +83,7 @@ class RatingController
                     'tahun' => Carbon::now()->year,
                     'tgl_mulai' => Carbon::parse($learn->created_at)->format('Y-m-d'),
                     'tgl_selesai' => Carbon::parse($learn->finished_at)->format('Y-m-d'),
-                    'peserta' => $this->user->getNip($this->participantId)
+                    'peserta' => get_user_meta($this->participantId, 'nip')
                 ]);
 
             DB::commit();

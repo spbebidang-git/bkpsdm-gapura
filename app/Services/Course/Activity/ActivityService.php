@@ -3,6 +3,7 @@
 namespace App\Services\Course\Activity;
 
 use App\Models\Course\Activity;
+use App\Models\Learn\Learn;
 
 class ActivityService
 {
@@ -20,12 +21,12 @@ class ActivityService
         $this->literature = $literatureService;
     }
 
-    public function getActivityByCourse($courseId)
+    public function getActivityByCourse($participantId, $courseId)
     {
-        return Activity::with('learnItem')
+        return Activity::with(['learnItem'])
             ->where('course_id', $courseId)
             ->get()
-            ->map(function ($row) {
+            ->map(function ($row) use ($participantId) {
                 return [
                     'id' => $row->id,
                     'course_id' => $row->course_id,
@@ -33,9 +34,24 @@ class ActivityService
                     'title' => $row->title,
                     'timer' => $row->timer,
                     'value' => $row->value,
-                    'status' => $row->learnItem ? $row->learnItem->status : 0,
+                    'status' => $this->getStatus($participantId, $row->id)
                 ];
             });
+    }
+
+    public function getStatus($participantId, $activityId)
+    {
+        $learn = Learn::with(['learnItems' => function ($query) use ($activityId) {
+            return $query->where('activity_id', $activityId);
+        }])
+            ->where('participant_id', $participantId)->first();
+
+        // dd($learn->learnItems);
+        if (!$learn || !$learn->learnItems->first()) {
+            return 0;
+        }
+
+        return $learn->learnItems->first()->status;
     }
 
     public function createActivity($data)
@@ -77,16 +93,16 @@ class ActivityService
         }
     }
 
-    public function getDetailActivityParticipant($activityId)
+    public function getDetailActivityParticipant($participantId, $activityId)
     {
         $activity = $this->findById($activityId);
 
         if ($activity->type === 'pre-test') {
-            return $this->question->getPreTestParticipant($activity);
+            return $this->question->getPreTestParticipant($participantId, $activity);
         }
 
         if ($activity->type === 'post-test') {
-            return $this->question->getPostTestParticipant($activity);
+            return $this->question->getPostTestParticipant($participantId, $activity);
         }
 
         if ($activity->type === 'task') {
@@ -94,7 +110,7 @@ class ActivityService
         }
 
         if ($activity->type === 'meeting') {
-            return $this->interactive->getMeetingParticipant($activity);
+            return $this->interactive->getMeetingParticipant($participantId, $activity);
         }
 
         if ($activity->type === 'video') {

@@ -82,14 +82,16 @@ class AuthController
             'client_secret' => env('SSO_CLIENT_SECRET'),
         ]);
 
+        // dd($response->body());
         if ($response->successful()) {
             $token = 'Bearer ' . $response->json()['access_token'];
 
-            $email = $request->username . '@elearning.gresikkab.go.id';
+            $userNip = UserMeta::with('user')
+                ->where('key', 'nip')
+                ->where('value', $request->username)
+                ->first();
 
-            $user = User::where('email', $email)->first();
-
-            if (!$user) {
+            if (!$userNip) {
                 try {
                     DB::beginTransaction();
 
@@ -99,10 +101,12 @@ class AuthController
                     ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
 
                     $user = User::create([
-                        'name' => $participantApi->json()['nama'],
-                        'email' => $email,
+                        'name' => $participantApi->json()['fv_nama'],
+                        'email' => $participantApi->json()['fv_email'],
                         'password' => Hash::make(str()->random(12))
                     ]);
+
+                    update_user_meta($user->id, 'nip', $participantApi->json()['fc_nipbr']);
 
                     $user->assignRole('Participant');
 
@@ -113,14 +117,14 @@ class AuthController
                     return to_route('home');
                 } catch (\Throwable $th) {
                     DB::rollBack();
-
+                    dd($th);
                     return back()->withErrors([
                         'username' => 'Something went wrong.',
                     ])->onlyInput('username');
                 }
             }
 
-            Auth::login($user);
+            Auth::login($userNip->user);
 
             Session::put('token', $token);
         }

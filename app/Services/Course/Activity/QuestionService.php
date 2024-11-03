@@ -4,6 +4,7 @@ namespace App\Services\Course\Activity;
 
 use App\Models\Course\Question;
 use App\Models\Course\Question\QuestionItem;
+use App\Models\Learn\Learn;
 use App\Services\Learn\LearnService;
 
 class QuestionService
@@ -51,7 +52,21 @@ class QuestionService
         ];
     }
 
-    public function getPreTestParticipant($activity)
+    public function getStatus($participantId, $activityId)
+    {
+        $learn = Learn::with('learnItems')
+            ->whereRelation('learnItems', 'activity_id', '=', $activityId)
+            ->where('participant_id', $participantId)->first();
+
+        // dd($learn->learnItems);
+        if (!$learn) {
+            return 0;
+        }
+
+        return $learn->learnItems->first()->status;
+    }
+
+    public function getPreTestParticipant($participantId, $activity)
     {
         $question = Question::with('questionVariant.questionItems.questionOptions')
             ->where('activity_id', $activity->id)
@@ -72,12 +87,14 @@ class QuestionService
             ];
         });
 
+        // dd($activity->learnItem->getStatus($participantId));
+
         return [
             'activity_id' => $activity->id,
             'title' => $activity->title,
             'description' => $question->description,
             'type' => 'pre-test',
-            'status' => $activity->learnItem ? $activity->learnItem->status : 0,
+            'status' => $this->getStatus($participantId, $activity->id),
             'data' => [
                 'question_items' => $questionItems,
                 'is_loop' => $question->is_loop
@@ -91,8 +108,6 @@ class QuestionService
             ->where('activity_id', $activity->id)
             ->first();
 
-
-
         return [
             'activity_id' => $activity->id,
             'title' => $activity->title,
@@ -103,7 +118,7 @@ class QuestionService
         ];
     }
 
-    public function getPostTestParticipant($activity)
+    public function getPostTestParticipant($participantId, $activity)
     {
         $question = Question::with('questionVariant.questionItems.questionOptions')
             ->where('activity_id', $activity->id)
@@ -129,7 +144,7 @@ class QuestionService
             'title' => $activity->title,
             'description' => $question->description,
             'type' => 'pre-test',
-            'status' => $activity->learnItem ? $activity->learnItem->status : 0,
+            'status' => $this->getStatus($participantId, $activity->id),
             'data' => [
                 'question_items' => $questionItems,
                 'is_loop' => $question->is_loop
