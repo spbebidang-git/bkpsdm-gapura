@@ -17,6 +17,7 @@ class LiteratureService
 
     public function createLiterature($data)
     {
+        dd($data['content'], Literature::$directoryDocument);
         return Literature::create([
             'activity_id' => $data['activity_id'],
             'sub_title' => $data['sub_title'],
