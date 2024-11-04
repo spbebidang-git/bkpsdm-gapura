@@ -20,6 +20,11 @@ const Edit = ({ course, categories }) => {
         { value: 'schedule', label: 'Schedule' }
     ];
 
+    const statusOptions = [
+        { value: 'publish', label: 'Published' },
+        { value: 'draft', label: 'Draft' }
+    ];
+
     const typeCategories = categories.map(item => ({
         value: item.id,
         label: item.title
@@ -42,7 +47,8 @@ const Edit = ({ course, categories }) => {
         short_description: course.short_description || "",
         description: course.description || "",
         thumbnail: null, // Handle file input separately
-        teaser_video: course.teaser_video || "",
+        // teaser_video: course.teaser_video || "",
+        status: course.status || ""
     });
 
     const handleChange = (e) => {
@@ -66,7 +72,16 @@ const Edit = ({ course, categories }) => {
         e.preventDefault();
 
         // Send PUT request to update the course
-        router.post(`/instructor/course/${course.slug}`, { _method: 'put', values });
+        router.post(`/instructor/course/${course.slug}`, {
+            _method: 'put', type: values.type,
+            category: values.category,
+            title: values.title,
+            short_description: values.short_description,
+            description: values.description,
+            thumbnail: values.thumbnail,
+            teaser_video: values.teaser_video,
+            status: values.status
+        });
     };
 
     const [data, setData] = useState(course.schedules || []); // Prepopulate schedules
@@ -79,12 +94,13 @@ const Edit = ({ course, categories }) => {
 
         setValues({
             type: course.type || 'unschedule',
-            category: course.category || "",
+            category: course.category_id || "",
             title: course.title || "",
             short_description: course.short_description || "",
             description: course.description || "",
             thumbnail: null,  // Untuk file upload, ini harus tetap null sampai user mengubahnya
-            teaser_video: course.teaser_video || ""
+            teaser_video: course.teaser_video || "",
+            status: course.status || ""
         });
     }, [course]);
 
@@ -110,9 +126,9 @@ const Edit = ({ course, categories }) => {
                     <div className="p-6">
                         <div>
                             {/* type */}
-                            <FormSelect title={'type'} value={values.type} onChange={handleChange} isRequired={true} options={typeOptions} />
+                            <FormSelect title={'type'} value={values.type} selectedValue={values.type} onChange={handleChange} isRequired={true} options={typeOptions} />
                             {/* category */}
-                            <FormSelect title={'category'} value={values.category} onChange={handleChange} isRequired={true} options={typeCategories} />
+                            <FormSelect title={'category'} value={values.category} selectedValue={values.category} onChange={handleChange} isRequired={true} options={typeCategories} />
                             {/* title */}
                             <FormInput title={'title'} value={values.title} onChange={handleChange} isRequired={true} />
                             {/* short description */}
@@ -136,6 +152,7 @@ const Edit = ({ course, categories }) => {
                             </div>
                             {/* teaser video */}
                             <FormInput title={'teaser video'} value={values.teaser_video} onChange={handleChange} isRequired={true} />
+                            <FormSelect title={'status'} selectedValue={values.status} value={values.status} onChange={handleChange} isRequired={true} options={statusOptions} />
                         </div>
                     </div>
                 </div>
@@ -191,7 +208,7 @@ const Edit = ({ course, categories }) => {
                 ) : null}
 
                 <div className="flex justify-end max-w-4xl mx-auto mt-10">
-                    <Link href="/instructor/course" className="button-secondary px-10">Back</Link>
+                    <Link href="/instructor" className="button-secondary px-10">Back</Link>
                     <button type="submit" className="button-primary px-10 ml-2">Update</button>
                 </div>
             </form>

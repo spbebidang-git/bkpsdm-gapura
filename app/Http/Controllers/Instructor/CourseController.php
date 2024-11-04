@@ -93,9 +93,8 @@ class CourseController
             'short_description' => 'required',
             'description' => 'required',
             'thumbnail' => 'nullable|image|mimes:png.jpg|max:10240',
-            'teaser_video' => 'required',
+            // 'teaser_video' => 'required',
         ]);
-
 
         try {
             DB::beginTransaction();
@@ -103,7 +102,7 @@ class CourseController
             $this->course->updateCourse(
                 $course,
                 $this->instructorId,
-                $request->only('type', 'category', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video'),
+                $request->only('type', 'category', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'status'),
                 json_decode($request->schedules, true)
             );
 
@@ -112,7 +111,7 @@ class CourseController
             return to_route('instructor.dashboard');
         } catch (\Throwable $th) {
             DB::rollBack();
-
+            dd($th);
             return to_route('instructor.dashboard');
         }
     }

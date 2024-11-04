@@ -170,6 +170,7 @@ class CourseService
 
     public function updateCourse($course, $instructorId, $data, $schedules = null)
     {
+        // dd($data['status']);
         $course->update([
             'category_id' => $data['category'],
             'type' => $data['type'],
@@ -177,11 +178,15 @@ class CourseService
             'slug' => str()->slug($data['title']),
             'short_description' => $data['short_description'],
             'description' => $data['description'],
-            'thumbnail' => UploadMedia::file($data['thumbnail'], Course::$directoryImage),
             'teaser_video' => $data['teaser_video'],
             // 'outline_topic' => $data['outline_topic'],
-            // 'status' => $data->status,
+            'status' => $data['status'],
         ]);
+
+        if ($data['thumbnail']) {
+            // $course->thumbnail => UploadMedia::file($data['thumbnail'], Course::$directoryImage)
+
+        }
 
         if ($data['thumbnail']) {
             remove_file(Course::$directoryImage . $course->thumbnail);
