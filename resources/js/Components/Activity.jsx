@@ -1,5 +1,5 @@
 import { Link, router } from "@inertiajs/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { pdfjs } from 'react-pdf';
 import 'videojs-youtube'; // Import plugin YouTube
 
@@ -11,6 +11,36 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
     const [submitted, setSubmitted] = useState(status);
     // State untuk menyimpan file
     const [file, setFile] = useState(null);
+
+    const [questions, setQuestions] = useState([]);
+
+    useEffect(() => {
+        if (type === 'pre-test' || type === 'post-test') {
+            if (data.mix === 1) {
+                // Fungsi untuk mengacak array
+                const shuffleArray = (array) => {
+                    return array.sort(() => Math.random() - 0.5);
+                };
+
+                // Mengacak pertanyaan
+                const shuffledQuestions = shuffleArray([...data.question_items]);
+
+                // Mengacak jawaban untuk setiap pertanyaan
+                const shuffledQuestionsWithOptions = shuffledQuestions.map(item => {
+                    const shuffledOptions = shuffleArray(Object.entries(item.option));
+                    return {
+                        ...item,
+                        option: Object.fromEntries(shuffledOptions)
+                    };
+                });
+
+                setQuestions(shuffledQuestionsWithOptions);
+            }
+            else {
+                setQuestions(data.question_items);
+            }
+        }
+    }, [data]);
 
     if (type === 'pre-test') {
         const handleAnswerChange = (index, answer, questionId) => {
@@ -82,7 +112,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                         </div>
                     ) : (
                         <div className="w-full flex justify-center mt-6">
-                            <button onClick={handleSubmit} className="button-primary max-w-56">
+                            <button onClick={handleSubmitNext} className="button-primary max-w-56">
                                 Selanjutnya
                             </button>
                         </div>
@@ -93,7 +123,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
 
         return (
             <div>
-                {data.question_items.map((item, index) => {
+                {questions.map((item, index) => {
                     const option = Object.entries(item.option).map(([key, value], index2) => {
                         return (
                             <li key={index2}>
@@ -183,7 +213,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                             <div className="text-center text-2xl font-semibold mb-5">
                                 Selamat, kamu telah menyelesaikan tes ini.
                             </div>
-                            <div className="flex text-center justify-center gap-8 text-xl">
+                            <div className="flex text-center justify-center gap-8 text-xl mb-4">
                                 <div>
                                     <div>Benar</div>
                                     <div>{question_result.correct}</div>
@@ -193,6 +223,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                                     <div>{question_result.wrong}</div>
                                 </div>
                             </div>
+                            <div className="text-center text-xl font-bold">Nilai Kamu : {question_result.score}</div>
                         </div>
                     )}
                     {data.is_loop === 1 ? (
@@ -212,7 +243,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                         </div>
                     ) : (
                         <div className="w-full flex justify-center mt-6">
-                            <button onClick={handleSubmit} className="button-primary max-w-56">
+                            <button onClick={handleSubmitNext} className="button-primary max-w-56">
                                 Selanjutnya
                             </button>
                         </div>
@@ -223,7 +254,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
 
         return (
             <div>
-                {data.question_items.map((item, index) => {
+                {questions.map((item, index) => {
                     const option = Object.entries(item.option).map(([key, value], index2) => {
                         return (
                             <li key={index2}>

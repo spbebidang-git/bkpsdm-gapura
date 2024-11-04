@@ -46,29 +46,31 @@ class InteractiveService
 
     public function getMeetingParticipant($participantId, $activity)
     {
+        $interactive = Interactive::where('activity_id', $activity->id)->first();
+
         return [
             'activity_id' => $activity->id,
             'title' => $activity->title,
             'type' => 'meeting',
             'status' => $this->getStatus($participantId, $activity->id),
             'data' => [
-                'meeting_url' => 'https://www.youtube.com/embed/M66U_DuMCS8',
-                'duration' => 120
+                'meeting_url' => $interactive->url,
+                'duration' => $interactive->duration
             ]
         ];
     }
 
     public function getVideo($activity)
     {
-
+        $interactive = Interactive::where('activity_id', $activity->id)->first();
         return [
             'activity_id' => $activity->id,
             'title' => $activity->title,
             'type' => 'video',
             'status' => $activity->learnItem && $activity->learnItem->status == 'done' ? 1 : 0,
             'data' => [
-                'src_video' => 'https://www.youtube.com/embed/M66U_DuMCS8',
-                'duration' => 120
+                'src_video' => $interactive->url,
+                'duration' => $interactive->duration
             ]
         ];
     }

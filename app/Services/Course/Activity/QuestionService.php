@@ -97,7 +97,8 @@ class QuestionService
             'status' => $this->getStatus($participantId, $activity->id),
             'data' => [
                 'question_items' => $questionItems,
-                'is_loop' => $question->is_loop
+                'mix' => $question->questionVariant->first()->mix,
+                'is_loop' => $question->questionVariant->first()->loop
             ]
         ];
     }
@@ -143,11 +144,12 @@ class QuestionService
             'activity_id' => $activity->id,
             'title' => $activity->title,
             'description' => $question->description,
-            'type' => 'pre-test',
+            'type' => 'post-test',
             'status' => $this->getStatus($participantId, $activity->id),
             'data' => [
                 'question_items' => $questionItems,
-                'is_loop' => $question->is_loop
+                'mix' => $question->questionVariant->first()->mix,
+                'is_loop' => $question->questionVariant->first()->loop
             ]
         ];
     }

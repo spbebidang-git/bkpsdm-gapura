@@ -21,10 +21,30 @@ class AuthController
 
     public function storeAdmin(Request $request)
     {
-        $credentials = $request->validate([
+        $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
+            'g-recaptcha-response' => 'required',
         ]);
+
+        $credentials = $request->only('email', 'password');
+
+        $recaptchaToken = $request->input('g-recaptcha-response');
+        $secretKey = env('RECAPTCHA_SECRET_KEY');
+
+        // Verifikasi token reCAPTCHA
+        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret' => $secretKey,
+            'response' => $recaptchaToken,
+        ]);
+
+        $result = $response->json();
+
+        if (!$result['success']) {
+            return back()->withErrors([
+                'email' => 'reCAPTCHA verification failed.',
+            ])->onlyInput('email');
+        }
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
@@ -44,10 +64,31 @@ class AuthController
 
     public function storeInstructor(Request $request)
     {
-        $credentials = $request->validate([
+        $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
+            'recaptchaToken' => 'required',
         ]);
+
+        $credentials = $request->only('email', 'password');
+
+
+        $recaptchaToken = $request->input('recaptchaToken');
+        $secretKey = env('RECAPTCHA_SECRET_KEY');
+
+        // Verifikasi token reCAPTCHA
+        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret' => $secretKey,
+            'response' => $recaptchaToken,
+        ]);
+
+        $result = $response->json();
+
+        if (!$result['success']) {
+            return back()->withErrors([
+                'username' => 'reCAPTCHA verification failed.',
+            ])->onlyInput('username');
+        }
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
@@ -70,7 +111,25 @@ class AuthController
         $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
+            'recaptchaToken' => 'required',
         ]);
+
+        $recaptchaToken = $request->input('recaptchaToken');
+        $secretKey = env('RECAPTCHA_SECRET_KEY');
+
+        // Verifikasi token reCAPTCHA
+        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret' => $secretKey,
+            'response' => $recaptchaToken,
+        ]);
+
+        $result = $response->json();
+
+        if (!$result['success']) {
+            return back()->withErrors([
+                'username' => 'reCAPTCHA verification failed.',
+            ])->onlyInput('username');
+        }
 
         $response = Http::withHeaders([
             'apikey' => env('API_KEY')
@@ -82,8 +141,7 @@ class AuthController
             'client_secret' => env('SSO_CLIENT_SECRET'),
         ]);
 
-        // dd($response->body());
-        if ($response->successful()) {
+        if ($response->successful() && $response->json()['access_token']) {
             $token = 'Bearer ' . $response->json()['access_token'];
 
             $userNip = UserMeta::with('user')
@@ -117,7 +175,7 @@ class AuthController
                     return to_route('home');
                 } catch (\Throwable $th) {
                     DB::rollBack();
-                    dd($th);
+
                     return back()->withErrors([
                         'username' => 'Something went wrong.',
                     ])->onlyInput('username');

@@ -184,12 +184,9 @@ class CourseService
         ]);
 
         if ($data['thumbnail']) {
-            // $course->thumbnail => UploadMedia::file($data['thumbnail'], Course::$directoryImage)
-
-        }
-
-        if ($data['thumbnail']) {
-            remove_file(Course::$directoryImage . $course->thumbnail);
+            if (is_file_exists(Course::$directoryImage . $course->thumbnail)) {
+                remove_file(Course::$directoryImage . $course->thumbnail);
+            }
 
             $course->thumbnail = UploadMedia::file($data['thumbnail'], Course::$directoryImage);
             $course->save();

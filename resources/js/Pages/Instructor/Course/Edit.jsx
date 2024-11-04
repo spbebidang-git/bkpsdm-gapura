@@ -47,7 +47,7 @@ const Edit = ({ course, categories }) => {
         short_description: course.short_description || "",
         description: course.description || "",
         thumbnail: null, // Handle file input separately
-        // teaser_video: course.teaser_video || "",
+        teaser_video: course.teaser_video || "",
         status: course.status || ""
     });
 

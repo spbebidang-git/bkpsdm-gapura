@@ -8,7 +8,7 @@
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <title>Login | Diagnostix</title>
+    <title>Login | {{ get_setting_meta('site_title') }}</title>
 
     <meta name="description" content="" />
 
@@ -40,6 +40,9 @@
     <link rel="stylesheet" href="{{ asset('assets/admin/') }}/vendor/css/pages/page-auth.css" />
     <!-- Helpers -->
     <script src="{{ asset('assets/admin/') }}/vendor/js/helpers.js"></script>
+
+    <!-- Muat Script reCAPTCHA dari Google -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
@@ -93,13 +96,14 @@
                                 </div>
 
                             </div>
-                            <div class="mb-3">
+                            <div class="g-recaptcha mb-3" data-sitekey="{{ env('VITE_RECAPTCHA_SITE_KEY') }}"></div>
+                            {{-- <div class="mb-3">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="remember-me" />
                                     <label class="form-label"class="form-check-label" for="remember-me"> Remember Me
                                     </label>
                                 </div>
-                            </div>
+                            </div> --}}
                             <div class="mb-3">
                                 <button class="btn btn-primary d-grid w-100" type="submit">Sign in</button>
                             </div>

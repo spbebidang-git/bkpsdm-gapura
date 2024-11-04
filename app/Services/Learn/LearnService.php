@@ -4,6 +4,7 @@ namespace App\Services\Learn;
 
 use App\Models\Learn\Learn;
 use App\Models\Learn\LearnItem;
+use Carbon\Carbon;
 
 class LearnService
 {
@@ -80,5 +81,24 @@ class LearnService
     {
         $a = search($response, 'is_correct', false);
         return count($a);
+    }
+
+    public function resetLearning($participantId, $courseId, $expired)
+    {
+
+        $learn = Learn::with('learnItems')->where('participant_id', $participantId)
+            ->where('course_id', $courseId)
+            ->first();
+
+        if ($learn) {
+            // Menghitung waktu 100 jam dari created_at
+            $threshold = $learn->created_at->addHours($expired);
+
+            // Membandingkan dengan waktu sekarang
+            if (Carbon::now()->greaterThan($threshold)) {
+                // Lebih dari 100 jam
+                $learn->delete();
+            }
+        }
     }
 }

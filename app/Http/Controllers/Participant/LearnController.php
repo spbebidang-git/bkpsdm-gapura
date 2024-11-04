@@ -31,11 +31,14 @@ class LearnController extends Controller
 
     public function index($slug, $scheduleId, $activityId = null)
     {
-        $course = $this->course->findBySlug($slug);
-        $activity = Activity::find($activityId);
 
+        $course = $this->course->findBySlug($slug);
+        $this->learn->resetLearning($this->participantId, $course->id, 10);
+
+        $activity = Activity::find($activityId);
         if ($activity->type == 'pre-test' || $activity->type == 'post-test') {
             $questionResult = $this->learn->getResultQuestion($this->participantId, $course->id, $activityId);
+            // dd($this->activity->getDetailActivityParticipant($this->participantId, $activityId));
             return Inertia::render('Learn/Show', [
                 'course' => $course,
                 'progress' => Learn::where('participant_id', $this->participantId)->first()->progress ?? '0 %',

@@ -1,5 +1,6 @@
-import FormInput from "@/Components/FormInput"
-import { Link, useForm, usePage } from "@inertiajs/react"
+import FormInput from "@/Components/FormInput";
+import { Link, useForm, usePage } from "@inertiajs/react";
+import ReCAPTCHA from 'react-google-recaptcha';
 
 const LoginParticipant = () => {
     const { site } = usePage().props
@@ -7,18 +8,24 @@ const LoginParticipant = () => {
     const { data, setData, post, processing, errors } = useForm({
         username: "",
         password: "",
-    })
+        recaptchaToken: "",  // Tambahkan recaptchaToken ke data
+    });
 
     const handleChange = (e) => {
         const key = e.target.id;
         const value = e.target.value;
         setData(key, value);
-    }
+    };
+
+    const handleRecaptchaChange = (token) => {
+        setData('recaptchaToken', token);  // Set token ke data
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post('/sign-in');
-    }
+        post('/sign-in');  // Kirim data termasuk token ke backend
+    };
+
 
     return (
         <section className="min-h-screen flex flex-col bg-gray-100">
@@ -54,6 +61,13 @@ const LoginParticipant = () => {
                                     onChange={handleChange}
                                     error={errors.password}
                                 />
+                                {/* Recaptha */}
+                                <div className="w-full">
+                                    <ReCAPTCHA
+                                        sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                                        onChange={handleRecaptchaChange}
+                                    />
+                                </div>
                                 {/* submit */}
                                 <button type="submit" className="button-primary my-2.5" disabled={processing}>
                                     {processing ? 'Please Wait...' : 'Sign In'}
