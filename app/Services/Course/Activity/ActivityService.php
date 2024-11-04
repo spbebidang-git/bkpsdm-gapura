@@ -21,7 +21,25 @@ class ActivityService
         $this->literature = $literatureService;
     }
 
-    public function getActivityByCourse($participantId, $courseId)
+    public function getActivityByCourse($courseId)
+    {
+        return Activity::with(['learnItem'])
+            ->where('course_id', $courseId)
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'id' => $row->id,
+                    'course_id' => $row->course_id,
+                    'type' => $row->type,
+                    'title' => $row->title,
+                    'timer' => $row->timer,
+                    'value' => $row->value,
+                    'status' => 0
+                ];
+            });
+    }
+
+    public function getActivityByParticipant($participantId, $courseId)
     {
         return Activity::with(['learnItem'])
             ->where('course_id', $courseId)

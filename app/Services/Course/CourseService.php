@@ -12,6 +12,7 @@ class CourseService
     {
         return Course::inRandomOrder()
             ->limit(8)
+            ->where('status', 'publish')
             ->get()
             ->map(function ($row) {
                 return [
@@ -33,6 +34,7 @@ class CourseService
     public function getAllCourse()
     {
         return Course::OrderBy('id')
+            ->where('status', 'publish')
             ->get()
             ->map(function ($row) {
                 return [
