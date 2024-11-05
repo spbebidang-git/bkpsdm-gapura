@@ -21,3 +21,10 @@ yarn-error.log
 /.idea
 /.vscode
 /.zed
+
+# Ignore everything in public/assets/media
+public/assets/media/*
+
+# But do not ignore the static folder and its contents
+!public/assets/media/static/
+!public/assets/media/static/*
