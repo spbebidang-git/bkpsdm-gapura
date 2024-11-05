@@ -26,12 +26,15 @@ class LiteratureService
 
     public function getLiterature($activity)
     {
+        $literature = Literature::where('activity_id', $activity->id)->first();
+
         return [
             'activity_id' => $activity->id,
             'title' => $activity->title,
             'type' => 'literature',
             'data' => [
-                'src_pdf' => Literature::$directoryDocument . 'BIWide-EES2023-Pure.pdf'
+                'duration' => $literature->duration,
+                'src_pdf' => '/assets/media/documents/literatures/' . $literature->content
             ]
         ];
     }
