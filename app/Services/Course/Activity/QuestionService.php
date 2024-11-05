@@ -147,6 +147,7 @@ class QuestionService
             'type' => 'post-test',
             'status' => $this->getStatus($participantId, $activity->id),
             'data' => [
+                'min_score' => $question->min_score,
                 'question_items' => $questionItems,
                 'mix' => $question->questionVariant->first()->mix,
                 'is_loop' => $question->questionVariant->first()->loop

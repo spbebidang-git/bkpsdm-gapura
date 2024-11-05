@@ -31,7 +31,6 @@ class LearnController extends Controller
 
     public function index($slug, $scheduleId, $activityId = null)
     {
-
         $course = $this->course->findBySlug($slug);
         $this->learn->resetLearning($this->participantId, $course->id, 10);
 
@@ -61,6 +60,23 @@ class LearnController extends Controller
     public function store(Request $request, Course $course, $scheduleId, $activityId)
     {
         $activity = Activity::find($activityId);
+        if ($activity->type === 'post-test' && $request->loop) {
+            // dd(123);
+            // Check Total looping
+            $checkTrial = $this->learn->checkTrial($this->participantId, $course->id, $activity->id);
+            // dd($checkTrial);
+            if ($checkTrial) {
+                if ($checkTrial === 3) {
+                    $this->learn->resetFromPostTest($this->participantId, $course->id);
+
+                    return to_route('participant.learn.index', [$course->slug, 1, $this->learn->getInititalActivityId($course->id)]);
+                }
+
+                $this->learn->setTrialTotal($checkTrial->learnItems->first());
+                return response(null, 200);
+            }
+        }
+
 
         try {
             DB::beginTransaction();
@@ -110,4 +126,6 @@ class LearnController extends Controller
             return to_route('participant.learn.index', [$course->slug, 1, $activityId]);
         }
     }
+
+    public function checkTrial() {}
 }

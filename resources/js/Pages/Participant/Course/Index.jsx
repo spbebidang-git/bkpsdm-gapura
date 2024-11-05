@@ -25,7 +25,7 @@ const Index = ({ courses }) => {
                                     </Link>
                                     {item.finished_at == null ? (<Link className="w-full" href={`/learn/${item.slug}/${item.schedule_id}/${item.initial_activity}`}>
                                         <button className="button-primary">Ikuti Kelas</button>
-                                    </Link>) : <button className="button-primary">Unduh Sertifikat</button>}
+                                    </Link>) : ''}
                                 </div>
                             </div>
                         </div>)

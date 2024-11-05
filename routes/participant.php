@@ -15,6 +15,8 @@ Route::middleware([CheckRoleAuthMiddleware::class, IsParticipantMiddleware::clas
         # Rating & Submit Score
         Route::get('learn/{course:slug}/{scheduleId}/rating', [\App\Http\Controllers\Participant\RatingController::class, 'index'])->name('rating.index');
         Route::post('learn/{course:slug}/{scheduleId}/rating', [\App\Http\Controllers\Participant\RatingController::class, 'store'])->name('rating.store');
+        # Survey
+        Route::get('learn/{course:slug}/{scheduleId}/survey', [\App\Http\Controllers\Participant\SurveyController::class, 'index'])->name('survey.index');
         # Learn 
         Route::get('learn/{slug}/{scheduleId}/{activity}', [\App\Http\Controllers\Participant\LearnController::class, 'index'])->name('learn.index');
         Route::post('learn/{course:slug}/{scheduleId}/{activity}', [\App\Http\Controllers\Participant\LearnController::class, 'store'])->name('learn.store');

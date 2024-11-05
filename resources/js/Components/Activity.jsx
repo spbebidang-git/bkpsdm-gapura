@@ -1,9 +1,6 @@
 import { Link, router } from "@inertiajs/react";
 import { useEffect, useState } from "react";
-import { pdfjs } from 'react-pdf';
-import 'videojs-youtube'; // Import plugin YouTube
-
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+import { toast } from "react-toastify";
 
 const Activity = ({ id, type, data, slug, question_result, status }) => {
     // State untuk menyimpan jawaban
@@ -11,6 +8,9 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
     const [submitted, setSubmitted] = useState(status);
     // State untuk menyimpan file
     const [file, setFile] = useState(null);
+
+    const [duration, setDuration] = useState(data.duration)
+    const [activeButton, setActiveButton] = useState(false)
 
     const [questions, setQuestions] = useState([]);
 
@@ -40,7 +40,23 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                 setQuestions(data.question_items);
             }
         }
-    }, [data]);
+
+        if (type === 'video' || type === 'literature') {
+            if (duration === 0) {
+                setActiveButton(true)
+                return;
+            }
+
+            // Atur interval untuk menghitung mundur
+            const interval = setInterval(() => {
+                console.log(123)
+                setDuration(prevDuration => prevDuration - 1);
+            }, 1000);
+
+            // Bersihkan interval ketika komponen unmount atau durasi mencapai 0
+            return () => clearInterval(interval);
+        }
+    }, [data, duration]);
 
     if (type === 'pre-test') {
         const handleAnswerChange = (index, answer, questionId) => {
@@ -64,6 +80,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
         };
 
         const handleSubmitNext = () => {
+
             setSubmitted(false);
             setAnswers({}); // Reset jawaban sebelum submit berikutnya
             router.post(`/learn/${slug}/1/${id}`, []);
@@ -83,7 +100,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                             <div className="text-center text-2xl font-semibold mb-5">
                                 Selamat, kamu telah menyelesaikan tes ini.
                             </div>
-                            <div className="flex text-center justify-center gap-8 text-xl">
+                            <div className="flex text-center justify-center gap-8 text-xl mb-4">
                                 <div>
                                     <div>Benar</div>
                                     <div>{question_result.correct}</div>
@@ -93,6 +110,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                                     <div>{question_result.wrong}</div>
                                 </div>
                             </div>
+                            <div className="text-center text-xl font-bold">Nilai Kamu : {question_result.score}</div>
                         </div>
                     )}
                     {data.is_loop === 1 ? (
@@ -194,14 +212,32 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
         };
 
         const handleSubmitNext = () => {
-            setSubmitted(false);
-            setAnswers({}); // Reset jawaban sebelum submit berikutnya
-            router.post(`/learn/${slug}/1/${id}`, []);
+
+            if (question_result.score < data.min_score) {
+                toast.error('Kamu belum memenuhi nilai yang ditetapkan. Silakan ulangi post-test untuk mencoba lagi', {
+                    position: "top-center",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    theme: "colored",
+                });
+            } else {
+                setSubmitted(false);
+                setAnswers({}); // Reset jawaban sebelum submit berikutnya
+                router.post(`/learn/${slug}/1/${id}`, []);
+            }
+
         };
 
         const handleLoop = () => {
-            setSubmitted(false);
-            setAnswers({}); // Reset jawaban saat mulai ulang
+            router.post(`/learn/${slug}/1/${id}`, { loop: 1 }, {
+                onSuccess: () => {
+                    setSubmitted(false);
+                    setAnswers({}); // Reset jawaban saat mulai ulang
+                },
+            });
         };
 
         if (submitted === 'done') {
@@ -428,22 +464,24 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
         return (
             <div className="flex flex-col items-center rounded-xl overflow-hidden p-6">
                 <iframe
-                    width="1024px"
-                    height="512px"
-                    className="aspect-video"
-                    src={`${data.src_video}`}
+                    className="xl:w-[912px] xl:h-[512px] aspect-video shadow"
+                    src={`${data.src_video}?rel=0`}
                     title="YouTube video player"
                     frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen="true"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope;"
 
                 ></iframe>
 
                 <div className="w-full flex justify-center mt-6">
-                    <button onClick={handleSubmit} className="button-primary max-w-56">
+                    {activeButton ? <button onClick={handleSubmit} className="button-primary max-w-56">
                         Selanjutnya
-                    </button>
+                    </button> : <button className="button-disable max-w-56">
+                        Selanjutnya
+                    </button>}
                 </div>
             </div>
+
         )
     }
 
@@ -463,9 +501,11 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                 ></iframe>
 
                 <div className="w-full flex justify-center mt-6">
-                    <button onClick={handleSubmit} className="button-primary max-w-56">
+                    {activeButton ? <button onClick={handleSubmit} className="button-primary max-w-56">
                         Selanjutnya
-                    </button>
+                    </button> : <button className="button-disable max-w-56">
+                        Selanjutnya
+                    </button>}
                 </div>
             </div>
         )

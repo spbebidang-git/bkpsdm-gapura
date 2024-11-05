@@ -2,6 +2,7 @@
 
 namespace App\Services\Learn;
 
+use App\Models\Course\Activity;
 use App\Models\Learn\Learn;
 use App\Models\Learn\LearnItem;
 use Carbon\Carbon;
@@ -83,14 +84,13 @@ class LearnService
         return count($a);
     }
 
-    public function resetLearning($participantId, $courseId, $expired)
+    public function resetLearning($participantId, $courseId, $expired = null)
     {
-
         $learn = Learn::with('learnItems')->where('participant_id', $participantId)
             ->where('course_id', $courseId)
             ->first();
 
-        if ($learn) {
+        if ($learn && $expired) {
             // Menghitung waktu 100 jam dari created_at
             $threshold = $learn->created_at->addHours($expired);
 
@@ -100,5 +100,51 @@ class LearnService
                 $learn->delete();
             }
         }
+    }
+
+    public function resetFromPostTest($participantId, $courseId)
+    {
+        $learn = Learn::with('learnItems')->where('participant_id', $participantId)
+            ->where('course_id', $courseId)
+            ->first();
+
+
+        if ($learn) {
+            $learn->delete();
+        }
+    }
+
+    public function checkValidNextActivity($activityId) {}
+
+    public function checkTrial($participantId, $courseId, $activityId)
+    {
+        $learn = Learn::with(['learnItems' => function ($query) use ($activityId) {
+            $query->where('activity_id', $activityId);
+        }])
+            ->where('course_id', $courseId)
+            ->where('participant_id', $participantId)
+            ->first();
+
+        if (!$learn && $learn->learnItems->first()) {
+            return false;
+        }
+        // dd($learn->learnItems);
+
+        if ($learn->learnItems->first()->trial_total == 3) {
+            return 3;
+        }
+
+        return $learn;
+    }
+
+    public function getInititalActivityId($courseId)
+    {
+        return Activity::where('course_id', $courseId)->first()->id;
+    }
+
+    public function setTrialTotal($learnItem)
+    {
+        $learnItem->trial_total = $learnItem->trial_total + 1;
+        $learnItem->save();
     }
 }

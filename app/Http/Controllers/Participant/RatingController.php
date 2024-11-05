@@ -88,11 +88,11 @@ class RatingController
 
             DB::commit();
 
-            return to_route('participant.course.index');
+            return to_route('participant.survey.index', [$course->slug, 1]);
         } catch (\Throwable $th) {
             DB::rollBack();
             dd($th);
-            // return response(null, 400);
+            return response(null, 400);
         }
     }
 }

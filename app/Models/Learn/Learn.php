@@ -2,6 +2,7 @@
 
 namespace App\Models\Learn;
 
+use App\Models\Course\Course;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -18,15 +19,20 @@ class Learn extends Model
         return $this->hasMany(LearnItem::class);
     }
 
+    public function course()
+    {
+        return $this->belongsTo(Course::class);
+    }
+
     public function progress(): Attribute
     {
         $doneActivity = $this->learnItems()->where('status', 'done')->count();
-        $totalActivity = $this->learnItems()->count();
+        $totalActivity = $this->course->activities->count();
 
         if ($totalActivity == 0) {
             return Attribute::get(fn() => 0 . '%');
         }
 
-        return Attribute::get(fn() => ($doneActivity / $totalActivity) * 100 . '%');
+        return Attribute::get(fn() => round(($doneActivity / $totalActivity) * 100, 2) . '%');
     }
 }

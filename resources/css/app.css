@@ -18,6 +18,10 @@
    @apply bg-primary text-sm shadow text-white font-medium  px-5 py-2.5 rounded-full w-full
 }
 
+.button-disable {
+   @apply bg-gray-600 text-sm shadow text-white font-medium  px-5 py-2.5 rounded-full w-full
+}
+
 .button-secondary {
     @apply bg-white block text-center border text-sm shadow text-gray-600 font-medium px-5 py-2.5 rounded-full w-full
  }
