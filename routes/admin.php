@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\CheckRoleAuthMiddleware;
 use App\Http\Middleware\IsAdminMiddleware;
+use App\Models\Learn\Learn;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('/admin')
@@ -34,4 +35,37 @@ Route::prefix('/admin')
                 # User
                 Route::resource('user', \App\Http\Controllers\Admin\Management\UserController::class)->except('show');
             });
+
+        Route::get('report', function () {
+            $query = Learn::with('participant', 'learnItems')->get();
+
+            $a = $query->map(function ($row) {
+                // dd(unserialize($row->learnItems->where('type', 'pre-test')->first()->response));
+                $pre = 0;
+                foreach (unserialize($row->learnItems->where('type', 'pre-test')->first()->response) as $item) {
+                    $pre = $pre + $item['score'];
+                }
+
+                $post = 0;
+                foreach (unserialize($row->learnItems->where('type', 'post-test')->first()->response) as $item) {
+                    $post = $pre + $item['score'];
+                }
+
+                return [
+                    'name' => $row->participant->name,
+                    'pre_score' => $pre,
+                    'post_score' => $post,
+                ];
+            });
+
+            foreach ($a as $item) {
+                echo '<table>
+                    <tr>
+                        <td>' . $item['name'] . '</td>
+                        <td>' . $item['pre_score'] . '</td>
+                        <td>' . $item['post_score'] . '</td>
+                    </tr>
+                </table>';
+            }
+        });
     });
