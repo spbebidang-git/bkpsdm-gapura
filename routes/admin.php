@@ -42,13 +42,21 @@ Route::prefix('/admin')
             $a = $query->map(function ($row) {
                 // dd(unserialize($row->learnItems->where('type', 'pre-test')->first()->response));
                 $pre = 0;
-                foreach (unserialize($row->learnItems->where('type', 'pre-test')->first()->response) as $item) {
-                    $pre = $pre + $item['score'];
+                if ($row->learnItems->where('type', 'pre-test')->first()->response) {
+                    foreach (unserialize($row->learnItems->where('type', 'pre-test')->first()->response) as $item) {
+                        $pre = $pre + $item['score'];
+                    }
+                } else {
+                    $pre = null;
                 }
 
                 $post = 0;
-                foreach (unserialize($row->learnItems->where('type', 'post-test')->first()->response) as $item) {
-                    $post = $pre + $item['score'];
+                if ($row->learnItems->where('type', 'post-test')->first()) {
+                    foreach (unserialize($row->learnItems->where('type', 'post-test')->first()->response) as $item) {
+                        $post = $pre + $item['score'];
+                    }
+                } else {
+                    $post = null;
                 }
 
                 return [
