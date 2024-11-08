@@ -3,6 +3,7 @@
 namespace App\Models\Learn;
 
 use App\Models\Course\Course;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -22,6 +23,11 @@ class Learn extends Model
     public function course()
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function participant()
+    {
+        return $this->belongsTo(User::class, 'participant_id');
     }
 
     public function progress(): Attribute
