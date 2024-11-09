@@ -47,6 +47,9 @@
     <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="{{ asset('assets/admin/') }}/js/config.js"></script>
+
+
+
 </head>
 
 <body>
@@ -94,9 +97,19 @@
                                         <small class="invalid-feedback">{{ $message }}</small>
                                     @enderror
                                 </div>
-
                             </div>
-                            <div class="g-recaptcha mb-3" data-sitekey="{{ env('VITE_RECAPTCHA_SITE_KEY') }}"></div>
+                            <div class="form-group mb-3 d-flex gap-3">
+                                <div class="captcha">
+                                    <span style="width: 100%" id="captcha-image">{!! captcha_img() !!}</span>
+                                </div>
+                                <input type="text" id="captcha" name="captcha" class="form-control"
+                                    placeholder="CAPTCHA" required>
+                                @error('captcha')
+                                    <small class="invalid-feedback">{{ $message }}</small>
+                                @enderror
+                            </div>
+
+                            {{-- <div class="g-recaptcha mb-3" data-sitekey="{{ env('VITE_RECAPTCHA_SITE_KEY') }}"></div> --}}
                             {{-- <div class="mb-3">
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" id="remember-me" />
@@ -136,6 +149,17 @@
 
     <!-- Place this tag in your head or just before your close body tag. -->
     <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+    <script>
+        document.getElementById('captcha-image').addEventListener('click', function() {
+            fetch('/sign-in/captcha')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('captcha-image').innerHTML = '<img src="' + data.captcha +
+                        '" alt="captcha">';
+                });
+        });
+    </script>
 </body>
 
 </html>

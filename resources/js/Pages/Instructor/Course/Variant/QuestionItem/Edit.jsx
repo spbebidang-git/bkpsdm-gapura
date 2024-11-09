@@ -105,9 +105,9 @@ const Edit = ({ slug, activityId, questionId, question }) => {
                     </div>
                 </div>
 
-                <div className="flex gap-3 max-w-lg mx-auto pt-8">
+                <div className="max-w-80 mx-auto gap-3 flex justify-center mt-8">
                     <button className="button-primary">Save</button>
-                    <Link className="w-full" href={`/instructor/course/${slug}/activity/variant/${activityId}`}>
+                    <Link className="w-full" href={route('instructor.course.activity.variant.question-item.index', [slug, activityId, questionId])}>
                         <button type="button" className="button-secondary">Back</button>
                     </Link>
                 </div>

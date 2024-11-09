@@ -1,13 +1,16 @@
+import FormInput from "@/Components/FormInput";
 import FormSelect from "@/Components/FormSelect";
 import App from "@/Layouts/Instructor/App";
-import { Link, router } from "@inertiajs/react";
+import { Link, router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 
 const Edit = ({ slug, activityId, variant }) => {
 
+    const { errors } = usePage().props
+
     const [values, setValues] = useState({
-        loop: 0,
-        mix: 0,
+        variant: variant.variant,
+        mix: variant.mix,
     })
 
     function handleChange(e) {
@@ -30,7 +33,7 @@ const Edit = ({ slug, activityId, variant }) => {
 
     useEffect(() => {
         setValues({
-            loop: variant.loop,
+            variant: variant.variant,
             mix: variant.mix
         });
     }, [variant])
@@ -42,12 +45,12 @@ const Edit = ({ slug, activityId, variant }) => {
             <form onSubmit={handleSubmit}>
                 <div className="max-w-2xl mx-auto shadow bg-white rounded-xl">
                     <div className="p-6">
-                        <FormSelect title={'loop'} value={values.type} onChange={handleChange} isRequired={true} options={typeOptions} />
-                        <FormSelect title={'mix'} value={values.type} onChange={handleChange} isRequired={true} options={typeOptions} />
+                        <FormInput title={'variant'} value={values.variant} onChange={handleChange} isRequired={true} error={errors.variant} readOnly={true} />
+                        <FormSelect title={'mix'} value={values.mix} selectedValue={values.mix} onChange={handleChange} isRequired={true} options={typeOptions} error={errors.mix} />
                     </div>
                 </div>
 
-                <div className="flex gap-3 max-w-lg mx-auto pt-8">
+                <div className="max-w-80 mx-auto gap-3 flex justify-center mt-8">
                     <button className="button-primary">Save</button>
                     <Link className="w-full" href={`/instructor/course/${slug}/activity/variant/${activityId}`}>
                         <button className="button-secondary">Back</button>

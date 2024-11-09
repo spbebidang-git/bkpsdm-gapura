@@ -1,8 +1,8 @@
 import App from "@/Layouts/Instructor/App";
 import { Link, router } from "@inertiajs/react";
 import { useEffect, useState } from "react";
-
-const Create = ({ course, activities }) => {
+import Swal from "sweetalert2";
+const Show = ({ course, activities }) => {
     const [dataActivities, setDataActivities] = useState([]);
 
     useEffect(() => {
@@ -10,8 +10,31 @@ const Create = ({ course, activities }) => {
     }, [])
 
     const handleSubmitDelete = (e, activityId) => {
-        e.preventDefault()
-        router.delete(`/instructor/course/${course.slug}/activity/${activityId}`)
+        e.preventDefault();
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This data will be permanently deleted!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, Delete!',
+            cancelButtonText: 'No'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.delete(`/instructor/course/${course.slug}/activity/${activityId}`, {
+                    onSuccess: () => {
+                        router.get(`/instructor/course/${course.slug}`);
+                        Swal.fire(
+                            'Deleted!',
+                            'Data deleted successfully.',
+                            'success'
+                        );
+                    },
+                });
+            }
+        });
     }
 
     return (
@@ -92,4 +115,4 @@ const Create = ({ course, activities }) => {
     )
 }
 
-export default Create
+export default Show

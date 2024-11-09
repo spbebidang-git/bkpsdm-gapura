@@ -1,4 +1,5 @@
 import Dropdown from "@/Components/Dropdown";
+import FlashMessageToast from "@/Components/FlashMessageToast";
 import { Link, usePage } from '@inertiajs/react';
 
 
@@ -8,6 +9,7 @@ export default function App({ children }) {
 
     return (
         <div className="flex flex-col justify-between min-h-screen">
+            <FlashMessageToast />
             <header className="bg-gray-50 shadow border-b">
                 <div class="bg-primary h-2"></div>
                 <nav class="bg-white border-gray-200 ">
@@ -18,7 +20,7 @@ export default function App({ children }) {
                         <div class="flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
                             <div className="">
                                 <Dropdown.Link href={route('logout')} method="post" as="button">
-                                    <button className="button-primary">Log Out</button>
+                                    <button className="w-20 h-8 text-xs font-bold bg-primary text-white rounded-full shadow">Sign Out</button>
                                 </Dropdown.Link>
                             </div>
                             <button data-collapse-toggle="navbar-user" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200  :bg-gray-700 :ring-gray-600" aria-controls="navbar-user" aria-expanded="false">

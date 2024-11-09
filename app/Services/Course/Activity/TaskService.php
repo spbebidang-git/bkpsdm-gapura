@@ -20,15 +20,18 @@ class TaskService
         return Task::create($data);
     }
 
-    public function getTask($activity)
+    public function getTask($participantId, $activity)
     {
+        $task = Task::where('activity_id', $activity->id)->first();
+
         return [
-            'activity_id' => 7,
+            'activity_id' => $activity->id,
             'title' => $activity->title,
             'type' => 'task',
+            // 'status' => 'done',
             'data' => [
-                'title' => 'title',
-                'description' => 'description'
+                'title' => $task->title,
+                'description' => $task->description
             ]
         ];
     }

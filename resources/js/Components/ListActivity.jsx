@@ -2,7 +2,6 @@ import { Link } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 
 const ListActivity = ({ type, activity, status, isActive, slug, scheduleId = 1, activityId }) => {
-    console.log(status)
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [icon, setIcon] = useState('');

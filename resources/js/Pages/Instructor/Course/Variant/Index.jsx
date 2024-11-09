@@ -57,9 +57,6 @@ const Index = ({ slug, activity, variants }) => {
                                     Acak
                                 </th>
                                 <th scope="col" className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap">
-                                    Ulangi
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap">
                                     Action
                                 </th>
                             </tr>
@@ -70,7 +67,6 @@ const Index = ({ slug, activity, variants }) => {
                                     <td className="px-6 py-4 text-center">{item.variant}</td>
                                     <td className="px-6 py-4 text-center">{item.question_count}</td>
                                     <td className="px-6 py-4 text-center">{item.mix}</td>
-                                    <td className="px-6 py-4 text-center">{item.loop}</td>
                                     <td>
                                         <div className="flex justify-center items-center gap-2">
                                             <Link href={`/instructor/course/${slug}/activity/variant/${activity.activity_id}/${item.id}/question-item`}>

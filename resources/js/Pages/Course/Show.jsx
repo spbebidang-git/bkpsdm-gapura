@@ -1,11 +1,10 @@
-import StartRating from '@/Components/StartRating';
 import { useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import App from '../../Layouts/App';
 
+import StarRating from '@/Components/StarRating';
 import { Link, router, usePage } from '@inertiajs/react';
 import 'react-toastify/dist/ReactToastify.css';
-import StarRating from '@/Components/StarRating';
 
 const Show = ({ course, schedules, reviews, rating }) => {
     const [activeSchedules, setActiveSchedules] = useState([]);
@@ -15,7 +14,7 @@ const Show = ({ course, schedules, reviews, rating }) => {
     const handleActivation = (e, scheduleId) => {
         e.preventDefault()
 
-        router.post(`/course/${scheduleId}`, [], {
+        router.post(`/course/${course.slug}/${scheduleId}`, [], {
             onSuccess: page => {
                 setActiveSchedules(prevState => [...prevState, scheduleId]);
             },

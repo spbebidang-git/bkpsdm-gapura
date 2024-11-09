@@ -20,6 +20,7 @@ class LiteratureService
         return Literature::create([
             'activity_id' => $data['activity_id'],
             'sub_title' => $data['sub_title'],
+            'duration' => $data['duration'],
             'content' => UploadMedia::file($data['content'], Literature::$directoryDocument),
         ]);
     }
@@ -41,7 +42,6 @@ class LiteratureService
 
     public function storeLiterature($participantId, $courseId, $activityId, $request)
     {
-        // dd(123);
         $learnItem = [
             'type' => 'video',
             'status' => 'done',
@@ -56,8 +56,9 @@ class LiteratureService
         $literature = Literature::where('activity_id', $request['activity_id'])->first();
 
         $literature->sub_title = $request['sub_title'];
+        $literature->duration = $request['duration'];
 
-        remove_file(Literature::$directoryDocument);
+        remove_file(Literature::$directoryDocument . $literature->content);
         $literature->content = UploadMedia::file($request['content'], Literature::$directoryDocument);
         $literature->save();
 
@@ -73,6 +74,7 @@ class LiteratureService
             'title' => $activity->title,
             'value' => $activity->value,
             'sub_title' => $literature->sub_title,
+            'duration' => $literature->duration,
         ];
     }
 }

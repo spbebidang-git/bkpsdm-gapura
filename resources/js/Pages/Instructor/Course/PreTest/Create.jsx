@@ -50,7 +50,7 @@ const Create = ({ slug }) => {
                     </div>
                 </div>
 
-                <div className="flex gap-3 max-w-lg mx-auto pt-8">
+                <div className="max-w-80 mx-auto gap-3 flex justify-center mt-8">
                     <button className="button-primary">Save</button>
                     <Link className="w-full" href={`/instructor/course/${slug}/activity`}>
                         <button className="button-secondary">Back</button>

@@ -11,9 +11,17 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Inertia\Inertia;
+use Mews\Captcha\Facades\Captcha;
 
 class AuthController
 {
+    public function captcha()
+    {
+        return response()->json([
+            'captcha' => Captcha::src('default')
+        ]);
+    }
+
     public function createAdmin()
     {
         return view('admin.login');
@@ -22,29 +30,14 @@ class AuthController
     public function storeAdmin(Request $request)
     {
         $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-            'g-recaptcha-response' => 'required',
+            'email' => 'required|string',
+            'password' => 'required|string',
+            'captcha' => 'required|captcha'
+        ],  [
+            'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'  // Pesan error khusus
         ]);
 
         $credentials = $request->only('email', 'password');
-
-        $recaptchaToken = $request->input('g-recaptcha-response');
-        $secretKey = env('RECAPTCHA_SECRET_KEY');
-
-        // Verifikasi token reCAPTCHA
-        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
-            'secret' => $secretKey,
-            'response' => $recaptchaToken,
-        ]);
-
-        $result = $response->json();
-
-        if (!$result['success']) {
-            return back()->withErrors([
-                'email' => 'reCAPTCHA verification failed.',
-            ])->onlyInput('email');
-        }
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
@@ -65,30 +58,14 @@ class AuthController
     public function storeInstructor(Request $request)
     {
         $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-            'recaptchaToken' => 'required',
+            'email' => 'required|string',
+            'password' => 'required|string',
+            'captcha' => 'required|captcha'
+        ],  [
+            'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'  // Pesan error khusus
         ]);
 
         $credentials = $request->only('email', 'password');
-
-
-        $recaptchaToken = $request->input('recaptchaToken');
-        $secretKey = env('RECAPTCHA_SECRET_KEY');
-
-        // Verifikasi token reCAPTCHA
-        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
-            'secret' => $secretKey,
-            'response' => $recaptchaToken,
-        ]);
-
-        $result = $response->json();
-
-        if (!$result['success']) {
-            return back()->withErrors([
-                'username' => 'reCAPTCHA verification failed.',
-            ])->onlyInput('username');
-        }
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
@@ -111,25 +88,10 @@ class AuthController
         $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
-            'recaptchaToken' => 'required',
+            'captcha' => 'required|captcha'
+        ],  [
+            'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'  // Pesan error khusus
         ]);
-
-        $recaptchaToken = $request->input('recaptchaToken');
-        $secretKey = env('RECAPTCHA_SECRET_KEY');
-
-        // Verifikasi token reCAPTCHA
-        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
-            'secret' => $secretKey,
-            'response' => $recaptchaToken,
-        ]);
-
-        $result = $response->json();
-
-        if (!$result['success']) {
-            return back()->withErrors([
-                'username' => 'reCAPTCHA verification failed.',
-            ])->onlyInput('username');
-        }
 
         $response = Http::withHeaders([
             'apikey' => env('API_KEY')

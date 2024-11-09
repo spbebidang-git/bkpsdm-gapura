@@ -34,6 +34,22 @@ class LearnController extends Controller
         $course = $this->course->findBySlug($slug);
         $this->learn->resetLearning($this->participantId, $course->id, 10);
 
+        if (!$this->learn->isLearned($this->participantId, $course->id)) {
+            $initActivity = $this->learn->getInititalActivityId($course->id);
+            if ($initActivity !== intval($activityId)) {
+
+                return to_route('participant.learn.index', [$course->slug, 1, $initActivity]);
+            }
+        } else {
+
+
+            $validOpenActivity = $this->learn->checkValidOpenActivity($activityId);
+            // dd($validOpenActivity);
+            if (is_array($validOpenActivity)) {
+                return redirect()->back()->withErrors(['error' => 'Kamu belum menyelesaikan kegiatan sebelumnya. Selesaikan sesuai urutan kegiatan.']);
+            }
+        }
+
         $activity = Activity::find($activityId);
         if ($activity->type == 'pre-test' || $activity->type == 'post-test') {
             $questionResult = $this->learn->getResultQuestion($this->participantId, $course->id, $activityId);
@@ -59,6 +75,12 @@ class LearnController extends Controller
 
     public function store(Request $request, Course $course, $scheduleId, $activityId)
     {
+        $request->validate([
+            'captcha' => 'required|captcha'
+        ], [
+            'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'  // Pesan error khusus
+        ]);
+
         $activity = Activity::find($activityId);
         if ($activity->type === 'post-test' && $request->loop) {
             // dd(123);
@@ -93,7 +115,12 @@ class LearnController extends Controller
 
             # For Submit Meeting 
             if (!empty($request->all()) && $activity->type == 'meeting') {
-                $this->activity->storeActivity($this->participantId, $course->id, $activityId, $request->all());
+
+                $q = $this->activity->storeActivity($this->participantId, $course->id, $activityId, $request->all());
+                // dd($q);
+                if (!$q) {
+                    return to_route('participant.learn.index', [$course->slug, $course->id, $activity->id])->with('danger', 'error');
+                }
             }
 
             DB::commit();
@@ -112,14 +139,14 @@ class LearnController extends Controller
             $nextActivity =  $this->activity->nextActivity($course->id, $activityId);
 
             if (!$nextActivity) {
-                return to_route('participant.rating.index', [$course->slug, 1]);
+                return to_route('participant.rating.index', [$course->slug, 1])->with('success', 'Saved');
             }
 
             if (($activity->type == 'pre-test' || $activity->type == 'post-test') && empty($request->all())) {
-                return to_route('participant.learn.index', [$course->slug, 1, $nextActivity]);
+                return to_route('participant.learn.index', [$course->slug, 1, $nextActivity])->with('success', 'Saved');
             }
 
-            return to_route('participant.learn.index', [$course->slug, 1, $nextActivity]);
+            return to_route('participant.learn.index', [$course->slug, 1, $nextActivity])->with('success', 'Saved');;
         } catch (\Throwable $th) {
             DB::rollBack();
             dd($th);

@@ -39,7 +39,7 @@ const Create = ({ slug, activityId, questionId }) => {
 
     return (
         <App>
-            <div className="text-center text-2xl font-bold text-gray-700 mb-5">Add New Variant</div>
+            <div className="text-center text-2xl font-bold text-gray-700 mb-5">Add New Question</div>
 
             <form onSubmit={handleSubmit}>
                 <div className="max-w-2xl mx-auto shadow bg-white rounded-xl">
@@ -105,9 +105,9 @@ const Create = ({ slug, activityId, questionId }) => {
                     </div>
                 </div>
 
-                <div className="flex gap-3 max-w-lg mx-auto pt-8">
+                <div className="max-w-80 mx-auto gap-3 flex justify-center mt-8">
                     <button className="button-primary">Save</button>
-                    <Link className="w-full" href={`/instructor/course/${slug}/activity/variant/${activityId}`}>
+                    <Link className="w-full" href={route('instructor.course.activity.variant.question-item.index', [slug, activityId, questionId])}>
                         <button className="button-secondary">Back</button>
                     </Link>
                 </div>

@@ -19,14 +19,22 @@ class QuestionItemController
         $this->questionItem = $questionItemService;
     }
 
-
     public function index($slug, $activityId, $questionId)
     {
+        $activity = $this->questionItem->getActivity($activityId, $questionId);
+        // dd($activity);
         return Inertia::render('Instructor/Course/Variant/QuestionItem/Index', [
             'slug' => $slug,
             'activityId' => $activityId,
             'questionId' => $questionId,
-            'questionItems' => $this->questionItem->getQuestionItems($questionId)
+            'questionItems' => $this->questionItem->getQuestionItems($questionId),
+            'activity' => [
+                'type' => $activity->type == 'pre' ? 'Pre-Test' : 'Post-Test',
+                'title' => $activity->title,
+                'is_loop' => $activity->is_loop ? 'Yes' : 'No',
+                'variant' => $activity->variant,
+                'mix' => $activity->mix ? 'Yes' : 'No',
+            ]
         ]);
     }
 

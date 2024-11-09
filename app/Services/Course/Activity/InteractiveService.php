@@ -77,6 +77,9 @@ class InteractiveService
 
     public function storeMeeting($participantId, $courseId, $activityId, $request)
     {
+        $interactive = Interactive::where('activity_id', $activityId)->first();
+        // dd($request);
+
         if ($request) {
             $learnItem = [
                 'type' => 'meeting',
@@ -91,7 +94,15 @@ class InteractiveService
             ];
         }
 
+        if ($request && $request['status'] == 'done') {
+            if (!$interactive->end_meeting) {
+                return false;
+            }
+        }
+
         $this->learn->createLearn($participantId, $courseId, $activityId, null, $learnItem);
+
+        return true;
     }
 
     public function storeVideo($participantId, $courseId, $activityId, $request)

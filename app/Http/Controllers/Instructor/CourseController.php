@@ -31,15 +31,23 @@ class CourseController
 
     public function store(Request $request)
     {
+        if (is_string($request->schedules)) {
+            $request->merge([
+                'schedules' => json_decode($request->schedules, true)  // Dekode menjadi array
+            ]);
+        }
+
         $request->validate([
-            'type' => 'required',
-            'category' => 'required',
-            'title' => 'required',
-            'short_description' => 'required',
-            'description' => 'required',
+            'type' => 'required|string',
+            'category' => 'required|numeric',
+            'title' => 'required|string',
+            'short_description' => 'required|string',
+            'description' => 'required|string',
             'thumbnail' => 'required|image|max:10240|mimes:png,jpg',
-            'teaser_video' => 'required',
-            'status' => 'required',
+            'teaser_video' => 'required|string',
+            'expired' => 'required_if:type,unschedule',
+            'status' => 'required|string',
+            'schedules' => 'required_if:type,schedule|array|min:1'
         ]);
 
         try {
@@ -47,17 +55,17 @@ class CourseController
 
             $this->course->createCourse(
                 $this->instructorId,
-                $request->only('type', 'category', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video'),
-                json_decode($request->schedules, true)
+                $request->only('type', 'category', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status'),
+                $request->schedules
             );
 
             DB::commit();
 
-            return to_route('instructor.dashboard');
+            return to_route('instructor.dashboard')->with('success', 'Course saved successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
-            return to_route('instructor.dashboard');
+
+            return to_route('instructor.dashboard')->with('danger', 'Something went wrong.');
         }
     }
 
@@ -80,23 +88,39 @@ class CourseController
     {
         return Inertia::render('Instructor/Course/Edit', [
             'course' => $course,
+            'schedules' => $course->load('schedules')->schedules->map(function ($row) {
+                return [
+                    'id' => $row->id,
+                    'date' => $row->date,
+                    'time_from' => $row->time_from,
+                    'time_to' => $row->time_to,
+                    'quota' => $row->quota,
+                ];
+            }),
             'categories' => Category::all()
         ]);
     }
 
     public function update(Course $course, Request $request)
     {
-        // dd($request->all());
-        $request->validate([
-            'type' => 'required',
-            'category' => 'required',
-            'title' => 'required',
-            'short_description' => 'required',
-            'description' => 'required',
-            'thumbnail' => 'nullable|image|mimes:png,jpg|max:10240',
-            'teaser_video' => 'required',
-        ]);
+        if (is_string($request->schedules)) {
+            $request->merge([
+                'schedules' => json_decode($request->schedules, true)  // Dekode menjadi array
+            ]);
+        }
 
+        $request->validate([
+            'type' => 'required|string',
+            'category' => 'required|numeric',
+            'title' => 'required|string',
+            'short_description' => 'required|string',
+            'description' => 'required|string',
+            'thumbnail' => 'nullable|image|max:10240|mimes:png,jpg',
+            'teaser_video' => 'required|string',
+            'expired' => 'required_if:type,unschedule',
+            'status' => 'required|string',
+            'schedules' => 'required_if:type,schedule|array|min:1'
+        ]);
 
         try {
             DB::beginTransaction();
@@ -104,22 +128,24 @@ class CourseController
             $this->course->updateCourse(
                 $course,
                 $this->instructorId,
-                $request->only('type', 'category', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'status'),
-                json_decode($request->schedules, true)
+                $request->only('type', 'category', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status'),
+                $request->schedules
             );
 
             DB::commit();
 
-            return to_route('instructor.dashboard');
+            return to_route('instructor.dashboard')->with('success', 'Course updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
-            return to_route('instructor.dashboard');
+
+            return to_route('instructor.dashboard')->with('danger', 'Something went wrong.');
         }
     }
 
     public function destroy(Course $course)
     {
         $course->delete();
+
+        return to_route('instructor.dashboard')->with('success', 'Course deleted successfully.');
     }
 }

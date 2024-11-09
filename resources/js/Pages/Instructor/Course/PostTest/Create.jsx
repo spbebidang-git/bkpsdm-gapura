@@ -14,7 +14,7 @@ const Create = ({ slug }) => {
         title: "",
         description: "",
         min_score: 0,
-        show_result: false,
+        is_loop: false,
         value: ''
     })
 
@@ -44,15 +44,15 @@ const Create = ({ slug }) => {
                         <FormInput title={'value'} isRequired={true} onChange={handleChange} value={values.value} error={errors.value} />
                         <FormInput title={'min score'} isRequired={true} onChange={handleChange} value={values.min_score} error={errors.min_score} />
                         <FormCheckbox
-                            id="show_result"
-                            title={'Show result in certificate?'}
+                            id="is_loop"
+                            title={'Pengulangan? (Maksimal pengulangan untuk post-test adalah 4x)'}
                             onChange={handleChange}
-                            checked={values.show_result}
+                            checked={values.is_loop}
                         />
                     </div>
                 </div>
 
-                <div className="flex gap-3 max-w-lg mx-auto pt-8">
+                <div className="max-w-80 mx-auto gap-3 flex justify-center mt-8">
                     <button className="button-primary">Save</button>
                     <Link className="w-full" href={`/instructor/course/${slug}/activity`}>
                         <button className="button-secondary">Back</button>

@@ -35,6 +35,7 @@ class LiteratureController
             'title' => 'required',
             'sub_title' => 'required',
             'value' => 'required|numeric',
+            'duration' => 'required|numeric',
             'content' => 'required|mimes:pdf|max:10240',
         ]);
 
@@ -54,15 +55,16 @@ class LiteratureController
                 'activity_id' => $activity->id,
                 'sub_title' => $request->sub_title,
                 'content' => $request->content,
+                'duration' => $request->duration,
             ]);
 
             DB::commit();
 
-            return to_route('instructor.course.show', $course->slug);
+            return to_route('instructor.course.show', $course->slug)->with('success', 'Literature created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
-            return to_route('instructor.course.show', $course->slug);
+
+            return to_route('instructor.course.show', $course->slug)->with('danger', 'Something went wrong.');
         }
     }
 
@@ -80,7 +82,7 @@ class LiteratureController
             'title' => 'required',
             'sub_title' => 'required',
             'value' => 'required|numeric',
-            'content' => 'nullable|mimes:pdf|max:10240',
+            'content' => 'required|mimes:pdf|max:10240',
         ]);
 
         try {
@@ -98,15 +100,16 @@ class LiteratureController
                 'activity_id' => $activity->id,
                 'sub_title' => $request->sub_title,
                 'content' => $request->content,
+                'duration' => $request->duration,
             ]);
 
             DB::commit();
 
-            return to_route('instructor.course.show', $course->slug);
+            return to_route('instructor.course.show', $course->slug)->with('success', 'Literature updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('instructor.course.show', $course->slug);
+            return to_route('instructor.course.show', $course->slug)->with('danger', $th->getMessage());
         }
     }
 }

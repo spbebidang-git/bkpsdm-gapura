@@ -230,7 +230,7 @@ class QuestionService
         $question->update([
             'description' => $request['description'],
             'min_score' => $request['min_score'],
-            'show_result' => $request['show_result'],
+            'is_loop' => $request['is_loop'],
         ]);
 
         return true;

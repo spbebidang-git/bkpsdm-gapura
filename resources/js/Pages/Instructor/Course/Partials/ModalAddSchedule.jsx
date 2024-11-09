@@ -22,9 +22,8 @@ const ModalAddSchedule = ({ isOpen, onClose, onScheduleAdded }) => {
         }))
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmitModal = (e) => {
         e.preventDefault(); // Mencegah reload halaman
-        console.log(values)
 
         // Ambil data yang sudah ada dari localStorage
         const existingData = JSON.parse(localStorage.getItem('scheduleData')) || [];
@@ -37,10 +36,6 @@ const ModalAddSchedule = ({ isOpen, onClose, onScheduleAdded }) => {
             time_to: values.time_to,
             quota: values.quota,
         };
-
-        // Tampilkan data yang ada dan data baru untuk debugging
-        console.log("Existing Data:", existingData);
-        console.log("New Schedule:", newSchedule);
 
         // Simpan data baru ke array
         existingData.push(newSchedule);
@@ -61,10 +56,10 @@ const ModalAddSchedule = ({ isOpen, onClose, onScheduleAdded }) => {
             backdropClasses: 'bg-gray-900/50 dark:bg-gray-900/80 fixed inset-0 z-40',
             closable: true,
             onHide: () => {
-                console.log('modal is hidden');
+                // console.log('modal is hidden');
             },
             onShow: () => {
-                console.log('modal is shown');
+                // console.log('modal is shown');
             },
         };
 
@@ -122,7 +117,7 @@ const ModalAddSchedule = ({ isOpen, onClose, onScheduleAdded }) => {
                         </div>
                         <div className="space-y-6 p-6">
                             <p className="text-base leading-relaxed text-gray-500">
-                                <form onSubmit={handleSubmit}>
+                                <form onSubmit={handleSubmitModal}>
                                     {/* date */}
                                     <div className="mb-3">
                                         <FormLabel title={'date'} />

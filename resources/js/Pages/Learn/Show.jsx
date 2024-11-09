@@ -1,10 +1,26 @@
 import Activity from "@/Components/Activity"
 import ListActivity from "@/Components/ListActivity"
 import { Link, usePage } from "@inertiajs/react"
+import { toast } from "react-toastify"
 
 const Home = ({ course, progress, activities, activity, activity_id, question_result }) => {
     const { site } = usePage().props
+    const { errors } = usePage().props
 
+    if (errors.error) {
+        // console.log(errors);
+        toast.error(errors.error, {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "colored",
+            // transition: Bounce,
+        });
+    }
     return (
         <>
             <div className="grid grid-cols-12 max-h-screen min-h-screen">

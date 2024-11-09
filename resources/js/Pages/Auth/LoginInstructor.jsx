@@ -1,25 +1,42 @@
 import FormInput from "@/Components/FormInput";
 import { Link, useForm, usePage } from "@inertiajs/react";
-import ReCAPTCHA from 'react-google-recaptcha';
+import { useEffect, useState } from "react";
 
 const LoginParticipant = () => {
     const { site } = usePage().props
+    const [captchaUrl, setCaptchaUrl] = useState('');
+    const [captchaInput, setCaptchaInput] = useState('');
 
+    useEffect(() => {
+        fetchCaptcha()
+    }, []);
     const { data, setData, post, processing, errors } = useForm({
         email: "",
         password: "",
-        recaptchaToken: "",  // Tambahkan recaptchaToken ke data
+        captcha: "",  // Tambahkan recaptchaToken ke data
     })
+
+    const fetchCaptcha = async () => {
+        try {
+            const response = await axios.get('/sign-in/captcha ')
+            const data = response.data
+            setCaptchaUrl(data.captcha);
+        } catch (error) {
+            console.error("Error fetching captcha:", error);
+        }
+    };
+
+    const handleCaptchaChange = (e) => {
+        const value = e.target.value;
+        setCaptchaInput(value);
+        setData('captcha', value);  // Set nilai captcha di data form
+    };
 
     const handleChange = (e) => {
         const key = e.target.id;
         const value = e.target.value;
         setData(key, value);
     }
-
-    const handleRecaptchaChange = (token) => {
-        setData('recaptchaToken', token);  // Set token ke data
-    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -60,11 +77,26 @@ const LoginParticipant = () => {
                                     onChange={handleChange}
                                     error={errors.password}
                                 />
-                                <div className="w-full">
-                                    <ReCAPTCHA
-                                        sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-                                        onChange={handleRecaptchaChange}
-                                    />
+                                {/* CAPTCHA */}
+                                <div className="py-2">
+                                    <div className=" flex items-center gap-3 -mt-1">
+                                        <div className="flex-1 flex items-center border h-[42px]">
+                                            <img onClick={fetchCaptcha} src={captchaUrl} className="w-full h-full" alt="captcha" style={{ cursor: 'pointer' }} />
+                                        </div>
+                                        <div className="w-1/3">
+                                            <input
+                                                type="text"
+                                                id="captcha"
+                                                value={captchaInput}
+                                                onChange={handleCaptchaChange}
+                                                placeholder="CAPTCHA"
+                                                className={`${errors.captcha ? 'error' : ''} form-control`}
+                                            />
+                                        </div>
+                                    </div>
+                                    {errors.captcha && <div className="mt-1 text-red-500 text-sm">{errors.captcha}
+                                    </div>}
+                                    <small className="text-gray-600 italic">Klik pada gambar untuk melakukan refresh CAPTCHA.</small>
                                 </div>
                                 {/* submit */}
                                 <button type="submit" className="button-primary my-2.5" disabled={processing}>

@@ -13,6 +13,7 @@ const Create = ({ slug }) => {
         title: "",
         sub_title: "",
         value: "",
+        duration: '',
         content: null,
     });
 
@@ -31,6 +32,7 @@ const Create = ({ slug }) => {
         formData.append('title', values.title);
         formData.append('sub_title', values.sub_title);
         formData.append('value', values.value);
+        formData.append('duration', values.duration);
         formData.append('content', values.content);
 
         router.post(`/instructor/course/${slug}/activity/literature`, formData);
@@ -47,6 +49,7 @@ const Create = ({ slug }) => {
                         <FormInput title={'title'} isRequired={true} onChange={handleChange} value={values.title} error={errors.title} />
                         <FormInput title={'sub title'} isRequired={true} onChange={handleChange} value={values.sub_title} error={errors.sub_title} />
                         <FormInput title={'value'} isRequired={true} onChange={handleChange} value={values.value} error={errors.value} />
+                        <FormInput title={'duration'} isRequired={true} onChange={handleChange} value={values.duration} error={errors.duration} />
                         <div className="mb-3">
                             <FormLabel title={'content'} />
                             <div className="flex items-center justify-center w-full">
@@ -61,12 +64,15 @@ const Create = ({ slug }) => {
                                     <input id="content" type="file" onChange={handleChange} className="hidden" />
                                 </label>
                             </div>
+                            {values.content && (
+                                <p className="mt-2 text-sm text-green-500">File selected: {values.content.name}</p>
+                            )}
                             {errors.content && <small className="text-red-500 text-sm mt-1">{errors.content}</small>}
                         </div>
                     </div>
                 </div>
 
-                <div className="flex gap-3 max-w-lg mx-auto pt-8">
+                <div className="max-w-80 mx-auto gap-3 flex justify-center mt-8">
                     <button className="button-primary">Save</button>
                     <Link className="w-full" href={`/instructor/course/${slug}/activity`}>
                         <button className="button-secondary">Back</button>

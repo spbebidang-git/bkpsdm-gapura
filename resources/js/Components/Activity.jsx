@@ -1,4 +1,4 @@
-import { Link, router } from "@inertiajs/react";
+import { router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
@@ -13,8 +13,31 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
     const [activeButton, setActiveButton] = useState(false)
 
     const [questions, setQuestions] = useState([]);
+    const { errors } = usePage().props
+
+    const [captchaUrl, setCaptchaUrl] = useState('');
+    const [captchaInput, setCaptchaInput] = useState('');
+
+    const fetchCaptcha = async () => {
+        try {
+            const response = await axios.get('/captcha-url')
+            // const data = response.data
+            // console.log(response.data)
+            setCaptchaUrl(response.data.captcha);
+        } catch (error) {
+            console.error("Error fetching captcha:", error);
+        }
+    };
+
+    const handleCaptchaChange = (e) => {
+        const value = e.target.value;
+        setCaptchaInput(value);
+        setData('captcha', value);  // Set nilai captcha di data form
+    };
+
 
     useEffect(() => {
+        fetchCaptcha()
         if (type === 'pre-test' || type === 'post-test') {
             if (data.mix === 1) {
                 // Fungsi untuk mengacak array
@@ -181,6 +204,24 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                     );
                 })}
 
+                {/* Captcha */}
+                <div className="p-5 border-2">
+                    <div>
+                        <div className="flex-1 flex items-center border h-12">
+                            <img onClick={fetchCaptcha} src={captchaUrl} className="w-full h-full" alt="captcha" style={{ cursor: 'pointer' }} />
+                        </div>
+                        <div className="w-1/3">
+                            <input
+                                type="text"
+                                id="captcha"
+                                value={captchaInput}
+                                onChange={handleCaptchaChange}
+                                placeholder="Masukan CAPTCHA"
+                                className={`${errors.captcha ? 'error' : ''} form-control`}
+                            />
+                        </div>
+                    </div>
+                </div>
                 <div className="w-full flex justify-center mt-6">
                     <button onClick={handleSubmit} className="button-primary max-w-56">
                         Kirim Jawaban
@@ -408,6 +449,21 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
         const handleSubmitDone = () => {
             router.post(`/learn/${slug}/1/${id}`, {
                 status: 'done'
+            }, {
+                // onSuccess: page => {
+                //     // console.log(page);
+                //     toast.success('Meeting telah berakhir.', {
+                //         position: "top-right",
+                //         autoClose: 3000,
+                //         hideProgressBar: false,
+                //         closeOnClick: true,
+                //         pauseOnHover: true,
+                //         draggable: true,
+                //         progress: undefined,
+                //         theme: "colored",
+                //     });
+                // },
+
             })
         }
 
@@ -417,23 +473,25 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
 
         return <div className="h-full text-gray-700 text-center">
             <div className="mb-5">Klik link online meeting di bawah : </div>
-            <a href={data.meeting_url} className="block text-blue-500 text-xl mb-5">
+            <a href={data.meeting_url} target="_blank" className="block text-blue-500 text-xl mb-5">
                 {data.meeting_url}
             </a>
-            <div className="mb-6">
-                Pastikan anda sudah bergabung didalam online meeting, lalu tekan tombol "Mulai" di bawah.
-            </div>
+
 
             {status === 'done' ? (
-                <Link className="button-primary">
-                    Meeting Selesai
-                </Link>
+                <div className="mb-6">
+                    Meeting Online "Selesai". <br /> Terimakasih telah mengikuti sesi Meeting Online.
+                </div>
             ) : status === 'in_progress' ? (
-                <div className="button-primary">
-                    Sedang Berlangsung
+                <div>
+                    <div className="mb-6">
+                        Meeting Online "Sedang Berlangsung". <br /> Tunggu informasi dari pembicara untuk mengakhiri Meeting Online.
+                    </div>
                 </div>
             ) : (
-                ''
+                <div className="mb-6">
+                    Pastikan anda sudah bergabung didalam online meeting, lalu tekan tombol "Mulai" di bawah.
+                </div>
             )}
 
             <div className="w-full max-w-sm mx-auto flex justify-center mt-6">
@@ -443,7 +501,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                     </button>
                 ) : status === 'in_progress' ? (
                     <button onClick={handleSubmitDone} className="button-primary">
-                        Selesaikan Meeting
+                        Akhiri Meeting
                     </button>
                 ) : (
                     <button onClick={handleSubmit} className="button-primary">

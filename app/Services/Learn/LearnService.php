@@ -6,6 +6,7 @@ use App\Models\Course\Activity;
 use App\Models\Learn\Learn;
 use App\Models\Learn\LearnItem;
 use Carbon\Carbon;
+use PDO;
 
 class LearnService
 {
@@ -147,4 +148,105 @@ class LearnService
         $learnItem->trial_total = $learnItem->trial_total + 1;
         $learnItem->save();
     }
+
+    public function checkValidOpenActivity($activityId)
+    {
+        # get all activity 
+        $activities = Activity::where('course_id', 1)->get();
+        # get learn items 
+        $learn = Learn::with('learnItems')->where('participant_id', 7)->where('course_id', 1)->first();
+
+
+        $currentActivityId = $activityId; // Ganti dengan activity_id saat ini
+
+        $sortedActivityIds = $activities->pluck('id')->sort()->values()->toArray(); // Mengambil daftar activity_id yang sudah diurutkan
+
+        $learnedActivityIds = $learn->learnItems->pluck('activity_id')->toArray(); // Mengambil daftar activity_id yang sudah ada di learnItems
+
+
+
+        // 1. Validasi jika `currentActivityId` adalah activity pertama
+        if ($currentActivityId === $sortedActivityIds[0]) {
+            return true; // Valid jika adalah yang pertama, baik ada atau tidak di learnItems
+        }
+
+        // 2. Validasi jika `currentActivityId` adalah activity kedua
+        $index = array_search($currentActivityId, $sortedActivityIds);
+        if ($index === 1) { // Activity kedua
+            if (in_array($sortedActivityIds[0], $learnedActivityIds)) {
+                return true; // Valid jika activity pertama ada di learnItems
+            } else {
+                return [1]; // Tidak valid jika activity pertama belum ada di learnItems
+            }
+        }
+
+        // 3. Validasi jika `currentActivityId` lebih dari yang pertama
+        if ($index > 1) {
+            if (empty($learnedActivityIds)) {
+                return [2]; // Tidak valid jika belum ada learnItems sama sekali
+            }
+
+            // Cek apakah semua activity sebelumnya sudah ada di learnItems
+            $previousActivities = array_slice($sortedActivityIds, 0, $index);
+            foreach ($previousActivities as $activityId) {
+                if (!in_array($activityId, $learnedActivityIds)) {
+                    return [3]; // Tidak valid jika ada activity sebelumnya yang belum dipelajari
+                }
+            }
+            return true; // Valid jika semua activity sebelumnya sudah ada
+        }
+
+        return true; // Jika tidak memenuhi kondisi lain, maka tidak valid
+    }
+
+    public function isLearned($participantId, $courseId)
+    {
+        $learn = Learn::where('participant_id', $participantId)->where('course_id', $courseId)->first();
+
+        if ($learn) {
+            return true;
+        }
+
+        Learn::create([
+            'participant_id' => $participantId,
+            'course_id' => $courseId,
+        ]);
+
+        return false;
+    }
+
+    // public function checkValidOpenActivity()
+    // {
+    //     # get all activity 
+    //     $activities = Activity::where('course_id', 1)->get();
+    //     # get learn items 
+    //     $learn = Learn::with('learnItems')->where('participant_id', 7)->where('course_id', 1)->first();
+
+    //     $currentActivityId = 20; // Ganti dengan `activity_id` saat ini
+    //     $sortedActivityIds = $activities->pluck('id')->sort()->values()->toArray(); // Mengambil semua `activity_id` secara berurutan
+    //     $learnedActivityIds = $learn->learnItems->pluck('activity_id')->sort()->values()->toArray(); // Mengambil semua `activity_id` di `learnItems` secara berurutan
+
+    //     // Jika tidak ada `learnItems`, validasi hanya untuk `activity_id` pertama
+    //     if (empty($learnedActivityIds)) {
+    //         return $currentActivityId === $sortedActivityIds[0] ? true : [];
+    //     }
+
+    //     // Dapatkan `activity_id` terbesar di `learnItems`
+    //     $lastLearnedActivityId = end($learnedActivityIds);
+
+    //     // Cari indeks dari `lastLearnedActivityId` di dalam daftar `activities`
+    //     $lastIndex = array_search($lastLearnedActivityId, $sortedActivityIds);
+
+    //     // Validasi `currentActivityId`
+    //     if ($lastIndex !== false) {
+    //         // Pastikan `currentActivityId` adalah elemen berikutnya dalam urutan
+    //         if (isset($sortedActivityIds[$lastIndex + 1]) && $sortedActivityIds[$lastIndex + 1] === $currentActivityId) {
+    //             return true;
+    //         } else {
+    //             return []; // Tidak valid jika `currentActivityId` bukan elemen berikutnya
+    //         }
+    //     }
+
+    //     return []; // Tidak valid jika tidak memenuhi kondisi
+    // }
 }

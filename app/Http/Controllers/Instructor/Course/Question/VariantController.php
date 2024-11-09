@@ -36,6 +36,7 @@ class VariantController
     {
         return Inertia::render('Instructor/Course/Variant/Create', [
             'slug' => $slug,
+            'variant' => $this->variant->generateVariantNumber($activityId),
             'activityId' => $activityId,
         ]);
     }
@@ -45,11 +46,11 @@ class VariantController
         try {
             DB::beginTransaction();
 
-            $this->variant->createVariant($slug, $activityId, $request->all());
+            $this->variant->createVariant($activityId, $request->all());
 
             DB::commit();
 
-            return to_route('instructor.course.activity.variant.index', [$slug, $activityId]);
+            return to_route('instructor.course.activity.variant.index', [$slug, $activityId])->with('success', 'Variant created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
@@ -73,12 +74,12 @@ class VariantController
 
             $variant->update([
                 'mix' => $request->mix,
-                'loop' => $request->loop,
+                'variant' => $request->variant,
             ]);
 
             DB::commit();
 
-            return to_route('instructor.course.activity.variant.index', [$slug, $activityId]);
+            return to_route('instructor.course.activity.variant.index', [$slug, $activityId])->with('success', 'Variant updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Course\Course;
 use App\Models\Course\Schedule;
+use App\Models\Learn\Learn;
 use App\Services\Course\CourseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -70,13 +71,19 @@ class CourseController extends Controller
         ]);
     }
 
-    public function store(Request $request, Schedule $schedule)
+    public function store(Request $request, Course $course, Schedule $schedule)
     {
+
         try {
             DB::beginTransaction();
 
             $participantId = Auth::user()->id;
             $schedule->participants()->attach($participantId);
+
+            // Learn::create([
+            //     'participant_id' => $participantId,
+            //     'course_id' => $course->id,
+            // ]);
 
             DB::commit();
 

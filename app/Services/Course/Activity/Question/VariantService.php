@@ -29,15 +29,12 @@ class VariantService
             });
     }
 
-    public function createVariant($slug, $activityId, $data)
+    public function createVariant($activityId, $data)
     {
-        $question = Question::where('activity_id', $activityId)->first();
-
         QuestionVariant::create([
-            'question_id' =>  $question->id,
-            'variant' =>  $this->genereateVariantNumber($question->id),
+            'question_id' =>  $this->getQuestionId($activityId),
+            'variant' =>  $data['variant'],
             'mix' =>  $data['mix'],
-            'loop' =>  $data['loop'],
         ]);
     }
 
@@ -50,5 +47,22 @@ class VariantService
         }
 
         return $variant->variant + 1;
+    }
+
+    public function generateVariantNumber($activityId)
+    {
+        $variant = QuestionVariant::where('question_id',  $this->getQuestionId($activityId))
+            ->orderByDesc('id')
+            ->first();
+        if (!$variant) {
+            return 1;
+        }
+
+        return $variant->variant + 1;
+    }
+
+    public function getQuestionId($activityId)
+    {
+        return Question::where('activity_id', $activityId)->first()->id;
     }
 }

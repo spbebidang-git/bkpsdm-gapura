@@ -142,8 +142,8 @@ class CourseService
             'description' => $data['description'],
             'thumbnail' => UploadMedia::file($data['thumbnail'], Course::$directoryImage),
             'teaser_video' => $data['teaser_video'],
-            // 'outline_topic' => $data['outline_topic'],
-            // 'status' => $data->status,
+            'expired' => $data['expired'],
+            'status' => $data['status'],
         ]);
 
         # Create Schedule
@@ -170,7 +170,7 @@ class CourseService
 
     public function updateCourse($course, $instructorId, $data, $schedules = null)
     {
-        // dd($data['status']);
+        // dd($data['expired']);
         $course->update([
             'category_id' => $data['category'],
             'type' => $data['type'],
@@ -179,7 +179,7 @@ class CourseService
             'short_description' => $data['short_description'],
             'description' => $data['description'],
             'teaser_video' => $data['teaser_video'],
-            // 'outline_topic' => $data['outline_topic'],
+            'expired' => $data['expired'] == 'undefined' ? null :  $data['expired'],
             'status' => $data['status'],
         ]);
 
@@ -190,6 +190,30 @@ class CourseService
 
             $course->thumbnail = UploadMedia::file($data['thumbnail'], Course::$directoryImage);
             $course->save();
+        }
+        // dd($schedules);
+        # Update Schedule
+        if ($schedules) {
+            # Remove all schedules by course
+            // dd($course->load('schedules'));
+            // Memuat relasi schedules
+            $course->load('schedules');
+
+            // Menghapus setiap schedule terkait
+            $course->schedules->each(function ($schedule) {
+                $schedule->delete();  // Menghapus setiap schedule
+            });
+            foreach ($schedules as $item) {
+                Schedule::create([
+                    'course_id' => $course->id,
+                    'date' => $item['date'],
+                    'time_from' => $item['time_from'],
+                    'time_to' => $item['time_to'],
+                    'quota' => $item['quota'],
+                ]);
+            }
+
+            return true;
         }
     }
 }

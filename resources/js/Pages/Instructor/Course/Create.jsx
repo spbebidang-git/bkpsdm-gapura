@@ -5,9 +5,10 @@ import FormTextArea from "@/Components/FormTextArea";
 import App from "@/Layouts/Instructor/App";
 import { Link, router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import ModalAddSchedule from "./Partials/ModalAddSchedule";
 
-const Create = ({ courses, categories }) => {
+const Create = ({ categories }) => {
 
     const [type, setType] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,15 +33,6 @@ const Create = ({ courses, categories }) => {
         label: item.title
     }));
 
-    const handleTypeChange = (e) => {
-        const selectedValue = e.target.value;
-        if (selectedValue === "Schedule") {
-            setType(1);
-        } else {
-            setType(0);
-        }
-    };
-
     const [values, setValues] = useState({
         type: "",
         category: "",
@@ -49,6 +41,8 @@ const Create = ({ courses, categories }) => {
         description: "",
         thumbnail: null,
         teaser_video: "",
+        expired: "",
+        status: "",
     })
 
     const handleChange = (e) => {
@@ -79,25 +73,20 @@ const Create = ({ courses, categories }) => {
         formData.append('description', values.description);
         formData.append('thumbnail', values.thumbnail);
         formData.append('teaser_video', values.teaser_video);
+        formData.append('expired', values.expired);
+        formData.append('status', values.status);
 
         const localData = localStorage.getItem('scheduleData');
         if (values.type == 'schedule' && localData) {
             formData.append('schedules', localData)
         }
 
-        router.post(`/instructor/course`, values, {
+        router.post(`/instructor/course`, formData, {
             onSuccess: page => {
-                toast.success('🦄 Wow so easy!', {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    progress: undefined,
-                    theme: "light",
-                    transition: Bounce,
-                });
+                const localData = localStorage.getItem('scheduleData');
+                if (localData) {
+                    localStorage.clear();
+                }
             },
         });
     }
@@ -105,11 +94,26 @@ const Create = ({ courses, categories }) => {
     const [data, setData] = useState([]);
 
     useEffect(() => {
+        if (errors.schedules) {
+            console.log(errors)
+            toast.error('Schedules cannot empty.', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "colored",
+                // transition: Bounce,
+            });
+        }
+
         const localData = localStorage.getItem('scheduleData');
         if (localData) {
             setData(JSON.parse(localData));
         }
-    }, []);
+    }, [errors]);
 
     const handleScheduleAdded = (newSchedule) => {
         setData(prevData => {
@@ -124,6 +128,7 @@ const Create = ({ courses, categories }) => {
         setData(updatedData);
         localStorage.setItem('scheduleData', JSON.stringify(updatedData));
     };
+
     return (
         <App>
             <form onSubmit={handleSubmit}>
@@ -143,6 +148,10 @@ const Create = ({ courses, categories }) => {
                             <FormTextArea title={'description'} value={values.description} onChange={handleChange} isRequired={true} error={errors.description} />
                             {/* teaser video */}
                             <FormInput title={'teaser video'} value={values.teaser_video} onChange={handleChange} isRequired={true} error={errors.teaser_video} />
+                            {/* expired */}
+                            {!type && (
+                                <FormInput title={'expired'} value={values.expired} placeholder={'Set expired in hour'} onChange={handleChange} isRequired={true} error={errors.expired} />
+                            )}
                             {/* thumbnail */}
                             <div className="mb-3">
                                 <FormLabel title={'thumbnail'} isRequired={true} />
@@ -153,11 +162,14 @@ const Create = ({ courses, categories }) => {
                                                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
                                             </svg>
                                             <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                                            <p className="text-xs text-gray-500">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
+                                            <p className="text-xs text-gray-500">PNG or JPG(MAX. 10MB)</p>
                                         </div>
                                         <input id="thumbnail" type="file" onChange={handleChange} className="hidden" />
                                     </label>
                                 </div>
+                                {values.thumbnail && (
+                                    <p className="mt-2 text-sm text-green-500">File selected: {values.thumbnail.name}</p>
+                                )}
                                 {errors.thumbnail && <small className="text-red-500 text-sm mt-1">{errors.thumbnail}</small>}
                             </div>
                             {/* status */}
@@ -231,7 +243,6 @@ const Create = ({ courses, categories }) => {
             </form>
 
             <ModalAddSchedule isOpen={isModalOpen} onClose={toggleModal} onScheduleAdded={handleScheduleAdded} />
-
 
         </App>
     )

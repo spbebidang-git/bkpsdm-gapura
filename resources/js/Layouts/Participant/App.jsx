@@ -1,3 +1,4 @@
+import FlashMessageToast from '@/Components/FlashMessageToast';
 import { Link, usePage } from '@inertiajs/react';
 import { ToastContainer } from 'react-toastify';
 export default function App({ children }) {
@@ -6,6 +7,7 @@ export default function App({ children }) {
 
     return (
         <div className="flex flex-col justify-between min-h-screen">
+            <FlashMessageToast />
             <header className="bg-gray-50 shadow border-b">
                 <div class="bg-primary h-2"></div>
                 <nav class="bg-white border-gray-200 dark:bg-gray-900">

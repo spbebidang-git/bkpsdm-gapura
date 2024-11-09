@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\CheckRoleAuthMiddleware;
+use App\Http\Middleware\IsFinishedMiddleware;
 use App\Http\Middleware\IsParticipantMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -13,10 +14,10 @@ Route::middleware([CheckRoleAuthMiddleware::class, IsParticipantMiddleware::clas
         Route::get('my-course', [\App\Http\Controllers\Participant\CourseController::class, 'index'])->name('course.index');
         Route::get('my-course/{course:slug}', [\App\Http\Controllers\Participant\CourseController::class, 'show'])->name('course.show');
         # Rating & Submit Score
-        Route::get('learn/{course:slug}/{scheduleId}/rating', [\App\Http\Controllers\Participant\RatingController::class, 'index'])->name('rating.index');
+        Route::get('learn/{course:slug}/{scheduleId}/rating', [\App\Http\Controllers\Participant\RatingController::class, 'index'])->name('rating.index')->middleware(IsFinishedMiddleware::class);
         Route::post('learn/{course:slug}/{scheduleId}/rating', [\App\Http\Controllers\Participant\RatingController::class, 'store'])->name('rating.store');
         # Survey
-        Route::get('learn/{course:slug}/{scheduleId}/survey', [\App\Http\Controllers\Participant\SurveyController::class, 'index'])->name('survey.index');
+        Route::get('learn/{course:slug}/{scheduleId}/survey', [\App\Http\Controllers\Participant\SurveyController::class, 'index'])->name('survey.index')->middleware(IsFinishedMiddleware::class);;
         # Learn 
         Route::get('learn/{slug}/{scheduleId}/{activity}', [\App\Http\Controllers\Participant\LearnController::class, 'index'])->name('learn.index');
         Route::post('learn/{course:slug}/{scheduleId}/{activity}', [\App\Http\Controllers\Participant\LearnController::class, 'store'])->name('learn.store');

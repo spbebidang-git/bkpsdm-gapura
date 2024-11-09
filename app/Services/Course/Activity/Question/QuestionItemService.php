@@ -3,6 +3,7 @@
 namespace App\Services\Course\Activity\Question;
 
 use App\Models\Course\Question\QuestionItem;
+use Illuminate\Support\Facades\DB;
 
 class QuestionItemService
 {
@@ -26,4 +27,15 @@ class QuestionItemService
     }
 
     public function createQuestionItem() {}
+
+    public function getActivity($activityId, $variant)
+    {
+        return DB::table('questions')
+            ->select('questions.description as title', 'questions.type', 'questions.is_loop', 'question_variants.variant', 'question_variants.mix')
+            ->join('question_variants', 'question_variants.question_id', '=', 'questions.id')
+            ->where('questions.activity_id', $activityId)
+            // ->where('questions.id', $questionId)
+            ->where('question_variants.id', $variant)
+            ->first();
+    }
 }

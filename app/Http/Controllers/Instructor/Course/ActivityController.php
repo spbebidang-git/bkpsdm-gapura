@@ -27,11 +27,11 @@ class ActivityController
 
             DB::commit();
 
-            return to_route('instructor.course.show', $slug);
+            return to_route('instructor.course.show', $slug)->with('success', 'Activity deleted successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('instructor.course.show', $slug);
+            return to_route('instructor.course.show', $slug)->with('danger', 'Something went wrong.');
         }
     }
 }

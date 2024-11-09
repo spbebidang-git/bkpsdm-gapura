@@ -61,11 +61,11 @@ class OnlineMeetingController
 
             DB::commit();
 
-            return to_route('instructor.course.show', $course->slug);
+            return to_route('instructor.course.show', $course->slug)->with('success', 'Meeting created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
-            return to_route('instructor.course.show', $course->slug);
+
+            return to_route('instructor.course.show', $course->slug)->with('danger', 'Something went wrong.');
         }
     }
 
@@ -108,11 +108,11 @@ class OnlineMeetingController
 
             DB::commit();
 
-            return to_route('instructor.course.show', $course->slug);
+            return to_route('instructor.course.show', $course->slug)->with('success', 'Meeting updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('instructor.course.show', $course->slug);
+            return to_route('instructor.course.show', $course->slug)->with('danger', 'Something went wrong.');
         }
     }
 }

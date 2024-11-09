@@ -1,4 +1,4 @@
-const FormInput = ({ title, value, onChange, isRequired, placeholder = null, error, type = null }) => {
+const FormInput = ({ title, value, onChange, isRequired, placeholder = null, error, type = null, readOnly = false }) => {
     return (
         <div className="mb-3">
             <label htmlFor={title.replace(/\s+/g, '_')} className="form-label">
@@ -11,6 +11,7 @@ const FormInput = ({ title, value, onChange, isRequired, placeholder = null, err
                 className={`${error ? 'error' : ''} form-control`}
                 placeholder={placeholder ? placeholder : title}
                 onChange={onChange}
+                readOnly={readOnly}
             />
             {error && <small className="text-red-500 text-sm mt-1">{error}</small>}
         </div>

@@ -3,13 +3,15 @@ import FormLabel from "@/Components/FormLabel";
 import FormSelect from "@/Components/FormSelect";
 import FormTextArea from "@/Components/FormTextArea";
 import App from "@/Layouts/Instructor/App";
-import { Link, router } from "@inertiajs/react";
+import { Link, router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import ModalAddSchedule from "./Partials/ModalAddSchedule";
 
-const Edit = ({ course, categories }) => {
+const Edit = ({ course, categories, schedules }) => {
     const [type, setType] = useState(course.type === 'schedule' ? 1 : 0); // Set type based on existing data
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const { errors } = usePage().props
 
     const toggleModal = () => {
         setIsModalOpen(!isModalOpen);
@@ -29,15 +31,6 @@ const Edit = ({ course, categories }) => {
         value: item.id,
         label: item.title
     }));
-
-    const handleTypeChange = (e) => {
-        const selectedValue = e.target.value;
-        if (selectedValue === "schedule") {
-            setType(1);
-        } else {
-            setType(0);
-        }
-    };
 
     // Prepopulate form with course
     const [values, setValues] = useState({
@@ -71,26 +64,86 @@ const Edit = ({ course, categories }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // Send PUT request to update the course
-        router.post(`/instructor/course/${course.slug}`, {
-            _method: 'put', type: values.type,
-            category: values.category,
-            title: values.title,
-            short_description: values.short_description,
-            description: values.description,
-            thumbnail: values.thumbnail,
-            teaser_video: values.teaser_video,
-            status: values.status
+        // // Send PUT request to update the course
+        // router.post(`/instructor/course/${course.slug}`, {
+        //     _method: 'put', type: values.type,
+        //     category: values.category,
+        //     title: values.title,
+        //     short_description: values.short_description,
+        //     description: values.description,
+        //     thumbnail: values.thumbnail,
+        //     teaser_video: values.teaser_video,
+        //     status: values.status
+        // });
+
+        e.preventDefault();
+
+        const formData = new FormData();
+        formData.append('_method', 'put');
+        formData.append('type', values.type);
+        formData.append('category', values.category);
+        formData.append('title', values.title);
+        formData.append('short_description', values.short_description);
+        formData.append('description', values.description);
+        if (values.thumbnail !== null) {
+            formData.append('thumbnail', values.thumbnail);
+        } else {
+            formData.append('thumbnail', ''); // Atau bisa tidak menambahkannya sama sekali
+        }
+
+        formData.append('teaser_video', values.teaser_video);
+        formData.append('expired', values.expired);
+        formData.append('status', values.status);
+
+        const localData = localStorage.getItem('scheduleData');
+        if (values.type == 'schedule' && localData) {
+            formData.append('schedules', localData)
+        }
+
+        router.post(`/instructor/course/${course.slug}`, formData, {
+            onSuccess: page => {
+                const localData = localStorage.getItem('scheduleData');
+                if (localData) {
+                    localStorage.clear();
+                }
+            },
         });
     };
 
-    const [data, setData] = useState(course.schedules || []); // Prepopulate schedules
+    const [data, setData] = useState([]); // Prepopulate schedules
 
     useEffect(() => {
-        const localData = localStorage.getItem('scheduleData');
-        if (localData) {
-            setData(JSON.parse(localData));
+        if (errors.schedules) {
+            // console.log(errors)
+            toast.error('Schedules cannot empty.', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "colored",
+                // transition: Bounce,
+            });
         }
+        const mappedSchedules = schedules.map(schedule => ({
+            id: schedule.id, // Jika id ada, gunakan id tersebut, jika tidak, buat id baru
+            date: schedule.date || values.date,
+            time_from: schedule.time_from || values.time_from,
+            time_to: schedule.time_to || values.time_to,
+            quota: schedule.quota || values.quota,
+        }));
+
+        // const localData = localStorage.getItem('scheduleData');
+        // if (localData) {
+        // }
+        setData(mappedSchedules);
+
+        // Simpan kembali ke localStorage
+        localStorage.setItem('scheduleData', JSON.stringify(mappedSchedules));
+
+
 
         setValues({
             type: course.type || 'unschedule',
@@ -126,15 +179,15 @@ const Edit = ({ course, categories }) => {
                     <div className="p-6">
                         <div>
                             {/* type */}
-                            <FormSelect title={'type'} value={values.type} selectedValue={values.type} onChange={handleChange} isRequired={true} options={typeOptions} />
+                            <FormSelect title={'type'} value={values.type} selectedValue={values.type} onChange={handleChange} isRequired={true} options={typeOptions} error={errors.type} />
                             {/* category */}
-                            <FormSelect title={'category'} value={values.category} selectedValue={values.category} onChange={handleChange} isRequired={true} options={typeCategories} />
+                            <FormSelect title={'category'} value={values.category} selectedValue={values.category} onChange={handleChange} isRequired={true} options={typeCategories} error={errors.category} />
                             {/* title */}
-                            <FormInput title={'title'} value={values.title} onChange={handleChange} isRequired={true} />
+                            <FormInput title={'title'} value={values.title} onChange={handleChange} isRequired={true} error={errors.title} />
                             {/* short description */}
-                            <FormTextArea title={'short description'} value={values.short_description} onChange={handleChange} isRequired={true} />
+                            <FormTextArea title={'short description'} value={values.short_description} onChange={handleChange} isRequired={true} error={errors.short_description} />
                             {/* description */}
-                            <FormTextArea title={'description'} value={values.description} onChange={handleChange} isRequired={true} />
+                            <FormTextArea title={'description'} value={values.description} onChange={handleChange} isRequired={true} error={errors.description} />
                             <div className="mb-3">
                                 <FormLabel title={'thumbnail'} />
                                 <div className="flex items-center justify-center w-full">
@@ -151,8 +204,13 @@ const Edit = ({ course, categories }) => {
                                 </div>
                             </div>
                             {/* teaser video */}
-                            <FormInput title={'teaser video'} value={values.teaser_video} onChange={handleChange} isRequired={true} />
-                            <FormSelect title={'status'} selectedValue={values.status} value={values.status} onChange={handleChange} isRequired={true} options={statusOptions} />
+                            <FormInput title={'teaser video'} value={values.teaser_video} onChange={handleChange} isRequired={true} error={errors.teaser_video} />
+                            {/* expired */}
+                            {!type && (
+                                <FormInput title={'expired'} value={values.expired} placeholder={'Set expired in hour'} onChange={handleChange} isRequired={true} error={errors.expired} />
+                            )}
+                            {/* status */}
+                            <FormSelect title={'status'} selectedValue={values.status} value={values.status} onChange={handleChange} isRequired={true} options={statusOptions} error={errors.status} />
                         </div>
                     </div>
                 </div>
@@ -178,40 +236,51 @@ const Edit = ({ course, categories }) => {
                                                     Date
                                                 </th>
                                                 <th scope="col" className="px-6 py-3 text-center bg-gray-50 dark:bg-gray-700">
-                                                    Time
+                                                    Time Period
                                                 </th>
                                                 <th scope="col" className="px-6 py-3 text-center bg-gray-50 dark:bg-gray-700">
-                                                    Delete
+                                                    Quota
+                                                </th>
+                                                <th scope="col" className="px-6 py-3 text-center bg-gray-50 dark:bg-gray-700">
+                                                    Action
                                                 </th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {data.map((item, index) => (
-                                                <tr key={item.id}>
-                                                    <td className="px-6 py-4 text-center">{index + 1}</td>
-                                                    <td className="px-6 py-4 text-center">{item.date}</td>
-                                                    <td className="px-6 py-4 text-center">{item.time}</td>
-                                                    <td className="px-6 py-4 text-center">
-                                                        <button type="button" onClick={() => handleDeleteSchedule(item.id)} className="font-medium text-red-600 hover:underline dark:text-red-500">
-                                                            Delete
-                                                        </button>
-                                                    </td>
+                                            {data.length > 0 ? (
+                                                data.map((item, index) => (
+                                                    <tr key={index} className="border-b dark:border-gray-700">
+                                                        <td className="px-6 py-4 text-center">{index + 1}</td>
+                                                        <td className="px-6 py-4 text-center">{item.date}</td>
+                                                        <td className="px-6 py-4 text-center">{`${item.time_from} - ${item.time_to}`}</td>
+                                                        <td className="px-6 py-4 text-center">{item.quota}</td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            {/* Tambahkan tombol atau aksi di sini */}
+                                                            <button type="button" className="text-red-600 hover:text-red-900" onClick={() => handleDeleteSchedule(item.id)}>Delete</button>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan="100%" className="text-center py-4">No data available</td>
                                                 </tr>
-                                            ))}
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
-                        <ModalAddSchedule isOpen={isModalOpen} onClose={toggleModal} onScheduleAdded={handleScheduleAdded} />
                     </div>
                 ) : null}
 
-                <div className="flex justify-end max-w-4xl mx-auto mt-10">
-                    <Link href="/instructor" className="button-secondary px-10">Back</Link>
-                    <button type="submit" className="button-primary px-10 ml-2">Update</button>
+                <div className="max-w-80 mx-auto gap-3 flex justify-center mt-8">
+                    <button className="button-primary">Save</button>
+                    <Link href="/instructor" className="button-secondary">Back</Link>
                 </div>
             </form>
+
+            <ModalAddSchedule isOpen={isModalOpen} onClose={toggleModal} onScheduleAdded={handleScheduleAdded} />
+
         </App>
     );
 };

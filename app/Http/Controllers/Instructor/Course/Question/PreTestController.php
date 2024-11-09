@@ -59,11 +59,11 @@ class PreTestController
 
             DB::commit();
 
-            return to_route('instructor.course.show', $course->slug);
+            return to_route('instructor.course.show', $course->slug)->with('success', 'Pre-Test created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('instructor.course.show', $course->slug);
+            return to_route('instructor.course.show', $course->slug)->with('danger', 'Something went wrong.');
         }
     }
 
@@ -103,11 +103,11 @@ class PreTestController
 
             DB::commit();
 
-            return to_route('instructor.course.show', $course->slug);
+            return to_route('instructor.course.show', $course->slug)->with('success', 'Pre-Test updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('instructor.course.show', $course->slug);
+            return to_route('instructor.course.show', $course->slug)->with('danger', 'Something went wrong.');
         }
     }
 }

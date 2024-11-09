@@ -48,6 +48,6 @@ class Schedule extends Model
             return  Attribute::get(fn() => 'Tidak Terbatas');
         }
 
-        return Attribute::get(fn() => $this->date);
+        return Attribute::get(fn($row) => $row);
     }
 }

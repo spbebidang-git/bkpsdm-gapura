@@ -42,27 +42,45 @@ Route::prefix('/admin')
             $a = $query->map(function ($row) {
                 // dd(unserialize($row->learnItems->where('type', 'pre-test')->first()->response));
                 $pre = 0;
-                if ($row->learnItems->where('type', 'pre-test')->first()->response) {
-                    foreach (unserialize($row->learnItems->where('type', 'pre-test')->first()->response) as $item) {
+                if ($row->learnItems->where('type', 'pre-test')->first()) {
+                    $responsePre = unserialize($row->learnItems->where('type', 'pre-test')->first()->response);
+                    // dd($responsePre[0]['score']);
+                    foreach ($responsePre as $item) {
                         $pre = $pre + $item['score'];
                     }
-                } else {
-                    $pre = null;
+
+                    $preCorrect = count(search($responsePre, 'is_correct', true));
+
+                    $preWrong = count(search($responsePre, 'is_correct', false));
+
+                    $preScore = $responsePre[0]['score'];
                 }
 
                 $post = 0;
                 if ($row->learnItems->where('type', 'post-test')->first()) {
-                    foreach (unserialize($row->learnItems->where('type', 'post-test')->first()->response) as $item) {
+                    $responsePost = unserialize($row->learnItems->where('type', 'post-test')->first()->response);
+                    foreach ($responsePost as $item) {
                         $post = $pre + $item['score'];
                     }
-                } else {
-                    $post = null;
+
+                    $postCorrect = count(search($responsePost, 'is_correct', true));
+
+                    $postWrong = count(search($responsePost, 'is_correct', false));
+
+                    $postScore = $responsePost[0]['score'];
                 }
 
                 return [
                     'name' => $row->participant->name,
-                    'pre_score' => $pre,
-                    'post_score' => $post,
+                    'pre_score_total' => $pre ?? 'kosong',
+                    'pre_correct' => $preCorrect ?? 'kosong',
+                    'pre_wrong' => $preWrong ?? 'kosong',
+                    'pre_score' => $preScore ?? 'kosong',
+                    'post_score_total' => $post ?? 'kosong',
+                    'post_correct' => $postCorrect ?? 'kosong',
+                    'post_wrong' => $postWrong ?? 'kosong',
+                    'post_score' => $postScore ?? 'kosong',
+                    'finished_at' => $row->finished_at,
                 ];
             });
 
@@ -70,8 +88,17 @@ Route::prefix('/admin')
                 echo '<table>
                     <tr>
                         <td>' . $item['name'] . '</td>
+                        <td>' . $item['pre_score_total'] . '</td>
+                        <td>' . $item['pre_correct'] . '</td>
+                        <td>' . $item['pre_wrong'] . '</td>
                         <td>' . $item['pre_score'] . '</td>
+
+                        <td>' . $item['post_score_total'] . '</td>
+                        <td>' . $item['post_correct'] . '</td>
+                        <td>' . $item['post_wrong'] . '</td>
                         <td>' . $item['post_score'] . '</td>
+
+                        <td>' . $item['finished_at'] . '</td>
                     </tr>
                 </table>';
             }

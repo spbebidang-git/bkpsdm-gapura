@@ -56,11 +56,11 @@ class TaskController
 
             DB::commit();
 
-            return to_route('instructor.course.show', $course->slug);
+            return to_route('instructor.course.show', $course->slug)->with('success', 'Task created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('instructor.course.show', $course->slug);
+            return to_route('instructor.course.show', $course->slug)->with('danger', 'Something went wrong.');
         }
     }
 
@@ -98,11 +98,11 @@ class TaskController
 
             DB::commit();
 
-            return to_route('instructor.course.show', $course->slug);
+            return to_route('instructor.course.show', $course->slug)->with('success', 'Task updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
-            return to_route('instructor.course.show', $course->slug);
+
+            return to_route('instructor.course.show', $course->slug)->with('danger', 'Something went wrong.');
         }
     }
 }

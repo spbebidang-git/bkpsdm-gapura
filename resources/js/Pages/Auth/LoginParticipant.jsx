@@ -1,14 +1,21 @@
 import FormInput from "@/Components/FormInput";
 import { Link, useForm, usePage } from "@inertiajs/react";
-import ReCAPTCHA from 'react-google-recaptcha';
+import { useEffect, useState } from "react";
 
 const LoginParticipant = () => {
     const { site } = usePage().props
 
+    const [captchaUrl, setCaptchaUrl] = useState('');
+    const [captchaInput, setCaptchaInput] = useState('');
+
+    useEffect(() => {
+        fetchCaptcha()
+    }, []);
+
     const { data, setData, post, processing, errors } = useForm({
         username: "",
         password: "",
-        recaptchaToken: "",  // Tambahkan recaptchaToken ke data
+        captcha: "",  // Tambahkan recaptchaToken ke data
     });
 
     const handleChange = (e) => {
@@ -17,8 +24,10 @@ const LoginParticipant = () => {
         setData(key, value);
     };
 
-    const handleRecaptchaChange = (token) => {
-        setData('recaptchaToken', token);  // Set token ke data
+    const handleCaptchaChange = (e) => {
+        const value = e.target.value;
+        setCaptchaInput(value);
+        setData('captcha', value);  // Set nilai captcha di data form
     };
 
     const handleSubmit = (e) => {
@@ -26,12 +35,21 @@ const LoginParticipant = () => {
         post('/sign-in');  // Kirim data termasuk token ke backend
     };
 
+    const fetchCaptcha = async () => {
+        try {
+            const response = await axios.get('/captcha ')
+            const data = response.data
+            setCaptchaUrl(data.captcha);
+        } catch (error) {
+            console.error("Error fetching captcha:", error);
+        }
+    };
 
     return (
         <section className="min-h-screen flex flex-col bg-gray-100">
             <div className="bg-primary h-2"></div>
 
-            <div className="flex-1 flex flex-col justify-center items-center">
+            <div className="p-5 xl:p-0 flex-1 flex flex-col justify-center items-center">
                 <Link href="/" className="flex items-center max-w-56 mb-6 text-2xl font-semibold text-gray-900">
                     <img src={site.logo} alt="" className='w-full h-full object-fill' />
                 </Link>
@@ -61,12 +79,26 @@ const LoginParticipant = () => {
                                     onChange={handleChange}
                                     error={errors.password}
                                 />
-                                {/* Recaptha */}
-                                <div className="w-full">
-                                    <ReCAPTCHA
-                                        sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-                                        onChange={handleRecaptchaChange}
-                                    />
+                                {/* CAPTCHA */}
+                                <div>
+                                    <div className=" flex items-center gap-3 -mt-1">
+                                        <div className="flex-1 flex items-center border h-12">
+                                            <img onClick={fetchCaptcha} src={captchaUrl} className="w-full h-full" alt="captcha" style={{ cursor: 'pointer' }} />
+                                        </div>
+                                        <div className="w-1/3">
+                                            <input
+                                                type="text"
+                                                id="captcha"
+                                                value={captchaInput}
+                                                onChange={handleCaptchaChange}
+                                                placeholder="Masukan CAPTCHA"
+                                                className={`${errors.captcha ? 'error' : ''} form-control`}
+                                            />
+                                        </div>
+                                    </div>
+                                    {errors.captcha && <div className="mt-1 text-red-500 text-sm">{errors.captcha}
+                                    </div>}
+                                    <small className="text-gray-600 italic">Klik pada gambar untuk melakukan refresh CAPTCHA.</small>
                                 </div>
                                 {/* submit */}
                                 <button type="submit" className="button-primary my-2.5" disabled={processing}>

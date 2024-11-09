@@ -36,7 +36,7 @@ class PostTestController
             'description' => 'required|string',
             'value' => 'required|numeric',
             'min_score' => 'required',
-            'show_result' => 'boolean'
+            'is_loop' => 'boolean'
         ]);
 
         try {
@@ -56,16 +56,16 @@ class PostTestController
                 'description' => $request->description,
                 'type' => 'post',
                 'min_score' => $request->min_score,
-                'show_result' => $request->show_result
+                'is_loop' => $request->is_loop
             ]);
 
             DB::commit();
 
-            return to_route('instructor.course.show', $course->slug);
+            return to_route('instructor.course.show', $course->slug)->with('success', 'Post-Test created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
-            return to_route('instructor.course.show', $course->slug);
+
+            return to_route('instructor.course.show', $course->slug)->with('danger', 'Something went wrong.');
         }
     }
 
@@ -102,16 +102,16 @@ class PostTestController
                 'type' => 'post',
                 'description' => $request->description,
                 'min_score' => $request->min_score,
-                'show_result' => $request->show_result
+                'is_loop' => $request->is_loop
             ]);
 
             DB::commit();
 
-            return to_route('instructor.course.show', $course->slug);
+            return to_route('instructor.course.show', $course->slug)->with('success', 'Post-Test updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
-            return to_route('instructor.course.show', $course->slug);
+
+            return to_route('instructor.course.show', $course->slug)->with('danger', 'Something went wrong.');
         }
     }
 }

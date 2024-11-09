@@ -11,6 +11,8 @@ Route::prefix('/sign-in')
     ->name('sign-in.')
     ->middleware('guest')
     ->group(function () {
+        # Captha
+        Route::get('captcha', [\App\Http\Controllers\Web\AuthController::class, 'captcha'])->name('captcha');
         # Admin
         Route::get('/admin', [\App\Http\Controllers\Web\AuthController::class, 'createAdmin'])->name('admin.create');
         Route::post('/admin', [\App\Http\Controllers\Web\AuthController::class, 'storeAdmin'])->name('admin.store');
@@ -40,13 +42,16 @@ Route::get('/contact', [\App\Http\Controllers\Web\StaticPageController::class, '
 # Course
 Route::get('/course', [\App\Http\Controllers\Web\CourseController::class, 'index'])->name('course.index');
 Route::get('/course/{course:slug}', [\App\Http\Controllers\Web\CourseController::class, 'show'])->name('course.show');
-Route::post('/course/{schedule}', [\App\Http\Controllers\Web\CourseController::class, 'store'])->name('course.store')->middleware(IsParticipantMiddleware::class);
+Route::post('/course/{course:slug}/{schedule}', [\App\Http\Controllers\Web\CourseController::class, 'store'])->name('course.store')->middleware(IsParticipantMiddleware::class);
 # Category
 Route::get('/category', [\App\Http\Controllers\Web\CategoryController::class, 'index'])->name('category.index');
 Route::get('/category/{category}', [\App\Http\Controllers\Web\CategoryController::class, 'show'])->name('category.show');
 
 # Customer 
 # Route::prefix('learn')
+
+# Captcha
+Route::get('captcha-url', [\App\Http\Controllers\Web\CapthaController::class, 'captcha'])->name('captcha');
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');

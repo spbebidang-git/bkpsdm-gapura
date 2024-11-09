@@ -124,7 +124,7 @@ class ActivityService
         }
 
         if ($activity->type === 'task') {
-            return $this->task->getTask($activity);
+            return $this->task->getTask($participantId, $activity);
         }
 
         if ($activity->type === 'meeting') {
