@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Models\Management\UserMeta;
 use App\Models\User;
+use App\Services\User\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,13 @@ use Mews\Captcha\Facades\Captcha;
 
 class AuthController
 {
+    protected $user;
+
+    public function __construct(UserService $userService)
+    {
+        $this->user = $userService;
+    }
+
     public function captcha()
     {
         return response()->json([
@@ -103,7 +111,9 @@ class AuthController
             'client_secret' => env('SSO_CLIENT_SECRET'),
         ]);
 
-        if ($response->successful() && $response->json()['access_token']) {
+        sleep(1);
+
+        if ($response->successful() && isset($response->json()['access_token'])) {
             $token = 'Bearer ' . $response->json()['access_token'];
 
             $userNip = UserMeta::with('user')
@@ -111,14 +121,14 @@ class AuthController
                 ->where('value', $request->username)
                 ->first();
 
+            $participantApi = Http::withHeaders([
+                'apikey' => env('API_KEY'),
+                'auth' => $token
+            ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
+
             if (!$userNip) {
                 try {
                     DB::beginTransaction();
-
-                    $participantApi = Http::withHeaders([
-                        'apikey' => env('API_KEY'),
-                        'auth' => $token
-                    ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
 
                     $user = User::create([
                         'name' => $participantApi->json()['fv_nama'],
@@ -126,7 +136,7 @@ class AuthController
                         'password' => Hash::make(str()->random(12))
                     ]);
 
-                    update_user_meta($user->id, 'nip', $participantApi->json()['fc_nipbr']);
+                    $this->user->storeUserMeta($user->id, $participantApi->json());
 
                     $user->assignRole('Participant');
 
@@ -137,7 +147,7 @@ class AuthController
                     return to_route('home');
                 } catch (\Throwable $th) {
                     DB::rollBack();
-
+                    dd($th);
                     return back()->withErrors([
                         'username' => 'Something went wrong.',
                     ])->onlyInput('username');
@@ -147,9 +157,12 @@ class AuthController
             Auth::login($userNip->user);
 
             Session::put('token', $token);
+
+            $this->user->storeUserMeta($userNip->user->id, $participantApi->json());
         }
 
-        return to_route('sign-in.participant.create')->with('danger', 'Something went wrong.');
+
+        return to_route('sign-in.participant.create')->with('danger', 'Something went wrong. Please try again.');
     }
 
     public function logout(Request $request)
