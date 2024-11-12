@@ -11,7 +11,7 @@ class IsFinishedMiddleware
     public function handle(Request $request, Closure $next)
     {
         $learn = Learn::where('participant_id', $request->user()->id)->where('course_id', $request->course->id)->first();
-        if ($learn->finished_at) {
+        if ($learn->isAllowRating()) {
             return $next($request);
         }
 

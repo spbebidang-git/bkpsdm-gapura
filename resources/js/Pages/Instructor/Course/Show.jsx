@@ -9,6 +9,29 @@ const Show = ({ course, activities }) => {
         setDataActivities(activities)
     }, [])
 
+    const handleEndMeeting = (e, activityId) => {
+        e.preventDefault();
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This data will be permanently updated!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, Delete!',
+            cancelButtonText: 'No'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.post(route('instructor.course.activity.meeting.end-meeting', [course.slug, activityId]));
+
+                setDataActivities(prevData => prevData.map(activity =>
+                    activity.id === activityId ? { ...activity, end_meeting: 1 } : activity
+                ));
+            }
+        });
+    }
+
     const handleSubmitDelete = (e, activityId) => {
         e.preventDefault();
 
@@ -91,6 +114,11 @@ const Show = ({ course, activities }) => {
                                                             Variant
                                                         </button>
                                                     </Link>
+                                                ) : ''}
+                                                {item.type === 'meeting' && item.end_meeting === 0 ? (
+                                                    <button onClick={(e) => handleEndMeeting(e, item.id)} className="w-20 h-7 text-sm font-medium bg-primary text-white rounded-full shadow">
+                                                        End Meet
+                                                    </button>
                                                 ) : ''}
                                                 <Link href={`/instructor/course/${course.slug}/activity/${item.type}/${item.id}/edit`}>
                                                     <button className="button-warning">

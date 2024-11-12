@@ -36,7 +36,7 @@ const Show = ({ course, schedules, reviews, rating }) => {
                                 <svg class="w-3 h-3 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                                     <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
                                 </svg>
-                                Beranda
+                                <span>Beranda</span>
                             </a>
                         </li>
                         <li>
@@ -60,12 +60,12 @@ const Show = ({ course, schedules, reviews, rating }) => {
 
                 {/* Course */}
                 <div className="grid grid-cols-3 gap-5 mb-5">
-                    <div className='col-span-1'>
+                    <div className='col-span-3 xl:col-span-1'>
                         <div className='h-48 bg-red-200 rounded-lg overflow-hidden shadow'>
                             <img src={course.thumbnail} alt={course.title} className='w-full h-full object-contain' />
                         </div>
                     </div>
-                    <div className='col-span-2'>
+                    <div className='col-span-3 xl:col-span-2'>
                         <div className='text-xl font-bold text-gray-800 mb-0.5 capitalize'>{course.title}</div>
                         <div className='text-sm italic mb-1 text-gray-700'>oleh <span className='not-italic font-bold'>{course.instructor}</span></div>
                         <div className='text-base flex gap-1 items-center mb-1 '>
@@ -78,7 +78,7 @@ const Show = ({ course, schedules, reviews, rating }) => {
                             </div>
                         </div>
                         <div className='mb-2.5 text-gray-700 text-sm'>{course.short_description}</div>
-                        <div className='flex max-w-xl gap-3'>
+                        <div className='flex flex-col xl:flex-row max-w-full w-full xl:max-w-xl gap-3'>
                             <button className='button-primary'>Schedule</button>
                             <button className='button-primary'>Teaser Video</button>
                             <button className='button-primary'>Description</button>
@@ -93,7 +93,7 @@ const Show = ({ course, schedules, reviews, rating }) => {
                         {schedules.map((item, index) => {
                             return (
                                 <div className='shadow overflow-hidden'>
-                                    <div className='px-5 border-b-2 pb-4 font-medium text-lg flex justify-between items-center my-4'>{course.title}
+                                    <div className='px-5 border-b-2 pb-4 font-medium xl:text-lg flex flex-col xl:flex-row gap-3 xl:justify-between items-center my-4'>{course.title}
                                         <div>
                                             {activeSchedules.includes(item.id) || item.is_active ? (
                                                 <Link href={`/my-course`}>
@@ -106,19 +106,19 @@ const Show = ({ course, schedules, reviews, rating }) => {
                                         </div>
                                     </div>
                                     <div className='mb-4 px-5 grid grid-cols-4 gap-5'>
-                                        <div className='flex items-center gap-1.5  text-sm text-gray-600 font-medium'>
+                                        <div className='col-span-4 xl:col-span-1 flex items-center gap-1.5  text-sm text-gray-600 font-medium'>
                                             <box-icon name='calendar' color='#5eead4' size="sm"></box-icon>
                                             <div className=''>{item.date}</div>
                                         </div>
-                                        <div className='flex items-center gap-1.5  text-sm text-gray-600 font-medium'>
+                                        <div className='col-span-4 xl:col-span-1 flex items-center gap-1.5  text-sm text-gray-600 font-medium'>
                                             <box-icon name='time' color='#5eead4' size="sm"></box-icon>
                                             <div className=''>{item.time}</div>
                                         </div>
-                                        <div className='flex items-center gap-1.5  text-sm text-gray-600 font-medium'>
+                                        <div className='col-span-4 xl:col-span-1 flex items-center gap-1.5  text-sm text-gray-600 font-medium'>
                                             <box-icon name='user-circle' color='#5eead4' size="sm"></box-icon>
                                             <div className=''>{course.instructor}</div>
                                         </div>
-                                        <div className='flex items-center gap-1.5  text-sm text-gray-600 font-medium'>
+                                        <div className='col-span-4 xl:col-span-1 flex items-center gap-1.5  text-sm text-gray-600 font-medium'>
                                             <box-icon name='check-circle' color='#5eead4' size="sm"></box-icon>
                                             <div className='capitalize'>{course.quota}</div>
                                         </div>
@@ -135,7 +135,7 @@ const Show = ({ course, schedules, reviews, rating }) => {
                 <div className="bg-white p-6 rounded-xl shadow mb-5">
                     <div className='text-lg font-bold mb-3'>Teaser Video</div>
                     <div className=" flex justify-center">
-                        <div className="w-full h-[512px] aspect-video rounded-xl shadow overflow-hidden">
+                        <div className="w-full aspect-video xl:h-[512px] rounded-xl shadow overflow-hidden">
                             <iframe
                                 src={course.teaser_video}
                                 width="100%"
@@ -160,7 +160,7 @@ const Show = ({ course, schedules, reviews, rating }) => {
                     {reviews ? reviews.map((item, index) => {
                         return (
                             <div className='text-gray-700 pb-4 mb-4'>
-                                <div className='flex gap-1.5 items-center mb-1'>
+                                <div className='flex flex-col xl:flex-row gap-1.5 items-start xl:items-center mb-1'>
                                     <div className=''>
                                         <StarRating value={item.star} />
                                     </div>

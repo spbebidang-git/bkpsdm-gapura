@@ -3,8 +3,11 @@
 namespace App\Services\Course;
 
 use App\Helper\UploadMedia;
+use App\Models\Course\Activity;
 use App\Models\Course\Course;
+use App\Models\Course\Question;
 use App\Models\Course\Schedule;
+use Illuminate\Support\Facades\DB;
 
 class CourseService
 {
@@ -215,5 +218,52 @@ class CourseService
 
             return true;
         }
+    }
+
+    public function generatePrePostTestVariant($participantId, $course)
+    {
+        $queryActivities = DB::table('activities')
+            ->select('activities.id as key', DB::raw('MAX(question_variants.id) as value'))
+            ->join('questions', 'questions.activity_id', '=', 'activities.id')
+            ->join('question_variants', 'question_variants.question_id', '=', 'questions.id')
+            ->where('activities.course_id', 1)
+            ->where(function ($query) {
+                $query->where('activities.type', 'pre-test')
+                    ->orWhere('activities.type', 'post-test');
+            })->groupBy('activities.id')->get();
+
+        $queryVariants = DB::table('activities')
+            ->select('activities.id as key', DB::raw('MAX(question_variants.id) as value'))
+            ->join('questions', 'questions.activity_id', '=', 'activities.id')
+            ->join('question_variants', 'question_variants.question_id', '=', 'questions.id')
+            ->where('activities.course_id', 1)
+            ->where(function ($query) {
+                $query->where('activities.type', 'pre-test')
+                    ->orWhere('activities.type', 'post-test');
+            })
+            ->groupBy('question_variants.id')
+            ->inRandomOrder()
+            ->get(); // Mengubah menjadi collection
+
+        // dd($queryVariants->get());
+        # group by activity
+        $data = [];
+        foreach ($queryActivities as $item) {
+            $variant = $queryVariants->firstWhere('key', $item->key);
+            // // dd($variant->value);
+            // $data[] = [
+            //     'key' => $item->key,
+            //     'value' => $variant->value, // Sesuaikan nama kolom 'value' sesuai data yang ada di $variant
+            // ];
+            update_user_meta($participantId, $item->key, $variant->value);
+        }
+
+        // dd($data);
+
+        # loop data 
+
+
+
+        // dd($queryKeyValue);
     }
 }

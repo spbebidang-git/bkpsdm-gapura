@@ -5,6 +5,7 @@ namespace App\Services\Course\Activity;
 use App\Models\Course\Question;
 use App\Models\Course\Question\QuestionItem;
 use App\Models\Learn\Learn;
+use App\Models\User;
 use App\Services\Learn\LearnService;
 
 class QuestionService
@@ -72,9 +73,15 @@ class QuestionService
             ->where('activity_id', $activity->id)
             ->first();
 
-        $questionVariants = $question->questionVariant->first()->questionItems;
+        $participant = User::where('id', $participantId)->first();
 
-        $questionItems = $questionVariants->map(function ($row) {
+        $preTestVariantId = get_user_meta($participantId, $activity->id);
+
+        $questionVariant = $question->questionVariant->where('id', $preTestVariantId)->first();
+
+        $questionItems = $question->questionVariant->where('id', $preTestVariantId)->first()->questionItems;
+
+        $mappedQuestionItems = $questionItems->map(function ($row) {
             return [
                 'question_id' => $row->id,
                 'question' => $row->description,
@@ -96,9 +103,9 @@ class QuestionService
             'type' => 'pre-test',
             'status' => $this->getStatus($participantId, $activity->id),
             'data' => [
-                'question_items' => $questionItems,
-                'mix' => $question->questionVariant->first()->mix,
-                'is_loop' => $question->questionVariant->first()->loop
+                'question_items' => $mappedQuestionItems,
+                'mix' => $questionVariant->mix,
+                'is_loop' => $question->is_loop
             ]
         ];
     }
@@ -150,7 +157,7 @@ class QuestionService
                 'min_score' => $question->min_score,
                 'question_items' => $questionItems,
                 'mix' => $question->questionVariant->first()->mix,
-                'is_loop' => $question->questionVariant->first()->loop
+                'is_loop' => $question->is_loop
             ]
         ];
     }

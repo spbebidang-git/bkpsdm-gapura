@@ -21,9 +21,9 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
     const fetchCaptcha = async () => {
         try {
             const response = await axios.get('/captcha-url')
-            // const data = response.data
-            // console.log(response.data)
+
             setCaptchaUrl(response.data.captcha);
+            handleCaptchaChange({ target: { value: '' } });
         } catch (error) {
             console.error("Error fetching captcha:", error);
         }
@@ -35,9 +35,12 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
         setData('captcha', value);  // Set nilai captcha di data form
     };
 
+    useEffect(() => {
+        fetchCaptcha();
+    }, []);
 
     useEffect(() => {
-        fetchCaptcha()
+        // fetchCaptcha()
         if (type === 'pre-test' || type === 'post-test') {
             if (data.mix === 1) {
                 // Fungsi untuk mengacak array
@@ -95,6 +98,12 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
 
         const handleSubmit = () => {
             const formattedAnswers = Object.values(answers).map(answer => ({ ...answer }));
+
+            // const combinedData = {
+            //     formattedAnswers,
+            //     captcha: captchaInput
+            // };
+
             router.post(`/learn/${slug}/1/${id}`, formattedAnswers, {
                 onSuccess: () => {
                     setSubmitted('done'); // Ubah state menjadi "done" setelah berhasil submit
@@ -163,7 +172,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
         }
 
         return (
-            <div>
+            <div className="">
                 {questions.map((item, index) => {
                     const option = Object.entries(item.option).map(([key, value], index2) => {
                         return (
@@ -179,7 +188,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                                 />
                                 <label
                                     htmlFor={`option-${index}-${index2}`}
-                                    className="flex gap-4 p-3 items-center w-full text-gray-500 bg-white border border-gray-200 rounded-xl cursor-pointer peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white hover:text-gray-600 hover:bg-gray-100"
+                                    className="flex text-sm xl:text-base gap-4 p-2 xl:p-3 items-center w-full text-gray-500 bg-white border border-gray-200 rounded-xl cursor-pointer peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white hover:text-gray-600 hover:bg-gray-100"
                                 >
                                     <div className="font-bold border-2 rounded-full text-sm w-8 h-8 flex items-center justify-center uppercase">
                                         {key}
@@ -193,7 +202,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                     });
 
                     return (
-                        <div className="mb-8 px-5" key={index}>
+                        <div className="mb-5 xl:mb-8 px-5" key={index}>
                             <h3 className="mb-3 text-lg font-medium text-gray-800 dark:text-white">
                                 {index + 1 + '. ' + item.question}
                             </h3>
@@ -245,6 +254,12 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
 
         const handleSubmit = () => {
             const formattedAnswers = Object.values(answers).map(answer => ({ ...answer }));
+
+            // const combinedData = {
+            //     formattedAnswers,
+            //     captcha: captchaInput
+            // };
+
             router.post(`/learn/${slug}/1/${id}`, formattedAnswers, {
                 onSuccess: () => {
                     setSubmitted('done'); // Ubah state menjadi "done" setelah berhasil submit
@@ -305,7 +320,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                     )}
                     {data.is_loop === 1 ? (
                         <div className="w-full max-w-sm flex mx-auto mt-6">
-                            <div className="flex gap-3 w-full">
+                            <div className="flex px-5 xl:px-0 items-center gap-3 w-full">
                                 <div className="w-full">
                                     <button onClick={handleLoop} className="button-primary max-w-56">
                                         Ulangi
@@ -330,7 +345,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
         }
 
         return (
-            <div>
+            <div className="">
                 {questions.map((item, index) => {
                     const option = Object.entries(item.option).map(([key, value], index2) => {
                         return (
@@ -346,7 +361,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                                 />
                                 <label
                                     htmlFor={`option-${index}-${index2}`}
-                                    className="flex gap-4 p-3 items-center w-full text-gray-500 bg-white border border-gray-200 rounded-xl cursor-pointer peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white hover:text-gray-600 hover:bg-gray-100"
+                                    className="flex text-sm xl:text-base gap-4 p-2 xl:p-3 items-center w-full text-gray-500 bg-white border border-gray-200 rounded-xl cursor-pointer peer-checked:border-primary peer-checked:bg-primary peer-checked:text-white hover:text-gray-600 hover:bg-gray-100"
                                 >
                                     <div className="font-bold border-2 rounded-full text-sm w-8 h-8 flex items-center justify-center uppercase">
                                         {key}
@@ -360,7 +375,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                     });
 
                     return (
-                        <div className="mb-8 px-5" key={index}>
+                        <div className="mb-5 xl:mb-8 px-5" key={index}>
                             <h3 className="mb-3 text-lg font-medium text-gray-800 dark:text-white">
                                 {index + 1 + '. ' + item.question}
                             </h3>
@@ -370,7 +385,6 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                         </div>
                     );
                 })}
-
                 <div className="w-full flex justify-center mt-6">
                     <button onClick={handleSubmit} className="button-primary max-w-56">
                         Kirim Jawaban
@@ -398,6 +412,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
             const formData = new FormData();
             formData.append('file', file);  // Tambahkan file ke formData
             formData.append('id', id);  // Tambahkan data lain jika diperlukan
+            // formData.append('captcha', captchaInput);  // Tambahkan data lain jika diperlukan
 
             // Kirim FormData menggunakan Inertia router
             router.post(`/learn/${slug}/1/${id}`, formData, {
@@ -412,12 +427,13 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
         };
 
         return (
-            <div className="h-full p-8">
+            <div className="h-full p-5 xl:p-8">
                 <div className="flex items-center flex-col">
-                    <div className="text-xl font-bold text-gray-700 capitalize">title</div>
-                    <div className="text-gray-600">description</div>
+                    <div className="mb-5">
+                        <div className="text-gray-600 text-center">{data.description}</div>
+                    </div>
 
-                    <div className="mb-3 w-full max-w-xl">
+                    <div className="mb-5 w-full max-w-xl">
                         <div className="flex items-center justify-center w-full">
                             <label htmlFor="thumbnail" className={`flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100`}>
                                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
@@ -425,13 +441,25 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                                         <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
                                     </svg>
                                     <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                                    <p className="text-xs text-gray-500">SVG, PNG, JPG or GIF (MAX. 800x400px)</p>
+                                    <p className="text-xs text-gray-500">(MAX. 10MB)</p>
                                 </div>
                                 <input id="thumbnail" type="file" className="hidden" onChange={handleFileChange} />
                             </label>
                         </div>
+                        {file && (
+                            <p className="mt-2 text-sm text-green-500">File selected: {file.name}</p>
+                        )}
+                        {errors.file && <small className="text-red-500 text-sm mt-1">{errors.file}</small>}
                     </div>
                 </div>
+
+                {/* <Captcha
+                    captchaUrl={captchaUrl}
+                    fetchCaptcha={fetchCaptcha}
+                    captchaInput={captchaInput}
+                    handleCaptchaChange={handleCaptchaChange}
+                    errors={errors}
+                /> */}
                 <div className="w-full flex justify-center mt-6">
                     <button onClick={handleSubmit} className="button-primary max-w-56">
                         Submit
@@ -443,12 +471,13 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
 
     if (type === 'meeting') {
         const handleSubmit = () => {
-            router.post(`/learn/${slug}/1/${id}`, { status: 'in_progress' })
+            router.post(`/learn/${slug}/1/${id}`, { status: 'in_progress', captcha: captchaInput })
         }
 
         const handleSubmitDone = () => {
             router.post(`/learn/${slug}/1/${id}`, {
-                status: 'done'
+                status: 'done',
+                // captcha: captchaInput
             }, {
                 // onSuccess: page => {
                 //     // console.log(page);
@@ -494,19 +523,42 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                 </div>
             )}
 
+
+
             <div className="w-full max-w-sm mx-auto flex justify-center mt-6">
                 {status === 'done' ? (
-                    <button onClick={handleSubmitNext} className="button-primary">
-                        Selanjutnya
-                    </button>
+                    <div>
+
+                        <button onClick={handleSubmitNext} className="button-primary">
+                            Selanjutnya
+                        </button>
+                    </div>
                 ) : status === 'in_progress' ? (
-                    <button onClick={handleSubmitDone} className="button-primary">
-                        Akhiri Meeting
-                    </button>
+                    <div>
+                        {/* <Captcha
+                            captchaUrl={captchaUrl}
+                            fetchCaptcha={fetchCaptcha}
+                            captchaInput={captchaInput}
+                            handleCaptchaChange={handleCaptchaChange}
+                            errors={errors}
+                        /> */}
+                        <button onClick={handleSubmitDone} className="button-primary">
+                            Akhiri Meeting
+                        </button>
+                    </div>
                 ) : (
-                    <button onClick={handleSubmit} className="button-primary">
-                        Mulai
-                    </button>
+                    <div>
+                        {/* <Captcha
+                            captchaUrl={captchaUrl}
+                            fetchCaptcha={fetchCaptcha}
+                            captchaInput={captchaInput}
+                            handleCaptchaChange={handleCaptchaChange}
+                            errors={errors}
+                        /> */}
+                        <button onClick={handleSubmit} className="button-primary">
+                            Mulai
+                        </button>
+                    </div>
                 )}
             </div>
         </div>;
@@ -516,7 +568,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
         const handleSubmit = () => {
             // console.log(answers)
             // const formattedAnswers = Object.values(answers);
-            router.post(`/learn/${slug}/1/${id}`, [])
+            router.post(`/learn/${slug}/1/${id}`)
         }
 
         return (
@@ -530,7 +582,13 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope;"
 
                 ></iframe>
-
+                {/* <Captcha
+                    captchaUrl={captchaUrl}
+                    fetchCaptcha={fetchCaptcha}
+                    captchaInput={captchaInput}
+                    handleCaptchaChange={handleCaptchaChange}
+                    errors={errors}
+                /> */}
                 <div className="w-full flex justify-center mt-6">
                     {activeButton ? <button onClick={handleSubmit} className="button-primary max-w-56">
                         Selanjutnya
@@ -547,7 +605,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
         const handleSubmit = () => {
             // console.log(answers)
             // const formattedAnswers = Object.values(answers);
-            router.post(`/learn/${slug}/1/${id}`, [])
+            router.post(`/learn/${slug}/1/${id}`)
         }
         return (
             <div className="pdf-container">
@@ -558,6 +616,13 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                     title="PDF Viewer"
                 ></iframe>
 
+                {/* <Captcha
+                    captchaUrl={captchaUrl}
+                    fetchCaptcha={fetchCaptcha}
+                    captchaInput={captchaInput}
+                    handleCaptchaChange={handleCaptchaChange}
+                    errors={errors}
+                /> */}
                 <div className="w-full flex justify-center mt-6">
                     {activeButton ? <button onClick={handleSubmit} className="button-primary max-w-56">
                         Selanjutnya

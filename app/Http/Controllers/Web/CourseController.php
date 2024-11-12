@@ -78,6 +78,9 @@ class CourseController extends Controller
             DB::beginTransaction();
 
             $participantId = Auth::user()->id;
+
+            $variant = $this->course->generatePrePostTestVariant($participantId, $course);
+
             $schedule->participants()->attach($participantId);
 
             // Learn::create([
@@ -90,7 +93,7 @@ class CourseController extends Controller
             return response(null, 200);
         } catch (\Throwable $th) {
             DB::rollBack();
-
+            dd($th);
             return response(null, 200);
         }
     }

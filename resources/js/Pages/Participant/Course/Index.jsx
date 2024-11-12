@@ -10,7 +10,7 @@ const Index = ({ courses }) => {
                 </div>
                 <div className="grid grid-cols-3 gap-5">
                     {courses.map((item, index) => {
-                        return (<div className="rounded-xl overflow-hidden shadow ">
+                        return (<div className="rounded-xl col-span-3 xl:col-span-1 overflow-hidden shadow ">
                             <div className='bg-red-200 h-36'>
                                 <img src={item.thumbnail} className="w-full h-full object-fill" alt={item.title} />
                             </div>

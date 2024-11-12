@@ -51,6 +51,7 @@ Route::prefix('/instructor')
                         # Task
                         Route::resource('task', \App\Http\Controllers\Instructor\Course\Task\TaskController::class);
                         # Meeting
+                        Route::post('/{activityId}/meeting/end-meeting/', [\App\Http\Controllers\Instructor\Course\Interactive\OnlineMeetingController::class, 'endMeeting'])->name('meeting.end-meeting');
                         Route::resource('meeting', \App\Http\Controllers\Instructor\Course\Interactive\OnlineMeetingController::class);
                         # Video Interactive
                         Route::resource('video', \App\Http\Controllers\Instructor\Course\Interactive\PresentationVideoController::class);

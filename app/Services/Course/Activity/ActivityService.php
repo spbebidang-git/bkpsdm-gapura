@@ -3,6 +3,7 @@
 namespace App\Services\Course\Activity;
 
 use App\Models\Course\Activity;
+use App\Models\Course\Interactive;
 use App\Models\Learn\Learn;
 
 class ActivityService
@@ -23,10 +24,13 @@ class ActivityService
 
     public function getActivityByCourse($courseId)
     {
-        return Activity::with(['learnItem'])
-            ->where('course_id', $courseId)
+        return Activity::where('course_id', $courseId)
             ->get()
             ->map(function ($row) {
+                $endMeeting = null;
+                if ($row->type == 'meeting') {
+                    $endMeeting = Interactive::where('activity_id', $row->id)->first()->end_meeting;
+                }
                 return [
                     'id' => $row->id,
                     'course_id' => $row->course_id,
@@ -34,6 +38,7 @@ class ActivityService
                     'title' => $row->title,
                     'timer' => $row->timer,
                     'value' => $row->value,
+                    'end_meeting' => $endMeeting,
                     'status' => 0
                 ];
             });

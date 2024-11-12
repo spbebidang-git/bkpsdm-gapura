@@ -37,13 +37,10 @@ class LearnController extends Controller
         if (!$this->learn->isLearned($this->participantId, $course->id)) {
             $initActivity = $this->learn->getInititalActivityId($course->id);
             if ($initActivity !== intval($activityId)) {
-
                 return to_route('participant.learn.index', [$course->slug, 1, $initActivity]);
             }
         } else {
-
-
-            $validOpenActivity = $this->learn->checkValidOpenActivity($activityId);
+            $validOpenActivity = $this->learn->checkValidOpenActivity($this->participantId, $course->id, $activityId);
             // dd($validOpenActivity);
             if (is_array($validOpenActivity)) {
                 return redirect()->back()->withErrors(['error' => 'Kamu belum menyelesaikan kegiatan sebelumnya. Selesaikan sesuai urutan kegiatan.']);
@@ -82,6 +79,35 @@ class LearnController extends Controller
         // ]);
 
         $activity = Activity::find($activityId);
+
+        // if ($activity->type == 'pre-test' || $activity->type == 'post-test') {
+        //     $request->validate([
+        //         'captcha' => 'required_unless:formattedAnswers,null|captcha'
+        //     ], [
+        //         'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'  // Pesan error khusus
+        //     ]);
+        // } elseif ($activity->type == 'task') {
+        //     $request->validate([
+        //         'captcha' => 'required|captcha'
+        //     ], [
+        //         'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'  // Pesan error khusus
+        //     ]);
+        // } elseif ($activity->type == 'meeting') {
+        //     $request->validate([
+        //         'status' => 'nullable',
+        //         'captcha' => 'required_if:status,!null|captcha'
+        //     ], [
+        //         'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'  // Pesan error khusus
+        //     ]);
+        // } else {
+        //     $request->validate([
+        //         'captcha' => 'required|captcha'
+        //     ], [
+        //         'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'  // Pesan error khusus
+        //     ]);
+        // }
+
+
         if ($activity->type === 'post-test' && $request->loop) {
             // dd(123);
             // Check Total looping
@@ -104,7 +130,11 @@ class LearnController extends Controller
             DB::beginTransaction();
 
             # For Pre Test, Post Test & Task
-            if (!empty($request->all()) && ($activity->type == 'pre-test' || $activity->type == 'post-test' || $activity->type  == 'task')) {
+            if (!empty($request->all()) && ($activity->type == 'pre-test' || $activity->type == 'post-test')) {
+                $this->activity->storeActivity($this->participantId, $course->id, $activityId, $request->all()['formattedAnswers']);
+            }
+            # For Task
+            if ($activity->type  == 'task') {
                 $this->activity->storeActivity($this->participantId, $course->id, $activityId, $request->all());
             }
 
@@ -112,6 +142,10 @@ class LearnController extends Controller
             if (empty($request->all()) && ($activity->type == 'meeting' || $activity->type == 'video' || $activity->type == 'literature')) {
                 $this->activity->storeActivity($this->participantId, $course->id, $activityId, $request->all());
             }
+
+            // if ($request->captcha && ($activity->type == 'meeting' || $activity->type == 'video' || $activity->type == 'literature')) {
+            //     $this->activity->storeActivity($this->participantId, $course->id, $activityId, $request->all());
+            // }
 
             # For Submit Meeting 
             if (!empty($request->all()) && $activity->type == 'meeting') {
@@ -139,6 +173,7 @@ class LearnController extends Controller
             $nextActivity =  $this->activity->nextActivity($course->id, $activityId);
 
             if (!$nextActivity) {
+
                 return to_route('participant.rating.index', [$course->slug, 1])->with('success', 'Saved');
             }
 

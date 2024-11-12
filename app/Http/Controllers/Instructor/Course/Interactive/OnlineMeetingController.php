@@ -6,6 +6,7 @@ use App\Models\Course\Activity;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use App\Models\Course\Course;
+use App\Models\Course\Interactive;
 use App\Services\Course\Activity\ActivityService;
 use Illuminate\Support\Facades\DB;
 use App\Services\Course\Activity\InteractiveService;
@@ -109,6 +110,26 @@ class OnlineMeetingController
             DB::commit();
 
             return to_route('instructor.course.show', $course->slug)->with('success', 'Meeting updated successfully.');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            return to_route('instructor.course.show', $course->slug)->with('danger', 'Something went wrong.');
+        }
+    }
+
+    public function endMeeting(Course $course, $activityId)
+    {
+        try {
+            DB::beginTransaction();
+
+            $interactive = Interactive::where('activity_id', $activityId)->first();
+
+            $interactive->end_meeting = 1;
+            $interactive->save();
+
+            DB::commit();
+
+            return to_route('instructor.course.show', $course->slug)->with('success', 'Meeting ended successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
 

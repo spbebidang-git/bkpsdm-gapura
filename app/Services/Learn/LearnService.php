@@ -149,12 +149,12 @@ class LearnService
         $learnItem->save();
     }
 
-    public function checkValidOpenActivity($activityId)
+    public function checkValidOpenActivity($participantId, $courseId, $activityId)
     {
         # get all activity 
-        $activities = Activity::where('course_id', 1)->get();
+        $activities = Activity::where('course_id', $courseId)->get();
         # get learn items 
-        $learn = Learn::with('learnItems')->where('participant_id', 7)->where('course_id', 1)->first();
+        $learn = Learn::with('learnItems')->where('participant_id', $participantId)->where('course_id', $courseId)->first();
 
 
         $currentActivityId = $activityId; // Ganti dengan activity_id saat ini

@@ -30,7 +30,7 @@ class TaskService
             'type' => 'task',
             // 'status' => 'done',
             'data' => [
-                'title' => $task->title,
+                'title' => $task->sub_title,
                 'description' => $task->description
             ]
         ];

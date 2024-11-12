@@ -2,6 +2,7 @@
 
 namespace App\Models\Learn;
 
+use App\Models\Course\Activity;
 use App\Models\Course\Course;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -40,5 +41,17 @@ class Learn extends Model
         }
 
         return Attribute::get(fn() => round(($doneActivity / $totalActivity) * 100, 2) . '%');
+    }
+
+    public function isAllowRating()
+    {
+        $activityCount = Activity::where('course_id', $this->course_id)->count();
+        $learnItemsCount = $this->learnItems()->count();
+
+        if ($activityCount == $learnItemsCount) {
+            return true;
+        }
+
+        return false;
     }
 }
