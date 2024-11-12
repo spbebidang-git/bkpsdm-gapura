@@ -131,7 +131,7 @@ class LearnController extends Controller
 
             # For Pre Test, Post Test & Task
             if (!empty($request->all()) && ($activity->type == 'pre-test' || $activity->type == 'post-test')) {
-                $this->activity->storeActivity($this->participantId, $course->id, $activityId, $request->all()['formattedAnswers']);
+                $this->activity->storeActivity($this->participantId, $course->id, $activityId, $request->all());
             }
             # For Task
             if ($activity->type  == 'task') {

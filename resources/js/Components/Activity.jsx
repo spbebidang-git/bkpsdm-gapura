@@ -40,7 +40,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
     }, []);
 
     useEffect(() => {
-        // fetchCaptcha()
+
         if (type === 'pre-test' || type === 'post-test') {
             if (data.mix === 1) {
                 // Fungsi untuk mengacak array
@@ -68,18 +68,27 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
         }
 
         if (type === 'video' || type === 'literature') {
+            // setDuration(data.duration)
             if (duration === 0) {
                 setActiveButton(true)
                 return;
             }
 
+
             // Atur interval untuk menghitung mundur
             const interval = setInterval(() => {
-                console.log(123)
-                setDuration(prevDuration => prevDuration - 1);
+                setDuration(prevDuration => {
+                    if (prevDuration > 1) {
+                        return prevDuration - 1;
+                    } else {
+                        clearInterval(interval); // Hentikan interval saat durasi mencapai 0
+                        setActiveButton(true); // Aktifkan tombol
+                        return 0;
+                    }
+                });
             }, 1000);
 
-            // Bersihkan interval ketika komponen unmount atau durasi mencapai 0
+            // Bersihkan interval ketika komponen unmount
             return () => clearInterval(interval);
         }
     }, [data, duration]);
@@ -566,6 +575,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
 
     if (type === 'video') {
         const handleSubmit = () => {
+            // setActiveButton(false)
             // console.log(answers)
             // const formattedAnswers = Object.values(answers);
             router.post(`/learn/${slug}/1/${id}`)
