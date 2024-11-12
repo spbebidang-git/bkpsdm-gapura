@@ -38,24 +38,62 @@ class AuthController
     public function storeAdmin(Request $request)
     {
         $request->validate([
-            'email' => 'required|string',
+            'username' => 'required|string',
             'password' => 'required|string',
             'captcha' => 'required|captcha'
         ],  [
             'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'  // Pesan error khusus
         ]);
 
-        $credentials = $request->only('email', 'password');
+        $response = Http::withHeaders([
+            'apikey' => env('API_KEY')
+        ])->post(env('SSO_BASE_URL') . '/oauth/token', [
+            'username' => $request->username,
+            'password' => $request->password,
+            'grant_type'   => 'password',
+            'client_id'    => env('SSO_CLIENT_ID'),
+            'client_secret' => env('SSO_CLIENT_SECRET'),
+        ]);
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
+        if ($response->successful() && isset($response->json()['access_token'])) {
+            $token = 'Bearer ' . $response->json()['access_token'];
+
+            $user = User::where('email', $request->username . '@gapura.gresikkab.go.id')->first();
+
+            if (!$user) {
+                try {
+                    DB::beginTransaction();
+
+                    $user = User::create([
+                        'name' => $request->username,
+                        'email' => $request->username . '@gapura.gresikkab.go.id',
+                        'password' => Hash::make(str()->random(12))
+                    ]);
+
+                    $user->assignRole('Admin');
+
+                    Auth::login($user);
+
+                    DB::commit();
+
+                    return to_route('admin.dashboard');
+                } catch (\Throwable $th) {
+                    DB::rollBack();
+
+                    return back()->withErrors([
+                        'username' => 'Something went wrong.',
+                    ])->onlyInput('username');
+                }
+            }
+
+            Auth::login($user);
+
+            Session::put('token', $token);
 
             return to_route('admin.dashboard');
         }
 
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->onlyInput('email');
+        return to_route('sign-in.admin.create')->with('danger', 'Something went wrong. Please try again.');
     }
 
     public function createInstructor()

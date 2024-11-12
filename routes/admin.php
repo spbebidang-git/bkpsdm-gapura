@@ -103,4 +103,6 @@ Route::prefix('/admin')
                 </table>';
             }
         });
+
+        Route::get('/certificate', [App\Http\Controllers\Admin\CertificateController::class, 'index'])->name('certificate.index');
     });

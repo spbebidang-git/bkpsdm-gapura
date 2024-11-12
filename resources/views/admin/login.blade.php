@@ -67,22 +67,19 @@
                             method="POST">
                             @csrf
                             <div class="mb-3">
-                                <label class="form-label"for="email" class="form-label">Email</label>
+                                <label class="form-label"for="username" class="form-label">username</label>
                                 <input type="text"
-                                    class="form-control @error('email')
+                                    class="form-control @error('username')
                                     is-invalid
                                 @enderror"
-                                    id="email" name="email" placeholder="Enter your email" autofocus />
-                                @error('email')
+                                    id="username" name="username" placeholder="Enter your username" autofocus />
+                                @error('username')
                                     <small class="invalid-feedback">{{ $message }}</small>
                                 @enderror
                             </div>
                             <div class="mb-3 form-password-toggle">
                                 <div class="d-flex justify-content-between">
                                     <label class="form-label"class="form-label" for="password">Password</label>
-                                    {{-- <a href="{{ route('password.request') }}">
-                                        <small>Forgot Password?</small>
-                                    </a> --}}
                                 </div>
                                 <div class="input-group input-group-merge">
                                     <input type="password" id="password"

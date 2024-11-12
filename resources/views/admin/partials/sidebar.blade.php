@@ -64,6 +64,13 @@
                 <div data-i18n="Layouts">Review</div>
             </a>
         </li>
+        {{-- Certificate --}}
+        <li class="menu-item {{ request()->routeIs('admin.certificate.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.certificate.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-data"></i>
+                <div data-i18n="Layouts">Certificate</div>
+            </a>
+        </li>
 
         <li class="menu-header small text-uppercase">
             <span class="menu-header-text">Management</span>
