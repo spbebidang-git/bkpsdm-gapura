@@ -136,7 +136,7 @@ class AuthController
                         'password' => Hash::make(str()->random(12))
                     ]);
 
-                    $this->user->storeUserMeta($user->id, $participantApi->json());
+                    // $this->user->storeUserMeta($user->id, $participantApi->json());
 
                     $user->assignRole('Participant');
 
@@ -158,7 +158,7 @@ class AuthController
 
             Session::put('token', $token);
 
-            $this->user->storeUserMeta($userNip->user->id, $participantApi->json());
+            // $this->user->storeUserMeta($userNip->user->id, $participantApi->json());
         }
 
 

@@ -75,11 +75,11 @@ class LearnController extends Controller
 
     public function store(Request $request, Course $course, $scheduleId, $activityId)
     {
-        $request->validate([
-            'captcha' => 'required|captcha'
-        ], [
-            'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'  // Pesan error khusus
-        ]);
+        // $request->validate([
+        //     'captcha' => 'required|captcha'
+        // ], [
+        //     'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'  // Pesan error khusus
+        // ]);
 
         $activity = Activity::find($activityId);
         if ($activity->type === 'post-test' && $request->loop) {

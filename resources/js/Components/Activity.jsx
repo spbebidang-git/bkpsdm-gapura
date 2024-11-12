@@ -205,7 +205,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                 })}
 
                 {/* Captcha */}
-                <div className="p-5 border-2">
+                {/* <div className="p-5 border-2">
                     <div>
                         <div className="flex-1 flex items-center border h-12">
                             <img onClick={fetchCaptcha} src={captchaUrl} className="w-full h-full" alt="captcha" style={{ cursor: 'pointer' }} />
@@ -221,7 +221,7 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                             />
                         </div>
                     </div>
-                </div>
+                </div>s */}
                 <div className="w-full flex justify-center mt-6">
                     <button onClick={handleSubmit} className="button-primary max-w-56">
                         Kirim Jawaban
