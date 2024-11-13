@@ -61,8 +61,8 @@ const Show = ({ course, schedules, reviews, rating }) => {
                 {/* Course */}
                 <div className="grid grid-cols-3 gap-5 mb-5">
                     <div className='col-span-3 xl:col-span-1'>
-                        <div className='h-48 bg-red-200 rounded-lg overflow-hidden shadow'>
-                            <img src={course.thumbnail} alt={course.title} className='w-full h-full object-contain' />
+                        <div className='h-48 w-full rounded-lg overflow-hidden shadow'>
+                            <img src={course.thumbnail} alt={course.title} className='w-full h-full object-fill' />
                         </div>
                     </div>
                     <div className='col-span-3 xl:col-span-2'>

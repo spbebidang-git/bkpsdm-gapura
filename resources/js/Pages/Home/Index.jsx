@@ -67,8 +67,8 @@ export default function Home({ courses }) {
                                 return (
                                     <div class="bg-white rounded-lg overflow-hidden col-span-4 lg:col-span-1 flex flex-row lg:flex-col">
                                         <Link href={'course/' + item.slug}>
-                                            <div class="w-full xl:w-2/5 lg:w-full overflow-hidden">
-                                                <img class="w-full h-full object-cover" src={item.thumbnail}
+                                            <div class="w-full overflow-hidden">
+                                                <img class="w-full h-full object-fill" src={item.thumbnail}
                                                     alt={item.title} />
                                             </div>
                                             <div class="p-3 w-full">
