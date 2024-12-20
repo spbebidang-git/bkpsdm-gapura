@@ -86,9 +86,11 @@ class RatingController
                     'peserta' => get_user_meta($this->participantId, 'nip')
                 ]);
 
-            DB::commit();
+            if ($response->successful()) {
+                DB::commit();
 
-            return to_route('participant.survey.index', [$course->slug, 1]);
+                return to_route('participant.survey.index', [$course->slug, 1]);
+            }
         } catch (\Throwable $th) {
             DB::rollBack();
             dd($th);

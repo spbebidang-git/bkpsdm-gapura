@@ -2,8 +2,11 @@
 
 use App\Http\Middleware\CheckRoleAuthMiddleware;
 use App\Http\Middleware\IsAdminMiddleware;
+use App\Jobs\BulkCertificateJob;
 use App\Models\Learn\Learn;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Session;
 
 Route::prefix('/admin')
     ->name('admin.')
@@ -105,4 +108,51 @@ Route::prefix('/admin')
         });
 
         Route::get('/certificate', [App\Http\Controllers\Admin\CertificateController::class, 'index'])->name('certificate.index');
+
+        Route::get('bulk-certificate/{courseId}', function ($courseId) {
+            $results = DB::table('users')
+                ->select([
+                    'courses.title',
+                    'courses.category_id',
+                    'users.id as user_id',
+                    'nip_meta.value as nip',
+                    'fc_kduker_meta.value as fc_kduker_meta',
+                    'fc_kdsatker_meta.value as fc_kdsatker_meta',
+                    'fc_kdsubsatker_meta.value as fc_kdsubsatker_meta',
+                    DB::raw("DATE_FORMAT(learns.created_at, '%Y-%m-%d') as created_at"),
+                    DB::raw("DATE_FORMAT(learns.finished_at, '%Y-%m-%d') as finished_at")
+                ])
+                ->join('user_meta as nip_meta', function ($join) {
+                    $join->on('nip_meta.user_id', '=', 'users.id')
+                        ->where('nip_meta.key', '=', 'nip');
+                })
+                ->leftJoin('user_meta as fc_kduker_meta', function ($join) {
+                    $join->on('fc_kduker_meta.user_id', '=', 'users.id')
+                        ->where('fc_kduker_meta.key', '=', 'fc_kduker');
+                })
+                ->leftJoin('user_meta as fc_kdsatker_meta', function ($join) {
+                    $join->on('fc_kdsatker_meta.user_id', '=', 'users.id')
+                        ->where('fc_kdsatker_meta.key', '=', 'fc_kdsatker');
+                })
+                ->leftJoin('user_meta as fc_kdsubsatker_meta', function ($join) {
+                    $join->on('fc_kdsubsatker_meta.user_id', '=', 'users.id')
+                        ->where('fc_kdsubsatker_meta.key', '=', 'fc_kdsubsatker');
+                })
+                ->join('reviews', 'reviews.user_id', '=', 'users.id')
+                ->join('learns', 'learns.participant_id', '=', 'users.id')
+                ->join('courses', 'learns.course_id', '=', 'courses.id')
+                ->whereNotNull('learns.finished_at')
+                ->where('courses.id', $courseId)
+                ->groupBy('nip_meta.value')
+                ->get();
+
+            // dd($results);
+            $token = Session::get('token');
+            // dd($token);
+            foreach ($results as $item) {
+                BulkCertificateJob::dispatch($item, $token);
+            }
+
+            dd('oke');
+        });
     });

@@ -132,19 +132,22 @@ const Show = ({ course, schedules, reviews, rating }) => {
                 </div>
 
                 {/* Teaser Video */}
-                <div className="bg-white p-6 rounded-xl shadow mb-5">
-                    <div className='text-lg font-bold mb-3'>Teaser Video</div>
-                    <div className=" flex justify-center">
-                        <div className="w-full aspect-video xl:h-[512px] rounded-xl shadow overflow-hidden">
-                            <iframe
-                                src={course.teaser_video}
-                                width="100%"
-                                height="100%"
-                                title="PDF Viewer"
-                            ></iframe>
+                {course.teaser_video && (
+                    <div className="bg-white p-6 rounded-xl shadow mb-5">
+                        <div className='text-lg font-bold mb-3'>Teaser Video</div>
+                        <div className=" flex justify-center">
+                            <div className="w-full aspect-video xl:h-[512px] rounded-xl shadow overflow-hidden">
+                                <iframe
+                                    src={course.teaser_video}
+                                    width="100%"
+                                    height="100%"
+                                    title="PDF Viewer"
+                                ></iframe>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
+
 
                 {/* Description */}
                 <div className="bg-white p-6 rounded-xl shadow mb-5">

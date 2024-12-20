@@ -44,7 +44,7 @@ class CourseController
             'short_description' => 'required|string',
             'description' => 'required|string',
             'thumbnail' => 'required|image|max:10240|mimes:png,jpg',
-            'teaser_video' => 'required|string',
+            'teaser_video' => 'nullable|string',
             'expired' => 'required_if:type,unschedule',
             'status' => 'required|string',
             'schedules' => 'required_if:type,schedule|array|min:1'
@@ -116,7 +116,7 @@ class CourseController
             'short_description' => 'required|string',
             'description' => 'required|string',
             'thumbnail' => 'nullable|image|max:10240|mimes:png,jpg',
-            'teaser_video' => 'required|string',
+            'teaser_video' => 'nullable|string',
             'expired' => 'required_if:type,unschedule',
             'status' => 'required|string',
             'schedules' => 'required_if:type,schedule|array|min:1'

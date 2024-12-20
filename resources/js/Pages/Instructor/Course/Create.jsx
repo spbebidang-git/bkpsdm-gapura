@@ -147,7 +147,7 @@ const Create = ({ categories }) => {
                             {/* description */}
                             <FormTextArea title={'description'} value={values.description} onChange={handleChange} isRequired={true} error={errors.description} />
                             {/* teaser video */}
-                            <FormInput title={'teaser video'} value={values.teaser_video} onChange={handleChange} isRequired={true} error={errors.teaser_video} />
+                            <FormInput title={'teaser video'} value={values.teaser_video} onChange={handleChange} error={errors.teaser_video} />
                             {/* expired */}
                             {!type && (
                                 <FormInput title={'expired'} value={values.expired} placeholder={'Set expired in hour'} onChange={handleChange} isRequired={true} error={errors.expired} />

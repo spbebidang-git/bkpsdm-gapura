@@ -41,6 +41,7 @@ const Edit = ({ course, categories, schedules }) => {
         description: course.description || "",
         thumbnail: null, // Handle file input separately
         teaser_video: course.teaser_video || "",
+        expired: course.expired || "",
         status: course.status || ""
     });
 
@@ -143,8 +144,6 @@ const Edit = ({ course, categories, schedules }) => {
         // Simpan kembali ke localStorage
         localStorage.setItem('scheduleData', JSON.stringify(mappedSchedules));
 
-
-
         setValues({
             type: course.type || 'unschedule',
             category: course.category_id || "",
@@ -153,6 +152,7 @@ const Edit = ({ course, categories, schedules }) => {
             description: course.description || "",
             thumbnail: null,  // Untuk file upload, ini harus tetap null sampai user mengubahnya
             teaser_video: course.teaser_video || "",
+            expired: course.expired || "",
             status: course.status || ""
         });
     }, [course]);
@@ -204,7 +204,7 @@ const Edit = ({ course, categories, schedules }) => {
                                 </div>
                             </div>
                             {/* teaser video */}
-                            <FormInput title={'teaser video'} value={values.teaser_video} onChange={handleChange} isRequired={true} error={errors.teaser_video} />
+                            <FormInput title={'teaser video'} value={values.teaser_video} onChange={handleChange} error={errors.teaser_video} />
                             {/* expired */}
                             {!type && (
                                 <FormInput title={'expired'} value={values.expired} placeholder={'Set expired in hour'} onChange={handleChange} isRequired={true} error={errors.expired} />

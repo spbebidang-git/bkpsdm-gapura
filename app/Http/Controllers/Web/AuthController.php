@@ -168,24 +168,34 @@ class AuthController
                 try {
                     DB::beginTransaction();
 
-                    $user = User::create([
-                        'name' => $participantApi->json()['fv_nama'],
-                        'email' => $participantApi->json()['fv_email'],
-                        'password' => Hash::make(str()->random(12))
-                    ]);
+                    // check email
+                    $checkEmail = User::where('email', $participantApi->json()['fv_email'])->first();
+                    if ($checkEmail) {
+                        update_user_meta($checkEmail->id, 'nip', $request->username);
 
-                    // $this->user->storeUserMeta($user->id, $participantApi->json());
+                        Auth::login($checkEmail);
+                    } else {
+                        $user = User::create([
+                            'name' => $participantApi->json()['fv_nama'],
+                            'email' => $participantApi->json()['fv_email'],
+                            'password' => Hash::make(str()->random(12))
+                        ]);
 
-                    $user->assignRole('Participant');
+                        $this->user->storeUserMeta($user->id, $participantApi->json());
 
-                    Auth::login($user);
+                        // update_user_meta($user->id, 'nip', )
+
+                        $user->assignRole('Participant');
+
+                        Auth::login($user);
+                    }
 
                     DB::commit();
 
                     return to_route('home');
                 } catch (\Throwable $th) {
                     DB::rollBack();
-                    dd($th);
+
                     return back()->withErrors([
                         'username' => 'Something went wrong.',
                     ])->onlyInput('username');

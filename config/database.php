@@ -57,7 +57,7 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'modes' => [
-                'ONLY_FULL_GROUP_BY',
+                // 'ONLY_FULL_GROUP_BY',
                 'STRICT_TRANS_TABLES',
                 'NO_ZERO_IN_DATE',
                 'NO_ZERO_DATE',

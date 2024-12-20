@@ -59,7 +59,7 @@ const Home = ({ course, progress, activities, activity, activity_id, question_re
                         </div>
                     </div>
                 </div>
-                <div className="col-span-12 xl:col-span-3 p-5 xl:p-0 bg-teal-50">
+                <div className="col-span-12 xl:col-span-3 p-5 xl:p-0 bg-teal-50 xl:bg-white">
                     <div className="text-gray-800 bg-white flex justify-center items-center font-bold text-xl border-b-2 h-14 cursor-pointer">
                         Agenda Kegiatan
                     </div>
