@@ -139,7 +139,7 @@ class AuthController
             'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'  // Pesan error khusus
         ]);
 
-        $response = Http::withHeaders([
+        $response = Http::retry(3, 100)->withHeaders([
             'apikey' => env('API_KEY')
         ])->post(env('SSO_BASE_URL') . '/oauth/token', [
             'username' => $request->username,
@@ -149,8 +149,6 @@ class AuthController
             'client_secret' => env('SSO_CLIENT_SECRET'),
         ]);
 
-        sleep(1);
-
         if ($response->successful() && isset($response->json()['access_token'])) {
             $token = 'Bearer ' . $response->json()['access_token'];
 
@@ -159,7 +157,7 @@ class AuthController
                 ->where('value', $request->username)
                 ->first();
 
-            $participantApi = Http::withHeaders([
+            $participantApi = Http::retry(3, 100)->withHeaders([
                 'apikey' => env('API_KEY'),
                 'auth' => $token
             ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
@@ -205,8 +203,6 @@ class AuthController
             Auth::login($userNip->user);
 
             Session::put('token', $token);
-
-            // $this->user->storeUserMeta($userNip->user->id, $participantApi->json());
         }
 
 
