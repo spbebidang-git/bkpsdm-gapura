@@ -6,7 +6,7 @@ export default function App({ children }) {
 
     return (
         <div className="flex flex-col justify-between min-h-screen">
-            <header>
+            <header className="fixed w-full top-0 z-50">
                 <div class="bg-primary h-2"></div>
                 <nav class="bg-white border-gray-200 dark:bg-gray-900">
                     <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
@@ -34,13 +34,10 @@ export default function App({ children }) {
                                     <Link href="/" className={`block py-2 px-3 md:p-0 bg-blue-700 rounded md:bg-transparent text-gray-900 ${url === '/' ? 'md:text-primary' : 'text-gray-900'}`} aria-current="page">Beranda</Link>
                                 </li>
                                 <li>
-                                    <Link href="/about" className={`block py-2 px-3 md:p-0  rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-primary ${url === '/about' ? 'text-primary' : 'text-gray-900'}`}>Tentang Kami</Link>
-                                </li>
-                                <li>
                                     <Link href="/course" className={`block py-2 px-3 md:p-0  rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-primary ${url === '/course' ? 'text-primary' : 'text-gray-900'}`}>Materi Pilihan</Link>
                                 </li>
                                 <li>
-                                    <Link href="/contact" className={`block py-2 px-3 md:p-0 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-primary ${url === '/contact' ? 'text-primary' : 'text-gray-900'}`}>Kontak</Link>
+                                    <Link href="/contact" className={`block py-2 px-3 md:p-0 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-primary ${url === '/contact' ? 'text-primary' : 'text-gray-900'}`}>Bantuan</Link>
                                 </li>
                             </ul>
                         </div>
@@ -48,10 +45,9 @@ export default function App({ children }) {
                 </nav>
 
             </header>
-            <main className="flex-1 bg-gray-50">
+            <main className="flex-1 bg-gray-50 pt-20">
                 {children}
             </main>
-
             <footer class="bg-primary p-5 xl:p-8">
                 <div className="max-w-7xl mx-auto gap-5 border-b pb-5">
                     <div className="flex flex-col xl:flex-row gap-8">
