@@ -137,6 +137,7 @@ class InteractiveService
             'id' => $activity->id,
             'title' => $activity->title,
             'value' => $activity->value,
+            'instruction' => $activity->instruction,
             'description' => $interactive->description,
             'url' => $interactive->url,
             'duration' => $interactive->duration,

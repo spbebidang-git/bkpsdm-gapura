@@ -2,18 +2,28 @@ import FormCheckbox from "@/Components/FormCheckbox";
 import FormInput from "@/Components/FormInput";
 import FormTextArea from "@/Components/FormTextArea";
 import NumberActivity from "@/Components/NumberActivity";
+// import QuillEditor from "@/Components/QuillEditor";
 import TitleActivity from "@/Components/TitleActivity";
 import App from "@/Layouts/Instructor/App";
 import { Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+
+
 
 const Create = ({ slug }) => {
     const { errors } = usePage().props
+    // const [content, setContent] = useState('');
+
 
     const [values, setValues] = useState({
         title: "",
         description: "",
+        instruction: "",
         value: "",
+        timer: 0,
+        min_score: 0,
         repeatable: false
     })
 
@@ -41,6 +51,17 @@ const Create = ({ slug }) => {
                         <FormInput title={'title'} isRequired={true} onChange={handleChange} value={values.title} error={errors.title} />
                         <FormTextArea title={'description'} isRequired={true} onChange={handleChange} value={values.description} error={errors.description} />
                         <FormInput title={'value'} isRequired={true} onChange={handleChange} value={values.value} error={errors.value} />
+                        <FormInput title={'timer'} isRequired={true} onChange={handleChange} value={values.timer} error={errors.timer} placeholder={'Time in minutes'} />
+                        <div className="h-auto mb-3">
+                            <ReactQuill
+                                value={values.instruction}
+                                onChange={(value) => setValues((prevValues) => ({
+                                    ...prevValues,
+                                    instruction: value
+                                }))}
+                            />
+                        </div>
+                        <FormInput title={'min score'} isRequired={true} onChange={handleChange} value={values.min_score} error={errors.min_score} />
                         <FormCheckbox
                             id="repeatable"
                             title={'Pengulangan?'}

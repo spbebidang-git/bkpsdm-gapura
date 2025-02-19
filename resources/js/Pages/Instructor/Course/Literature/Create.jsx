@@ -5,6 +5,8 @@ import TitleActivity from "@/Components/TitleActivity";
 import App from "@/Layouts/Instructor/App";
 import { Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 const Create = ({ slug }) => {
     const { errors } = usePage().props
@@ -13,6 +15,7 @@ const Create = ({ slug }) => {
         title: "",
         sub_title: "",
         value: "",
+        instruction: "",
         duration: '',
         content: null,
     });
@@ -33,6 +36,7 @@ const Create = ({ slug }) => {
         formData.append('sub_title', values.sub_title);
         formData.append('value', values.value);
         formData.append('duration', values.duration);
+        formData.append('instruction', values.instruction);
         formData.append('content', values.content);
 
         router.post(`/instructor/course/${slug}/activity/literature`, formData);
@@ -49,6 +53,15 @@ const Create = ({ slug }) => {
                         <FormInput title={'title'} isRequired={true} onChange={handleChange} value={values.title} error={errors.title} />
                         <FormInput title={'sub title'} isRequired={true} onChange={handleChange} value={values.sub_title} error={errors.sub_title} />
                         <FormInput title={'value'} isRequired={true} onChange={handleChange} value={values.value} error={errors.value} />
+                        <div className="h-auto mb-3">
+                            <ReactQuill
+                                value={values.instruction}
+                                onChange={(value) => setValues((prevValues) => ({
+                                    ...prevValues,
+                                    instruction: value
+                                }))}
+                            />
+                        </div>
                         <FormInput title={'duration'} isRequired={true} onChange={handleChange} value={values.duration} error={errors.duration} />
                         <div className="mb-3">
                             <FormLabel title={'content'} />

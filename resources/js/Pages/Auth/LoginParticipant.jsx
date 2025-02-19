@@ -82,9 +82,9 @@ const LoginParticipant = () => {
                                     error={errors.password}
                                 />
                                 {/* CAPTCHA */}
-                                <div>
+                                <div className="py-2.5">
                                     <div className=" flex items-center gap-3 -mt-1">
-                                        <div className="flex-1 flex items-center border h-12">
+                                        <div className="flex-1 border border-gray-300 shadow flex items-center rounded-xl overflow-hidden ">
                                             <img onClick={fetchCaptcha} src={captchaUrl} className="w-full h-full" alt="captcha" style={{ cursor: 'pointer' }} />
                                         </div>
                                         <div className="w-1/3">
@@ -93,7 +93,7 @@ const LoginParticipant = () => {
                                                 id="captcha"
                                                 value={captchaInput}
                                                 onChange={handleCaptchaChange}
-                                                placeholder="Masukan CAPTCHA"
+                                                placeholder="CAPTCHA"
                                                 className={`${errors.captcha ? 'error' : ''} form-control`}
                                             />
                                         </div>

@@ -35,7 +35,10 @@ class PreTestController
         $request->validate([
             'title' => 'required|string',
             'description' => 'required|string',
-            'value' => 'required|numeric'
+            'instruction' => 'required|string',
+            'value' => 'required|numeric',
+            'timer' => 'required|numeric',
+            'min_score' => 'required|numeric'
         ]);
 
         try {
@@ -47,6 +50,8 @@ class PreTestController
                 'type' => 'pre-test',
                 'title' => $request->title,
                 'value' => $request->value,
+                'timer' => $request->timer,
+                'instruction' => $request->instruction,
             ]);
 
             # Insert Pre Test
@@ -54,6 +59,7 @@ class PreTestController
                 'activity_id' => $activity->id,
                 'description' => $request->description,
                 'type' => 'pre',
+                'min_score' => $request->min_score,
                 'is_loop' => $request->repetable ? 1 : 0
             ]);
 
@@ -80,7 +86,8 @@ class PreTestController
         $request->validate([
             'title' => 'required|string',
             'description' => 'required|string',
-            'value' => 'required|numeric'
+            'value' => 'required|numeric',
+            'timer' => 'required|numeric'
         ]);
 
         try {
@@ -91,6 +98,8 @@ class PreTestController
                 'activity_id' => $pre_test->id,
                 'title' => $request->title,
                 'value' => $request->value,
+                'timer' => $request->timer,
+                'instruction' => $request->instruction,
             ]);
 
             # Update Pre Test

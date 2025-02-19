@@ -23,9 +23,9 @@ const Index = ({ courses }) => {
                                     <Link className="w-full" href={`/course/${item.slug}`}>
                                         <button className="button-primary">Detail</button>
                                     </Link>
-                                    {item.finished_at == null ? (<a className="w-full" href={`/learn/${item.slug}/${item.schedule_id}/${item.initial_activity}`}>
+                                    {item.finished_at == null ? (<a className="w-full" href={`/learn/${item.slug}/${item.schedule_id}/${item.initial_activity}/instruction`}>
                                         <button className="button-primary">Ikuti Kelas</button>
-                                    </a>) : ''}
+                                    </a>) : <button className="button-primary">Unduh Sertifikat</button>}
                                 </div>
                             </div>
                         </div>)

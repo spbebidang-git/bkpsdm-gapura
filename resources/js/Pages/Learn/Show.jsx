@@ -8,7 +8,6 @@ const Home = ({ course, progress, activities, activity, activity_id, question_re
     const { errors } = usePage().props
 
     if (errors.error) {
-        // console.log(errors);
         toast.error(errors.error, {
             position: "top-right",
             autoClose: 3000,
@@ -18,9 +17,10 @@ const Home = ({ course, progress, activities, activity, activity_id, question_re
             draggable: true,
             progress: undefined,
             theme: "colored",
-            // transition: Bounce,
         });
     }
+
+
     return (
         <>
             <div className="grid grid-cols-12 max-h-screen min-h-screen">

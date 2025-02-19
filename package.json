@@ -21,10 +21,15 @@
         "vite": "^5.0"
     },
     "dependencies": {
+        "@tiptap/pm": "^2.11.5",
+        "@tiptap/react": "^2.11.5",
+        "@tiptap/starter-kit": "^2.11.5",
         "boxicons": "^2.1.4",
         "pdfjs-dist": "^4.7.76",
+        "quill": "^2.0.3",
         "react-google-recaptcha": "^3.1.0",
         "react-pdf": "^9.1.1",
+        "react-quill": "^2.0.0",
         "react-toastify": "^10.0.5",
         "sweetalert2": "^11.14.1",
         "video.js": "^8.18.1",

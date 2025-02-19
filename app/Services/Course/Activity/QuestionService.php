@@ -4,6 +4,7 @@ namespace App\Services\Course\Activity;
 
 use App\Models\Course\Question;
 use App\Models\Course\Question\QuestionItem;
+use App\Models\Course\Question\QuestionVariant;
 use App\Models\Learn\Learn;
 use App\Models\User;
 use App\Services\Learn\LearnService;
@@ -105,7 +106,8 @@ class QuestionService
             'data' => [
                 'question_items' => $mappedQuestionItems,
                 'mix' => $questionVariant->mix,
-                'is_loop' => $question->is_loop
+                'is_loop' => $question->is_loop,
+                'min_score' => 100
             ]
         ];
     }
@@ -128,13 +130,52 @@ class QuestionService
 
     public function getPostTestParticipant($participantId, $activity)
     {
+        // $question = Question::with('questionVariant.questionItems.questionOptions')
+        //     ->where('activity_id', $activity->id)
+        //     ->first();
+
+        // // $questionVariants = $question->questionVariant->first()->questionItems;
+
+        // $questionItems = $questionVariants->map(function ($row) {
+        //     return [
+        //         'question_id' => $row->id,
+        //         'question' => $row->description,
+        //         'option' => [
+        //             'a' => $row->questionOptions[0]->option,
+        //             'b' => $row->questionOptions[1]->option,
+        //             'c' => $row->questionOptions[2]->option,
+        //             'd' => $row->questionOptions[3]->option,
+        //         ]
+        //     ];
+        // });
+
+        // return [
+        //     'activity_id' => $activity->id,
+        //     'title' => $activity->title,
+        //     'description' => $question->description,
+        //     'type' => 'post-test',
+        //     'status' => $this->getStatus($participantId, $activity->id),
+        //     'data' => [
+        //         'min_score' => $question->min_score,
+        //         'question_items' => $questionItems,
+        //         'mix' => $question->questionVariant->first()->mix,
+        //         'is_loop' => $question->is_loop
+        //     ]
+        // ];
+
         $question = Question::with('questionVariant.questionItems.questionOptions')
             ->where('activity_id', $activity->id)
             ->first();
 
-        $questionVariants = $question->questionVariant->first()->questionItems;
+        $participant = User::where('id', $participantId)->first();
 
-        $questionItems = $questionVariants->map(function ($row) {
+        $preTestVariantId = get_user_meta($participantId, $activity->id);
+
+        $questionVariant = $question->questionVariant->where('id', $preTestVariantId)->first();
+
+        $questionItems = $question->questionVariant->where('id', $preTestVariantId)->first()->questionItems;
+
+        $mappedQuestionItems = $questionItems->map(function ($row) {
             return [
                 'question_id' => $row->id,
                 'question' => $row->description,
@@ -147,17 +188,19 @@ class QuestionService
             ];
         });
 
+        // dd($activity->learnItem->getStatus($participantId));
+
         return [
             'activity_id' => $activity->id,
             'title' => $activity->title,
             'description' => $question->description,
-            'type' => 'post-test',
+            'type' => 'pre-test',
             'status' => $this->getStatus($participantId, $activity->id),
             'data' => [
-                'min_score' => $question->min_score,
-                'question_items' => $questionItems,
-                'mix' => $question->questionVariant->first()->mix,
-                'is_loop' => $question->is_loop
+                'question_items' => $mappedQuestionItems,
+                'mix' => $questionVariant->mix,
+                'is_loop' => $question->is_loop,
+                'min_score' => $question->min_score
             ]
         ];
     }
@@ -251,10 +294,24 @@ class QuestionService
             'id' => $activity->id,
             'title' => $activity->title,
             'value' => $activity->value,
+            'timer' => $activity->timer,
             'description' => $question->description,
+            'instruction' => $activity->instruction,
             'min_score' => $question->min_score,
             'is_loop' => $question->is_loop,
             'show_result' => $question->show_result,
         ];
+    }
+
+    public function validateQuestion($countResponse, $userId, $activityId)
+    {
+
+        $questionVariant = QuestionVariant::with('questionItems')->where('id', get_user_meta($userId, $activityId))->first();
+
+        if ($countResponse < $questionVariant->questionItems->count()) {
+            return false;
+        }
+
+        return true;
     }
 }

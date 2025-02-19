@@ -1,10 +1,13 @@
 import FormInput from "@/Components/FormInput";
+import FormLabel from "@/Components/FormLabel";
 import FormTextArea from "@/Components/FormTextArea";
 import NumberActivity from "@/Components/NumberActivity";
 import TitleActivity from "@/Components/TitleActivity";
 import App from "@/Layouts/Instructor/App";
 import { Link, router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 const Edit = ({ slug, activity }) => {
     const { errors } = usePage().props
@@ -13,6 +16,7 @@ const Edit = ({ slug, activity }) => {
         title: activity?.title || "",
         description: activity?.description || "",
         value: activity?.value || "",
+        instruction: "",
         url: activity?.url || "",
         duration: activity?.duration || ""
     });
@@ -23,6 +27,7 @@ const Edit = ({ slug, activity }) => {
                 title: activity.title,
                 description: activity.description,
                 value: activity.value,
+                instruction: activity.instruction,
                 url: activity.url,
                 duration: activity.duration
             });
@@ -53,6 +58,16 @@ const Edit = ({ slug, activity }) => {
                         <FormInput title={'title'} isRequired={true} onChange={handleChange} value={values.title} error={errors.title} />
                         <FormTextArea title={'description'} isRequired={true} onChange={handleChange} value={values.description} error={errors.description} />
                         <FormInput title={'value'} isRequired={true} onChange={handleChange} value={values.value} error={errors.value} />
+                        <div className="h-auto mb-3">
+                            <FormLabel title={'instruction'} />
+                            <ReactQuill
+                                value={values.instruction}
+                                onChange={(value) => setValues((prevValues) => ({
+                                    ...prevValues,
+                                    instruction: value
+                                }))}
+                            />
+                        </div>
                         <FormInput title={'url'} isRequired={true} onChange={handleChange} value={values.url} error={errors.url} />
                         <FormInput title={'duration'} isRequired={true} onChange={handleChange} value={values.duration} error={errors.duration} />
                     </div>

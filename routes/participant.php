@@ -19,8 +19,16 @@ Route::middleware([CheckRoleAuthMiddleware::class, IsParticipantMiddleware::clas
         # Survey
         Route::get('learn/{course:slug}/{scheduleId}/survey', [\App\Http\Controllers\Participant\SurveyController::class, 'index'])->name('survey.index')->middleware(IsFinishedMiddleware::class);;
         # Learn 
-        Route::get('learn/{slug}/{scheduleId}/{activity}', [\App\Http\Controllers\Participant\LearnController::class, 'index'])->name('learn.index');
-        Route::post('learn/{course:slug}/{scheduleId}/{activity}', [\App\Http\Controllers\Participant\LearnController::class, 'store'])->name('learn.store');
+        # Instruction
+        Route::get('learn/{course:slug}/{schedule}/{activity}/instruction', [\App\Http\Controllers\Participant\LearnController::class, 'instruction'])->name('learn.instruction.index');
+        Route::post('learn/{course:slug}/{schedule}/{activity}/instruction', [\App\Http\Controllers\Participant\LearnController::class, 'storeInstruction'])->name('learn.instruction.store');
+        # Material
+        Route::get('learn/{course:slug}/{schedule}/{activity}', [\App\Http\Controllers\Participant\LearnController::class, 'index'])->name('learn.index');
+        Route::post('learn/{course:slug}/{schedule}/{activity}', [\App\Http\Controllers\Participant\LearnController::class, 'store'])->name('learn.store');
+        # Result
+        Route::get('learn/{course:slug}/{schedule}/{activity}/result', [\App\Http\Controllers\Participant\LearnController::class, 'result'])->name('learn.result.index');
+        Route::post('learn/{course:slug}/{schedule}/{activity}/result', [\App\Http\Controllers\Participant\LearnController::class, 'storeResult'])->name('learn.result.store');
+
         # Profile
         Route::get('/profile', [\App\Http\Controllers\Participant\ProfileController::class, 'index'])->name('profile.index');
     });

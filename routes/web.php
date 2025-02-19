@@ -3,9 +3,11 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Middleware\IsParticipantMiddleware;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+// Auth::loginUsingId(3);
 # Sign In / Guest
 Route::prefix('/sign-in')
     ->name('sign-in.')

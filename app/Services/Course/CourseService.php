@@ -226,7 +226,7 @@ class CourseService
             ->select('activities.id as key', DB::raw('MAX(question_variants.id) as value'))
             ->join('questions', 'questions.activity_id', '=', 'activities.id')
             ->join('question_variants', 'question_variants.question_id', '=', 'questions.id')
-            ->where('activities.course_id', 1)
+            ->where('activities.course_id', $course->id)
             ->where(function ($query) {
                 $query->where('activities.type', 'pre-test')
                     ->orWhere('activities.type', 'post-test');
@@ -236,7 +236,7 @@ class CourseService
             ->select('activities.id as key', DB::raw('MAX(question_variants.id) as value'))
             ->join('questions', 'questions.activity_id', '=', 'activities.id')
             ->join('question_variants', 'question_variants.question_id', '=', 'questions.id')
-            ->where('activities.course_id', 1)
+            ->where('activities.course_id', $course->id)
             ->where(function ($query) {
                 $query->where('activities.type', 'pre-test')
                     ->orWhere('activities.type', 'post-test');
@@ -245,12 +245,12 @@ class CourseService
             ->inRandomOrder()
             ->get(); // Mengubah menjadi collection
 
-        // dd($queryVariants->get());
+        // dd($queryActivities);
         # group by activity
         $data = [];
         foreach ($queryActivities as $item) {
             $variant = $queryVariants->firstWhere('key', $item->key);
-            // // dd($variant->value);
+            // dd($variant->value);
             // $data[] = [
             //     'key' => $item->key,
             //     'value' => $variant->value, // Sesuaikan nama kolom 'value' sesuai data yang ada di $variant

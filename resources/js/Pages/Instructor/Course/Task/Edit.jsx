@@ -1,10 +1,13 @@
 import FormInput from "@/Components/FormInput";
+import FormLabel from "@/Components/FormLabel";
 import FormTextArea from "@/Components/FormTextArea";
 import NumberActivity from "@/Components/NumberActivity";
 import TitleActivity from "@/Components/TitleActivity";
 import App from "@/Layouts/Instructor/App";
 import { Link, router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 const Edit = ({ slug, activity }) => {
     const { errors } = usePage().props
@@ -12,6 +15,7 @@ const Edit = ({ slug, activity }) => {
     const [values, setValues] = useState({
         title: activity?.title || "",
         description: activity?.description || "",
+        instruction: "123",
         value: activity?.value || ""
     });
 
@@ -20,7 +24,8 @@ const Edit = ({ slug, activity }) => {
             setValues({
                 title: activity.title,
                 description: activity.description,
-                value: activity.value
+                value: activity.value,
+                instruction: activity.instruction,
             });
         }
     }, [activity]);
@@ -48,6 +53,16 @@ const Edit = ({ slug, activity }) => {
                     <div className="p-6">
                         <FormInput title={'title'} isRequired={true} onChange={handleChange} value={values.title} error={errors.title} />
                         <FormInput title={'value'} isRequired={true} onChange={handleChange} value={values.value} error={errors.value} />
+                        <div className="h-auto mb-3">
+                            <FormLabel title={'instruction'} />
+                            <ReactQuill
+                                value={values.instruction}
+                                onChange={(value) => setValues((prevValues) => ({
+                                    ...prevValues,
+                                    instruction: value
+                                }))}
+                            />
+                        </div>
                         <div className="-mb-3">
                             <FormTextArea title={'description'} isRequired={true} onChange={handleChange} value={values.description} error={errors.description} />
                         </div>

@@ -49,6 +49,7 @@ class OnlineMeetingController
                 'type' => 'meeting',
                 'title' => $request->title,
                 'value' => $request->value,
+                'instruction' => $request->instruction,
             ]);
 
             # Insert Pre Test
@@ -96,6 +97,7 @@ class OnlineMeetingController
                 'activity_id' => $meeting->id,
                 'title' => $request->title,
                 'value' => $request->value,
+                'instruction' => $request->instruction,
             ]);
 
             # Update Pre Test

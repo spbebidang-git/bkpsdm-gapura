@@ -1,11 +1,14 @@
 import FormCheckbox from "@/Components/FormCheckbox";
 import FormInput from "@/Components/FormInput";
+import FormLabel from "@/Components/FormLabel";
 import FormTextArea from "@/Components/FormTextArea";
 import NumberActivity from "@/Components/NumberActivity";
 import TitleActivity from "@/Components/TitleActivity";
 import App from "@/Layouts/Instructor/App";
 import { Link, router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 const Edit = ({ slug, activity }) => {
     const { errors } = usePage().props
@@ -14,6 +17,8 @@ const Edit = ({ slug, activity }) => {
         title: activity?.title || "",
         description: activity?.description || "",
         value: activity?.value || "",
+        timer: activity?.timer || "",
+        instruction: "",
         repeatable: activity?.is_loop || false
     });
 
@@ -23,6 +28,8 @@ const Edit = ({ slug, activity }) => {
                 title: activity.title,
                 description: activity.description,
                 value: activity.value,
+                timer: activity.timer,
+                instruction: activity.instruction,
                 repeatable: activity.is_loop
             });
         }
@@ -52,6 +59,17 @@ const Edit = ({ slug, activity }) => {
                         <FormInput title={'title'} isRequired={true} onChange={handleChange} value={values.title} error={errors.title} />
                         <FormTextArea title={'description'} isRequired={true} onChange={handleChange} value={values.description} error={errors.description} />
                         <FormInput title={'value'} isRequired={true} onChange={handleChange} value={values.value} error={errors.value} />
+                        <FormInput title={'timer'} isRequired={true} onChange={handleChange} value={values.timer} error={errors.timer} />
+                        <div className="h-auto mb-3">
+                            <FormLabel title={'instruction'} />
+                            <ReactQuill
+                                value={values.instruction}
+                                onChange={(value) => setValues((prevValues) => ({
+                                    ...prevValues,
+                                    instruction: value
+                                }))}
+                            />
+                        </div>
                         <FormCheckbox
                             id="repeatable"
                             title={'Pengulangan?'}

@@ -48,6 +48,7 @@ class PresentationVideoController
                 'type' => 'video',
                 'title' => $request->title,
                 'value' => $request->value,
+                'instruction' => $request->instruction,
             ]);
 
             # Insert Pre Test
@@ -95,6 +96,7 @@ class PresentationVideoController
                 'activity_id' => $video->id,
                 'title' => $request->title,
                 'value' => $request->value,
+                'instruction' => $request->instruction,
             ]);
 
             # Update Pre Test

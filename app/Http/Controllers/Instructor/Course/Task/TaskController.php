@@ -46,6 +46,7 @@ class TaskController
                 'type' => 'task',
                 'title' => $request->title,
                 'value' => $request->value,
+                'instruction' => $request->instruction,
             ]);
 
             # Insert Pre Test
@@ -88,6 +89,7 @@ class TaskController
                 'activity_id' => $task->id,
                 'title' => $request->title,
                 'value' => $request->value,
+                'instruction' => $request->instruction,
             ]);
 
             # Update Pre Test

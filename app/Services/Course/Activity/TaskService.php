@@ -56,6 +56,7 @@ class TaskService
             'title' => $activity->title,
             'value' => $activity->value,
             'description' => $task->description,
+            'instruction' => $activity->instruction,
         ];
     }
 

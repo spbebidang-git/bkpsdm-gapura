@@ -2,12 +2,9 @@ import { router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-const Activity = ({ id, type, data, slug, question_result, status }) => {
-    // State untuk menyimpan jawaban
-    const [answers, setAnswers] = useState({});
+const Activity = ({ id, type, data, slug, question_result, status, answer, setAnswers, file, setFile }) => {
     const [submitted, setSubmitted] = useState(status);
-    // State untuk menyimpan file
-    const [file, setFile] = useState(null);
+
 
     const [duration, setDuration] = useState(data.duration)
     const [activeButton, setActiveButton] = useState(false)
@@ -15,29 +12,6 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
     const [questions, setQuestions] = useState([]);
     const { errors } = usePage().props
 
-    const [captchaUrl, setCaptchaUrl] = useState('');
-    const [captchaInput, setCaptchaInput] = useState('');
-
-    const fetchCaptcha = async () => {
-        try {
-            const response = await axios.get('/captcha-url')
-
-            setCaptchaUrl(response.data.captcha);
-            handleCaptchaChange({ target: { value: '' } });
-        } catch (error) {
-            console.error("Error fetching captcha:", error);
-        }
-    };
-
-    const handleCaptchaChange = (e) => {
-        const value = e.target.value;
-        setCaptchaInput(value);
-        setData('captcha', value);  // Set nilai captcha di data form
-    };
-
-    useEffect(() => {
-        fetchCaptcha();
-    }, []);
 
     useEffect(() => {
 
@@ -73,8 +47,6 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                 setActiveButton(true)
                 return;
             }
-
-
             // Atur interval untuk menghitung mundur
             const interval = setInterval(() => {
                 setDuration(prevDuration => {
@@ -104,81 +76,6 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                 }
             }));
         };
-
-        const handleSubmit = () => {
-            const formattedAnswers = Object.values(answers).map(answer => ({ ...answer }));
-
-            // const combinedData = {
-            //     formattedAnswers,
-            //     captcha: captchaInput
-            // };
-
-            router.post(`/learn/${slug}/1/${id}`, formattedAnswers, {
-                onSuccess: () => {
-                    setSubmitted('done'); // Ubah state menjadi "done" setelah berhasil submit
-                },
-            });
-        };
-
-        const handleSubmitNext = () => {
-
-            setSubmitted(false);
-            setAnswers({}); // Reset jawaban sebelum submit berikutnya
-            router.post(`/learn/${slug}/1/${id}`, []);
-        };
-
-        const handleLoop = () => {
-            setSubmitted(false);
-            setAnswers({}); // Reset jawaban saat mulai ulang
-        };
-
-        if (submitted === 'done') {
-            // Jika sudah submit, tampilkan hasil
-            return (
-                <div className="">
-                    {question_result && (
-                        <div>
-                            <div className="text-center text-2xl font-semibold mb-5">
-                                Selamat, kamu telah menyelesaikan tes ini.
-                            </div>
-                            <div className="flex text-center justify-center gap-8 text-xl mb-4">
-                                <div>
-                                    <div>Benar</div>
-                                    <div>{question_result.correct}</div>
-                                </div>
-                                <div>
-                                    <div>Salah</div>
-                                    <div>{question_result.wrong}</div>
-                                </div>
-                            </div>
-                            <div className="text-center text-xl font-bold">Nilai Kamu : {question_result.score}</div>
-                        </div>
-                    )}
-                    {data.is_loop === 1 ? (
-                        <div className="w-full max-w-sm flex mx-auto mt-6">
-                            <div className="flex gap-3 w-full">
-                                <div className="w-full">
-                                    <button onClick={handleLoop} className="button-primary max-w-56">
-                                        Ulangi
-                                    </button>
-                                </div>
-                                <div className="w-full">
-                                    <button onClick={handleSubmitNext} className="button-primary max-w-56">
-                                        Selanjutnya
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="w-full flex justify-center mt-6">
-                            <button onClick={handleSubmitNext} className="button-primary max-w-56">
-                                Selanjutnya
-                            </button>
-                        </div>
-                    )}
-                </div>
-            );
-        }
 
         return (
             <div className="">
@@ -221,30 +118,6 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                         </div>
                     );
                 })}
-
-                {/* Captcha */}
-                {/* <div className="p-5 border-2">
-                    <div>
-                        <div className="flex-1 flex items-center border h-12">
-                            <img onClick={fetchCaptcha} src={captchaUrl} className="w-full h-full" alt="captcha" style={{ cursor: 'pointer' }} />
-                        </div>
-                        <div className="w-1/3">
-                            <input
-                                type="text"
-                                id="captcha"
-                                value={captchaInput}
-                                onChange={handleCaptchaChange}
-                                placeholder="Masukan CAPTCHA"
-                                className={`${errors.captcha ? 'error' : ''} form-control`}
-                            />
-                        </div>
-                    </div>
-                </div>s */}
-                <div className="w-full flex justify-center mt-6">
-                    <button onClick={handleSubmit} className="button-primary max-w-56">
-                        Kirim Jawaban
-                    </button>
-                </div>
             </div>
         );
     }
@@ -404,35 +277,9 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
     }
 
     if (type === 'task') {
-
         // Fungsi untuk menangani perubahan file
         const handleFileChange = (e) => {
             setFile(e.target.files[0]);
-        };
-
-        // Fungsi submit
-        const handleSubmit = () => {
-            if (!file) {
-                alert("Please select a file first");
-                return;
-            }
-
-            // Membuat FormData
-            const formData = new FormData();
-            formData.append('file', file);  // Tambahkan file ke formData
-            formData.append('id', id);  // Tambahkan data lain jika diperlukan
-            // formData.append('captcha', captchaInput);  // Tambahkan data lain jika diperlukan
-
-            // Kirim FormData menggunakan Inertia router
-            router.post(`/learn/${slug}/1/${id}`, formData, {
-                forceFormData: true, // Pastikan formData dikirim sebagai multipart/form-data
-                onSuccess: () => {
-                    alert("File uploaded successfully");
-                },
-                onError: () => {
-                    alert("File upload failed");
-                }
-            });
         };
 
         return (
@@ -461,26 +308,13 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                         {errors.file && <small className="text-red-500 text-sm mt-1">{errors.file}</small>}
                     </div>
                 </div>
-
-                {/* <Captcha
-                    captchaUrl={captchaUrl}
-                    fetchCaptcha={fetchCaptcha}
-                    captchaInput={captchaInput}
-                    handleCaptchaChange={handleCaptchaChange}
-                    errors={errors}
-                /> */}
-                <div className="w-full flex justify-center mt-6">
-                    <button onClick={handleSubmit} className="button-primary max-w-56">
-                        Submit
-                    </button>
-                </div>
             </div>
         );
     }
 
     if (type === 'meeting') {
         const handleSubmit = () => {
-            router.post(`/learn/${slug}/1/${id}`, { status: 'in_progress', captcha: captchaInput })
+            router.post(`/learn/${slug}/1/${id}`, { status: 'in_progress' })
         }
 
         const handleSubmitDone = () => {
@@ -505,9 +339,9 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
             })
         }
 
-        const handleSubmitNext = () => {
-            router.post(`/learn/${slug}/1/${id}`, [])
-        }
+        // const handleSubmitNext = () => {
+        //     router.post(`/learn/${slug}/1/${id}`, [])
+        // }
 
         return <div className="h-full text-gray-700 text-center">
             <div className="mb-5">Klik link online meeting di bawah : </div>
@@ -536,34 +370,21 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
 
             <div className="w-full max-w-sm mx-auto flex justify-center mt-6">
                 {status === 'done' ? (
-                    <div>
+                    ''
+                    // <div>
 
-                        <button onClick={handleSubmitNext} className="button-primary">
-                            Selanjutnya
-                        </button>
-                    </div>
+                    //     <button onClick={handleSubmitNext} className="button-primary">
+                    //         Selanjutnya
+                    //     </button>
+                    // </div>
                 ) : status === 'in_progress' ? (
                     <div>
-                        {/* <Captcha
-                            captchaUrl={captchaUrl}
-                            fetchCaptcha={fetchCaptcha}
-                            captchaInput={captchaInput}
-                            handleCaptchaChange={handleCaptchaChange}
-                            errors={errors}
-                        /> */}
                         <button onClick={handleSubmitDone} className="button-primary">
                             Akhiri Meeting
                         </button>
                     </div>
                 ) : (
                     <div>
-                        {/* <Captcha
-                            captchaUrl={captchaUrl}
-                            fetchCaptcha={fetchCaptcha}
-                            captchaInput={captchaInput}
-                            handleCaptchaChange={handleCaptchaChange}
-                            errors={errors}
-                        /> */}
                         <button onClick={handleSubmit} className="button-primary">
                             Mulai
                         </button>
@@ -592,20 +413,6 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope;"
 
                 ></iframe>
-                {/* <Captcha
-                    captchaUrl={captchaUrl}
-                    fetchCaptcha={fetchCaptcha}
-                    captchaInput={captchaInput}
-                    handleCaptchaChange={handleCaptchaChange}
-                    errors={errors}
-                /> */}
-                <div className="w-full flex justify-center mt-6">
-                    {activeButton ? <button onClick={handleSubmit} className="button-primary max-w-56">
-                        Selanjutnya
-                    </button> : <button className="button-disable max-w-56">
-                        Selanjutnya
-                    </button>}
-                </div>
             </div>
 
         )
@@ -625,21 +432,13 @@ const Activity = ({ id, type, data, slug, question_result, status }) => {
                     height="600px"
                     title="PDF Viewer"
                 ></iframe>
-
-                {/* <Captcha
-                    captchaUrl={captchaUrl}
-                    fetchCaptcha={fetchCaptcha}
-                    captchaInput={captchaInput}
-                    handleCaptchaChange={handleCaptchaChange}
-                    errors={errors}
-                /> */}
-                <div className="w-full flex justify-center mt-6">
+                {/* <div className="w-full flex justify-center mt-6">
                     {activeButton ? <button onClick={handleSubmit} className="button-primary max-w-56">
                         Selanjutnya
                     </button> : <button className="button-disable max-w-56">
                         Selanjutnya
                     </button>}
-                </div>
+                </div> */}
             </div>
         )
     }

@@ -35,6 +35,7 @@ class PostTestController
             'title' => 'required|string',
             'description' => 'required|string',
             'value' => 'required|numeric',
+            'timer' => 'required|numeric',
             'min_score' => 'required',
             'is_loop' => 'boolean'
         ]);
@@ -48,6 +49,8 @@ class PostTestController
                 'type' => 'post-test',
                 'title' => $request->title,
                 'value' => $request->value,
+                'timer' => $request->timer,
+                'instruction' => $request->instruction,
             ]);
 
             # Insert Pre Test
@@ -83,6 +86,7 @@ class PostTestController
             'title' => 'required|string',
             'description' => 'required|string',
             'value' => 'required|numeric',
+            'timer' => 'required|numeric',
             'min_score' => 'required|numeric'
         ]);
 
@@ -94,6 +98,8 @@ class PostTestController
                 'activity_id' => $post_test->id,
                 'title' => $request->title,
                 'value' => $request->value,
+                'timer' => $request->timer,
+                'instruction' => $request->instruction,
             ]);
 
             # Update Pre Test

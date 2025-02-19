@@ -73,6 +73,7 @@ class LiteratureService
             'id' => $activity->id,
             'title' => $activity->title,
             'value' => $activity->value,
+            'instruction' => $activity->instruction,
             'sub_title' => $literature->sub_title,
             'duration' => $literature->duration,
         ];

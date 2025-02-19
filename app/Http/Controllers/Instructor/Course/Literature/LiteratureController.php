@@ -48,6 +48,7 @@ class LiteratureController
                 'type' => 'literature',
                 'title' => $request->title,
                 'value' => $request->value,
+                'instruction' => $request->instruction,
             ]);
 
             # Insert Literature
@@ -93,6 +94,7 @@ class LiteratureController
                 'activity_id' => $literature->id,
                 'title' => $request->title,
                 'value' => $request->value,
+                'instruction' => $request->instruction,
             ]);
 
             # Update Pre Test

@@ -1,11 +1,15 @@
 import FormCheckbox from "@/Components/FormCheckbox";
 import FormInput from "@/Components/FormInput";
+import FormLabel from "@/Components/FormLabel";
 import FormTextArea from "@/Components/FormTextArea";
 import NumberActivity from "@/Components/NumberActivity";
 import TitleActivity from "@/Components/TitleActivity";
 import App from "@/Layouts/Instructor/App";
 import { Link, router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+
 
 const Edit = ({ slug, activity }) => { // Tambahkan activity untuk membawa data yang akan diedit
     const { errors } = usePage().props
@@ -13,9 +17,11 @@ const Edit = ({ slug, activity }) => { // Tambahkan activity untuk membawa data 
     const [values, setValues] = useState({
         title: activity?.title || "",
         description: activity?.description || "",
+        instruction: "",
         min_score: activity?.min_score || 0,
         is_loop: activity?.is_loop || false,
-        value: activity?.value || ""
+        value: activity?.value || "",
+        timer: activity?.timer || ""
     });
 
     useEffect(() => {
@@ -24,8 +30,10 @@ const Edit = ({ slug, activity }) => { // Tambahkan activity untuk membawa data 
                 title: activity.title,
                 description: activity.description,
                 min_score: activity.min_score,
+                instruction: activity.instruction,
                 is_loop: activity.is_loop,
-                value: activity.value
+                value: activity.value,
+                timer: activity.timer
             });
         }
     }, [activity]);
@@ -55,9 +63,20 @@ const Edit = ({ slug, activity }) => { // Tambahkan activity untuk membawa data 
                         <FormTextArea title={'description'} isRequired={true} onChange={handleChange} value={values.description} error={errors.description} />
                         <FormInput title={'min score'} isRequired={true} onChange={handleChange} value={values.min_score} error={errors.min_score} />
                         <FormInput title={'value'} isRequired={true} onChange={handleChange} value={values.value} error={errors.value} />
+                        <FormInput title={'timer'} isRequired={true} onChange={handleChange} value={values.timer} error={errors.timer} />
+                        <div className="h-auto mb-3">
+                            <FormLabel title={'instruction'} />
+                            <ReactQuill
+                                value={values.instruction}
+                                onChange={(value) => setValues((prevValues) => ({
+                                    ...prevValues,
+                                    instruction: value
+                                }))}
+                            />
+                        </div>
                         <FormCheckbox
                             id="is_loop"
-                            title={'Pengulangan? (Maksimal pengulangan untuk post-test adalah 4x)'}
+                            title={'Pengulangan? (Maksimal pengulangan untuk post-test adalah 3x)'}
                             onChange={handleChange}
                             checked={values.is_loop}
                         />

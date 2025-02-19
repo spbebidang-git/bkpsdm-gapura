@@ -5,6 +5,8 @@ import TitleActivity from "@/Components/TitleActivity";
 import App from "@/Layouts/Instructor/App";
 import { Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 const Create = ({ slug }) => {
     const { errors } = usePage().props
@@ -12,6 +14,7 @@ const Create = ({ slug }) => {
     const [values, setValues] = useState({
         title: "",
         description: "",
+        instruction: "",
         value: ""
     })
 
@@ -38,6 +41,15 @@ const Create = ({ slug }) => {
                     <div className="p-6">
                         <FormInput title={'title'} isRequired={true} onChange={handleChange} value={values.title} error={errors.title} />
                         <FormInput title={'value'} isRequired={true} onChange={handleChange} value={values.value} error={errors.value} />
+                        <div className="h-auto mb-3">
+                            <ReactQuill
+                                value={values.instruction}
+                                onChange={(value) => setValues((prevValues) => ({
+                                    ...prevValues,
+                                    instruction: value
+                                }))}
+                            />
+                        </div>
                         <div className="-mb-3">
                             <FormTextArea title={'description'} isRequired={true} onChange={handleChange} value={values.description} error={errors.description} />
                         </div>

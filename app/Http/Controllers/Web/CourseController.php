@@ -80,6 +80,7 @@ class CourseController extends Controller
             $participantId = Auth::user()->id;
 
             $variant = $this->course->generatePrePostTestVariant($participantId, $course);
+            // dd($variant);
 
             $schedule->participants()->attach($participantId);
 

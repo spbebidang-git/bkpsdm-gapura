@@ -5,10 +5,11 @@ namespace App\Models\Course\Question;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class QuestionItem extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     public $guarded = [];
 
