@@ -4,6 +4,7 @@ namespace App\Services\Course\Activity;
 
 use App\Models\Course\Activity;
 use App\Models\Course\Interactive;
+use App\Models\Course\Question;
 use App\Models\Learn\Learn;
 
 class ActivityService
@@ -31,6 +32,12 @@ class ActivityService
                 if ($row->type == 'meeting') {
                     $endMeeting = Interactive::where('activity_id', $row->id)->first()->end_meeting;
                 }
+
+                $hasImported = null;
+                if ($row->type == 'pre-test' || $row->type == 'post-test') {
+                    $hasImported = Question::where('activity_id', $row->id)->first()->has_imported;
+                }
+
                 return [
                     'id' => $row->id,
                     'course_id' => $row->course_id,
@@ -39,6 +46,7 @@ class ActivityService
                     'timer' => $row->timer,
                     'value' => $row->value,
                     'end_meeting' => $endMeeting,
+                    'has_imported' => $hasImported,
                     'status' => 0
                 ];
             });

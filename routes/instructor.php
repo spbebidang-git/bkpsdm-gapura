@@ -34,6 +34,10 @@ Route::prefix('/instructor')
                         Route::resource('pre-test', \App\Http\Controllers\Instructor\Course\Question\PreTestController::class);
                         # Post Test
                         Route::resource('post-test', \App\Http\Controllers\Instructor\Course\Question\PostTestController::class);
+                        # Import Question 
+                        Route::get('{activity}/import-question', [\App\Http\Controllers\Instructor\Course\Question\ImportQuestionController::class, 'index'])->name('import-question.index');
+                        Route::get('{activity}/import-question/download', [\App\Http\Controllers\Instructor\Course\Question\ImportQuestionController::class, 'download'])->name('import-question.download');
+                        Route::post('{activity}/import-question', [\App\Http\Controllers\Instructor\Course\Question\ImportQuestionController::class, 'store'])->name('import-question.store');
                         # Variant
                         Route::prefix('variant/{activityId}')
                             ->name('variant.')

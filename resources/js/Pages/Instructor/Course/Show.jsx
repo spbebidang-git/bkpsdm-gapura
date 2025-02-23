@@ -106,14 +106,23 @@ const Show = ({ course, activities }) => {
                                         <td className="px-6 py-4 text-center">{index + 1}</td>
                                         <td className="px-6 py-4 text-center capitalize whitespace-nowrap">{item.type}</td>
                                         <td className="px-6 py-4 text-center font-medium text-gray-800 w-full">{item.title}</td>
-                                        <td className="px-6 py-4 text-center flex justify-end w-80 gap-2">
+                                        <td className="px-6 py-4 text-center flex justify-end w-96 gap-2">
                                             <div className=" w-full flex gap-2 justify-end h-8">
                                                 {item.type === 'pre-test' || item.type == 'post-test' ? (
-                                                    <Link href={`/instructor/course/${course.slug}/activity/variant/${item.id}`}>
-                                                        <button className="w-20 h-7 text-sm font-medium bg-primary text-white rounded-full shadow">
-                                                            Variant
-                                                        </button>
-                                                    </Link>
+                                                    <div className="flex gap-2">
+                                                        {!item.has_imported ? (
+                                                            <Link href={route('instructor.course.activity.import-question.index', { course: course.slug, activity: item.id })}>
+                                                                <button className="w-20 h-7 text-sm font-medium bg-green-500 text-white rounded-full shadow">
+                                                                    Import
+                                                                </button>
+                                                            </Link>
+                                                        ) : ('')}
+                                                        <Link href={`/instructor/course/${course.slug}/activity/variant/${item.id}`}>
+                                                            <button className="w-20 h-7 text-sm font-medium bg-primary text-white rounded-full shadow">
+                                                                Variant
+                                                            </button>
+                                                        </Link>
+                                                    </div>
                                                 ) : ''}
                                                 {item.type === 'meeting' && item.end_meeting === 0 ? (
                                                     <button onClick={(e) => handleEndMeeting(e, item.id)} className="w-20 h-7 text-sm font-medium bg-primary text-white rounded-full shadow">

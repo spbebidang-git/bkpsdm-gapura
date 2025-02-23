@@ -5,7 +5,7 @@
 /public/storage
 /storage/*.key
 /vendor
-/public/assets/media/documents/*
+/public/assets/media/documents/literatures
 /public/assets/media/tasks/*
 .env
 .env.backup
