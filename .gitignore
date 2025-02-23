@@ -5,7 +5,6 @@
 /public/storage
 /storage/*.key
 /vendor
-/public/assets/media/documents/literatures
 /public/assets/media/tasks/*
 .env
 .env.backup
@@ -22,9 +21,13 @@ yarn-error.log
 /.vscode
 /.zed
 
-# Ignore everything in public/assets/media
+# Ignore everything inside public/assets/media
 public/assets/media/*
 
-# But do not ignore the static folder and its contents
-!public/assets/media/static/
-!public/assets/media/static/*
+# Allow only specific paths (documents/static & images/static)
+!public/assets/media/documents/
+!public/assets/media/documents/static/
+!public/assets/media/documents/static/*
+
+!public/assets/media/images/static/*
+
