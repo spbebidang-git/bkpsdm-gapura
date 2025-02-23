@@ -48,6 +48,7 @@ const Create = ({ slug }) => {
                         <FormInput title={'value'} isRequired={true} onChange={handleChange} value={values.value} error={errors.value} />
                         <FormInput title={'timer'} isRequired={true} onChange={handleChange} value={values.timer} error={errors.timer} />
                         <div className="h-auto mb-3">
+                            <FormLabel title={'instruction'} />
                             <ReactQuill
                                 value={values.instruction}
                                 onChange={(value) => setValues((prevValues) => ({
