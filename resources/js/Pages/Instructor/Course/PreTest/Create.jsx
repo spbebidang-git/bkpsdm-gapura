@@ -1,5 +1,6 @@
 import FormCheckbox from "@/Components/FormCheckbox";
 import FormInput from "@/Components/FormInput";
+import FormLabel from "@/Components/FormLabel";
 import FormTextArea from "@/Components/FormTextArea";
 import NumberActivity from "@/Components/NumberActivity";
 // import QuillEditor from "@/Components/QuillEditor";

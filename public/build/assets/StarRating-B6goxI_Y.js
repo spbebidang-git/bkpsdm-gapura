@@ -1,0 +1,1 @@
+import{j as t}from"./app-BxQA8_jR.js";const o=({value:s})=>{const a=Array(5).fill(0).map((n,r)=>t.jsx("box-icon",{type:"solid",name:"star",color:r<s?"#facc15":"#d1d5db"},r));return t.jsx("div",{className:"flex",children:a})},e=o;export{e as S};
