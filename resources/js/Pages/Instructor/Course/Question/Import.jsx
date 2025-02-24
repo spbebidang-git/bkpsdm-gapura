@@ -25,7 +25,7 @@ export default function Import({ course, activity }) {
 
         formData.append('content', values.content);
 
-        router.post(route('instructor.course.activity.import-question.store', { course: 'test', activity: activity.id }), formData);
+        router.post(route('instructor.course.activity.import-question.store', { course: course.slug, activity: activity.id }), formData);
     }
 
     const handleDownload = () => {
