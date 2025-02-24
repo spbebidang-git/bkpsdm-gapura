@@ -37,12 +37,11 @@ class ImportQuestionController
             Excel::import(new VariantImport($question->id), $request->file('content'));
 
             # get variant imported 
-            $variants = QuestionVariant::where('question_id', $activity->id)->pluck('code');
+            $variants = QuestionVariant::where('question_id', $question->id)->pluck('code');
 
             Excel::import(new VariantImport($variants), $request->file('content'));
 
             # add flag has imported 
-            $question = Question::where('activity_id', $activity->id)->first();
             $question->has_imported = 1;
             $question->save();
 
