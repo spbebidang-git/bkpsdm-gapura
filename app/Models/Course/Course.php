@@ -77,6 +77,16 @@ class Course extends Model
         }));
     }
 
+    public function totalPassed(): Attribute
+    {
+        return Attribute::get(fn() => $this->learns()->where('finished_at', '!=', null)->count());
+    }
+
+    public function efektifitas(): Attribute
+    {
+        return Attribute::get(fn() => ($this->total_passed / $this->total_participant) * 100);
+    }
+
     public function getStar(): Attribute
     {
         $totalRating = $this->reviews()->count(); // Total pengguna yang memberikan rating

@@ -29,7 +29,9 @@ class CourseService
                     'instructor' => $row->instructor->name,
                     'total_participant' => $row->total_participant,
                     'status' => $row->status,
-                    'star' => $row->getRating()['star']
+                    'star' => $row->getRating()['star'],
+                    'total_participant' => $row->total_participant,
+                    'total_passed' => $row->total_passed,
                 ];
             });
     }

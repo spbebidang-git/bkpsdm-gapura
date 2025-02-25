@@ -78,7 +78,10 @@ class CourseController
                 'instructor' => $course->instructor->name,
                 'short_description' => $course->short_description,
                 'description' => $course->description,
-                'thumbnail' => $course->thumbnail_src
+                'thumbnail' => $course->thumbnail_src,
+                'total_participant' => $course->total_participant,
+                'total_passed' => $course->total_passed,
+                'efektifitas' => $course->efektifitas,
             ],
             'activities' => $this->activity->getActivityByCourse($course->id)
         ]);

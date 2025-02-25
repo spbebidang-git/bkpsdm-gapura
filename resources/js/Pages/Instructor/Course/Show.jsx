@@ -72,8 +72,31 @@ const Show = ({ course, activities }) => {
                     <div className='col-span-2'>
                         <div className='text-xl font-bold text-gray-800 mb-0.5'>{course.title}</div>
                         <div className='text-sm italic mb-1 text-gray-700'>oleh <span className='not-italic font-bold'>{course.instructor}</span></div>
-
                         <div className='mb-2.5 text-gray-700'>{course.short_description}</div>
+                        <div className="flex justify-between items-center max-w-2xl">
+                            <div>
+                                <div className='flex flex-col gap-1 text-sm text-gray-700 font-medium'>
+                                    <div className='flex gap-2 items-center'>
+                                        <div className='w-12 h-12 rounded-full'>
+                                            <img src="/assets/media/images/static/peserta-icon.png" alt="" />
+                                        </div>
+                                        <div><b>{course.total_participant}</b> Peserta</div>
+                                    </div>
+                                    <div className='flex gap-2 items-center'>
+                                        <div className='w-12 h-12 rounded-full'>
+                                            <img src="/assets/media/images/static/lulus-icon.png" alt="" />
+                                        </div>
+                                        <div><b>{course.total_passed}</b> Peserta Selesai</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div className="text-right">
+                                    <h4 className="text-xl font-bold">Efektivitas Penerimaan Materi :</h4>
+                                    <h2 className="text-5xl">{course.efektifitas}%</h2>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div className="col-span-1 border-2 rounded-xl shadow">

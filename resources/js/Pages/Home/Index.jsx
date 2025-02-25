@@ -76,9 +76,23 @@ export default function Home({ courses }) {
                                                     class="font-semibold text-black text-sm lg:text-base leading-normal hover:text-primary">
                                                     {item.title}
                                                 </div>
-                                                <div class="text-xs lg:text-sm text-gray-400 italic">
+                                                <div class="text-xs lg:text-sm text-gray-400 italic mb-2">
                                                     by
                                                     <span class="font-medium text-gray-500"> {item.instructor}</span>
+                                                </div>
+                                                <div className='flex flex-col gap-1 text-sm text-gray-700 font-medium'>
+                                                    <div className='flex gap-2 items-center'>
+                                                        <div className='w-7 h-7 border rounded-full'>
+                                                            <img src="/assets/media/images/static/peserta-icon.png" alt="" />
+                                                        </div>
+                                                        <div><b>{item.total_participant}</b> Peserta</div>
+                                                    </div>
+                                                    <div className='flex gap-2 items-center'>
+                                                        <div className='w-7 h-7 border rounded-full'>
+                                                            <img src="/assets/media/images/static/lulus-icon.png" alt="" />
+                                                        </div>
+                                                        <div><b>{item.total_passed}</b> Peserta Selesai</div>
+                                                    </div>
                                                 </div>
                                                 <div className='flex justify-center p-2.5'>
                                                     <StarRating value={item.star} />
