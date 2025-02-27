@@ -10,6 +10,10 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
     const [file, setFile] = useState(null);
     const [activeButton, setActiveButton] = useState(false)
     const [duration, setDuration] = useState(activity.data.duration)
+    const [timer, setTimer] = useState(activity.timer)
+
+    const formattedAnswers = Object.values(answers).map(answer => ({ ...answer }));
+
 
     useEffect(() => {
 
@@ -45,7 +49,8 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
 
         // store pre test or post test
         if (activity.type == 'pre-test' || activity.type == 'post-test') {
-            const formattedAnswers = Object.values(answers).map(answer => ({ ...answer }));
+            localStorage.removeItem('countdownStartTime');
+
             router.post(route('participant.learn.store', { course: slug, schedule: 1, activity: activity_id }), formattedAnswers, {
                 onError: (errors) => {
                     toast.error(errors.error, {
@@ -112,16 +117,15 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
         // });
     };
 
-    return <Learn type="material" course={course} progress={progress} activities={activities} activity={activity}>
-        <div className="flex flex-col justify-between gap-3 h-auto ">
-            <div className='h-[562px] bg-gray-50 py-2.5 overflow-scroll'>
-                <div>
+    return <Learn type="material" course={course} progress={progress} activities={activities} activity={activity} timer={timer} formattedAnswers={formattedAnswers} activity_id={activity_id}>
+        <div className='flex flex-col justify-between'>
+            <div className='flex-1 rounded-xl bg-gray-50 py-2.5 mb-8 '>
+                <div className='p-3 flex-1 h-[550px] overflow-scroll'>
                     <Activity question_result={question_result} slug={course.slug} id={activity_id} type={activity.type} data={activity.data} status={activity.status} answers={answers} file={file} setFile={setFile}
                         setAnswers={setAnswers} />
                 </div>
             </div>
-            <div className='h-14 flex items-center w-56 mx-auto'>
-
+            <div className='h-14 w-56 mx-auto'>
                 {activeButton ? <button onClick={(e) => handleSubmit(e, course.slug)} className='button-primary'>Kirim Jawaban</button>
                     : <button className="button-disable max-w-56">
                         Selanjutnya

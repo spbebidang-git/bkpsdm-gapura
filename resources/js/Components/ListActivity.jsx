@@ -10,11 +10,13 @@ const ListActivity = ({ type, activity, status, isActive, slug, scheduleId = 1, 
     useEffect(() => {
         switch (type) {
             case 'pre-test':
+                localStorage.removeItem('countdownStartTime');
                 setTitle('Pre Test');
                 setDescription('Mengerjakan Quiz');
                 setIcon('pencil');  // Misalnya ikon untuk quiz adalah 'pencil'
                 break;
             case 'post-test':
+                localStorage.removeItem('countdownStartTime');
                 setTitle('Post Test');
                 setDescription('Mengerjakan Quiz');
                 setIcon('pencil');  // Ikon yang sama dengan pre-test
@@ -48,10 +50,10 @@ const ListActivity = ({ type, activity, status, isActive, slug, scheduleId = 1, 
 
     return (
         <div className="mb-4 rounded-xl cursor-pointer shadow">
-            <Link href={`/learn/${slug}/${scheduleId}/${activityId}`}>
+            <Link href={route('participant.learn.instruction.index', { course: slug, schedule: scheduleId, activity: activityId })}>
                 <div className="flex rounded-xl overflow-hidden">
                     <div className={`w-4 ${isActive ? 'bg-primary' : 'bg-white'}`}></div>
-                    <div className={`w-full px-8 border-gray-200 py-3 ${isActive ? 'bg-purple-50' : 'bg-white'}`}>
+                    <div className={`w-full px-8 border-gray-200 py-3 ${isActive ? 'bg-teal-50' : 'bg-white'}`}>
                         <div className="flex gap-3">
                             {status === 'done' ? (
                                 <div className="w-fit mb-1 px-4 flex items-center justify-center text-[12px] font-extrabold bg-green-500 text-white rounded-full shadow">

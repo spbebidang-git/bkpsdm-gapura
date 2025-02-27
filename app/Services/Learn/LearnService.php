@@ -54,13 +54,19 @@ class LearnService
             ->first();
 
 
-        if ($learn && $learn->learnItems->first()) {
-            return [
-                'score' => $this->getTotalScore(unserialize($learn->learnItems->first()->response)),
-                'correct' => $this->getCorrectAnswer(unserialize($learn->learnItems->first()->response)),
-                'wrong' => $this->getWrongAnswer(unserialize($learn->learnItems->first()->response))
-            ];
-        }
+        // if ($learn && $learn->learnItems->first()) {
+        //     return [
+        //         'score' => $this->getTotalScore(unserialize($learn->learnItems->first()->response)),
+        //         'correct' => $this->getCorrectAnswer(unserialize($learn->learnItems->first()->response)),
+        //         'wrong' => $this->getWrongAnswer(unserialize($learn->learnItems->first()->response))
+        //     ];
+        // }
+
+        return [
+            'score' => $learn->learnItems->first() ? $this->getTotalScore(unserialize($learn->learnItems->first()->response)) : 0,
+            'correct' => $learn->learnItems->first() ? $this->getCorrectAnswer(unserialize($learn->learnItems->first()->response)) : 0,
+            'wrong' => $learn->learnItems->first() ? $this->getWrongAnswer(unserialize($learn->learnItems->first()->response)) : 0
+        ];
     }
 
     public function getTotalScore($response)

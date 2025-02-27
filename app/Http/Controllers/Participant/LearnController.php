@@ -34,6 +34,23 @@ class LearnController extends Controller
 
     public function index(Course $course, $schedule, Activity $activity)
     {
+        if ($activity->type === 'post-test' && request()->loop) {
+            // dd(123);
+            // Check Total looping
+            $checkTrial = $this->learn->checkTrial($this->participantId, $course->id, $activity->id);
+            // dd($checkTrial);
+            if ($checkTrial) {
+                if ($checkTrial === 3) {
+                    $this->learn->resetFromPostTest($this->participantId, $course->id);
+
+                    return to_route('participant.learn.instruction.index', [$course->slug, 1, $this->learn->getInititalActivityId($course->id)]);
+                }
+
+                $this->learn->setTrialTotal($checkTrial->learnItems->first());
+                // return response(null, 200);
+            }
+        }
+
         $course = $this->course->findBySlug($course->slug);
         $this->learn->resetLearning($this->participantId, $course->id, 10);
 
@@ -62,33 +79,19 @@ class LearnController extends Controller
 
     public function store(Course $course, $schedule, Activity $activity, Request $request)
     {
-
-        // if ($activity->type === 'post-test' && $request->loop) {
-        //     // Check Total looping
-        //     $checkTrial = $this->learn->checkTrial($this->participantId, $course->id, $activity->id);
-        //     // dd($checkTrial);
-        //     if ($checkTrial) {
-        //         if ($checkTrial === 3) {
-        //             $this->learn->resetFromPostTest($this->participantId, $course->id);
-
-        //             return to_route('participant.learn.index', [$course->slug, 1, $this->learn->getInititalActivityId($course->id)]);
-        //         }
-
-        //         $this->learn->setTrialTotal($checkTrial->learnItems->first());
-        //         return response(null, 200);
-        //     }
-        // }
         // dd(count($request->all()));
         # validate pre test & post test
-        if ($activity->type == 'pre-test' || $activity->type == 'post-test') {
-            if (!$this->question->validateQuestion(count($request->all()), $this->participantId, $activity->id)) {
-                return redirect()->back()->withErrors(['error' => 'Please answer all questions']);
-            }
-        }
+        // if ($activity->type == 'pre-test' || $activity->type == 'post-test') {
+        //     if (!$this->question->validateQuestion(count($request->all()), $this->participantId, $activity->id)) {
+        //         return redirect()->back()->withErrors(['error' => 'Please answer all questions']);
+        //     }
+        // }
 
 
         try {
             DB::beginTransaction();
+
+
 
             # For Pre Test, Post Test & Task
             if (!empty($request->all()) && ($activity->type == 'pre-test' || $activity->type == 'post-test')) {
@@ -138,6 +141,19 @@ class LearnController extends Controller
 
     public function instruction(Course $course, $scheduleId, Activity $activity)
     {
+        if (!$this->learn->isLearned($this->participantId, $course->id)) {
+            $initActivity = $this->learn->getInititalActivityId($course->id);
+            if ($initActivity !== intval($activity->id)) {
+                return to_route('participant.learn.instruction.index', [$course->slug, 1, $initActivity]);
+            }
+        } else {
+            $validOpenActivity = $this->learn->checkValidOpenActivity($this->participantId, $course->id, $activity->id);
+            // dd($validOpenActivity);
+            if (is_array($validOpenActivity)) {
+                return redirect()->back()->withErrors(['error' => 'Kamu belum menyelesaikan kegiatan sebelumnya. Selesaikan sesuai urutan kegiatan.']);
+            }
+        }
+
         $instruction = $activity->instruction;
 
         return Inertia::render('Learn/Instruction/Index', [

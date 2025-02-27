@@ -100,6 +100,7 @@ class QuestionService
         return [
             'activity_id' => $activity->id,
             'title' => $activity->title,
+            'timer' => $activity->timer,
             'description' => $question->description,
             'type' => 'pre-test',
             'status' => $this->getStatus($participantId, $activity->id),
@@ -193,6 +194,7 @@ class QuestionService
         return [
             'activity_id' => $activity->id,
             'title' => $activity->title,
+            'timer' => $activity->timer,
             'description' => $question->description,
             'type' => 'pre-test',
             'status' => $this->getStatus($participantId, $activity->id),

@@ -1,17 +1,48 @@
 import { useEffect, useState } from 'react';
 
-const CountdownTimer = ({ initialSeconds = 600 }) => {
+const CountdownTimer = ({ initialSeconds = 600, onTimeout }) => {
     const [timeLeft, setTimeLeft] = useState(initialSeconds);
 
     useEffect(() => {
-        if (timeLeft <= 0) return;
+        const storedStartTime = localStorage.getItem('countdownStartTime');
+        const now = Math.floor(Date.now() / 1000);
+
+        if (storedStartTime) {
+            const elapsed = now - parseInt(storedStartTime, 10);
+            const remainingTime = initialSeconds - elapsed;
+
+            if (remainingTime > 0) {
+                setTimeLeft(remainingTime);
+            } else {
+                setTimeLeft(0);
+                if (onTimeout) onTimeout(); // Kirim event timeout ke parent
+            }
+        } else {
+            localStorage.setItem('countdownStartTime', now.toString());
+        }
+    }, [initialSeconds]);
+
+    useEffect(() => {
+        if (timeLeft <= 0) {
+            localStorage.removeItem('countdownStartTime');
+            if (onTimeout) onTimeout();
+            return;
+        }
 
         const timer = setInterval(() => {
-            setTimeLeft(prevTime => prevTime - 1);
+            setTimeLeft(prevTime => {
+                const newTime = prevTime - 1;
+                if (newTime <= 0) {
+                    clearInterval(timer);
+                    localStorage.removeItem('countdownStartTime');
+                    if (onTimeout) onTimeout();
+                }
+                return newTime;
+            });
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [timeLeft]);
+    }, [timeLeft, onTimeout]);
 
     const formatTime = (time) => {
         const minutes = Math.floor(time / 60).toString().padStart(2, '0');
