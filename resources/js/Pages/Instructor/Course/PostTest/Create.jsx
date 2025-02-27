@@ -39,7 +39,7 @@ const Create = ({ slug }) => {
     return (
         <App>
             <NumberActivity number={3} />
-            <TitleActivity number={3} title={'Setting Pre-Test / Quiz'} />
+            <TitleActivity number={3} title={'Setting Post-Test / Quiz'} />
 
             <form onSubmit={handleSubmit}>
                 <div className="max-w-2xl mx-auto shadow bg-white rounded-xl">

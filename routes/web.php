@@ -7,7 +7,10 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// Auth::loginUsingId(3);
+Route::get('/dummy', function () {
+    Auth::loginUsingId(3);
+});
+
 # Sign In / Guest
 Route::prefix('/sign-in')
     ->name('sign-in.')
