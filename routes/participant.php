@@ -31,4 +31,6 @@ Route::middleware([CheckRoleAuthMiddleware::class, IsParticipantMiddleware::clas
 
         # Profile
         Route::get('/profile', [\App\Http\Controllers\Participant\ProfileController::class, 'index'])->name('profile.index');
+        # Certificate
+        Route::post('/certificate', \App\Http\Controllers\Participant\CertificateController::class)->name('certificate');
     });
