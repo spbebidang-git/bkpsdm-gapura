@@ -148,13 +148,78 @@ class AuthController
 
         # if the user is found
         if ($userNip) {
-            # login the user 
-            Auth::login($userNip->user);
-            # return to home 
-            return to_route('home');
+            # set credentials
+            $credentials = $request->validate([
+                'email' => $userNip->email,
+                'password' => $request->password,
+            ]);
+
+            # login
+            if (Auth::attempt($credentials)) {
+                // regenare session
+                $request->session()->regenerate();
+                # return to home 
+                return to_route('home');
+            }
+
+            # condition if password wrong or change 
+            try {
+                # request oauth
+                $response = Http::retry(3, 100)->withHeaders([
+                    'apikey' => env('API_KEY')
+                ])->post(env('SSO_BASE_URL') . '/oauth/token', [
+                    'username' => $request->username,
+                    'password' => $request->password,
+                    'grant_type'   => 'password',
+                    'client_id'    => env('SSO_CLIENT_ID'),
+                    'client_secret' => env('SSO_CLIENT_SECRET'),
+                ]);
+
+                # if success oauth
+                if ($response->successful() && isset($response->json()['access_token'])) {
+                    # set bearer token
+                    $token = 'Bearer ' . $response->json()['access_token'];
+                    Session::put('token', $token);
+
+                    # get data user
+                    try {
+                        $participantApi = Http::retry(3, 100)->withHeaders([
+                            'apikey' => env('API_KEY'),
+                            'auth' => $token
+                        ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
+
+                        # if success request data user
+                        if ($participantApi->successful()) {
+                            try {
+                                DB::beginTransaction();
+                                # update password with new password 
+                                $user = $userNip->user;
+                                $user->password = Hash::make($request->password);
+                                $user->save();
+
+                                DB::commit();
+                                // regenare session
+                                $request->session()->regenerate();
+                                # login
+                                Auth::login($user);
+                                # redirect to home
+                                return to_route('home');
+                            } catch (\Throwable $th) {
+                                DB::rollBack();
+
+                                return redirect()->back()->with('danger', 'Something went wrong.');
+                            }
+                        }
+                    } catch (\Throwable $th) {
+                        return redirect()->back()->with('danger', $th->getMessage());
+                    }
+                }
+            } catch (\Throwable $th) {
+                return redirect()->back()->with('danger', $th->getMessage());
+            }
         }
 
-        # if the user is not found, login SSO to get data user 
+        # if the user is not found (never login), login SSO to get data user 
 
         # request login oauth
         try {
@@ -189,7 +254,7 @@ class AuthController
                             $user = User::create([
                                 'name' => $participantApi->json()['fv_nama'],
                                 'email' => $participantApi->json()['fv_email'],
-                                'password' => Hash::make(str()->random(12))
+                                'password' => Hash::make($request->password)
                             ]);
                             # create new meta user
                             $this->user->storeUserMeta($user->id, $participantApi->json());
