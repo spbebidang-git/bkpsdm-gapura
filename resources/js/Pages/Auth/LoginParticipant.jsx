@@ -4,19 +4,19 @@ import { Link, useForm, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 
 const LoginParticipant = () => {
-    const { site } = usePage().props
+    const { site } = usePage().props;
 
-    const [captchaUrl, setCaptchaUrl] = useState('');
-    const [captchaInput, setCaptchaInput] = useState('');
+    const [captchaUrl, setCaptchaUrl] = useState("");
+    const [captchaInput, setCaptchaInput] = useState("");
 
     useEffect(() => {
-        fetchCaptcha()
+        fetchCaptcha();
     }, []);
 
     const { data, setData, post, processing, errors } = useForm({
         username: "",
         password: "",
-        captcha: "",  // Tambahkan recaptchaToken ke data
+        captcha: "", // Tambahkan recaptchaToken ke data
     });
 
     const handleChange = (e) => {
@@ -28,18 +28,20 @@ const LoginParticipant = () => {
     const handleCaptchaChange = (e) => {
         const value = e.target.value;
         setCaptchaInput(value);
-        setData('captcha', value);  // Set nilai captcha di data form
+        setData("captcha", value); // Set nilai captcha di data form
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post('/sign-in');  // Kirim data termasuk token ke backend
+        post("/sign-in"); // Kirim data termasuk token ke backend
     };
 
     const fetchCaptcha = async () => {
         try {
-            const response = await axios.get('/captcha-url ')
-            const data = response.data
+            const response = await axios.get("/captcha-url ");
+            const data = response.data;
+            setCaptchaInput("");
+            setData("captcha", "");
             setCaptchaUrl(data.captcha);
         } catch (error) {
             console.error("Error fetching captcha:", error);
@@ -52,8 +54,15 @@ const LoginParticipant = () => {
             <div className="bg-primary h-2"></div>
 
             <div className="p-5 xl:p-0 flex-1 flex flex-col justify-center items-center">
-                <Link href="/" className="flex items-center max-w-56 mb-6 text-2xl font-semibold text-gray-900">
-                    <img src={site.logo} alt="" className='w-full h-full object-fill' />
+                <Link
+                    href="/"
+                    className="flex items-center max-w-56 mb-6 text-2xl font-semibold text-gray-900"
+                >
+                    <img
+                        src={site.logo}
+                        alt=""
+                        className="w-full h-full object-fill"
+                    />
                 </Link>
                 <div className="w-full bg-white rounded-lg shadow md:mt-0 sm:max-w-md xl:p-0">
                     <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
@@ -64,18 +73,18 @@ const LoginParticipant = () => {
                             <div className="mb-1">
                                 {/* username */}
                                 <FormInput
-                                    title={'username'}
+                                    title={"username"}
                                     isRequired={true}
-                                    placeholder={'Username'}
+                                    placeholder={"Username"}
                                     value={data.username}
                                     onChange={handleChange}
                                     error={errors.username}
                                 />
                                 {/* password */}
                                 <FormInput
-                                    title={'password'}
+                                    title={"password"}
                                     isRequired={true}
-                                    placeholder={'********'}
+                                    placeholder={"********"}
                                     type="password"
                                     value={data.password}
                                     onChange={handleChange}
@@ -85,7 +94,13 @@ const LoginParticipant = () => {
                                 <div className="py-2.5">
                                     <div className=" flex items-center gap-3 -mt-1">
                                         <div className="flex-1 border border-gray-300 shadow flex items-center rounded-xl overflow-hidden ">
-                                            <img onClick={fetchCaptcha} src={captchaUrl} className="w-full h-full" alt="captcha" style={{ cursor: 'pointer' }} />
+                                            <img
+                                                onClick={fetchCaptcha}
+                                                src={captchaUrl}
+                                                className="w-full h-full"
+                                                alt="captcha"
+                                                style={{ cursor: "pointer" }}
+                                            />
                                         </div>
                                         <div className="w-1/3">
                                             <input
@@ -94,17 +109,31 @@ const LoginParticipant = () => {
                                                 value={captchaInput}
                                                 onChange={handleCaptchaChange}
                                                 placeholder="CAPTCHA"
-                                                className={`${errors.captcha ? 'error' : ''} form-control`}
+                                                className={`${
+                                                    errors.captcha
+                                                        ? "error"
+                                                        : ""
+                                                } form-control`}
                                             />
                                         </div>
                                     </div>
-                                    {errors.captcha && <div className="mt-1 text-red-500 text-sm">{errors.captcha}
-                                    </div>}
-                                    <small className="text-gray-600 italic">Klik pada gambar untuk melakukan refresh CAPTCHA.</small>
+                                    {errors.captcha && (
+                                        <div className="mt-1 text-red-500 text-sm">
+                                            {errors.captcha}
+                                        </div>
+                                    )}
+                                    <small className="text-gray-600 italic">
+                                        Klik pada gambar untuk melakukan refresh
+                                        CAPTCHA.
+                                    </small>
                                 </div>
                                 {/* submit */}
-                                <button type="submit" className="button-primary my-2.5" disabled={processing}>
-                                    {processing ? 'Please Wait...' : 'Sign In'}
+                                <button
+                                    type="submit"
+                                    className="button-primary my-2.5"
+                                    disabled={processing}
+                                >
+                                    {processing ? "Please Wait..." : "Sign In"}
                                 </button>
                             </div>
                         </form>
@@ -112,7 +141,7 @@ const LoginParticipant = () => {
                 </div>
             </div>
         </section>
-    )
-}
+    );
+};
 
-export default LoginParticipant
+export default LoginParticipant;
