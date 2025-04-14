@@ -41,7 +41,7 @@ class AuthController
             'username' => 'required|string',
             'password' => 'required|string',
             'captcha' => 'required|captcha'
-        ],  [
+        ], [
             'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'  // Pesan error khusus
         ]);
 
@@ -135,9 +135,9 @@ class AuthController
         $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
-            'captcha' => 'required|captcha'
+            // 'captcha' => 'required|captcha'
         ],  [
-            'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'
+            // 'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'
         ]);
 
         # find user by username (nip)
@@ -149,10 +149,10 @@ class AuthController
         # if the user is found
         if ($userNip) {
             # set credentials
-            $credentials = $request->validate([
+            $credentials = [
                 'email' => $userNip->email,
                 'password' => $request->password,
-            ]);
+            ];
 
             # login
             if (Auth::attempt($credentials)) {
@@ -161,6 +161,7 @@ class AuthController
                 # return to home 
                 return to_route('home');
             }
+            // dd($request->all());
 
             # condition if password wrong or change 
             try {

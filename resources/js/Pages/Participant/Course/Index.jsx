@@ -4,46 +4,21 @@ import { Link, router } from "@inertiajs/react";
 const Index = ({ courses }) => {
     const handleSubmit = (e, slug) => {
         e.preventDefault();
-
-        router.post(route("participant.certificate"), {
-            course: slug,
-        });
-    };
-
-    const handleDownload = async (slug) => {
-        try {
-            const response = await axios.post(
-                route("participant.certificate"),
-                { course: slug },
-                {
-                    responseType: "blob",
-                }
-            );
-
-            // Ambil nama file dari header `Content-Disposition`
-            const contentDisposition = response.headers["content-disposition"];
-            let fileName = "certificate.pdf"; // Default nama file
-
-            if (contentDisposition) {
-                const match = contentDisposition.match(/filename="(.+)"/);
-                if (match.length > 1) {
-                    fileName = match[1];
-                }
+        router.post(
+            route("participant.certificate"),
+            {
+                // data yang dikirim
+                course: slug,
+            },
+            {
+                onSuccess: (page) => {
+                    const sertifikatUrl = page.props.flash?.sertifikat_url;
+                    if (sertifikatUrl) {
+                        window.open(sertifikatUrl, "_blank");
+                    }
+                },
             }
-
-            // Buat URL Blob untuk unduhan
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement("a");
-            link.href = url;
-            link.setAttribute("download", fileName);
-            document.body.appendChild(link);
-            link.click();
-
-            // Hapus elemen setelah unduhan
-            document.body.removeChild(link);
-        } catch (error) {
-            console.error("Gagal mengunduh sertifikat:", error);
-        }
+        );
     };
 
     return (
@@ -93,8 +68,8 @@ const Index = ({ courses }) => {
                                         ) : (
                                             <button
                                                 className="button-primary"
-                                                onClick={() =>
-                                                    handleDownload(item.slug)
+                                                onClick={(e) =>
+                                                    handleSubmit(e, item.slug)
                                                 }
                                             >
                                                 Unduh Sertifikat

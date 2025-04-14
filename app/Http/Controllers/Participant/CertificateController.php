@@ -8,55 +8,56 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Session;
 
 class CertificateController
 {
     public function __invoke(Request $request)
     {
+        $token = Session::get('token');
 
-        // dd($request->all());
-        $user = Auth::user();
+        # request sertifikat 
+        // $participantApi = Http::withHeaders([
+        //     'apikey' => env('API_KEY'),
+        //     'auth' => $token
+        // ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
+        try {
+            $response = Http::withHeaders([
+                'apikey' => env('API_KEY'),
+                'auth' => $token
+            ])->asForm()
+                ->post(env('SSO_BASE_URL') . '/api/get_data_sertifikat', [
+                    'nip' => get_user_meta(Auth::user()->id, 'nip'),
+                    'kode' => 135,
+                    'kegiatan' => $request->course,
+                ])
+                ->throw();
 
-        $course = Course::with('category', 'activities')->where('slug', $request->course)->first();
+            $array = json_decode($response->body(), true);
 
-        $learn = Learn::where('course_id', $course->id)
-            ->where('participant_id', $user->id)
-            ->first();
+            // Filter data: cari yang `nomor_sertifikat` tidak null atau `sertifikat` mengandung http
+            $filtered = collect($array)->filter(function ($item) {
+                return !is_null($item['nomor_sertifikat']) || str_contains($item['sertifikat'], 'http');
+            })->values();
 
-        $sumValueInMinutes = $course->activities->sum('value');
-        $sumInHour = $sumValueInMinutes / 60;
+            // Ambil satu data
+            $selected = $filtered->first();
 
-        $date = Carbon::parse($learn->finished_at)->locale('id');
-        $date->settings(['formatFunction' => 'translatedFormat']);
-
-        $data = [
-            'no_urut' => 140,
-            'nama_peserta' => $user->name . ' ' . get_user_meta($user->id, 'fc_glrblk'),
-            'nip' => get_user_meta($user->id, 'nip'),
-            'pangkat' => 'Penata Muda/III.a',
-            'jabatan' => get_user_meta($user->id, 'nama_jabatan'),
-            'departemen' => 'BKPSDM Kabupaten Gresik',
-            'title' => $course->category->title,
-            'sub_title' => $course->title,
-            'date_finish' => $date->format('j F Y'),
-            'sum_value' => round($sumInHour),
-        ];
-        $pdf = Pdf::loadView('certificate', $data)->setPaper('a4', 'landscape');
-
-        // Format nama file dengan Nama dan Title
-        $fileName = "Sertifikat Pelatihan | {$user->name} | {$course->title}.pdf";
-
-        // Bersihkan karakter yang tidak valid di nama file (opsional)
-        $fileName = str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '-', $fileName);
+            if ($selected && str_contains($selected['sertifikat'], 'http')) {
+                // Redirect ke URL sertifikat
+                return redirect()->away($selected['sertifikat']);
+            } else {
+                // Jika tidak ditemukan sertifikat dengan URL valid
+                return redirect()->back()->with('danger', 'Sertifikat tidak ditemukan atau belum tersedia.');
+            }
+        } catch (\Throwable $th) {
+            return redirect()->back()->with('danger', $th->getMessage());
+        }
 
 
-        return response()->streamDownload(
-            fn() => print($pdf->output()),
-            $fileName,
-            ["Content-Type" => "application/pdf"]
-        );
 
-        // return $pdf->download($fileName);
-        // return $pdf->stream('certificate.pdf');
+        # find array by course 
+
     }
 }
