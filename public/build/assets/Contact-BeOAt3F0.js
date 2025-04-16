@@ -1,0 +1,1 @@
+import{j as t}from"./app-CwL-H8zt.js";import{A as a}from"./App-BJfEbSnX.js";const s=()=>t.jsx(a,{children:t.jsx("div",{className:"max-w-7xl mx-auto p-8",children:"Contact Page"})});export{s as default};
