@@ -34,8 +34,6 @@ class RatingController
 
     public function store(Request $request, Course $course)
     {
-        // return redirect()->back()->with('message', 'Rating berhasil disimpan!');
-
         $request->validate([
             'rating' => 'required|numeric|min:1|max:5',
             'description' => 'required|string'
@@ -59,43 +57,44 @@ class RatingController
             $learn->save();
 
             # POST SERTIFIKAT 
-            // $token = Session::get('token');
+            $token = Session::get('token');
 
-            // $participantApi = Http::withHeaders([
-            //     'apikey' => env('API_KEY'),
-            //     'auth' => $token
-            // ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
+            $participantApi = Http::withHeaders([
+                'apikey' => env('API_KEY'),
+                'auth' => $token
+            ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
+            $response = Http::withHeaders([
+                'apikey' => env('API_KEY'),
+                'auth' => $token
+            ])->asForm()
+                ->post(env('SSO_BASE_URL') . '/api/post_sertifikat', [
+                    'fc_kduker' => $participantApi->json()['fc_kduker'] ?? 0,
+                    'fc_kdsatker' => $participantApi->json()['fc_kdsatker'] ?? 0,
+                    'fc_kdsubsatker' => $participantApi->json()['fc_kdsubsatker'] ?? 0,
+                    'lama_diklat' => 3,
+                    'jenis_waktu' => 'J',
+                    'kode_kegiatan' => $course->category->code,
+                    'nama_kegiatan' => $course->title,
+                    'tempat_kegiatan' => 'Dinas Komunikasi & Informatika',
+                    'penyelenggara' => 'BKPSDM Gresik',
+                    'tahun' => Carbon::now()->year,
+                    'tgl_mulai' => Carbon::parse($learn->created_at)->format('Y-m-d'),
+                    'tgl_selesai' => Carbon::parse($learn->finished_at)->format('Y-m-d'),
+                    'peserta' => get_user_meta($this->participantId, 'nip')
+                ]);
 
-            // $response = Http::withHeaders([
-            //     'apikey' => env('API_KEY'),
-            //     'auth' => $token
-            // ])->asForm()
-            //     ->post(env('SSO_BASE_URL') . '/api/post_sertifikat', [
-            //         'fc_kduker' => $participantApi->json()['fc_kduker'] ?? 0,
-            //         'fc_kdsatker' => $participantApi->json()['fc_kdsatker'] ?? 0,
-            //         'fc_kdsubsatker' => $participantApi->json()['fc_kdsubsatker'] ?? 0,
-            //         'lama_diklat' => 4,
-            //         'jenis_waktu' => 'J',
-            //         'kode_kegiatan' => $course->category_id,
-            //         'nama_kegiatan' => $course->title,
-            //         'tempat_kegiatan' => 'Dinas Komunikasi & Informatika',
-            //         'penyelenggara' => 'BKPSDM Gresik',
-            //         'tahun' => Carbon::now()->year,
-            //         'tgl_mulai' => Carbon::parse($learn->created_at)->format('Y-m-d'),
-            //         'tgl_selesai' => Carbon::parse($learn->finished_at)->format('Y-m-d'),
-            //         'peserta' => get_user_meta($this->participantId, 'nip')
-            //     ]);
-
-            // if ($response->successful()) {
-            // }
+            if (!$response->successful()) {
+                DB::rollBack();
+                return redirect()->back()->with('danger', 'Gagal mengirim data sertifikat. Silakan coba lagi nanti.');
+            }
 
             DB::commit();
 
             return to_route('participant.survey.index', [$course->slug, 1]);
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
-            return response(null, 400);
+
+            return redirect()->back()->with('danger', $th->getMessage());
         }
     }
 }

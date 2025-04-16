@@ -84,6 +84,9 @@ class Course extends Model
 
     public function efektifitas(): Attribute
     {
+        if ($this->total_passed <= 0) {
+            return Attribute::get(fn() => 0);
+        }
         return Attribute::get(fn() => round(($this->total_passed / $this->total_participant) * 100, 1));
     }
 

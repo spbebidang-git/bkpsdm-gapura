@@ -74,6 +74,7 @@ class VariantController
 
             $variant->update([
                 'mix' => $request->mix,
+                'code' => $request->code,
                 'variant' => $request->variant,
             ]);
 

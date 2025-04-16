@@ -21,6 +21,7 @@ class VariantService
             ->map(function ($row) {
                 return [
                     'id' => $row->id,
+                    'code' => $row->code,
                     'variant' => $row->variant,
                     'question_count' => $row->questionItems->count(),
                     'mix' => $row->mix ? 'Ya' : 'Tidak',
@@ -33,6 +34,7 @@ class VariantService
     {
         QuestionVariant::create([
             'question_id' =>  $this->getQuestionId($activityId),
+            'code' =>  $data['code'],
             'variant' =>  $data['variant'],
             'mix' =>  $data['mix'],
         ]);

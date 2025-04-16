@@ -135,9 +135,9 @@ class AuthController
         $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
-            // 'captcha' => 'required|captcha'
+            'captcha' => 'required|captcha'
         ],  [
-            // 'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'
+            'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'
         ]);
 
         # find user by username (nip)

@@ -176,7 +176,6 @@ class LearnController extends Controller
     {
         if ($activity->type == 'pre-test' || $activity->type == 'post-test') {
             $questionResult = $this->learn->getResultQuestion($this->participantId, $course->id, $activity->id);
-
             return Inertia::render('Learn/Result/Index', [
                 'course' => $course,
                 'progress' => Learn::where('participant_id', $this->participantId)->first()->progress ?? '0 %',
