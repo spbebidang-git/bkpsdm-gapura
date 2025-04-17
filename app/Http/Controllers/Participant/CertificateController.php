@@ -45,8 +45,7 @@ class CertificateController
             $selected = $filtered->first();
 
             if ($selected && str_contains($selected['sertifikat'], 'http')) {
-                // Redirect ke URL sertifikat
-                return redirect()->away($selected['sertifikat']);
+                return redirect()->back()->with('redirect_url', $selected['sertifikat']);
             } else {
                 // Jika tidak ditemukan sertifikat dengan URL valid
                 return redirect()->back()->with('danger', 'Sertifikat tidak ditemukan atau belum tersedia.');

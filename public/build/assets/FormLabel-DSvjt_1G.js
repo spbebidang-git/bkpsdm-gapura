@@ -1,0 +1,1 @@
+import{j as r}from"./app-qpmE1X5O.js";const l=({title:s,isRequired:e})=>r.jsxs("label",{htmlFor:s.replace(/\s+/g,"_"),class:"form-label",children:[" ",s," ",e&&r.jsx("span",{className:"text-red-500",children:"*"})]});export{l as F};

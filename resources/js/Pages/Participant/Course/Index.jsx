@@ -12,7 +12,8 @@ const Index = ({ courses }) => {
             },
             {
                 onSuccess: (page) => {
-                    const sertifikatUrl = page.props.flash?.sertifikat_url;
+                    // console.log(page.props.redirect_url);
+                    const sertifikatUrl = page.props.redirect_url;
                     if (sertifikatUrl) {
                         window.open(sertifikatUrl, "_blank");
                     }
