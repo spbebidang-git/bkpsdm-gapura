@@ -38,12 +38,24 @@ class AuthController
     public function storeAdmin(Request $request)
     {
         $request->validate([
-            'username' => 'required|string',
+            'email' => 'required|string',
             'password' => 'required|string',
             'captcha' => 'required|captcha'
         ], [
             'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'  // Pesan error khusus
         ]);
+
+        $credentials = $request->only('email', 'password');
+
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
+
+            return to_route('admin.dashboard');
+        }
+
+        return back()->withErrors([
+            'email' => 'The provided credentials do not match our records.',
+        ])->onlyInput('email');
 
         $response = Http::withHeaders([
             'apikey' => env('API_KEY')

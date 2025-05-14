@@ -67,13 +67,13 @@
                             method="POST">
                             @csrf
                             <div class="mb-3">
-                                <label class="form-label"for="username" class="form-label">username</label>
+                                <label class="form-label"for="email" class="form-label">email</label>
                                 <input type="text"
-                                    class="form-control @error('username')
+                                    class="form-control @error('email')
                                     is-invalid
                                 @enderror"
-                                    id="username" name="username" placeholder="Enter your username" autofocus />
-                                @error('username')
+                                    id="email" name="email" placeholder="Enter your email" autofocus />
+                                @error('email')
                                     <small class="invalid-feedback">{{ $message }}</small>
                                 @enderror
                             </div>
