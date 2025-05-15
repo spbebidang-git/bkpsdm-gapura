@@ -50,12 +50,12 @@ class QuestionItemController
     public function store($slug, $activityId, $questionId, Request $request)
     {
         $request->validate([
-            'description' => 'required|string|max:255',
+            'description' => 'required|string',
             'options' => 'required|array',
-            'options.option1' => 'required|string|max:255',
-            'options.option2' => 'required|string|max:255',
-            'options.option3' => 'required|string|max:255',
-            'options.option4' => 'required|string|max:255',
+            'options.option1' => 'required|string',
+            'options.option2' => 'required|string',
+            'options.option3' => 'required|string',
+            'options.option4' => 'required|string',
             'correct_answer' => 'required|string',
             'score' => 'required|integer|min:0',
         ]);
