@@ -189,9 +189,13 @@ class ActivityService
         $activity->update([
             'title' => $request['title'],
             'value' => $request['value'],
-            'timer' => $request['timer'],
             'instruction' => $request['instruction'],
         ]);
+
+        if ($activity->type === 'pre-test' || $activity->type === 'post-test') {
+            $activity->timer = $request['timer'];
+            $activity->save();
+        }
 
         return $activity;
     }
