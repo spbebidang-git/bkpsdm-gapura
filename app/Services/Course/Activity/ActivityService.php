@@ -63,6 +63,7 @@ class ActivityService
                     'course_id' => $row->course_id,
                     'type' => $row->type,
                     'title' => $row->title,
+                    'value' => $row->value,
                     'timer' => $row->timer,
                     'value' => $row->value,
                     'status' => $this->getStatus($participantId, $row->id)

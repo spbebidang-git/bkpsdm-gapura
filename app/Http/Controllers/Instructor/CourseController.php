@@ -75,6 +75,7 @@ class CourseController
             'course' => [
                 'title' => $course->title,
                 'slug' => $course->slug,
+                'value' => $course->value,
                 'instructor' => $course->instructor->name,
                 'short_description' => $course->short_description,
                 'description' => $course->description,
