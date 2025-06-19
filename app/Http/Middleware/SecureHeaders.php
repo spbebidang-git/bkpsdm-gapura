@@ -13,10 +13,10 @@ class SecureHeaders
         /** @var \Illuminate\Http\Response|\Illuminate\Http\JsonResponse $response */
         $response = $next($request);
 
-        // Tambahkan header keamanan
+        # Tambahkan header keamanan
         $response->headers->set('X-Content-Type-Options', 'nosniff');
 
-        // Jika belum ada Content-Type, tetapkan secara default
+        # Jika belum ada Content-Type, tetapkan secara default
         if (!$response->headers->has('Content-Type')) {
             $response->headers->set('Content-Type', 'text/html; charset=UTF-8');
         }
