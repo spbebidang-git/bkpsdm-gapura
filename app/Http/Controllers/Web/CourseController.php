@@ -94,7 +94,7 @@ class CourseController extends Controller
             return response(null, 200);
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
+
             return response(null, 200);
         }
     }
