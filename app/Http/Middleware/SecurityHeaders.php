@@ -24,7 +24,7 @@ class SecurityHeaders
                 "style-src 'self' 'unsafe-inline' https:; " .
                 "font-src 'self' https:; " .
                 "img-src 'self' data: blob:; " .
-                // "connect-src 'self' https: ws: https://gapura.gresikkab.go.id;" .
+                "connect-src 'self' https: http: ws:; " .
                 "frame-src 'self' https://www.youtube.com;"
         );
 
