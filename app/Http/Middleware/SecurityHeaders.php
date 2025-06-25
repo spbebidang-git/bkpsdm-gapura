@@ -17,16 +17,16 @@ class SecurityHeaders
 
         // $response->headers->set('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self';");
 
-        $response->headers->set(
-            'Content-Security-Policy',
-            "default-src 'self'; " .
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " .
-                "style-src 'self' 'unsafe-inline' https:; " .
-                "font-src 'self' https:; " .
-                "img-src 'self' data: blob:; " .
-                "connect-src 'self' https: http: ws:; " .
-                "frame-src 'self' https://www.youtube.com;"
-        );
+        // $response->headers->set(
+        //     // 'Content-Security-Policy',
+        //     // "default-src 'self'; " .
+        //     //     "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " .
+        //     //     "style-src 'self' 'unsafe-inline' https:; " .
+        //     //     "font-src 'self' https:; " .
+        //     //     "img-src 'self' data: blob:; " .
+        //     //     "connect-src 'self' https: http: ws:; " .
+        //     //     "frame-src 'self' https://www.youtube.com;"
+        // );
 
         return $response;
     }
