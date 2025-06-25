@@ -95,7 +95,7 @@ class CourseController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return response(null, 200);
+            return response($th->getMessage(), 200);
         }
     }
 }
