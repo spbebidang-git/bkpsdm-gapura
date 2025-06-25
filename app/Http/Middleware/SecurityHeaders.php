@@ -25,7 +25,8 @@ class SecurityHeaders
                 "font-src 'self' https:; " .
                 "img-src 'self' data: blob:; " .
                 "connect-src 'self' https: ws:; " .
-                "frame-src 'self' https://www.youtube.com;"
+                "frame-src 'self' https://www.youtube.com;" .
+                "connect-src 'self' http://gapura.gresikkab.go.id https: ws:;"
         );
 
         return $response;
