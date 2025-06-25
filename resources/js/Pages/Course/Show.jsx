@@ -17,20 +17,16 @@ const Show = ({ course, schedules, reviews, rating }) => {
         e.preventDefault();
         setLoadingScheduleId(scheduleId); // 🔄 start loading
 
-        router.post(
-            `https://gapura.gresikkab.go.id/course/${course.slug}/${scheduleId}`,
-            [],
-            {
-                onSuccess: () => {
-                    setActiveSchedules((prev) => [...prev, scheduleId]);
-                    setLoadingScheduleId(null); // ✅ stop loading
-                },
-                onError: () => {
-                    console.log("Gagal aktivasi");
-                    setLoadingScheduleId(null); // ❌ stop loading on error
-                },
-            }
-        );
+        router.post(`/course/${course.slug}/${scheduleId}`, [], {
+            onSuccess: () => {
+                setActiveSchedules((prev) => [...prev, scheduleId]);
+                setLoadingScheduleId(null); // ✅ stop loading
+            },
+            onError: () => {
+                console.log("Gagal aktivasi");
+                setLoadingScheduleId(null); // ❌ stop loading on error
+            },
+        });
     };
 
     return (
