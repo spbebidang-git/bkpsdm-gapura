@@ -3,7 +3,7 @@ import { ToastContainer } from "react-toastify";
 import App from "../../Layouts/App";
 
 import StarRating from "@/Components/StarRating";
-import { Link, router, usePage } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import "react-toastify/dist/ReactToastify.css";
 
 const Show = ({ course, schedules, reviews, rating }) => {
@@ -13,20 +13,40 @@ const Show = ({ course, schedules, reviews, rating }) => {
 
     const [loadingScheduleId, setLoadingScheduleId] = useState(null);
 
-    const handleActivation = (e, scheduleId) => {
-        e.preventDefault();
-        setLoadingScheduleId(scheduleId); // 🔄 start loading
+    // const handleActivation = (e, scheduleId) => {
+    //     e.preventDefault();
+    //     setLoadingScheduleId(scheduleId); // 🔄 start loading
 
-        router.post(`/course/${course.slug}/${scheduleId}`, [], {
-            onSuccess: () => {
-                setActiveSchedules((prev) => [...prev, scheduleId]);
-                setLoadingScheduleId(null); // ✅ stop loading
-            },
-            onError: () => {
-                console.log("Gagal aktivasi");
-                setLoadingScheduleId(null); // ❌ stop loading on error
-            },
-        });
+    //     e.preventDefault();
+    //     setLoadingScheduleId(scheduleId);
+
+    //     router.post(`/course/${course.slug}/${scheduleId}`, [], {
+    //         preserveScroll: true, // ✅ biar tidak scroll ke atas
+    //         onSuccess: () => {
+    //             setActiveSchedules((prev) => [...prev, scheduleId]);
+    //             setLoadingScheduleId(null);
+    //         },
+    //         onError: () => {
+    //             console.error("Gagal aktivasi");
+    //             setLoadingScheduleId(null);
+    //         },
+    //     });
+    // };
+
+    const handleActivation = async (e, scheduleId) => {
+        e.preventDefault();
+        setLoadingScheduleId(scheduleId);
+
+        try {
+            await axios.post(`/course/${course.slug}/${scheduleId}`);
+            setActiveSchedules((prev) => [...prev, scheduleId]);
+            setLoadingScheduleId(null);
+            toast.success("Kelas berhasil diaktivasi!");
+        } catch (error) {
+            console.error(error);
+            toast.error("Aktivasi gagal. Coba lagi.");
+            setLoadingScheduleId(null);
+        }
     };
 
     return (

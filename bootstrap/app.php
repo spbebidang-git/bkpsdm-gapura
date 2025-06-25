@@ -15,7 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
-            \App\Http\Middleware\HttpsProtocol::class,
+            // \App\Http\Middleware\HttpsProtocol::class,
             \App\Http\Middleware\SecureHeaders::class,
             \App\Http\Middleware\SecureFileUploadMiddleware::class,
             \App\Http\Middleware\SecurityHeaders::class,

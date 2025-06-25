@@ -32,7 +32,7 @@ class CourseController extends Controller
     public function show($course)
     {
         $course = $this->course->findBySlug($course);
-        $reviews = $course->reviews->load('user');
+        $reviews = $course->reviews ? $course->reviews->load('user') : [];
 
         return Inertia::render('Course/Show', [
             'course' => [
@@ -73,7 +73,6 @@ class CourseController extends Controller
 
     public function store(Request $request, Course $course, Schedule $schedule)
     {
-
         try {
             DB::beginTransaction();
 
@@ -91,7 +90,8 @@ class CourseController extends Controller
 
             DB::commit();
 
-            return response(null, 200);
+            return to_route('course.show', $course->slug);
+            // return response(null);
         } catch (\Throwable $th) {
             DB::rollBack();
 
