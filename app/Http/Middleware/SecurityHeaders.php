@@ -11,21 +11,22 @@ class SecurityHeaders
     {
         $response = $next($request);
 
+        // Di environment local, jangan set CSP agar dev lebih fleksibel
         if (app()->environment('local')) {
-            return $response; // Jangan set CSP di local
+            return $response;
         }
 
+        // Header keamanan umum
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('Referrer-Policy', 'no-referrer');
         $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=()');
 
-        // $response->headers->set('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self';");
-
+        // Content Security Policy – allow DataTables & jQuery CDN
         $response->headers->set(
             'Content-Security-Policy',
             "default-src 'self'; " .
-                "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " .
-                "style-src 'self' 'unsafe-inline' https:; " .
+                "script-src 'self' https://cdn.datatables.net https://code.jquery.com 'unsafe-inline' 'unsafe-eval'; " .
+                "style-src 'self' https://cdn.datatables.net 'unsafe-inline'; " .
                 "font-src 'self' https:; " .
                 "img-src 'self' data: blob:; " .
                 "connect-src 'self' https: http: ws:; " .
