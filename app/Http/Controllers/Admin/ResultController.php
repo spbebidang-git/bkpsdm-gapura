@@ -110,7 +110,7 @@ class ResultController
             ->select('id', 'name')
             ->get();
 
-        $activities = Activity::all();
+        $activities = Activity::where('course_id', $course->id)->get();
         return view('admin.result.show', compact('names', 'activities'));
     }
 }

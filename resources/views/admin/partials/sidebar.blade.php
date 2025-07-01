@@ -72,6 +72,14 @@
             </a>
         </li>
 
+        {{-- Result --}}
+        <li class="menu-item {{ request()->routeIs('admin.result.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.result.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-data"></i>
+                <div data-i18n="Layouts">Result</div>
+            </a>
+        </li>
+
         <li class="menu-header small text-uppercase">
             <span class="menu-header-text">Management</span>
         </li>

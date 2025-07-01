@@ -6,6 +6,7 @@
     <div class="card p-0">
         <h5 class="card-header border-bottom d-flex justify-content-between align-items-center">
             Results
+            <a class="btn btn-outline-secondary" href="{{ route('admin.result.index') }}">Back</a>
         </h5>
         <div class="row px-4 py-4 border-bottom">
             <div class="col-md-3">
