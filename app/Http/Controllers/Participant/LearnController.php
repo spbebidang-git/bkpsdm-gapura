@@ -60,6 +60,18 @@ class LearnController extends Controller
                 return to_route('participant.learn.instruction.index', [$course->slug, 1, $initActivity]);
             }
         } else {
+            // ✅ Cek activity sebelumnya
+            $prev = $this->activity->getPreviousActivity($course->id, $activity->id);
+
+            if ($prev && in_array($prev->type, ['pre-test', 'post-test'])) {
+                $passed = $this->learn->isPassedMinimumScore($this->participantId, $course->id, $prev->id);
+
+                if (!$passed) {
+                    return redirect()->back()->withErrors(['error' => 'Nilai minimal dari aktivitas sebelumnya belum tercapai.']);
+                }
+            }
+
+
             $validOpenActivity = $this->learn->checkValidOpenActivity($this->participantId, $course->id, $activity->id);
             // dd($validOpenActivity);
             if (is_array($validOpenActivity)) {
@@ -199,9 +211,19 @@ class LearnController extends Controller
     public function storeResult(Course $course, $schedule, Activity $activity, Request $request)
     {
         $nextActivity =  $this->activity->nextActivity($course->id, $activity->id);
-        // dd($activity);
+
         if (!$nextActivity) {
             return to_route('participant.rating.index', [$course->slug, 1])->with('success', 'Saved');
+        }
+
+        // ✅ CEGAH LANJUT JIKA NILAI BELUM MENCAPAI MINIMUM
+        if (in_array($activity->type, ['pre-test', 'post-test'])) {
+            $isPassed = $this->learn->isPassedMinimumScore($this->participantId, $course->id, $activity->id);
+
+            if (!$isPassed) {
+                // return response(null, 400);
+                return redirect()->back()->withErrors(['error' => 'Nilai minimal dari aktivitas sebelumnya belum tercapai. Silahkan ulangi test ini.']);
+            }
         }
 
         if (($activity->type == 'pre-test' || $activity->type == 'post-test') && empty($request->all())) {

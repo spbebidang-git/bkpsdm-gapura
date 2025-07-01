@@ -24,6 +24,9 @@ Route::prefix('/admin')
         Route::resource('course', \App\Http\Controllers\Admin\CourseController::class)->only('index', 'show');
         # Review
         Route::resource('review', \App\Http\Controllers\Admin\ReviewController::class);
+        # Result
+        Route::get('/result', [\App\Http\Controllers\Admin\ResultController::class, 'index'])->name('result.index');
+        Route::get('/result/{course:slug}', [\App\Http\Controllers\Admin\ResultController::class, 'show'])->name('result.show');
 
         # Management 
         Route::prefix('management')

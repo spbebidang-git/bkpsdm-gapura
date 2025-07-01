@@ -3,6 +3,7 @@
 namespace App\Services\Learn;
 
 use App\Models\Course\Activity;
+use App\Models\Course\Question;
 use App\Models\Learn\Learn;
 use App\Models\Learn\LearnItem;
 use Carbon\Carbon;
@@ -57,6 +58,19 @@ class LearnService
             'wrong' => $learn->learnItems->first() ? $this->getWrongAnswer(unserialize($learn->learnItems->first()->response)) : 0
         ];
     }
+
+    public function isPassedMinimumScore($participantId, $courseId, $activityId)
+    {
+        $result = $this->getResultQuestion($participantId, $courseId, $activityId);
+
+        // Ambil min_score dari question (asumsi 1 soal mewakili activity)
+        $question = Question::where('activity_id', $activityId)->first();
+
+        $minScore = $question->min_score ?? 70; // default 70 jika tidak ditemukan
+
+        return $result && isset($result['score']) && $result['score'] >= $minScore;
+    }
+
 
     public function getTotalScore($response)
     {

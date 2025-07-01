@@ -13,6 +13,10 @@ class SecureHeaders
         /** @var \Illuminate\Http\Response|\Illuminate\Http\JsonResponse $response */
         $response = $next($request);
 
+        if (app()->environment('local')) {
+            return $response; // Jangan set CSP di local
+        }
+
         # Tambahkan header keamanan
         $response->headers->set('X-Content-Type-Options', 'nosniff');
 

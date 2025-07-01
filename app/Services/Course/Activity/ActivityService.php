@@ -215,4 +215,15 @@ class ActivityService
             return null;
         }
     }
+
+    // ActivityService.php
+    public function getPreviousActivity($courseId, $currentActivityId)
+    {
+        $activities = Activity::where('course_id', $courseId)->orderBy('id')->get();
+        $index = $activities->search(function ($activity) use ($currentActivityId) {
+            return $activity->id == $currentActivityId;
+        });
+
+        return $index > 0 ? $activities[$index - 1] : null;
+    }
 }

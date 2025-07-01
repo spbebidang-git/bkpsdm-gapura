@@ -1,0 +1,1 @@
+import{j as e}from"./app-F1my6kib.js";import{A as r}from"./App-ClyA4EoR.js";import"./FlashMessageToast-DfTq8v7V.js";const x=()=>e.jsx(r,{children:e.jsx("div",{className:"max-w-5xl mx-auto",children:e.jsx("div",{className:"border bg-white rounded-xl shadow p-5 mb-6 text-xl font-bold text-center",children:"Profile"})})});export{x as default};
