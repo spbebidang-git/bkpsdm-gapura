@@ -71,7 +71,7 @@ class RatingController
                     'fc_kduker' => $participantApi->json()['fc_kduker'] ?? 0,
                     'fc_kdsatker' => $participantApi->json()['fc_kdsatker'] ?? 0,
                     'fc_kdsubsatker' => $participantApi->json()['fc_kdsubsatker'] ?? 0,
-                    'lama_diklat' => 3,
+                    'lama_diklat' => $course->jam_pelajaran,
                     'jenis_waktu' => 'J',
                     'kode_kegiatan' => $course->category->code,
                     'nama_kegiatan' => $course->title,

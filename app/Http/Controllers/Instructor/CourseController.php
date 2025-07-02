@@ -47,6 +47,7 @@ class CourseController
             'teaser_video' => 'nullable|string',
             'expired' => 'required_if:type,unschedule',
             'status' => 'required|string',
+            'jam_pelajaran' => 'required|string',
             'schedules' => 'required_if:type,schedule|array|min:1'
         ]);
 
@@ -55,7 +56,7 @@ class CourseController
 
             $this->course->createCourse(
                 $this->instructorId,
-                $request->only('type', 'category', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status'),
+                $request->only('type', 'category', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status', 'jam_pelajaran'),
                 $request->schedules
             );
 
@@ -123,6 +124,7 @@ class CourseController
             'teaser_video' => 'nullable|string',
             'expired' => 'required_if:type,unschedule',
             'status' => 'required|string',
+            'jam_pelajaran' => 'required|string',
             'schedules' => 'required_if:type,schedule|array|min:1'
         ]);
 
@@ -132,7 +134,7 @@ class CourseController
             $this->course->updateCourse(
                 $course,
                 $this->instructorId,
-                $request->only('type', 'category', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status'),
+                $request->only('type', 'category', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status', 'jam_pelajaran'),
                 $request->schedules
             );
 

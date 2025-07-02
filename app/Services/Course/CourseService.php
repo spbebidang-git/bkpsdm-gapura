@@ -148,6 +148,7 @@ class CourseService
             'thumbnail' => UploadMedia::file($data['thumbnail'], Course::$directoryImage),
             'teaser_video' => $data['teaser_video'],
             'expired' => $data['expired'],
+            'jam_pelajaran' => $data['jam_pelajaran'],
             'status' => $data['status'],
         ]);
 
@@ -185,6 +186,7 @@ class CourseService
             'description' => $data['description'],
             'teaser_video' => $data['teaser_video'],
             'expired' => $data['expired'] == 'undefined' ? null :  $data['expired'],
+            'jam_pelajaran' => $data['jam_pelajaran'],
             'status' => $data['status'],
         ]);
 
