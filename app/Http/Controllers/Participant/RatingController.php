@@ -84,8 +84,13 @@ class RatingController
                 ]);
 
             if (!$response->successful()) {
-                DB::rollBack();
-                return redirect()->back()->with('danger', 'Gagal mengirim data sertifikat. Silakan coba lagi nanti.');
+                if (!$response->successful()) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Gagal mengirim data sertifikat. Silakan coba lagi nanti.'
+                    ], 500);
+                }
             }
 
             DB::commit();
@@ -93,8 +98,10 @@ class RatingController
             return to_route('participant.survey.index', [$course->slug, 1]);
         } catch (\Throwable $th) {
             DB::rollBack();
-
-            return redirect()->back()->with('danger', $th->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $th->getMessage()
+            ], 500);
         }
     }
 }
