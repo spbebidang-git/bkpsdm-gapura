@@ -34,6 +34,7 @@ class LearnController extends Controller
 
     public function index(Course $course, $schedule, Activity $activity)
     {
+
         if ($activity->type === 'post-test' && request()->loop) {
             // dd(123);
             // Check Total looping
@@ -82,7 +83,7 @@ class LearnController extends Controller
 
         return Inertia::render('Learn/Material/Index', [
             'course' => $course,
-            'progress' => Learn::where('participant_id', $this->participantId)->first()->progress ?? '0 %',
+            'progress' => Learn::where('participant_id', $this->participantId)->where('course_id', $course->id)->first()->progress ?? '0 %',
             'activities' => $this->activity->getActivityByParticipant($this->participantId, $course->id),
             'activity' => $this->activity->getDetailActivityParticipant($this->participantId, $activity->id),
             'activity_id' => $activity->id,
@@ -153,6 +154,8 @@ class LearnController extends Controller
 
     public function instruction(Course $course, $scheduleId, Activity $activity)
     {
+        // dd($this->activity->getActivityByParticipant($this->participantId, $course->id));
+
         if (!$this->learn->isLearned($this->participantId, $course->id)) {
             $initActivity = $this->learn->getInititalActivityId($course->id);
             if ($initActivity !== intval($activity->id)) {
@@ -170,7 +173,7 @@ class LearnController extends Controller
 
         return Inertia::render('Learn/Instruction/Index', [
             'course' => $course,
-            'progress' => Learn::where('participant_id', $this->participantId)->first()->progress ?? '0 %',
+            'progress' => Learn::where('participant_id', $this->participantId)->where('course_id', $course->id)->first()->progress ?? '0 %',
             'activities' => $this->activity->getActivityByParticipant($this->participantId, $course->id),
             'activity' => $this->activity->getDetailActivityParticipant($this->participantId, $activity->id),
             'activity_id' => $activity->id,
@@ -190,7 +193,7 @@ class LearnController extends Controller
             $questionResult = $this->learn->getResultQuestion($this->participantId, $course->id, $activity->id);
             return Inertia::render('Learn/Result/Index', [
                 'course' => $course,
-                'progress' => Learn::where('participant_id', $this->participantId)->first()->progress ?? '0 %',
+                'progress' => Learn::where('participant_id', $this->participantId)->where('course_id', $course->id)->first()->progress ?? '0 %',
                 'activities' => $this->activity->getActivityByParticipant($this->participantId, $course->id),
                 'activity' => $this->activity->getDetailActivityParticipant($this->participantId, $activity->id),
                 'activity_id' => $activity->id,
@@ -200,7 +203,7 @@ class LearnController extends Controller
 
         return Inertia::render('Learn/Result/Index', [
             'course' => $course,
-            'progress' => Learn::where('participant_id', $this->participantId)->first()->progress ?? '0 %',
+            'progress' => Learn::where('participant_id', $this->participantId)->where('course_id', $course->id)->first()->progress ?? '0 %',
             'activities' => $this->activity->getActivityByParticipant($this->participantId, $course->id),
             'activity' => $this->activity->getDetailActivityParticipant($this->participantId, $activity->id),
             'activity_id' => $activity->id,

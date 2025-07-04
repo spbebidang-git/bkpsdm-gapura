@@ -66,17 +66,19 @@ class ActivityService
                     'value' => $row->value,
                     'timer' => $row->timer,
                     'value' => $row->value,
-                    'status' => $this->getStatus($participantId, $row->id)
+                    'status' => $this->getStatus($participantId, $row->course_id, $row->id)
                 ];
             });
     }
 
-    public function getStatus($participantId, $activityId)
+    public function getStatus($participantId, $courseId, $activityId)
     {
         $learn = Learn::with(['learnItems' => function ($query) use ($activityId) {
             return $query->where('activity_id', $activityId);
         }])
-            ->where('participant_id', $participantId)->first();
+            ->where('participant_id', $participantId)
+            ->where('course_id', $courseId)
+            ->first();
 
         // dd($learn->learnItems);
         if (!$learn || !$learn->learnItems->first()) {

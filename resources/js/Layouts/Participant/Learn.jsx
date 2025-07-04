@@ -131,7 +131,7 @@ const Learn = ({
                         </div>
                     </div>
                 </div>
-                <div class="flex flex-grow flex-col bg-red-200 lg:max-w-sm w-full">
+                <div class="flex flex-grow flex-col lg:max-w-sm w-full">
                     <div className="text-gray-800 bg-white flex justify-center items-center font-bold text-xl h-14 cursor-pointer">
                         Agenda Kegiatan
                     </div>
