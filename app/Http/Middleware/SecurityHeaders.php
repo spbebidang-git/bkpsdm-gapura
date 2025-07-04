@@ -22,16 +22,16 @@ class SecurityHeaders
         $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=()');
 
         // Content Security Policy – allow DataTables & jQuery CDN
-        $response->headers->set(
-            'Content-Security-Policy',
-            "default-src 'self'; " .
-                "script-src 'self' https://cdn.datatables.net https://code.jquery.com 'unsafe-inline' 'unsafe-eval'; " .
-                "style-src 'self' https://cdn.datatables.net https://fonts.bunny.net 'unsafe-inline'; " .
-                "font-src 'self' https://fonts.bunny.net https:; " .
-                "img-src 'self' data: blob:; " .
-                "connect-src 'self' https: http: ws:; " .
-                "frame-src 'self' https://www.youtube.com https://pdf-hosting.com;" // tambahkan di sini
-        );
+        // $response->headers->set(
+        //     'Content-Security-Policy',
+        //     "default-src 'self'; " .
+        //         "script-src 'self' https://cdn.datatables.net https://code.jquery.com 'unsafe-inline' 'unsafe-eval'; " .
+        //         "style-src 'self' https://cdn.datatables.net https://fonts.bunny.net 'unsafe-inline'; " .
+        //         "font-src 'self' https://fonts.bunny.net https:; " .
+        //         "img-src 'self' data: blob:; " .
+        //         "connect-src 'self' https: http: ws:; " .
+        //         "frame-src 'self' https://www.youtube.com https://pdf-hosting.com;" // tambahkan di sini
+        // );
 
 
 

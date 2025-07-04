@@ -43,7 +43,7 @@ class LiteratureService
     public function storeLiterature($participantId, $courseId, $activityId, $request)
     {
         $learnItem = [
-            'type' => 'video',
+            'type' => 'literature',
             'status' => 'done',
             'response' => null
         ];
