@@ -35,7 +35,11 @@ const LoginParticipant = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post("/sign-in"); // Kirim data termasuk token ke backend
+        post("/sign-in", {
+            onError: () => {
+                fetchCaptcha(); // Refresh CAPTCHA jika error login
+            },
+        });
     };
 
     const fetchCaptcha = async () => {
