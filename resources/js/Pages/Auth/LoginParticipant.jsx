@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 const LoginParticipant = () => {
     const { site } = usePage().props;
 
+    const [showPassword, setShowPassword] = useState(false);
+
     const [captchaUrl, setCaptchaUrl] = useState("");
     const [captchaInput, setCaptchaInput] = useState("");
 
@@ -81,15 +83,53 @@ const LoginParticipant = () => {
                                     error={errors.username}
                                 />
                                 {/* password */}
-                                <FormInput
-                                    title={"password"}
-                                    isRequired={true}
-                                    placeholder={"********"}
-                                    type="password"
-                                    value={data.password}
-                                    onChange={handleChange}
-                                    error={errors.password}
-                                />
+                                {/* password with show/hide */}
+                                <div className="mb-4">
+                                    <label
+                                        htmlFor="password"
+                                        className="block mb-1 text-sm font-medium text-gray-900"
+                                    >
+                                        Password{" "}
+                                        <span className="text-red-500">*</span>
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            id="password"
+                                            type={
+                                                showPassword
+                                                    ? "text"
+                                                    : "password"
+                                            }
+                                            value={data.password}
+                                            onChange={handleChange}
+                                            placeholder="********"
+                                            className={`form-control w-full pr-10 ${
+                                                errors.password
+                                                    ? "border-red-500"
+                                                    : ""
+                                            }`}
+                                            required
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setShowPassword(!showPassword)
+                                            }
+                                            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-600 text-sm focus:outline-none"
+                                        >
+                                            {showPassword ? (
+                                                "Hide"
+                                            ) : (
+                                                <i class="bxr  bx-eye"></i>
+                                            )}
+                                        </button>
+                                    </div>
+                                    {errors.password && (
+                                        <div className="mt-1 text-red-500 text-sm">
+                                            {errors.password}
+                                        </div>
+                                    )}
+                                </div>
                                 {/* CAPTCHA */}
                                 <div className="py-2.5">
                                     <div className=" flex items-center gap-3 -mt-1">
