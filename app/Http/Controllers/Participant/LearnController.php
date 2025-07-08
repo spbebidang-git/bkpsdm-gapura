@@ -53,7 +53,7 @@ class LearnController extends Controller
         }
 
         $course = $this->course->findBySlug($course->slug);
-        $this->learn->resetLearning($this->participantId, $course->id, 10);
+        $this->learn->resetLearning($this->participantId, $course->id, $course->expired);
 
         if (!$this->learn->isLearned($this->participantId, $course->id)) {
             $initActivity = $this->learn->getInititalActivityId($course->id);
