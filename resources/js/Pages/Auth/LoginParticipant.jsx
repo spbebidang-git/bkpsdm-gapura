@@ -117,11 +117,7 @@ const LoginParticipant = () => {
                                             }
                                             className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-600 text-sm focus:outline-none"
                                         >
-                                            {showPassword ? (
-                                                "Hide"
-                                            ) : (
-                                                <i class="bxr  bx-eye"></i>
-                                            )}
+                                            {showPassword ? "Hide" : "Show"}
                                         </button>
                                     </div>
                                     {errors.password && (
