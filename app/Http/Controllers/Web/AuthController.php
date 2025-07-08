@@ -224,11 +224,11 @@ class AuthController
                             }
                         }
                     } catch (\Throwable $th) {
-                        return redirect()->back()->with('danger', $th->getMessage());
+                        return redirect()->back()->with('danger', 'Something went wrong.');
                     }
                 }
             } catch (\Throwable $th) {
-                return redirect()->back()->with('danger', $th->getMessage());
+                return redirect()->back()->with('danger', 'Something went wrong.');
             }
         }
 
@@ -282,17 +282,17 @@ class AuthController
                         } catch (\Throwable $th) {
                             DB::rollBack();
 
-                            return redirect()->back()->with('danger', $th->getMessage());
+                            return redirect()->back()->with('danger', 'Something went wrong.');
                         }
                     }
                 } catch (\Throwable $th) {
                     # if failed request data user
-                    return redirect()->back()->with('danger', $th->getMessage());
+                    return redirect()->back()->with('danger', 'Something went wrong.');
                 }
             }
         } catch (\Throwable $th) {
             # if failed request sso
-            return redirect()->back()->with('danger', $th->getMessage());
+            return redirect()->back()->with('danger', 'Something went wrong.');
         }
     }
 
