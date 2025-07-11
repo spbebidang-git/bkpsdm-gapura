@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Course\Course;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Yajra\DataTables\Facades\DataTables;
 
 class ResultController
@@ -92,13 +93,22 @@ class ResultController
                     return $row->kegiatan; // dari activities.title
                 })
                 ->addColumn('nilai', function ($row) {
-                    if ($row->activity_type == 'post-test' || $row->activity_type == 'pre-test') {
-                        $a = 0;
-                        foreach (unserialize($row->response) as $item) {
-                            $a = $a + $item['score'];
-                        }
+                    if ($row->activity_type === 'post-test' || $row->activity_type === 'pre-test') {
+                        Log::info('Serialized Response:', ['response' => $row->response]);
 
-                        return $a; // dari learn_items.response
+                        try {
+                            $total = 0;
+                            foreach (unserialize($row->response) as $item) {
+                                $total += $item['score'];
+                            }
+                            return $total;
+                        } catch (\Exception $e) {
+                            Log::error('Gagal unserialize:', [
+                                'error' => $e->getMessage(),
+                                'response' => $row->response,
+                            ]);
+                            return 'Format Error';
+                        }
                     }
 
                     return '-';
