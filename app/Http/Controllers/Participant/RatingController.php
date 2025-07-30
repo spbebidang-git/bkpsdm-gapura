@@ -56,42 +56,42 @@ class RatingController
             $learn->finished_at = now();
             $learn->save();
 
-            # POST SERTIFIKAT 
-            $token = Session::get('token');
+            // # POST SERTIFIKAT 
+            // $token = Session::get('token');
 
-            $participantApi = Http::withHeaders([
-                'apikey' => env('API_KEY'),
-                'auth' => $token
-            ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
-            $response = Http::withHeaders([
-                'apikey' => env('API_KEY'),
-                'auth' => $token
-            ])->asForm()
-                ->post(env('SSO_BASE_URL') . '/api/post_sertifikat', [
-                    'fc_kduker' => $participantApi->json()['fc_kduker'] ?? 0,
-                    'fc_kdsatker' => $participantApi->json()['fc_kdsatker'] ?? 0,
-                    'fc_kdsubsatker' => $participantApi->json()['fc_kdsubsatker'] ?? 0,
-                    'lama_diklat' => $course->jam_pelajaran,
-                    'jenis_waktu' => 'J',
-                    'kode_kegiatan' => $course->category->code,
-                    'nama_kegiatan' => $course->title,
-                    'tempat_kegiatan' => 'Dinas Komunikasi & Informatika',
-                    'penyelenggara' => 'BKPSDM Gresik',
-                    'tahun' => Carbon::now()->year,
-                    'tgl_mulai' => Carbon::parse($learn->created_at)->format('Y-m-d'),
-                    'tgl_selesai' => Carbon::parse($learn->finished_at)->format('Y-m-d'),
-                    'peserta' => get_user_meta($this->participantId, 'nip')
-                ]);
+            // $participantApi = Http::withHeaders([
+            //     'apikey' => env('API_KEY'),
+            //     'auth' => $token
+            // ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
+            // $response = Http::withHeaders([
+            //     'apikey' => env('API_KEY'),
+            //     'auth' => $token
+            // ])->asForm()
+            //     ->post(env('SSO_BASE_URL') . '/api/post_sertifikat', [
+            //         'fc_kduker' => $participantApi->json()['fc_kduker'] ?? 0,
+            //         'fc_kdsatker' => $participantApi->json()['fc_kdsatker'] ?? 0,
+            //         'fc_kdsubsatker' => $participantApi->json()['fc_kdsubsatker'] ?? 0,
+            //         'lama_diklat' => $course->jam_pelajaran,
+            //         'jenis_waktu' => 'J',
+            //         'kode_kegiatan' => $course->category->code,
+            //         'nama_kegiatan' => $course->title,
+            //         'tempat_kegiatan' => 'Dinas Komunikasi & Informatika',
+            //         'penyelenggara' => 'BKPSDM Gresik',
+            //         'tahun' => Carbon::now()->year,
+            //         'tgl_mulai' => Carbon::parse($learn->created_at)->format('Y-m-d'),
+            //         'tgl_selesai' => Carbon::parse($learn->finished_at)->format('Y-m-d'),
+            //         'peserta' => get_user_meta($this->participantId, 'nip')
+            //     ]);
 
-            if (!$response->successful()) {
-                if (!$response->successful()) {
-                    DB::rollBack();
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Gagal mengirim data sertifikat. Silakan coba lagi nanti.'
-                    ], 500);
-                }
-            }
+            // if (!$response->successful()) {
+            //     if (!$response->successful()) {
+            //         DB::rollBack();
+            //         return response()->json([
+            //             'success' => false,
+            //             'message' => 'Gagal mengirim data sertifikat. Silakan coba lagi nanti.'
+            //         ], 500);
+            //     }
+            // }
 
             DB::commit();
 
@@ -100,7 +100,7 @@ class RatingController
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => $th->getMessage()
+                'message' => 'Something went wrong.'
             ], 500);
         }
     }

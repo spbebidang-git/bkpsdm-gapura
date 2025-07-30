@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import ModalAddSchedule from "./Partials/ModalAddSchedule";
 
-const Create = ({ categories }) => {
+const Create = ({ categories, employee_status }) => {
     const [type, setType] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { errors } = usePage().props;
@@ -32,6 +32,11 @@ const Create = ({ categories }) => {
         label: item.title,
     }));
 
+    const employeeStatus = employee_status.map((item) => ({
+        value: item,
+        label: item,
+    }))
+
     const [values, setValues] = useState({
         type: "",
         category: "",
@@ -53,8 +58,8 @@ const Create = ({ categories }) => {
                 type === "checkbox"
                     ? checked
                     : type === "file"
-                    ? files[0]
-                    : value,
+                        ? files[0]
+                        : value,
         }));
 
         if (id === "type") {
@@ -72,6 +77,7 @@ const Create = ({ categories }) => {
         const formData = new FormData();
         formData.append("type", values.type);
         formData.append("category", values.category);
+        formData.append("employee_status", values.employee_status);
         formData.append("title", values.title);
         formData.append("short_description", values.short_description);
         formData.append("description", values.description);
@@ -161,6 +167,15 @@ const Create = ({ categories }) => {
                                 options={typeCategories}
                                 error={errors.category}
                             />
+                            {/* employee_status */}
+                            <FormSelect
+                                title={"employee_status"}
+                                value={values.employee_status}
+                                onChange={handleChange}
+                                isRequired={true}
+                                options={employeeStatus}
+                                error={errors.employee_status}
+                            />
                             {/* title */}
                             <FormInput
                                 title={"title"}
@@ -221,11 +236,10 @@ const Create = ({ categories }) => {
                                 <div className="flex items-center justify-center w-full">
                                     <label
                                         htmlFor="thumbnail"
-                                        className={`flex flex-col items-center justify-center w-full h-64 border-2 ${
-                                            errors.thumbnail
-                                                ? "border-red-500"
-                                                : "border-gray-300"
-                                        } border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100`}
+                                        className={`flex flex-col items-center justify-center w-full h-64 border-2 ${errors.thumbnail
+                                            ? "border-red-500"
+                                            : "border-gray-300"
+                                            } border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100`}
                                     >
                                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                             <svg

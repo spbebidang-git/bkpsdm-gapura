@@ -63,7 +63,7 @@ const Edit = ({ slug, activity }) => {
                                 }))}
                             />
                         </div>
-                        <FormInput title={'duration'} isRequired={true} onChange={handleChange} value={values.duration} error={errors.duration} />
+                        <FormInput title={'duration'} placeholder={'Durasi (dalam detik, misalnya: 60 = 1 menit)'} isRequired={true} onChange={handleChange} value={values.duration} error={errors.duration} />
                         <div className="mb-3">
                             <FormLabel isRequired={true} title={'content'} />
                             <div className="flex items-center justify-center w-full">

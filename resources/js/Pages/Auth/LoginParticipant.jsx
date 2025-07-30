@@ -2,6 +2,8 @@ import FlashMessageToast from "@/Components/FlashMessageToast";
 import FormInput from "@/Components/FormInput";
 import { Link, useForm, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
+import { Bounce, toast } from 'react-toastify';
+
 
 const LoginParticipant = () => {
     const { site } = usePage().props;
@@ -36,7 +38,18 @@ const LoginParticipant = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         post("/sign-in", {
-            onError: () => {
+            onError: (errors) => {
+                toast.error(errors.danger, {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "colored",
+                    transition: Bounce,
+                });
                 fetchCaptcha(); // Refresh CAPTCHA jika error login
             },
         });
@@ -107,11 +120,10 @@ const LoginParticipant = () => {
                                             value={data.password}
                                             onChange={handleChange}
                                             placeholder="********"
-                                            className={`form-control w-full pr-10 ${
-                                                errors.password
-                                                    ? "border-red-500"
-                                                    : ""
-                                            }`}
+                                            className={`form-control w-full pr-10 ${errors.password
+                                                ? "border-red-500"
+                                                : ""
+                                                }`}
                                             required
                                         />
                                         <button
@@ -149,11 +161,10 @@ const LoginParticipant = () => {
                                                 value={captchaInput}
                                                 onChange={handleCaptchaChange}
                                                 placeholder="CAPTCHA"
-                                                className={`${
-                                                    errors.captcha
-                                                        ? "error"
-                                                        : ""
-                                                } form-control`}
+                                                className={`${errors.captcha
+                                                    ? "error"
+                                                    : ""
+                                                    } form-control`}
                                             />
                                         </div>
                                     </div>

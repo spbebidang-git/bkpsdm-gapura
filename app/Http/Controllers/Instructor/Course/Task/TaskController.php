@@ -6,6 +6,8 @@ use App\Models\Course\Activity;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use App\Models\Course\Course;
+use App\Models\Course\Task;
+use App\Models\Learn\LearnItem;
 use App\Services\Course\Activity\ActivityService;
 use App\Services\Course\Activity\TaskService;
 use Illuminate\Support\Facades\DB;
@@ -53,6 +55,7 @@ class TaskController
             $this->task->createTask([
                 'activity_id' => $activity->id,
                 'description' => $request->description,
+                'is_calculated' => $request->is_calculated,
             ]);
 
             DB::commit();
@@ -60,7 +63,7 @@ class TaskController
             return to_route('instructor.course.show', $course->slug)->with('success', 'Task created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-
+            dd($th->getMessage());
             return to_route('instructor.course.show', $course->slug)->with('danger', 'Something went wrong.');
         }
     }
@@ -96,6 +99,7 @@ class TaskController
             $this->task->updateTask([
                 'activity_id' => $task->id,
                 'description' => $request->description,
+                'is_calculated' => $request->is_calculated,
             ]);
 
             DB::commit();
@@ -103,8 +107,26 @@ class TaskController
             return to_route('instructor.course.show', $course->slug)->with('success', 'Task updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-
+            dd($th->getMessage());
             return to_route('instructor.course.show', $course->slug)->with('danger', 'Something went wrong.');
         }
+    }
+
+    public function result($course, $activityId)
+    {
+        $tasks = LearnItem::with('learn.participant')->where('activity_id', $activityId)->get()->map(function ($row) {
+            // dd($row);
+            return [
+                'nip' => get_user_meta($row->learn->participant->id, 'nip'),
+                'name' => $row->learn->participant->name,
+                'file' => asset(Task::$directoryTask . unserialize($row->response)),
+            ];
+        });
+
+        return Inertia::render('Instructor/Course/Task/Result', [
+            'slug' => $course,
+            'activity' => $activityId,
+            'tasks' => $tasks
+        ]);
     }
 }

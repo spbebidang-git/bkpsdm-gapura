@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import App from "../../Layouts/App";
 
 import StarRating from "@/Components/StarRating";
@@ -33,21 +33,56 @@ const Show = ({ course, schedules, reviews, rating }) => {
     //     });
     // };
 
-    const handleActivation = async (e, scheduleId) => {
+    // const handleActivation = async (e, scheduleId) => {
+    //     e.preventDefault();
+    //     setLoadingScheduleId(scheduleId);
+
+    //     if (!auth || !auth.user) {
+    //         toast.warning("Silakan login terlebih dahulu untuk mengaktivasi kelas.");
+    //         router.visit('/login'); // Redirect menggunakan Inertia
+    //         return;
+    //     }
+
+    //     try {
+    //         const response = await axios.post(`/course/${course.slug}/${scheduleId}`);
+    //         console.log(response);
+    //         setActiveSchedules((prev) => [...prev, scheduleId]);
+    //         setLoadingScheduleId(null);
+    //         toast.success("Kelas berhasil diaktivasi!");
+    //     } catch (error) {
+    //         console.error(error);
+    //         toast.error("Aktivasi gagal. Coba lagi.");
+    //         setLoadingScheduleId(null);
+    //     }
+    // };
+
+    const handleActivation = (e, scheduleId) => {
         e.preventDefault();
         setLoadingScheduleId(scheduleId);
 
-        try {
-            await axios.post(`/course/${course.slug}/${scheduleId}`);
-            setActiveSchedules((prev) => [...prev, scheduleId]);
-            setLoadingScheduleId(null);
-            toast.success("Kelas berhasil diaktivasi!");
-        } catch (error) {
-            console.error(error);
-            toast.error("Aktivasi gagal. Coba lagi.");
-            setLoadingScheduleId(null);
-        }
+        axios.post(`/course/${course.slug}/${scheduleId}`)
+            .then((res) => {
+                console.log(res)
+                setActiveSchedules((prev) => [...prev, scheduleId]);
+                toast.success("Berhasil!");
+            })
+            .catch(error => {
+                // if (error.response && error.response.status === 409 && error.response.data.redirect) {
+                //     window.location.href = error.response.data.redirect;
+                // }
+
+                // if employee status not valid 
+                if (error.response.status == 400) {
+                    // toast.success("Berhasil!");
+
+                    // toast.error(error.response.data.message)
+                }
+            })
+            .finally(() => {
+                setLoadingScheduleId(null); // Tetap jalan
+            });
     };
+
 
     return (
         <App>
@@ -126,7 +161,11 @@ const Show = ({ course, schedules, reviews, rating }) => {
                 {/* Course */}
                 <div className="grid grid-cols-3 gap-5 mb-5">
                     <div className="col-span-3 xl:col-span-1">
-                        <div className="h-48 w-full rounded-lg overflow-hidden shadow">
+
+                        <div className="h-48 w-full rounded-lg overflow-hidden shadow relative">
+                            <div className="absolute top-2.5 right-2.5 bg-secondary text-white text-[10px] font-bold text-sm px-2 rounded">
+                                {course.employee_status}
+                            </div>
                             <img
                                 src={course.thumbnail}
                                 alt={course.title}
@@ -204,7 +243,7 @@ const Show = ({ course, schedules, reviews, rating }) => {
                                                         }
                                                     >
                                                         {loadingScheduleId ===
-                                                        item.id ? (
+                                                            item.id ? (
                                                             <>
                                                                 <svg
                                                                     className="animate-spin h-4 w-4 text-white"

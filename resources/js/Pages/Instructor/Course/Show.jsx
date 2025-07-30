@@ -204,7 +204,7 @@ const Show = ({ course, activities }) => {
                                         <td className="px-6 py-4 text-center flex justify-end w-96 gap-2">
                                             <div className=" w-full flex gap-2 justify-end h-8">
                                                 {item.type === "pre-test" ||
-                                                item.type == "post-test" ? (
+                                                    item.type == "post-test" ? (
                                                     <div className="flex gap-2">
                                                         {!item.has_imported ? (
                                                             <Link
@@ -236,7 +236,7 @@ const Show = ({ course, activities }) => {
                                                     ""
                                                 )}
                                                 {item.type === "meeting" &&
-                                                item.end_meeting === 0 ? (
+                                                    item.end_meeting === 0 ? (
                                                     <button
                                                         onClick={(e) =>
                                                             handleEndMeeting(
@@ -248,6 +248,18 @@ const Show = ({ course, activities }) => {
                                                     >
                                                         End Meet
                                                     </button>
+                                                ) : (
+                                                    ""
+                                                )}
+                                                {item.type === "task" ? (
+                                                    <Link href={route('instructor.course.activity.result', { course: course.slug, activityId: item.id })}>
+                                                        <button
+
+                                                            className="w-20 h-7 text-sm font-medium bg-primary text-white rounded-full shadow"
+                                                        >
+                                                            Result
+                                                        </button>
+                                                    </Link>
                                                 ) : (
                                                     ""
                                                 )}

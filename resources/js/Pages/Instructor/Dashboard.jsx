@@ -1,5 +1,8 @@
-import App from "@/Layouts/Instructor/App"
-import { Link, router, usePage } from "@inertiajs/react"
+import App from "@/Layouts/Instructor/App";
+import { Link, router, usePage } from "@inertiajs/react";
+import { Button } from "flowbite-react";
+// resources/js/pages/welcome.tsx
+// import { Button } from "flowbite-react";
 
 const Dashboard = ({ courses }) => {
     const { auth } = usePage().props
@@ -11,6 +14,7 @@ const Dashboard = ({ courses }) => {
 
     return (
         <App>
+
             <div className="text-2xl max-w-7xl mx-auto font-bold text-gray-700 mb-5">Hi, {auth.user.name}</div>
 
             <div className="max-w-7xl mx-auto bg-gray-100 border overflow-hidden rounded-xl shadow">

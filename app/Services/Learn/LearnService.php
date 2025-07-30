@@ -140,8 +140,8 @@ class LearnService
         }
         // dd($learn->learnItems);
 
-        if ($learn->learnItems->first()->trial_total == 3) {
-            return 3;
+        if ($learn->learnItems->first()->trial_total == 2) {
+            return 2;
         }
 
         return $learn;

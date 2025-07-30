@@ -25,12 +25,14 @@ class CourseController
     public function create()
     {
         return Inertia::render('Instructor/Course/Create', [
+            'employee_status' => Course::EMPLOYEE_STATUS,
             'categories' => Category::all()
         ]);
     }
 
     public function store(Request $request)
     {
+        // dd($request->all());
         if (is_string($request->schedules)) {
             $request->merge([
                 'schedules' => json_decode($request->schedules, true)  // Dekode menjadi array
@@ -40,6 +42,7 @@ class CourseController
         $request->validate([
             'type' => 'required|string',
             'category' => 'required|numeric',
+            'employee_status' => 'required|in:PNS,CPNS,PPPK,THL',
             'title' => 'required|string',
             'short_description' => 'required|string',
             'description' => 'required|string',
@@ -56,7 +59,7 @@ class CourseController
 
             $this->course->createCourse(
                 $this->instructorId,
-                $request->only('type', 'category', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status', 'jam_pelajaran'),
+                $request->only('type', 'category', 'employee_status', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status', 'jam_pelajaran'),
                 $request->schedules
             );
 
@@ -93,6 +96,7 @@ class CourseController
     {
         return Inertia::render('Instructor/Course/Edit', [
             'course' => $course,
+            'employee_status' => Course::EMPLOYEE_STATUS,
             'schedules' => $course->load('schedules')->schedules->map(function ($row) {
                 return [
                     'id' => $row->id,
@@ -117,6 +121,7 @@ class CourseController
         $request->validate([
             'type' => 'required|string',
             'category' => 'required|numeric',
+            'employee_status' => 'required|in:PNS,CPNS,PPPK,THL',
             'title' => 'required|string',
             'short_description' => 'required|string',
             'description' => 'required|string',
@@ -134,7 +139,7 @@ class CourseController
             $this->course->updateCourse(
                 $course,
                 $this->instructorId,
-                $request->only('type', 'category', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status', 'jam_pelajaran'),
+                $request->only('type', 'category', 'employee_status', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status', 'jam_pelajaran'),
                 $request->schedules
             );
 

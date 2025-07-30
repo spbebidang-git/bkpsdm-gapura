@@ -1,5 +1,6 @@
 import FormInput from "@/Components/FormInput";
 import FormLabel from "@/Components/FormLabel";
+import FormSelect from "@/Components/FormSelect";
 import FormTextArea from "@/Components/FormTextArea";
 import NumberActivity from "@/Components/NumberActivity";
 import TitleActivity from "@/Components/TitleActivity";
@@ -16,6 +17,7 @@ const Create = ({ slug }) => {
         title: "",
         description: "",
         instruction: "",
+        is_calculated: "",
         value: ""
     })
 
@@ -26,6 +28,11 @@ const Create = ({ slug }) => {
             [id]: type === 'checkbox' ? checked : value,
         }));
     }
+
+    const typeOptions = [
+        { value: 0, label: "Tidak" },
+        { value: 1, label: "Ya" },
+    ];
 
     function handleSubmit(e) {
         e.preventDefault()
@@ -52,6 +59,13 @@ const Create = ({ slug }) => {
                                 }))}
                             />
                         </div>
+                        <FormSelect
+                            title={"is_calculated"}
+                            value={values.is_calculated}
+                            onChange={handleChange}
+                            isRequired={true}
+                            options={typeOptions}
+                        />
                         <div className="-mb-3">
                             <FormTextArea title={'description'} isRequired={true} onChange={handleChange} value={values.description} error={errors.description} />
                         </div>

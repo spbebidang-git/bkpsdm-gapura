@@ -41,7 +41,7 @@ class LearnController extends Controller
             $checkTrial = $this->learn->checkTrial($this->participantId, $course->id, $activity->id);
             // dd($checkTrial);
             if ($checkTrial) {
-                if ($checkTrial === 3) {
+                if ($checkTrial === 2) {
                     $this->learn->resetFromPostTest($this->participantId, $course->id);
 
                     return to_route('participant.learn.instruction.index', [$course->slug, 1, $this->learn->getInititalActivityId($course->id)]);
@@ -100,11 +100,15 @@ class LearnController extends Controller
         //     }
         // }
 
+        if ($activity->type == 'task') {
+            $request->validate([
+                'file' => 'required|mimes:pdf|max:10000 '
+            ]);
+        }
+
 
         try {
             DB::beginTransaction();
-
-
 
             # For Pre Test, Post Test & Task
             if (!empty($request->all()) && ($activity->type == 'pre-test' || $activity->type == 'post-test')) {

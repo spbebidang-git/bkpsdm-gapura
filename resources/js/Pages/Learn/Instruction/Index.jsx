@@ -30,7 +30,7 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
             <div className='flex flex-col justify-between'>
                 <div className='flex-1 rounded-xl bg-gray-50 py-2.5 mb-8 '>
                     <div className='p-3 flex-1 h-[550px] overflow-scroll'>
-                        <div dangerouslySetInnerHTML={{ __html: instruction }} />
+                        <div className='prose' dangerouslySetInnerHTML={{ __html: instruction }} />
                     </div>
                 </div>
                 <div className='h-14 w-56 mx-auto'>

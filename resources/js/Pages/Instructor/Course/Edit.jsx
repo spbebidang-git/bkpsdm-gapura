@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import ModalAddSchedule from "./Partials/ModalAddSchedule";
 
-const Edit = ({ course, categories, schedules }) => {
+const Edit = ({ course, categories, schedules, employee_status }) => {
     const [type, setType] = useState(course.type === "schedule" ? 1 : 0); // Set type based on existing data
     const [isModalOpen, setIsModalOpen] = useState(false);
     const { errors } = usePage().props;
@@ -32,11 +32,17 @@ const Edit = ({ course, categories, schedules }) => {
         label: item.title,
     }));
 
+    const employeeStatus = employee_status.map((item) => ({
+        value: item,
+        label: item,
+    }))
+
     // Prepopulate form with course
     const [values, setValues] = useState({
         type: course.type || "unschedule",
         category: course.category_id || "",
         title: course.title || "",
+        employee_status: course.employee_status || "",
         short_description: course.short_description || "",
         description: course.description || "",
         thumbnail: null, // Handle file input separately
@@ -55,8 +61,8 @@ const Edit = ({ course, categories, schedules }) => {
                 type === "checkbox"
                     ? checked
                     : type === "file"
-                    ? files[0]
-                    : value,
+                        ? files[0]
+                        : value,
         }));
 
         if (id === "type") {
@@ -88,6 +94,7 @@ const Edit = ({ course, categories, schedules }) => {
         const formData = new FormData();
         formData.append("_method", "put");
         formData.append("type", values.type);
+        formData.append("employee_status", values.employee_status);
         formData.append("category", values.category);
         formData.append("title", values.title);
         formData.append("short_description", values.short_description);
@@ -155,6 +162,7 @@ const Edit = ({ course, categories, schedules }) => {
             type: course.type || "unschedule",
             category: course.category_id || "",
             title: course.title || "",
+            employee_status: course.employee_status || "",
             short_description: course.short_description || "",
             description: course.description || "",
             thumbnail: null, // Untuk file upload, ini harus tetap null sampai user mengubahnya
@@ -207,6 +215,16 @@ const Edit = ({ course, categories, schedules }) => {
                                 isRequired={true}
                                 options={typeCategories}
                                 error={errors.category}
+                            />
+                            {/* category */}
+                            <FormSelect
+                                title={"employee_status"}
+                                value={values.employee_status}
+                                selectedValue={values.employee_status}
+                                onChange={handleChange}
+                                isRequired={true}
+                                options={employeeStatus}
+                                error={errors.employee_status}
                             />
                             {/* title */}
                             <FormInput

@@ -11,23 +11,32 @@ class IsParticipantMiddleware
 
     public function handle(Request $request, Closure $next)
     {
-
         if ($request->user() && $request->user()->is_participant) {
             $this->participant = $request->user();
-
             view()->share('participant', $this->participant);
-
             return $next($request);
         }
 
         if ($request->user() && $request->user()->is_admin) {
-            return to_route('admin.dashboard');
+            return $this->redirectResponse($request, route('admin.dashboard'));
         }
 
         if ($request->user() && $request->user()->is_instructor) {
-            return to_route('instructor.dashboard');
+            return $this->redirectResponse($request, route('instructor.dashboard'));
         }
 
-        return to_route('sign-in.participant.create');
+        return $this->redirectResponse($request, route('sign-in.participant.create'));
+    }
+
+    protected function redirectResponse(Request $request, $route)
+    {
+        if ($request->expectsJson() || $request->isMethod('POST')) {
+            // Untuk AJAX/Inertia/Axios, kirim response custom
+            return response()->json([
+                'redirect' => $route
+            ], 409);
+        }
+
+        return redirect($route);
     }
 }

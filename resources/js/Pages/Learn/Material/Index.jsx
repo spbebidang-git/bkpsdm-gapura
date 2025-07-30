@@ -69,24 +69,77 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
         // store task
         if (activity.type == 'task') {
             if (!file) {
-                alert("Please select a file first");
+                toast.error("Please select a file first", {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    theme: "colored",
+                });
+                return;
+            }
+
+            // Validasi: Hanya PDF yang diperbolehkan
+            if (file.type !== 'application/pdf') {
+                toast.error("Only PDF files are allowed", {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    theme: "colored",
+                });
+                return;
+            }
+
+            // Validasi: Maksimal 10MB
+            const maxSizeInBytes = 10 * 1024 * 1024; // 10MB
+            if (file.size > maxSizeInBytes) {
+                toast.error("File size must not exceed 10MB", {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    theme: "colored",
+                });
                 return;
             }
 
             // Membuat FormData
             const formData = new FormData();
-            formData.append('file', file);  // Tambahkan file ke formData
-            formData.append('id', 123);  // Tambahkan data lain jika diperlukan
+            formData.append('file', file);
 
             router.post(route('participant.learn.store', { course: slug, schedule: 1, activity: activity_id }), formData, {
-                forceFormData: true, // Pastikan formData dikirim sebagai multipart/form-data
+                forceFormData: true,
                 onSuccess: () => {
-                    alert("File uploaded successfully");
+                    toast.success("File uploaded successfully", {
+                        position: "top-right",
+                        autoClose: 3000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        theme: "colored",
+                    });
                 },
                 onError: () => {
-                    alert("File upload failed");
+                    toast.error("File upload failed", {
+                        position: "top-right",
+                        autoClose: 3000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,
+                        draggable: true,
+                        theme: "colored",
+                    });
                 }
             });
+
         }
 
         // store meeting

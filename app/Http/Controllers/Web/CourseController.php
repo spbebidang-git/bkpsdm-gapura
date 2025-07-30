@@ -39,6 +39,7 @@ class CourseController extends Controller
                 'id' => $course->id,
                 'type' => $course->type,
                 'title' => $course->title,
+                'employee_status' => $course->employee_status,
                 'short_description' => $course->short_description,
                 'description' => $course->description,
                 'teaser_video' => $course->teaser_video,
@@ -73,20 +74,24 @@ class CourseController extends Controller
 
     public function store(Request $request, Course $course, Schedule $schedule)
     {
+        # check valid employee status
+        if (!$this->course->checkEmployeeStatusCourse(Auth::user()->id, $course)) {
+            return response()->json([
+                'status' => 400,
+                'message' => 'Kamu tidak memenuhi syarat untuk mengikuti pelatihan ini.',
+                'data' => false
+            ], 400);
+        }
+
         try {
             DB::beginTransaction();
 
             $participantId = Auth::user()->id;
 
             $variant = $this->course->generatePrePostTestVariant($participantId, $course);
-            // dd($variant);
 
             $schedule->participants()->attach($participantId);
 
-            // Learn::create([
-            //     'participant_id' => $participantId,
-            //     'course_id' => $course->id,
-            // ]);
 
             DB::commit();
 
@@ -95,7 +100,7 @@ class CourseController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return response($th->getMessage(), 200);
+            return response('Something went wrong.', 200);
         }
     }
 }

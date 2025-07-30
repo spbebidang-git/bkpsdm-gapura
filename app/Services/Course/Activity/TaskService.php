@@ -41,7 +41,8 @@ class TaskService
         $task = Task::where('activity_id', $request['activity_id'])->first();
 
         $task->update([
-            'description' => $request['description']
+            'description' => $request['description'],
+            'is_calculated' => $request['is_calculated'],
         ]);
 
         return true;
@@ -56,6 +57,7 @@ class TaskService
             'title' => $activity->title,
             'value' => $activity->value,
             'description' => $task->description,
+            'is_calculated' => $task->is_calculated,
             'instruction' => $activity->instruction,
         ];
     }

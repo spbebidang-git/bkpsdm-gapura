@@ -26,6 +26,7 @@ Route::prefix('/admin')
         Route::resource('review', \App\Http\Controllers\Admin\ReviewController::class);
         # Result
         Route::get('/result', [\App\Http\Controllers\Admin\ResultController::class, 'index'])->name('result.index');
+        Route::get('/result/post-test/{course:slug}', [\App\Http\Controllers\Admin\ResultController::class, 'postTest'])->name('result.post-test');
         Route::get('/result/{course:slug}', [\App\Http\Controllers\Admin\ResultController::class, 'show'])->name('result.show');
 
         # Management 

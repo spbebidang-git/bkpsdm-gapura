@@ -46,6 +46,7 @@ class CourseService
                     'id' => $row->id,
                     'type' => $row->type,
                     'title' => $row->title,
+                    'employee_status' => $row->employee_status,
                     'slug' => $row->slug,
                     'quota' => $row->quota,
                     'thumbnail' => $row->thumbnail_src,
@@ -139,6 +140,7 @@ class CourseService
         # Create Course
         $course = Course::create([
             'category_id' => $data['category'],
+            'employee_status' => $data['employee_status'],
             'instructor_id' => $instructorId,
             'type' => $data['type'],
             'title' => $data['title'],
@@ -179,6 +181,7 @@ class CourseService
         // dd($data['expired']);
         $course->update([
             'category_id' => $data['category'],
+            'employee_status' => $data['employee_status'],
             'type' => $data['type'],
             'title' => $data['title'],
             'slug' => str()->slug($data['title']),
@@ -269,5 +272,19 @@ class CourseService
 
 
         // dd($queryKeyValue);
+    }
+
+    public function checkEmployeeStatusCourse($userId, $course)
+    {
+        # get meta employee status
+        $employeeStatus = get_user_meta($userId, 'status_pegawai');
+
+        if ($employeeStatus) {
+            if ($course->employee_status === $employeeStatus) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

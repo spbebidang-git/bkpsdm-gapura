@@ -13,6 +13,13 @@ class Course extends Model
 {
     use HasFactory, SoftDeletes;
 
+    const EMPLOYEE_STATUS = [
+        'PNS',
+        'CPNS',
+        'PPPK',
+        'THL'
+    ];
+
     public static $directoryImage = 'assets/media/images/courses/';
 
     protected $guarded = [];

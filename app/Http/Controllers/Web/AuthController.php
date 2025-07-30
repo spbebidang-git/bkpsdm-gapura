@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Inertia\Inertia;
 use Mews\Captcha\Facades\Captcha;
@@ -166,14 +167,19 @@ class AuthController
                 'password' => $request->password,
             ];
 
-            # login
-            if (Auth::attempt($credentials)) {
-                // regenare session
-                $request->session()->regenerate();
-                # return to home 
-                return to_route('home');
+            # sync data
+            $sync = $this->SyncUserMeta($userNip, $request->username, $request->password);
+            if ($sync) {
+                # login
+                if (Auth::attempt($credentials)) {
+                    // regenare session
+                    $request->session()->regenerate();
+                    # return to home 
+                    return to_route('home');
+                }
+            } else {
+                return redirect()->back()->with('danger', 'Something went wrong.');
             }
-            // dd($request->all());
 
             # condition if password wrong or change 
             try {
@@ -220,15 +226,15 @@ class AuthController
                             } catch (\Throwable $th) {
                                 DB::rollBack();
 
-                                return redirect()->back()->with('danger', $th->getMessage());
+                                return redirect()->back()->with('danger', 'Something went wrong.');
                             }
                         }
                     } catch (\Throwable $th) {
-                        return redirect()->back()->with('danger', $th->getMessage());
+                        return redirect()->back()->with('danger', 'Something went wrong.');
                     }
                 }
             } catch (\Throwable $th) {
-                return redirect()->back()->with('danger', $th->getMessage());
+                return redirect()->back()->with('danger', 'Something went wrong.');
             }
         }
 
@@ -282,17 +288,17 @@ class AuthController
                         } catch (\Throwable $th) {
                             DB::rollBack();
 
-                            return redirect()->back()->with('danger', $th->getMessage());
+                            return redirect()->back()->with('danger', 'Something went wrong.');
                         }
                     }
                 } catch (\Throwable $th) {
                     # if failed request data user
-                    return redirect()->back()->with('danger', $th->getMessage());
+                    return redirect()->back()->with('danger', 'Something went wrong.');
                 }
             }
         } catch (\Throwable $th) {
             # if failed request sso
-            return redirect()->back()->with('danger', $th->getMessage());
+            return redirect()->back()->with('danger', 'Something went wrong.');
         }
     }
 
@@ -316,6 +322,63 @@ class AuthController
 
         if ($role == 'Admin') {
             return to_route('sign-in.participant.create');
+        }
+    }
+
+    private function SyncUserMeta($user, $username, $password)
+    {
+        // dd($user, $username, $password);
+        try {
+            // Request OAuth token
+            $response = Http::retry(3, 100)->withHeaders([
+                'apikey' => env('API_KEY')
+            ])->post(env('SSO_BASE_URL') . '/oauth/token', [
+                'username'      => $username,
+                'password'      => $password,
+                'grant_type'    => 'password',
+                'client_id'     => env('SSO_CLIENT_ID'),
+                'client_secret' => env('SSO_CLIENT_SECRET'),
+            ]);
+
+            // dd($response->body());
+
+            $json = $response->json();
+
+            if ($response->successful() && isset($json['access_token'])) {
+                $token = 'Bearer ' . $json['access_token'];
+                Session::put('token', $token);
+
+                // Call participant API
+                $participantApi = Http::retry(3, 100)->withHeaders([
+                    'apikey'        => env('API_KEY'),
+                    'auth'          => $token,
+                ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
+
+                if ($participantApi->successful()) {
+                    $data = $participantApi->json();
+                    $this->user->storeUserMeta($user->id, $data);
+                    Log::info('SyncUserMeta: success', ['user_id' => $user->id]);
+
+                    return true;
+                } else {
+                    Log::warning('SyncUserMeta: Failed to fetch user data from API.', [
+                        'user_id' => $user->id,
+                        'api_response' => $participantApi->body()
+                    ]);
+
+                    return false;
+                }
+            } else {
+                Log::warning('SyncUserMeta: OAuth token request failed.', [
+                    'username' => $username,
+                    'response' => $response->body()
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('SyncUserMeta: Exception occurred', [
+                'username' => $username,
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 }

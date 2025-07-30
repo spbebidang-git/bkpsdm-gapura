@@ -53,6 +53,7 @@ Route::prefix('/instructor')
                                 Route::resource('/{variant}/question-item', \App\Http\Controllers\Instructor\Course\Question\QuestionItemController::class);
                             });
                         # Task
+                        Route::get('task/{activityId}/result', [\App\Http\Controllers\Instructor\Course\Task\TaskController::class, 'result'])->name('result');
                         Route::resource('task', \App\Http\Controllers\Instructor\Course\Task\TaskController::class);
                         # Meeting
                         Route::post('/{activityId}/meeting/end-meeting/', [\App\Http\Controllers\Instructor\Course\Interactive\OnlineMeetingController::class, 'endMeeting'])->name('meeting.end-meeting');

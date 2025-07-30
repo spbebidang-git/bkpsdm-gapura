@@ -1,5 +1,6 @@
 import FormInput from "@/Components/FormInput";
 import FormLabel from "@/Components/FormLabel";
+import FormSelect from "@/Components/FormSelect";
 import FormTextArea from "@/Components/FormTextArea";
 import NumberActivity from "@/Components/NumberActivity";
 import TitleActivity from "@/Components/TitleActivity";
@@ -16,7 +17,8 @@ const Edit = ({ slug, activity }) => {
         title: activity?.title || "",
         description: activity?.description || "",
         instruction: "123",
-        value: activity?.value || ""
+        value: activity?.value || "",
+        is_calculated: activity?.is_calculated || ""
     });
 
     useEffect(() => {
@@ -24,6 +26,7 @@ const Edit = ({ slug, activity }) => {
             setValues({
                 title: activity.title,
                 description: activity.description,
+                is_calculated: activity.is_calculated,
                 value: activity.value,
                 instruction: activity.instruction,
             });
@@ -37,6 +40,11 @@ const Edit = ({ slug, activity }) => {
             [id]: type === 'checkbox' ? checked : value,
         }));
     }
+
+    const typeOptions = [
+        { value: 0, label: "Tidak" },
+        { value: 1, label: "Ya" },
+    ];
 
     function handleSubmit(e) {
         e.preventDefault();
@@ -63,6 +71,15 @@ const Edit = ({ slug, activity }) => {
                                 }))}
                             />
                         </div>
+                        <FormSelect
+                            title={"is_calculated"}
+                            value={values.is_calculated}
+                            selectedValue={values.is_calculated}
+                            onChange={handleChange}
+                            isRequired={true}
+                            options={typeOptions}
+                            error={errors.is_calculated}
+                        />
                         <div className="-mb-3">
                             <FormTextArea title={'description'} isRequired={true} onChange={handleChange} value={values.description} error={errors.description} />
                         </div>

@@ -12,29 +12,31 @@ const Index = ({ courses }) => {
                         {courses.length > 0 ? (
                             courses.map((item, index) => {
                                 return (
-                                    <div class="bg-white rounded-lg overflow-hidden col-span-4 lg:col-span-1 flex flex-row lg:flex-col">
+                                    <div className="bg-white rounded-lg overflow-hidden col-span-4 lg:col-span-1 flex flex-row lg:flex-col relative">
                                         <Link href={'course/' + item.slug}>
-                                            <div class="lg:h-36 w-2/5 lg:w-full overflow-hidden">
+                                            <div className="lg:h-36 w-2/5 lg:w-full overflow-hidden relative">
+                                                {/* Label di pojok kanan atas */}
+                                                <div className="absolute top-2.5 right-2.5 bg-secondary text-white text-[10px] font-bold text-sm px-2 rounded">
+                                                    {item.employee_status}
+                                                </div>
 
-                                                <img class="w-full h-full object-cover" src={item.thumbnail}
-                                                    alt={item.title} />
+                                                <img className="w-full h-full object-cover" src={item.thumbnail} alt={item.title} />
                                             </div>
-                                            <div class="p-3 w-full">
-                                                <div
-                                                    class="font-semibold text-black text-sm lg:text-base leading-normal hover:text-primary">
+                                            <div className="p-3 w-full">
+                                                <div className="font-semibold text-black text-sm lg:text-base leading-normal hover:text-primary">
                                                     {item.title}
                                                 </div>
-                                                <div class="text-xs lg:text-sm text-gray-400 italic">
+                                                <div className="text-xs lg:text-sm text-gray-400 italic">
                                                     by
-                                                    <span class="font-medium text-gray-500"> {item.instructor}</span>
+                                                    <span className="font-medium text-gray-500"> {item.instructor}</span>
                                                 </div>
-                                                <div className='flex justify-center p-2.5'>
+                                                <div className="flex justify-center p-2.5">
                                                     <StarRating value={item.star} />
                                                 </div>
-
                                             </div>
                                         </Link>
                                     </div>
+
 
                                 )
                             })

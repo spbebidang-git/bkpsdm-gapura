@@ -51,7 +51,7 @@ class CertificateController
                 return redirect()->back()->with('danger', 'Sertifikat tidak ditemukan atau belum tersedia.');
             }
         } catch (\Throwable $th) {
-            return redirect()->back()->with('danger', $th->getMessage());
+            return redirect()->back()->with('danger', 'Something went wrong.');
         }
 
 

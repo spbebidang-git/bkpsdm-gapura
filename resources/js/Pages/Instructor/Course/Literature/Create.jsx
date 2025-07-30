@@ -29,8 +29,8 @@ const Create = ({ slug }) => {
                 type === "checkbox"
                     ? checked
                     : type === "file"
-                    ? files[0]
-                    : value,
+                        ? files[0]
+                        : value,
         }));
     }
 
@@ -90,6 +90,7 @@ const Create = ({ slug }) => {
                         </div>
                         <FormInput
                             title={"duration"}
+                            placeholder={'Durasi (dalam detik, misalnya: 60 = 1 menit)'}
                             isRequired={true}
                             onChange={handleChange}
                             value={values.duration}
@@ -100,11 +101,10 @@ const Create = ({ slug }) => {
                             <div className="flex items-center justify-center w-full">
                                 <label
                                     htmlFor="content"
-                                    className={`flex flex-col items-center justify-center w-full h-64 border-2 ${
-                                        errors.content
-                                            ? "border-red-500"
-                                            : "border-gray-300"
-                                    } border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100`}
+                                    className={`flex flex-col items-center justify-center w-full h-64 border-2 ${errors.content
+                                        ? "border-red-500"
+                                        : "border-gray-300"
+                                        } border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100`}
                                 >
                                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                         <svg
