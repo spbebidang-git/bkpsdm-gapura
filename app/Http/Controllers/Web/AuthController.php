@@ -166,9 +166,9 @@ class AuthController
                 'email' => $userNip->user->email,
                 'password' => $request->password,
             ];
-
+            // dd($userNip->user->id);
             # sync data
-            $sync = $this->SyncUserMeta($userNip->user->od, $request->username, $request->password);
+            $sync = $this->SyncUserMeta($userNip->user->id, $request->username, $request->password);
             if ($sync) {
                 # login
                 if (Auth::attempt($credentials)) {
@@ -357,12 +357,12 @@ class AuthController
                 if ($participantApi->successful()) {
                     $data = $participantApi->json();
                     $this->user->storeUserMeta($user, $data);
-                    Log::info('SyncUserMeta: success', ['user_id' => $user->id]);
+                    Log::info('SyncUserMeta: success', ['user_id' => $user]);
 
                     return true;
                 } else {
                     Log::warning('SyncUserMeta: Failed to fetch user data from API.', [
-                        'user_id' => $user->id,
+                        'user_id' => $user,
                         'api_response' => $participantApi->body()
                     ]);
 
