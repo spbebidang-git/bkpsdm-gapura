@@ -1,6 +1,5 @@
 import App from "@/Layouts/Instructor/App";
 import { Link, router, usePage } from "@inertiajs/react";
-import { Button } from "flowbite-react";
 // resources/js/pages/welcome.tsx
 // import { Button } from "flowbite-react";
 
