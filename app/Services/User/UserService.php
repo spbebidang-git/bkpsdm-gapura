@@ -68,5 +68,6 @@ class UserService
         update_user_meta($participantId, 'FV_HP', $data['FV_HP']);
         update_user_meta($participantId, 'fc_kdJab', $data['fc_kdJab']);
         update_user_meta($participantId, 'nama_jabatan', $data['nama_jabatan']);
+        update_user_meta($participantId, 'status_pegawai', $data['status_pegawai']);
     }
 }
