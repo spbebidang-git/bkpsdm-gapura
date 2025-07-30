@@ -163,12 +163,12 @@ class AuthController
         if ($userNip) {
             # set credentials
             $credentials = [
-                'email' => $userNip->email,
+                'email' => $userNip->user->email,
                 'password' => $request->password,
             ];
 
             # sync data
-            $sync = $this->SyncUserMeta($userNip, $request->username, $request->password);
+            $sync = $this->SyncUserMeta($userNip->user->od, $request->username, $request->password);
             if ($sync) {
                 # login
                 if (Auth::attempt($credentials)) {
@@ -356,7 +356,7 @@ class AuthController
 
                 if ($participantApi->successful()) {
                     $data = $participantApi->json();
-                    $this->user->storeUserMeta($user->id, $data);
+                    $this->user->storeUserMeta($user, $data);
                     Log::info('SyncUserMeta: success', ['user_id' => $user->id]);
 
                     return true;
