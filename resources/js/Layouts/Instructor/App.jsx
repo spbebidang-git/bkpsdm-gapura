@@ -36,6 +36,9 @@ export default function App({ children }) {
                                     <Link href="/instructor" className={`block py-2 px-3 md:p-0  rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-primary ${url === '/instructor' ? 'text-primary' : 'text-gray-900'}`} aria-current="page">Dashboard</Link>
                                 </li>
                                 <li>
+                                    <Link href="/instructor/result" className={`block py-2 px-3 md:p-0  rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-primary ${url === '/instructor/result' ? 'text-primary' : 'text-gray-900'}`} aria-current="page">Results</Link>
+                                </li>
+                                <li>
                                     <Link href="/instructor/profile" className={`block py-2 px-3 md:p-0  rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-primary ${url === '/instructor/profile' ? 'text-primary' : 'text-gray-900'}`}>Profile</Link>
                                 </li>
                             </ul>

@@ -7,6 +7,7 @@ use App\Models\Course\Question;
 use App\Models\Learn\Learn;
 use App\Models\Learn\LearnItem;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use PDO;
 
 class LearnService
@@ -258,4 +259,56 @@ class LearnService
 
     //     return []; // Tidak valid jika tidak memenuhi kondisi
     // }
+
+    public function findLearn($courseId, $participantId)
+    {
+        return Learn::where('course_id', $courseId)
+            ->where('participant_id', $participantId)
+            ->first();
+    }
+
+    public function getFinishedAt($courseId, $participantId)
+    {
+        $finishedAt =  $this->findLearn($courseId, $participantId)->finished_at;
+
+        return Carbon::parse($finishedAt)->format('Y-m-d H:i');
+    }
+
+    public function getPostTestAvg($courseId, $participantId)
+    {
+        $data = DB::table('learn_items')
+            ->join('learns', 'learn_items.learn_id', '=', 'learns.id')
+            ->join('activities', function ($join) {
+                $join->on('activities.course_id', '=', 'learns.course_id')
+                    ->on('activities.id', '=', 'learn_items.activity_id');
+            })
+            ->where('learns.course_id', $courseId)
+            ->where('learns.participant_id', $participantId)
+            ->whereNotNull('learns.finished_at')
+            ->select('activities.type as activity_type', 'learn_items.response')
+            ->get();
+
+        $scores = [];
+
+        foreach ($data as $row) {
+            if (in_array($row->activity_type, ['pre-test', 'post-test'])) {
+                try {
+                    $response = @unserialize($row->response);
+                    if (is_array($response)) {
+                        foreach ($response as $item) {
+                            if (isset($item['score'])) {
+                                $scores[] = $item['score'];
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // optional: log error
+                }
+            }
+        }
+
+        return count($scores) > 0
+            ? round(array_sum($scores) / count($scores), 2)
+            : 0;
+    }
 }

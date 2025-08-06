@@ -51,7 +51,7 @@ const Index = ({ courses }) => {
                                     <div className="flex gap-2">
                                         <Link
                                             className="w-full"
-                                            href={`/course/${item.slug}`}
+                                            href={route('participant.course.show', { course: item.slug })}
                                         >
                                             <button className="button-primary">
                                                 Detail
