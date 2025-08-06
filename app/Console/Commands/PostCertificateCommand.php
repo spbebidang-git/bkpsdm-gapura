@@ -92,6 +92,10 @@ class PostCertificateCommand extends Command
                         continue;
                     }
 
+                    Learn::where('course_id', $courseItem->course->id)
+                        ->whereDate('finished_at', Carbon::today())
+                        ->update(['is_post_certificate' => 1]);
+
                     DB::commit();
 
                     Log::info('Sertifikat berhasil diposting.', [
