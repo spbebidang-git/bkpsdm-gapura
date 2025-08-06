@@ -39,6 +39,7 @@ const LoginParticipant = () => {
         e.preventDefault();
         post("/sign-in", {
             onError: (errors) => {
+                console.log('Form Errors:', errors);
                 toast.error(errors.danger, {
                     position: "top-right",
                     autoClose: 3000,
@@ -57,11 +58,12 @@ const LoginParticipant = () => {
 
     const fetchCaptcha = async () => {
         try {
-            const response = await axios.get("/captcha-url ");
+            const response = await axios.get("/captcha-url");
             const data = response.data;
             setCaptchaInput("");
             setData("captcha", "");
             setCaptchaUrl(data.captcha);
+            console.log('oke')
         } catch (error) {
             console.error("Error fetching captcha:", error);
         }

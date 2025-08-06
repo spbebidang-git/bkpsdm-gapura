@@ -1,6 +1,8 @@
+import FlashMessageToast from "@/Components/FlashMessageToast";
 import FormInput from "@/Components/FormInput";
 import { Link, useForm, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
+import { Bounce, toast } from 'react-toastify';
 
 const LoginParticipant = () => {
     const { site } = usePage().props
@@ -18,9 +20,12 @@ const LoginParticipant = () => {
 
     const fetchCaptcha = async () => {
         try {
-            const response = await axios.get('/sign-in/captcha ')
-            const data = response.data
+            const response = await axios.get("/captcha-url");
+            const data = response.data;
+            setCaptchaInput("");
+            setData("captcha", "");
             setCaptchaUrl(data.captcha);
+            console.log('oke')
         } catch (error) {
             console.error("Error fetching captcha:", error);
         }
@@ -40,11 +45,29 @@ const LoginParticipant = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post('/sign-in/instructor');
-    }
+        post("/sign-in/instructor", {
+            onError: (errors) => {
+                console.log('Form Errors:', errors);
+                toast.error(errors.danger, {
+                    position: "top-right",
+                    autoClose: 3000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "colored",
+                    transition: Bounce,
+                });
+                fetchCaptcha(); // Refresh CAPTCHA jika error login
+            },
+        });
+    };
 
     return (
         <section className="min-h-screen flex flex-col bg-gray-100">
+            <FlashMessageToast />
+
             <div className="bg-primary h-2"></div>
 
             <div className="flex-1 flex flex-col justify-center items-center">

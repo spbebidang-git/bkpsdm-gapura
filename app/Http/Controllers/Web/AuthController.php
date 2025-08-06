@@ -43,70 +43,19 @@ class AuthController
             'password' => 'required|string',
             'captcha' => 'required|captcha'
         ], [
-            'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'  // Pesan error khusus
+            'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'
         ]);
 
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-
             return to_route('admin.dashboard');
         }
 
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ])->onlyInput('email');
-
-        $response = Http::withHeaders([
-            'apikey' => env('API_KEY')
-        ])->post(env('SSO_BASE_URL') . '/oauth/token', [
-            'username' => $request->username,
-            'password' => $request->password,
-            'grant_type'   => 'password',
-            'client_id'    => env('SSO_CLIENT_ID'),
-            'client_secret' => env('SSO_CLIENT_SECRET'),
-        ]);
-
-        if ($response->successful() && isset($response->json()['access_token'])) {
-            $token = 'Bearer ' . $response->json()['access_token'];
-
-            $user = User::where('email', $request->username . '@gapura.gresikkab.go.id')->first();
-
-            if (!$user) {
-                try {
-                    DB::beginTransaction();
-
-                    $user = User::create([
-                        'name' => $request->username,
-                        'email' => $request->username . '@gapura.gresikkab.go.id',
-                        'password' => Hash::make(str()->random(12))
-                    ]);
-
-                    $user->assignRole('Admin');
-
-                    Auth::login($user);
-
-                    DB::commit();
-
-                    return to_route('admin.dashboard');
-                } catch (\Throwable $th) {
-                    DB::rollBack();
-
-                    return back()->withErrors([
-                        'username' => 'Something went wrong.',
-                    ])->onlyInput('username');
-                }
-            }
-
-            Auth::login($user);
-
-            Session::put('token', $token);
-
-            return to_route('admin.dashboard');
-        }
-
-        return to_route('sign-in.admin.create')->with('danger', 'Something went wrong. Please try again.');
     }
 
     public function createInstructor()
@@ -120,15 +69,12 @@ class AuthController
             'email' => 'required|string',
             'password' => 'required|string',
             'captcha' => 'required|captcha'
-        ],  [
-            'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'  // Pesan error khusus
+        ], [
+            'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'
         ]);
 
-        $credentials = $request->only('email', 'password');
-
-        if (Auth::attempt($credentials)) {
+        if (Auth::attempt($request->only('email', 'password'))) {
             $request->session()->regenerate();
-
             return to_route('instructor.dashboard');
         }
 
@@ -144,162 +90,46 @@ class AuthController
 
     public function storeParticipant(Request $request)
     {
-        # validate
         $request->validate([
             'username' => 'required|string',
             'password' => 'required|string',
             'captcha' => 'required|captcha'
-        ],  [
+        ], [
             'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'
         ]);
 
-        # find user by username (nip)
-        $userNip = UserMeta::with('user')
+        $userMeta = UserMeta::with('user')
             ->where('key', 'nip')
             ->where('value', $request->username)
             ->first();
 
-        # if the user is found
-        if ($userNip) {
-            # set credentials
+        if ($userMeta) {
             $credentials = [
-                'email' => $userNip->user->email,
+                'email' => $userMeta->user->email,
                 'password' => $request->password,
             ];
-            // dd($userNip->user->id);
-            # sync data
-            $sync = $this->SyncUserMeta($userNip->user->id, $request->username, $request->password);
-            if ($sync) {
-                # login
+
+            if ($this->SyncUserMeta($userMeta->user->id, $request->username, $request->password)) {
                 if (Auth::attempt($credentials)) {
-                    // regenare session
                     $request->session()->regenerate();
-                    # return to home 
                     return to_route('home');
                 }
-            } else {
-                return redirect()->back()->with('danger', 'Something went wrong.');
             }
 
-            # condition if password wrong or change 
-            try {
-                # request oauth
-                $response = Http::retry(3, 100)->withHeaders([
-                    'apikey' => env('API_KEY')
-                ])->post(env('SSO_BASE_URL') . '/oauth/token', [
-                    'username' => $request->username,
-                    'password' => $request->password,
-                    'grant_type'   => 'password',
-                    'client_id'    => env('SSO_CLIENT_ID'),
-                    'client_secret' => env('SSO_CLIENT_SECRET'),
-                ]);
-
-                # if success oauth
-                if ($response->successful() && isset($response->json()['access_token'])) {
-                    # set bearer token
-                    $token = 'Bearer ' . $response->json()['access_token'];
-                    Session::put('token', $token);
-
-                    # get data user
-                    try {
-                        $participantApi = Http::retry(3, 100)->withHeaders([
-                            'apikey' => env('API_KEY'),
-                            'auth' => $token
-                        ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
-
-                        # if success request data user
-                        if ($participantApi->successful()) {
-                            try {
-                                DB::beginTransaction();
-                                # update password with new password 
-                                $user = $userNip->user;
-                                $user->password = Hash::make($request->password);
-                                $user->save();
-
-                                DB::commit();
-                                // regenare session
-                                $request->session()->regenerate();
-                                # login
-                                Auth::login($user);
-                                # redirect to home
-                                return to_route('home');
-                            } catch (\Throwable $th) {
-                                DB::rollBack();
-
-                                return redirect()->back()->with('danger', 'Something went wrong.');
-                            }
-                        }
-                    } catch (\Throwable $th) {
-                        return redirect()->back()->with('danger', 'Something went wrong.');
-                    }
-                }
-            } catch (\Throwable $th) {
-                return redirect()->back()->with('danger', 'Something went wrong.');
+            // Try to refresh password via SSO if failed
+            if ($this->handleSSOPasswordRefresh($request, $userMeta->user)) {
+                return to_route('home');
             }
+
+            return back()->withErrors(['danger' => 'Something went wrong.']);
         }
 
-        # if the user is not found (never login), login SSO to get data user 
-
-        # request login oauth
-        try {
-            $response = Http::retry(3, 100)->withHeaders([
-                'apikey' => env('API_KEY')
-            ])->post(env('SSO_BASE_URL') . '/oauth/token', [
-                'username' => $request->username,
-                'password' => $request->password,
-                'grant_type'   => 'password',
-                'client_id'    => env('SSO_CLIENT_ID'),
-                'client_secret' => env('SSO_CLIENT_SECRET'),
-            ]);
-
-            # if success response oauth & get access token
-            if ($response->successful() && isset($response->json()['access_token'])) {
-                # set bearer token
-                $token = 'Bearer ' . $response->json()['access_token'];
-                Session::put('token', $token);
-
-                # request data user
-                try {
-                    $participantApi = Http::retry(3, 100)->withHeaders([
-                        'apikey' => env('API_KEY'),
-                        'auth' => $token
-                    ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
-
-                    # if success request data user
-                    if ($participantApi->successful()) {
-                        try {
-                            DB::beginTransaction();
-                            # create new user
-                            $user = User::create([
-                                'name' => $participantApi->json()['fv_nama'],
-                                'email' => $participantApi->json()['fv_email'],
-                                'password' => Hash::make($request->password)
-                            ]);
-                            # create new meta user
-                            $this->user->storeUserMeta($user->id, $participantApi->json());
-                            # create role user
-                            $user->assignRole('Participant');
-                            # login with user 
-                            Auth::login($user);
-
-                            DB::commit();
-
-                            return to_route('home');
-                        } catch (\Throwable $th) {
-                            DB::rollBack();
-
-                            return redirect()->back()->with('danger', 'Something went wrong.');
-                        }
-                    }
-                } catch (\Throwable $th) {
-                    # if failed request data user
-                    return redirect()->back()->with('danger', 'Something went wrong.');
-                }
-            }
-        } catch (\Throwable $th) {
-            # if failed request sso
-            return redirect()->back()->with('danger', 'Something went wrong.');
+        // First-time SSO login
+        if ($this->handleSSOFirstLogin($request)) {
+            return to_route('home');
         }
+
+        return back()->withErrors(['danger' => 'Something went wrong.']);
     }
 
     public function logout(Request $request)
@@ -307,29 +137,23 @@ class AuthController
         $role = $request->user()->roles->first()->name;
 
         Auth::guard('web')->logout();
-
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
-        if ($role == 'Admin') {
-            return to_route('sign-in.admin.create');
-        }
-
-        if ($role == 'Instructor') {
-            return to_route('sign-in.instructor.create');
-        }
-
-        if ($role == 'Admin') {
-            return to_route('sign-in.participant.create');
-        }
+        return match ($role) {
+            'Admin' => to_route('sign-in.admin.create'),
+            'Instructor' => to_route('sign-in.instructor.create'),
+            default => to_route('sign-in.participant.create'),
+        };
     }
 
-    private function SyncUserMeta($user, $username, $password)
+    private function SyncUserMeta($userId, $username, $password)
     {
-        // dd($user, $username, $password);
+        if (get_user_meta($userId, 'status_pegawai')) {
+            return true;
+        }
+
         try {
-            // Request OAuth token
             $response = Http::retry(3, 100)->withHeaders([
                 'apikey' => env('API_KEY')
             ])->post(env('SSO_BASE_URL') . '/oauth/token', [
@@ -340,45 +164,115 @@ class AuthController
                 'client_secret' => env('SSO_CLIENT_SECRET'),
             ]);
 
-            // dd($response->body());
-
-            $json = $response->json();
-
-            if ($response->successful() && isset($json['access_token'])) {
-                $token = 'Bearer ' . $json['access_token'];
+            if ($response->successful() && isset($response->json()['access_token'])) {
+                $token = 'Bearer ' . $response->json()['access_token'];
                 Session::put('token', $token);
 
-                // Call participant API
                 $participantApi = Http::retry(3, 100)->withHeaders([
-                    'apikey'        => env('API_KEY'),
-                    'auth'          => $token,
+                    'apikey' => env('API_KEY'),
+                    'auth'   => $token
                 ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
 
                 if ($participantApi->successful()) {
-                    $data = $participantApi->json();
-                    $this->user->storeUserMeta($user, $data);
-                    Log::info('SyncUserMeta: success', ['user_id' => $user]);
-
+                    $this->user->storeUserMeta($userId, $participantApi->json());
+                    Log::info('SyncUserMeta success', ['user_id' => $userId]);
                     return true;
-                } else {
-                    Log::warning('SyncUserMeta: Failed to fetch user data from API.', [
-                        'user_id' => $user,
-                        'api_response' => $participantApi->body()
-                    ]);
-
-                    return false;
                 }
+
+                Log::warning('SyncUserMeta: Failed to fetch user data.', ['response' => $participantApi->body()]);
             } else {
-                Log::warning('SyncUserMeta: OAuth token request failed.', [
-                    'username' => $username,
-                    'response' => $response->body()
-                ]);
+                Log::warning('SyncUserMeta: OAuth failed.', ['response' => $response->body()]);
             }
         } catch (\Throwable $e) {
-            Log::error('SyncUserMeta: Exception occurred', [
-                'username' => $username,
-                'message' => $e->getMessage(),
-            ]);
+            Log::error('SyncUserMeta: Exception', ['message' => $e->getMessage()]);
         }
+
+        return false;
+    }
+
+    private function handleSSOPasswordRefresh(Request $request, $user)
+    {
+        try {
+            $response = Http::retry(3, 100)->withHeaders([
+                'apikey' => env('API_KEY')
+            ])->post(env('SSO_BASE_URL') . '/oauth/token', [
+                'username'      => $request->username,
+                'password'      => $request->password,
+                'grant_type'    => 'password',
+                'client_id'     => env('SSO_CLIENT_ID'),
+                'client_secret' => env('SSO_CLIENT_SECRET'),
+            ]);
+
+            if ($response->successful() && isset($response->json()['access_token'])) {
+                $token = 'Bearer ' . $response->json()['access_token'];
+                Session::put('token', $token);
+
+                $participantApi = Http::retry(3, 100)->withHeaders([
+                    'apikey' => env('API_KEY'),
+                    'auth'   => $token
+                ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
+
+                if ($participantApi->successful()) {
+                    DB::beginTransaction();
+                    $user->update(['password' => Hash::make($request->password)]);
+                    DB::commit();
+
+                    Auth::login($user);
+                    $request->session()->regenerate();
+                    return true;
+                }
+            }
+        } catch (\Throwable $th) {
+            // logging opsional
+        }
+
+        return false;
+    }
+
+    private function handleSSOFirstLogin(Request $request)
+    {
+        try {
+            $response = Http::retry(3, 100)->withHeaders([
+                'apikey' => env('API_KEY')
+            ])->post(env('SSO_BASE_URL') . '/oauth/token', [
+                'username'      => $request->username,
+                'password'      => $request->password,
+                'grant_type'    => 'password',
+                'client_id'     => env('SSO_CLIENT_ID'),
+                'client_secret' => env('SSO_CLIENT_SECRET'),
+            ]);
+
+            if ($response->successful() && isset($response->json()['access_token'])) {
+                $token = 'Bearer ' . $response->json()['access_token'];
+                Session::put('token', $token);
+
+                $participantApi = Http::retry(3, 100)->withHeaders([
+                    'apikey' => env('API_KEY'),
+                    'auth'   => $token
+                ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
+
+                if ($participantApi->successful()) {
+                    DB::beginTransaction();
+
+                    $user = User::create([
+                        'name'     => $participantApi->json()['fv_nama'],
+                        'email'    => $participantApi->json()['fv_email'],
+                        'password' => Hash::make($request->password),
+                    ]);
+
+                    $this->user->storeUserMeta($user->id, $participantApi->json());
+                    $user->assignRole('Participant');
+
+                    Auth::login($user);
+                    DB::commit();
+
+                    return true;
+                }
+            }
+        } catch (\Throwable $th) {
+            // logging opsional
+        }
+
+        return false;
     }
 }
