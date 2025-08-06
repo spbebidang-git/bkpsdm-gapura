@@ -32,7 +32,7 @@ class PostCertificateCommand extends Command
 
             if ($responseOauth->successful() && isset($responseOauth->json()['access_token'])) {
                 $token = 'Bearer ' . $responseOauth->json()['access_token'];
-                Log::info('OAuth token obtained.', $responseOauth->json());
+                Log::info('OAuth token obtained.');
             } else {
                 Log::warning('Gagal mendapatkan token OAuth.', [
                     'response' => $responseOauth->body()
