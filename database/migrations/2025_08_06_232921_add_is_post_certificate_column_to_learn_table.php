@@ -9,14 +9,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('learns', function (Blueprint $table) {
-            $table->string('url_certificate')->nullable()->after('finished_at');
+            $table->boolean('is_post_certificate')->after('finished_at');
         });
     }
 
-    public function down()
+    public function down(): void
     {
         Schema::table('learns', function (Blueprint $table) {
-            $table->dropColumn('url_certificate');
+            $table->dropColumn('is_post_certificate');
         });
     }
 };
