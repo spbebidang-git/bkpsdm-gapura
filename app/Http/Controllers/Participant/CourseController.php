@@ -36,7 +36,7 @@ class CourseController
     {
         # tgl aktivasi , tgl selesai , nilai post test, jam pelajaran
         $data = [
-            'activation_date' => $this->scheduleUser->getActivationDate(1, $this->participantId),
+            'activation_date' => $this->scheduleUser->getActivationDate($course->schedules->first()->id, $this->participantId),
             'finished_at' => $this->learn->getFinishedAt($course->id, $this->participantId),
             'post_test_avg' => $this->learn->getPostTestAvg($course->id, $this->participantId),
             'jam_pelajaran' => $course->jam_pelajaran,
