@@ -3,7 +3,8 @@
 /node_modules
 /public/hot
 /public/storage
-/public/build
+/public/build/*
+/public/assets/media/documents/*
 /storage/*.key
 /vendor
 /public/assets/media/tasks/*
