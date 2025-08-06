@@ -32,7 +32,7 @@ class PostCertificateCommand extends Command
 
             if ($responseOauth->successful() && isset($responseOauth->json()['access_token'])) {
                 $token = 'Bearer ' . $responseOauth->json()['access_token'];
-                Log::info('OAuth token obtained.', $responseOauth->json());
+                Log::info('OAuth token obtained.');
             } else {
                 Log::warning('Gagal mendapatkan token OAuth.', [
                     'response' => $responseOauth->body()
@@ -42,6 +42,7 @@ class PostCertificateCommand extends Command
 
             $courses = Learn::with('course.category')
                 ->whereDate('finished_at', Carbon::today())
+                ->where('is_post_certificate', 0)
                 ->get();
 
             if ($courses->isEmpty()) {
@@ -55,6 +56,7 @@ class PostCertificateCommand extends Command
 
                     $participants = Learn::where('course_id', $courseItem->course->id)
                         ->whereDate('finished_at', Carbon::today())
+                        ->where('is_post_certificate', 0)
                         ->get()
                         ->pluck('participant_id');
 
@@ -94,6 +96,7 @@ class PostCertificateCommand extends Command
 
                     Learn::where('course_id', $courseItem->course->id)
                         ->whereDate('finished_at', Carbon::today())
+                        ->where('is_post_certificate', 0)
                         ->update(['is_post_certificate' => 1]);
 
                     DB::commit();
