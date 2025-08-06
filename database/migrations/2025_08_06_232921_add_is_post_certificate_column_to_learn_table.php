@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('learns', function (Blueprint $table) {
-            $table->boolean('is_post_certificate')->after('finished_at');
+            $table->boolean('is_post_certificate')->after('finished_at')->default(false);
         });
     }
 
