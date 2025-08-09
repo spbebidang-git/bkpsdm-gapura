@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Carbon\Carbon;
 use App\Models\Learn\Learn;
+use App\Services\TokenService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -15,33 +16,13 @@ class PostCertificateCommand extends Command
 
     protected $description = 'Mengirim data sertifikat peserta dari pelatihan yang selesai hari ini.';
 
-    public function handle(): void
+    public function handle(TokenService $tokenService): void
     {
         try {
-            $responseOauth = Http::retry(3, 100)->withHeaders([
-                'apikey' => env('API_KEY')
-            ])->post(env('SSO_BASE_URL') . '/oauth/token', [
-                'username'      => env('SSO_ADMIN_USERNAME'),
-                'password'      => env('SSO_ADMIN_PASS'),
-                'grant_type'    => 'password',
-                'client_id'     => env('SSO_CLIENT_ID'),
-                'client_secret' => env('SSO_CLIENT_SECRET'),
-            ]);
-
-            $token = null;
-
-            if ($responseOauth->successful() && isset($responseOauth->json()['access_token'])) {
-                $token = 'Bearer ' . $responseOauth->json()['access_token'];
-                Log::info('OAuth token obtained.');
-            } else {
-                Log::warning('Gagal mendapatkan token OAuth.', [
-                    'response' => $responseOauth->body()
-                ]);
-                return;
-            }
+            $token = $tokenService->getToken(); // Ambil token dari service
 
             $courses = Learn::with('course.category')
-                ->whereDate('finished_at', Carbon::today())
+                ->whereDate('finished_at', '>=', '2025-08-01')
                 ->where('is_post_certificate', 0)
                 ->get();
 
@@ -55,7 +36,7 @@ class PostCertificateCommand extends Command
                     DB::beginTransaction();
 
                     $participants = Learn::where('course_id', $courseItem->course->id)
-                        ->whereDate('finished_at', Carbon::today())
+                        ->whereDate('finished_at', '>=', '2025-08-01')
                         ->where('is_post_certificate', 0)
                         ->get()
                         ->pluck('participant_id');
@@ -95,7 +76,7 @@ class PostCertificateCommand extends Command
                     }
 
                     Learn::where('course_id', $courseItem->course->id)
-                        ->whereDate('finished_at', Carbon::today())
+                        ->whereDate('finished_at', '>=', '2025-08-01')
                         ->where('is_post_certificate', 0)
                         ->update(['is_post_certificate' => 1]);
 
