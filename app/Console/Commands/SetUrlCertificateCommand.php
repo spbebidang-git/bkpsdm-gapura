@@ -54,26 +54,25 @@ class SetUrlCertificateCommand extends Command
 
         # Ubah ke array numerik
         $filteredData = array_values($groupedData);
-
         # Ambil data learn yang belum punya URL sertifikat
         $learns = Learn::with('course')
             ->whereNull('url_certificate')
             ->get();
 
-        # Proses pencocokan dan kirim job
         foreach ($filteredData as $kelas) {
             foreach ($kelas['peserta'] as $peserta) {
-                foreach ($learns as $learn) {
-                    if ($kelas['nama_kegiatan'] === $learn->course->title) {
-                        $payload = [
+                $learns->each(function ($learn) use ($kelas, $peserta) {
+                    if (
+                        $kelas['nama_kegiatan'] === $learn->course->title &&
+                        get_user_meta($learn->participant_id, 'nip') === $peserta['nip']
+                    ) {
+                        SetUrlCertificateJob::dispatch([
                             'course'         => $learn->course->id,
                             'participant'    => $learn->participant_id,
                             'url_certificate' => $peserta['sertifikat'],
-                        ];
-
-                        SetUrlCertificateJob::dispatch($payload);
+                        ]);
                     }
-                }
+                });
             }
         }
     }
