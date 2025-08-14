@@ -53,7 +53,7 @@ class PostCertificateCommand extends Command
                         'fc_kduker'        => 0,
                         'fc_kdsatker'      => 0,
                         'fc_kdsubsatker'   => 0,
-                        'lama_diklat'      => 4,
+                        'lama_diklat'      => $courseItem->course->jam_pelajaran,
                         'jenis_waktu'      => 'J',
                         'kode_kegiatan'    => $courseItem->course->category->code,
                         'nama_kegiatan'    => $courseItem->course->title,
