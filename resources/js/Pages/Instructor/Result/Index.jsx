@@ -1,4 +1,5 @@
 import App from "@/Layouts/Instructor/App";
+import { Link } from "@inertiajs/react";
 
 const Index = ({ courses }) => {
     return (
@@ -39,12 +40,16 @@ const Index = ({ courses }) => {
                                         <td className="px-6 py-4 text-center">
                                             <div className="">
                                                 <div className="">
-                                                    <button className="px-5 h-7 text-sm font-medium bg-green-500 text-white rounded-full shadow">
-                                                        Detail
-                                                    </button>
-                                                    <button className="px-5 h-7 text-sm font-medium bg-green-500 text-white rounded-full shadow">
-                                                        Post Test
-                                                    </button>
+                                                    <Link href={route('instructor.result.show', { course: item.slug })}>
+                                                        <button className="px-5 h-7 text-sm font-medium bg-green-500 text-white rounded-full shadow">
+                                                            Detail
+                                                        </button>
+                                                    </Link>
+                                                    <Link href={route('instructor.result.post-test', { course: item.slug })}>
+                                                        <button className="px-5 h-7 text-sm font-medium bg-green-500 text-white rounded-full shadow">
+                                                            Post Test
+                                                        </button>
+                                                    </Link>
                                                 </div>
                                             </div>
                                         </td>
