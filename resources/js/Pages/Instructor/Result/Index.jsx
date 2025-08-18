@@ -40,12 +40,12 @@ const Index = ({ courses }) => {
                                         <td className="px-6 py-4 text-center">
                                             <div className="">
                                                 <div className="">
-                                                    <Link href={route('instructor.result.show', { course: item.slug })}>
+                                                    <Link href={route('instructor.result.show', { course: item.id })}>
                                                         <button className="px-5 h-7 text-sm font-medium bg-green-500 text-white rounded-full shadow">
                                                             Detail
                                                         </button>
                                                     </Link>
-                                                    <Link href={route('instructor.result.post-test', { course: item.slug })}>
+                                                    <Link href={route('instructor.result.post-test', { course: item.id })}>
                                                         <button className="px-5 h-7 text-sm font-medium bg-green-500 text-white rounded-full shadow">
                                                             Post Test
                                                         </button>
