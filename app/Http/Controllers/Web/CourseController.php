@@ -74,6 +74,7 @@ class CourseController extends Controller
 
     public function store(Request $request, Course $course, Schedule $schedule)
     {
+        // dd($this->course->checkEmployeeStatusCourse(Auth::user()->id, $course));
         # check valid employee status
         if (!$this->course->checkEmployeeStatusCourse(Auth::user()->id, $course)) {
             return response()->json([

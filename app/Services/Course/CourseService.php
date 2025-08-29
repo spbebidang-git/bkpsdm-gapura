@@ -140,7 +140,7 @@ class CourseService
         # Create Course
         $course = Course::create([
             'category_id' => $data['category'],
-            'employee_status' => $data['employee_status'],
+            // 'employee_status' => $data['employee_status'],
             'instructor_id' => $instructorId,
             'type' => $data['type'],
             'title' => $data['title'],
@@ -153,6 +153,8 @@ class CourseService
             'jam_pelajaran' => $data['jam_pelajaran'],
             'status' => $data['status'],
         ]);
+
+        $course->employeeStatus()->attach($data['employee_status']);
 
         # Create Schedule
         if ($schedules) {
@@ -178,10 +180,9 @@ class CourseService
 
     public function updateCourse($course, $instructorId, $data, $schedules = null)
     {
-        // dd($data['expired']);
         $course->update([
             'category_id' => $data['category'],
-            'employee_status' => $data['employee_status'],
+            // 'employee_status' => $data['employee_status'],
             'type' => $data['type'],
             'title' => $data['title'],
             'slug' => str()->slug($data['title']),
@@ -193,7 +194,9 @@ class CourseService
             'status' => $data['status'],
         ]);
 
-        if ($data['thumbnail']) {
+        $course->employeeStatus()->sync($data['employee_status']);
+
+        if (isset($data['thumbnail'])) {
             if (is_file_exists(Course::$directoryImage . $course->thumbnail)) {
                 remove_file(Course::$directoryImage . $course->thumbnail);
             }
@@ -274,17 +277,34 @@ class CourseService
         // dd($queryKeyValue);
     }
 
+    // public function checkEmployeeStatusCourse($userId, $course)
+    // {
+    //     # get meta employee status
+    //     $employeeStatus = get_user_meta($userId, 'status_pegawai');
+
+    //     if ($employeeStatus) {
+    //         if ($course->employee_status === $employeeStatus) {
+    //             return true;
+    //         }
+    //     }
+
+    //     return false;
+    // }
+
     public function checkEmployeeStatusCourse($userId, $course)
     {
-        # get meta employee status
+        // Ambil status pegawai user (misalnya: CPNS, PNS, THL, PPPK)
         $employeeStatus = get_user_meta($userId, 'status_pegawai');
 
-        if ($employeeStatus) {
-            if ($course->employee_status === $employeeStatus) {
-                return true;
-            }
+        if (!$employeeStatus) {
+            return false;
         }
 
-        return false;
+        // Ambil semua status pegawai yang diizinkan untuk course ini
+        // Misalnya: ['PNS', 'PPPK']
+        $allowedStatuses = $course->employeeStatus->pluck('title')->toArray();
+
+        // Cek apakah status user termasuk dalam daftar
+        return in_array($employeeStatus, $allowedStatuses);
     }
 }

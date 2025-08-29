@@ -1,3 +1,4 @@
+import FormCheckbox from "@/Components/FormCheckbox";
 import FormInput from "@/Components/FormInput";
 import FormLabel from "@/Components/FormLabel";
 import FormSelect from "@/Components/FormSelect";
@@ -47,6 +48,7 @@ const Create = ({ categories, employee_status }) => {
         teaser_video: "",
         expired: "",
         status: "",
+        employee_status: [],
     });
 
     const handleChange = (e) => {
@@ -77,7 +79,9 @@ const Create = ({ categories, employee_status }) => {
         const formData = new FormData();
         formData.append("type", values.type);
         formData.append("category", values.category);
-        formData.append("employee_status", values.employee_status);
+        values.employee_status.forEach((id) => {
+            formData.append("employee_status[]", id);
+        });
         formData.append("title", values.title);
         formData.append("short_description", values.short_description);
         formData.append("description", values.description);
@@ -86,6 +90,7 @@ const Create = ({ categories, employee_status }) => {
         formData.append("expired", values.expired);
         formData.append("jam_pelajaran", values.expired);
         formData.append("status", values.status);
+
 
         const localData = localStorage.getItem("scheduleData");
         if (values.type == "schedule" && localData) {
@@ -168,14 +173,30 @@ const Create = ({ categories, employee_status }) => {
                                 error={errors.category}
                             />
                             {/* employee_status */}
-                            <FormSelect
-                                title={"employee_status"}
-                                value={values.employee_status}
-                                onChange={handleChange}
-                                isRequired={true}
-                                options={employeeStatus}
-                                error={errors.employee_status}
-                            />
+                            <div className="mb-1">
+                                <p className="mb-2 text-sm font-medium text-gray-900">Employee Status</p>
+                                <div className="flex gap-8">
+                                    {employee_status.map((item) => (
+                                        <FormCheckbox
+                                            key={item.id}
+                                            id={`employee-${item.id}`}
+                                            title={item.title}
+                                            checked={values.employee_status.includes(item.id)}
+                                            onChange={(e) => {
+                                                const checked = e.target.checked;
+                                                setValues((prev) => ({
+                                                    ...prev,
+                                                    employee_status: checked
+                                                        ? [...prev.employee_status, item.id]
+                                                        : prev.employee_status.filter((id) => id !== item.id),
+                                                }));
+                                            }}
+                                            error={errors.employee_status}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
                             {/* title */}
                             <FormInput
                                 title={"title"}

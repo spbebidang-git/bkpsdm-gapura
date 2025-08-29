@@ -2,6 +2,7 @@
 
 namespace App\Models\Course;
 
+use App\Models\EmployeeStatus;
 use App\Models\Learn\Learn;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -57,6 +58,11 @@ class Course extends Model
     public function learns()
     {
         return $this->hasMany(Learn::class, 'course_id');
+    }
+
+    public function employeeStatus()
+    {
+        return $this->belongsToMany(EmployeeStatus::class);
     }
 
     public function thumbnailSrc(): Attribute
