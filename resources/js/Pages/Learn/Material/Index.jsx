@@ -96,9 +96,9 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
             }
 
             // Validasi: Maksimal 10MB
-            const maxSizeInBytes = 10 * 1024 * 1024; // 10MB
+            const maxSizeInBytes = 2 * 1024 * 1024; // 10MB
             if (file.size > maxSizeInBytes) {
-                toast.error("File size must not exceed 10MB", {
+                toast.error("File size must not exceed 2MB", {
                     position: "top-right",
                     autoClose: 3000,
                     hideProgressBar: false,

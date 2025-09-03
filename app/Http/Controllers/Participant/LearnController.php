@@ -102,7 +102,7 @@ class LearnController extends Controller
 
         if ($activity->type == 'task') {
             $request->validate([
-                'file' => 'required|mimes:pdf|max:10000 '
+                'file' => 'required|mimes:pdf|max:2000'
             ]);
         }
 
