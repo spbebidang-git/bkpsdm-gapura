@@ -13,6 +13,11 @@ class Schedule extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected $casts = [
+        'date' => 'date',              // otomatis jadi Carbon date
+        'time_from' => 'datetime:H:i', // otomatis jadi Carbon datetime (jam menit)
+    ];
+
     public $guarded = [];
 
     public function course()

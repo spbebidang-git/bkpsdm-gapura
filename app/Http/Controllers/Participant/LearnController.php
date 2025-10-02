@@ -11,6 +11,7 @@ use App\Services\Course\Activity\ActivityService;
 use App\Services\Course\Activity\QuestionService;
 use App\Services\Course\CourseService;
 use App\Services\Learn\LearnService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -160,7 +161,15 @@ class LearnController extends Controller
 
     public function instruction(Course $course, Schedule $schedule, Activity $activity)
     {
-        // dd($this->activity->getActivityByParticipant($this->participantId, $course->id));
+        if ($course->type === 'schedule') {
+            $scheduleDate = Carbon::parse($schedule->date);
+            $scheduleTime = Carbon::parse($schedule->time_from);
+
+            if ($scheduleDate->isFuture() || ($scheduleDate->isToday() && $scheduleTime->greaterThan(now()))) {
+                return to_route('participant.course.index')->with('danger', 'Kelas belum dimulai');
+            }
+        }
+
 
         if (!$this->learn->isLearned($this->participantId, $course->id)) {
             $initActivity = $this->learn->getInititalActivityId($course->id);
