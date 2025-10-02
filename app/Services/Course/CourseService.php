@@ -82,12 +82,14 @@ class CourseService
 
     public function getByParticipant($participantId)
     {
+        // dd($participantId);
         return Schedule::whereRelation('participants', 'participant_id', '=', $participantId)
             ->with(['course', 'course.learns' => function ($query) use ($participantId) {
                 $query->where('participant_id', $participantId);
             }, 'course.activities'])
             ->get()
             ->map(function ($row) {
+                // dd($row->course->id);
                 // dd($row->course->activities->first()->id);
                 return [
                     'id' => $row->course->id,
@@ -102,7 +104,7 @@ class CourseService
                     'instructor' => $row->course->instructor->name,
                     'total_participant' => $row->course->total_participant,
                     'status' => $row->course->status,
-                    'schedule_id' => 1,
+                    'schedule_id' => $row->id,
                     'initial_activity' => $row->course->activities->first() ? $row->course->activities->first()->id : 0,
                     'finished_at' => $row->course->learns->first()->finished_at ?? null
                 ];

@@ -2,9 +2,10 @@ import { router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-const Activity = ({ id, type, data, slug, question_result, status, answer, setAnswers, file, setFile }) => {
+const Activity = ({ id, type, data, slug, question_result, status, answer, setAnswers, file, setFile, schedule }) => {
     const [submitted, setSubmitted] = useState(status);
 
+    console.log(123 + status)
 
     const [duration, setDuration] = useState(data.duration)
     const [activeButton, setActiveButton] = useState(false)
@@ -314,11 +315,22 @@ const Activity = ({ id, type, data, slug, question_result, status, answer, setAn
 
     if (type === 'meeting') {
         const handleSubmit = () => {
-            router.post(`/learn/${slug}/1/${id}`, { status: 'in_progress' })
+            router.post(`/learn/${slug}/${schedule.id}/${id}`, { status: 'in_progress' })
+        }
+
+        const { flash } = usePage().props
+
+        {
+            flash.danger && (
+                <div className="bg-red-500 text-white p-3 rounded">
+                    {flash.danger}
+                </div>
+            )
         }
 
         const handleSubmitDone = () => {
-            router.post(`/learn/${slug}/1/${id}`, {
+            console.log(schedule)
+            router.post(`/learn/${slug}/${schedule.id}/${id}`, {
                 status: 'done',
                 // captcha: captchaInput
             }, {
@@ -342,6 +354,7 @@ const Activity = ({ id, type, data, slug, question_result, status, answer, setAn
         // const handleSubmitNext = () => {
         //     router.post(`/learn/${slug}/1/${id}`, [])
         // }
+
 
         return <div className="h-full text-gray-700 text-center">
             <div className="mb-5">Klik link online meeting di bawah : </div>

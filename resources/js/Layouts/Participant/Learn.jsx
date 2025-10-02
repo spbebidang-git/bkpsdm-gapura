@@ -14,6 +14,7 @@ const Learn = ({
     timer,
     activity_id,
     formattedAnswers,
+    schedule
 }) => {
     const { site } = usePage().props;
     const { errors } = usePage().props;
@@ -37,7 +38,7 @@ const Learn = ({
         router.post(
             route("participant.learn.store", {
                 course: course.slug,
-                schedule: 1,
+                schedule: schedule.id,
                 activity: activity_id,
             }),
             formattedAnswers,
@@ -192,6 +193,7 @@ const Learn = ({
                                                                 : 0
                                                         }
                                                         value={item.value}
+                                                        schedule={schedule}
                                                     />
                                                 ))}
                                         </ul>

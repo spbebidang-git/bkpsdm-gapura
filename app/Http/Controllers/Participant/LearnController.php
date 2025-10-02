@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Participant;
 use App\Http\Controllers\Controller;
 use App\Models\Course\Activity;
 use App\Models\Course\Course;
+use App\Models\Course\Schedule;
 use App\Models\Learn\Learn;
 use App\Services\Course\Activity\ActivityService;
 use App\Services\Course\Activity\QuestionService;
@@ -32,7 +33,7 @@ class LearnController extends Controller
         $this->question = $questionService;
     }
 
-    public function index(Course $course, $schedule, Activity $activity)
+    public function index(Course $course, Schedule $schedule, Activity $activity)
     {
 
         if ($activity->type === 'post-test' && request()->loop) {
@@ -44,7 +45,7 @@ class LearnController extends Controller
                 if ($checkTrial === 2) {
                     $this->learn->resetFromPostTest($this->participantId, $course->id);
 
-                    return to_route('participant.learn.instruction.index', [$course->slug, 1, $this->learn->getInititalActivityId($course->id)]);
+                    return to_route('participant.learn.instruction.index', [$course->slug, $schedule->id, $this->learn->getInititalActivityId($course->id)]);
                 }
 
                 $this->learn->setTrialTotal($checkTrial->learnItems->first());
@@ -58,7 +59,7 @@ class LearnController extends Controller
         if (!$this->learn->isLearned($this->participantId, $course->id)) {
             $initActivity = $this->learn->getInititalActivityId($course->id);
             if ($initActivity !== intval($activity->id)) {
-                return to_route('participant.learn.instruction.index', [$course->slug, 1, $initActivity]);
+                return to_route('participant.learn.instruction.index', [$course->slug, $schedule->id, $initActivity]);
             }
         } else {
             // ✅ Cek activity sebelumnya
@@ -87,12 +88,13 @@ class LearnController extends Controller
             'activities' => $this->activity->getActivityByParticipant($this->participantId, $course->id),
             'activity' => $this->activity->getDetailActivityParticipant($this->participantId, $activity->id),
             'activity_id' => $activity->id,
+            'schedule' => $schedule
         ]);
     }
 
-    public function store(Course $course, $schedule, Activity $activity, Request $request)
+    public function store(Course $course, Schedule $schedule, Activity $activity, Request $request)
     {
-        // dd(count($request->all()));
+        // dd($request->all());
         # validate pre test & post test
         // if ($activity->type == 'pre-test' || $activity->type == 'post-test') {
         //     if (!$this->question->validateQuestion(count($request->all()), $this->participantId, $activity->id)) {
@@ -130,7 +132,7 @@ class LearnController extends Controller
                 $q = $this->activity->storeActivity($this->participantId, $course->id, $activity->id, $request->all());
                 // dd($q);
                 if (!$q) {
-                    return to_route('participant.learn.index', [$course->slug, $course->id, $activity->id])->with('danger', 'error');
+                    return to_route('participant.learn.index', [$course->slug, $schedule->id, $activity->id])->with('danger', 'error');
                 }
             }
 
@@ -141,10 +143,10 @@ class LearnController extends Controller
             }
 
             if (!empty($request->all()) && ($activity->type == 'pre-test' || $activity->type == 'post-test')) {
-                return to_route('participant.learn.result.index', [$course->slug, $schedule, $activity->id]);
+                return to_route('participant.learn.result.index', [$course->slug, $schedule->id, $activity->id]);
             }
 
-            return to_route('participant.learn.result.index', [$course->slug, $schedule, $activity->id]);
+            return to_route('participant.learn.result.index', [$course->slug, $schedule->id, $activity->id]);
 
             // // if question test
 
@@ -152,18 +154,18 @@ class LearnController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             dd($th);
-            return to_route('participant.learn.index', [$course->slug, 1, $activity->id]);
+            return to_route('participant.learn.index', [$course->slug, $schedule->id, $activity->id]);
         }
     }
 
-    public function instruction(Course $course, $scheduleId, Activity $activity)
+    public function instruction(Course $course, Schedule $schedule, Activity $activity)
     {
         // dd($this->activity->getActivityByParticipant($this->participantId, $course->id));
 
         if (!$this->learn->isLearned($this->participantId, $course->id)) {
             $initActivity = $this->learn->getInititalActivityId($course->id);
             if ($initActivity !== intval($activity->id)) {
-                return to_route('participant.learn.instruction.index', [$course->slug, 1, $initActivity]);
+                return to_route('participant.learn.instruction.index', [$course->slug, $schedule->id, $initActivity]);
             }
         } else {
             $validOpenActivity = $this->learn->checkValidOpenActivity($this->participantId, $course->id, $activity->id);
@@ -182,16 +184,17 @@ class LearnController extends Controller
             'activity' => $this->activity->getDetailActivityParticipant($this->participantId, $activity->id),
             'activity_id' => $activity->id,
             'question_result' =>  null,
-            'instruction' => $instruction
+            'instruction' => $instruction,
+            'schedule' => $schedule
         ]);
     }
 
-    public function storeInstruction(Course $course, $schedule, Activity $activity, Request $request)
+    public function storeInstruction(Course $course, Schedule $schedule, Activity $activity, Request $request)
     {
-        return to_route('participant.learn.index', [$course->slug, $schedule, $activity->id]);
+        return to_route('participant.learn.index', [$course->slug, $schedule->id, $activity->id]);
     }
 
-    public function result(Course $course, $schedule, Activity $activity)
+    public function result(Course $course, Schedule $schedule, Activity $activity)
     {
         if ($activity->type == 'pre-test' || $activity->type == 'post-test') {
             $questionResult = $this->learn->getResultQuestion($this->participantId, $course->id, $activity->id);
@@ -201,7 +204,8 @@ class LearnController extends Controller
                 'activities' => $this->activity->getActivityByParticipant($this->participantId, $course->id),
                 'activity' => $this->activity->getDetailActivityParticipant($this->participantId, $activity->id),
                 'activity_id' => $activity->id,
-                'question_result' => $questionResult ?? null
+                'question_result' => $questionResult ?? null,
+                'schedule' => $schedule
             ]);
         }
 
@@ -212,10 +216,11 @@ class LearnController extends Controller
             'activity' => $this->activity->getDetailActivityParticipant($this->participantId, $activity->id),
             'activity_id' => $activity->id,
             'question_result' =>  null,
+            'schedule' => $schedule
         ]);
     }
 
-    public function storeResult(Course $course, $schedule, Activity $activity, Request $request)
+    public function storeResult(Course $course, Schedule $schedule, Activity $activity, Request $request)
     {
         $nextActivity =  $this->activity->nextActivity($course->id, $activity->id);
 
@@ -234,9 +239,9 @@ class LearnController extends Controller
         }
 
         if (($activity->type == 'pre-test' || $activity->type == 'post-test') && empty($request->all())) {
-            return to_route('participant.learn.instruction.index', [$course->slug, 1, $nextActivity])->with('success', 'Saved');
+            return to_route('participant.learn.instruction.index', [$course->slug, $schedule->id, $nextActivity])->with('success', 'Saved');
         }
 
-        return to_route('participant.learn.instruction.index', [$course->slug, 1, $nextActivity])->with('success', 'Saved');
+        return to_route('participant.learn.instruction.index', [$course->slug, $schedule->id, $nextActivity])->with('success', 'Saved');
     }
 }

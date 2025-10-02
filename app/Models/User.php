@@ -57,10 +57,14 @@ class User extends Authenticatable
             ->withPivot('pre_test_variant_id', 'post_test_variant_id');
     }
 
+    public function voteRecords()
+    {
+        return $this->hasMany(VoteRecord::class);
+    }
 
     public function isAdmin(): Attribute
     {
-        return Attribute::get(fn() => $this->getRoleNames()->first() == 'Admin' ? true : false);
+        return Attribute::get(fn() => $this->getRoleNames()->first() == 'Admin'  ? true : false);
     }
 
     public function isInstructor(): Attribute

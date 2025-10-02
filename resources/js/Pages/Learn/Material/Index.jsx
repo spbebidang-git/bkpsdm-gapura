@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { toast } from "react-toastify";
 
 
-const Index = ({ course, progress, activities, activity, activity_id, question_result }) => {
+const Index = ({ course, progress, activities, activity, activity_id, question_result, schedule }) => {
     const [answers, setAnswers] = useState({});
     const [file, setFile] = useState(null);
     const [activeButton, setActiveButton] = useState(false)
@@ -51,7 +51,7 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
         if (activity.type == 'pre-test' || activity.type == 'post-test') {
             localStorage.removeItem('countdownStartTime');
 
-            router.post(route('participant.learn.store', { course: slug, schedule: 1, activity: activity_id }), formattedAnswers, {
+            router.post(route('participant.learn.store', { course: slug, schedule: schedule.id, activity: activity_id }), formattedAnswers, {
                 onError: (errors) => {
                     toast.error(errors.error, {
                         position: "top-center",
@@ -114,7 +114,7 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
             const formData = new FormData();
             formData.append('file', file);
 
-            router.post(route('participant.learn.store', { course: slug, schedule: 1, activity: activity_id }), formData, {
+            router.post(route('participant.learn.store', { course: slug, schedule: schedule.id, activity: activity_id }), formData, {
                 forceFormData: true,
                 onSuccess: () => {
                     toast.success("File uploaded successfully", {
@@ -144,19 +144,19 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
 
         // store meeting
         if (activity.type == 'meeting') {
-            router.post(route('participant.learn.store', { course: slug, schedule: 1, activity: activity_id }), []);
+            router.post(route('participant.learn.store', { course: slug, schedule: schedule.id, activity: activity_id }), []);
         }
 
         // store video
         if (activity.type == 'video') {
             const formattedAnswers = Object.values(answers).map(answer => ({ ...answer }));
-            router.post(route('participant.learn.store', { course: slug, schedule: 1, activity: activity_id }), formattedAnswers);
+            router.post(route('participant.learn.store', { course: slug, schedule: schedule.id, activity: activity_id }), formattedAnswers);
         }
 
         // store literature
         if (activity.type == 'literature') {
             const formattedAnswers = Object.values(answers).map(answer => ({ ...answer }));
-            router.post(route('participant.learn.store', { course: slug, schedule: 1, activity: activity_id }), formattedAnswers);
+            router.post(route('participant.learn.store', { course: slug, schedule: schedule.id, activity: activity_id }), formattedAnswers);
         }
 
         // toast.error('Kamu belum memenuhi nilai yang ditetapkan. Silakan ulangi post-test untuk mencoba lagi', {
@@ -170,12 +170,12 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
         // });
     };
 
-    return <Learn type="material" course={course} progress={progress} activities={activities} activity={activity} timer={timer} formattedAnswers={formattedAnswers} activity_id={activity_id}>
+    return <Learn type="material" course={course} progress={progress} activities={activities} activity={activity} timer={timer} formattedAnswers={formattedAnswers} activity_id={activity_id} schedule={schedule}>
         <div className='flex flex-col justify-between'>
             <div className='flex-1 rounded-xl bg-gray-50 py-2.5 mb-8 '>
                 <div className='p-3 flex-1 h-[550px] overflow-scroll'>
                     <Activity question_result={question_result} slug={course.slug} id={activity_id} type={activity.type} data={activity.data} status={activity.status} answers={answers} file={file} setFile={setFile}
-                        setAnswers={setAnswers} />
+                        setAnswers={setAnswers} schedule={schedule} />
                 </div>
             </div>
             <div className='h-14 w-56 mx-auto'>

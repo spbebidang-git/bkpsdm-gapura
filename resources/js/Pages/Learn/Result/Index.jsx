@@ -8,13 +8,13 @@ import { toast } from "react-toastify";
 //     router.post(route('participant.learn.result.store', { course: slug, schedule: 1, activity: activityId }), []);
 // };
 
-const handleSubmit = (e, slug, activityId) => {
+const handleSubmit = (e, slug, scheduleId, activityId) => {
     e.preventDefault();
 
     router.post(
         route("participant.learn.result.store", {
             course: slug,
-            schedule: 1,
+            schedule: scheduleId,
             activity: activityId,
         }),
         [],
@@ -34,13 +34,13 @@ const handleSubmit = (e, slug, activityId) => {
     );
 };
 
-const handleLoopTest = (e, slug, activityId) => {
+const handleLoopTest = (e, slug, scheduleId, activityId) => {
     e.preventDefault();
 
     router.get(
         route("participant.learn.index", {
             course: slug,
-            schedule: 1,
+            schedule: scheduleId,
             activity: activityId,
             loop: 1,
         }),
@@ -56,6 +56,7 @@ const Index = ({
     activity_id,
     question_result,
     instruction,
+    schedule
 }) => {
     if (activity.type == "pre-test" || activity.type == "post-test") {
         return (
@@ -70,7 +71,7 @@ const Index = ({
                     <div className="flex-1 rounded-xl bg-gray-50 py-2.5 mb-8 ">
                         <div className="p-3 flex-1 h-[550px] flex flex-col justify-center overflow-scroll">
                             {question_result.score >=
-                            activity.data.min_score ? (
+                                activity.data.min_score ? (
                                 <div className="border-2 bg-white max-w-lg w-full mx-auto flex flex-col items-center p-8">
                                     <div className="border-2 w-24 h-24 flex items-center justify-center rounded-full border-green-400 mb-3">
                                         <box-icon
@@ -121,6 +122,7 @@ const Index = ({
                                                         handleLoopTest(
                                                             e,
                                                             course.slug,
+                                                            schedule.id,
                                                             activity_id
                                                         )
                                                     }
@@ -223,6 +225,7 @@ const Index = ({
             progress={progress}
             activities={activities}
             activity={activity}
+            schedule={schedule}
         >
             <div className="flex flex-col justify-between">
                 <div className="flex-1 rounded-xl bg-gray-50 py-2.5 mb-8 ">
@@ -245,7 +248,7 @@ const Index = ({
                 <div className="h-14 w-56 mx-auto">
                     <button
                         onClick={(e) =>
-                            handleSubmit(e, course.slug, activity_id)
+                            handleSubmit(e, course.slug, schedule.id, activity_id)
                         }
                         className="button-primary"
                     >

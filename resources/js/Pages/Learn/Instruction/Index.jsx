@@ -2,13 +2,13 @@ import Learn from '@/Layouts/Participant/Learn';
 import { router, usePage } from '@inertiajs/react';
 import { toast } from 'react-toastify';
 
-const handleSubmit = (e, slug, activityId) => {
+const handleSubmit = (e, slug, activityId, scheduleId) => {
     e.preventDefault();
 
-    router.post(route('participant.learn.instruction.store', { course: slug, schedule: 1, activity: activityId }), []);
+    router.post(route('participant.learn.instruction.store', { course: slug, schedule: scheduleId, activity: activityId }), []);
 };
 
-const Index = ({ course, progress, activities, activity, activity_id, question_result, instruction }) => {
+const Index = ({ course, progress, activities, activity, activity_id, question_result, instruction, schedule }) => {
     const { errors } = usePage().props
 
 
@@ -26,7 +26,7 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
     }
 
     return (
-        <Learn type="instruction" course={course} progress={progress} activities={activities} activity={activity}>
+        <Learn type="instruction" course={course} progress={progress} activities={activities} activity={activity} schedule={schedule}>
             <div className='flex flex-col justify-between'>
                 <div className='flex-1 rounded-xl bg-gray-50 py-2.5 mb-8 '>
                     <div className='p-3 flex-1 h-[550px] overflow-scroll'>
@@ -34,7 +34,7 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
                     </div>
                 </div>
                 <div className='h-14 w-56 mx-auto'>
-                    <button onClick={(e) => handleSubmit(e, course.slug, activity_id)} className='button-primary'>Lanjut ke Materi</button>
+                    <button onClick={(e) => handleSubmit(e, course.slug, activity_id, schedule.id)} className='button-primary'>Lanjut ke Materi</button>
                 </div>
             </div>
         </Learn>

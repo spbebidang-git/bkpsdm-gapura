@@ -47,12 +47,24 @@ class InteractiveService
     public function getMeetingParticipant($participantId, $activity)
     {
         $interactive = Interactive::where('activity_id', $activity->id)->first();
+        $learn = Learn::with(['learnItems' => function ($query) use ($activity) {
+            return $query->where('activity_id', $activity->id);
+        }])
+            ->where('participant_id', $participantId)
+            ->where('course_id', $activity->course_id)
+            ->first();
+        $status = null;
+        if (!$learn || !$learn->learnItems->first()) {
+            $status = 0;
+        } else {
+            $status = $learn->learnItems->first()->status;
+        }
 
         return [
             'activity_id' => $activity->id,
             'title' => $activity->title,
             'type' => 'meeting',
-            'status' => $this->getStatus($participantId, $activity->id),
+            'status' => $status,
             'data' => [
                 'meeting_url' => $interactive->url,
                 'duration' => $interactive->duration
@@ -78,7 +90,7 @@ class InteractiveService
     public function storeMeeting($participantId, $courseId, $activityId, $request)
     {
         $interactive = Interactive::where('activity_id', $activityId)->first();
-        // dd($request);
+
 
         if ($request) {
             $learnItem = [

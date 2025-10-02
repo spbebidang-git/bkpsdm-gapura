@@ -7,7 +7,7 @@ const ListActivity = ({
     status,
     isActive,
     slug,
-    scheduleId = 1,
+    schedule,
     activityId,
     value,
 }) => {
@@ -62,20 +62,18 @@ const ListActivity = ({
             <Link
                 href={route("participant.learn.instruction.index", {
                     course: slug,
-                    schedule: scheduleId,
+                    schedule: schedule.id,
                     activity: activityId,
                 })}
             >
                 <div className="flex rounded-xl overflow-hidden">
                     <div
-                        className={`w-4 ${
-                            isActive ? "bg-primary" : "bg-white"
-                        }`}
+                        className={`w-4 ${isActive ? "bg-primary" : "bg-white"
+                            }`}
                     ></div>
                     <div
-                        className={`w-full px-8 border-gray-200 py-3 ${
-                            isActive ? "bg-teal-50" : "bg-white"
-                        }`}
+                        className={`w-full px-8 border-gray-200 py-3 ${isActive ? "bg-teal-50" : "bg-white"
+                            }`}
                     >
                         <div className="flex gap-3">
                             {status === "done" ? (
@@ -98,9 +96,8 @@ const ListActivity = ({
                         </div>
                         <li className="">
                             <div
-                                className={`mb-0.5 ${
-                                    isActive ? "text-primary" : ""
-                                }`}
+                                className={`mb-0.5 ${isActive ? "text-primary" : ""
+                                    }`}
                             >
                                 {activity}
                             </div>

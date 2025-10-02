@@ -47,6 +47,7 @@ const Create = ({ categories, employee_status }) => {
         thumbnail: null,
         teaser_video: "",
         expired: "",
+        jam_pelajaran: "",
         status: "",
         employee_status: [],
     });
@@ -88,7 +89,7 @@ const Create = ({ categories, employee_status }) => {
         formData.append("thumbnail", values.thumbnail);
         formData.append("teaser_video", values.teaser_video);
         formData.append("expired", values.expired);
-        formData.append("jam_pelajaran", values.expired);
+        formData.append("jam_pelajaran", values.jam_pelajaran);
         formData.append("status", values.status);
 
 
