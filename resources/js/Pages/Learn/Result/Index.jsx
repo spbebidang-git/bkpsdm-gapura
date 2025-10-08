@@ -188,6 +188,7 @@ const Index = ({
                                                         handleLoopTest(
                                                             e,
                                                             course.slug,
+                                                            schedule.id,
                                                             activity_id
                                                         )
                                                     }
@@ -207,7 +208,7 @@ const Index = ({
                     <div className="h-14 w-56 mx-auto">
                         <button
                             onClick={(e) =>
-                                handleSubmit(e, course.slug, activity_id)
+                                handleSubmit(e, course.slug, schedule.id, activity_id)
                             }
                             className="button-primary"
                         >
