@@ -44,7 +44,7 @@ class LearnController extends Controller
             // dd($checkTrial);
             if ($checkTrial) {
                 if ($checkTrial === 2) {
-                    $this->learn->resetFromPostTest($this->participantId, $course->id);
+                    // $this->learn->resetFromPostTest($this->participantId, $course->id);
 
                     return to_route('participant.learn.instruction.index', [$course->slug, $schedule->id, $this->learn->getInititalActivityId($course->id)]);
                 }
@@ -55,7 +55,7 @@ class LearnController extends Controller
         }
 
         $course = $this->course->findBySlug($course->slug);
-        $this->learn->resetLearning($this->participantId, $course->id, $course->expired);
+        // $this->learn->resetLearning($this->participantId, $course->id, $course->expired);
 
         if (!$this->learn->isLearned($this->participantId, $course->id)) {
             $initActivity = $this->learn->getInititalActivityId($course->id);
