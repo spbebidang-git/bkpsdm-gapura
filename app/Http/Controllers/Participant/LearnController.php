@@ -234,7 +234,7 @@ class LearnController extends Controller
         $nextActivity =  $this->activity->nextActivity($course->id, $activity->id);
 
         if (!$nextActivity) {
-            return to_route('participant.rating.index', [$course->slug, 1])->with('success', 'Saved');
+            return to_route('participant.rating.index', [$course->slug, $schedule->id])->with('success', 'Saved');
         }
 
         // ✅ CEGAH LANJUT JIKA NILAI BELUM MENCAPAI MINIMUM
