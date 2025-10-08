@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/dummy', function () {
-    Auth::loginUsingId(1212);
+    Auth::loginUsingId(3);
 });
 
 # Sign In / Guest
