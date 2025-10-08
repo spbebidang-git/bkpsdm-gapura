@@ -66,6 +66,7 @@ const Index = ({
                 progress={progress}
                 activities={activities}
                 activity={activity}
+                schedule={schedule}
             >
                 <div className="flex flex-col justify-between">
                     <div className="flex-1 rounded-xl bg-gray-50 py-2.5 mb-8 ">
