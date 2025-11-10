@@ -272,6 +272,7 @@ class AuthController
             }
         } catch (\Throwable $th) {
             // logging opsional
+            Log::info($th);
         }
 
         return false;
