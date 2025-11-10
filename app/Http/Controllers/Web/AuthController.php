@@ -149,9 +149,9 @@ class AuthController
 
     private function SyncUserMeta($userId, $username, $password)
     {
-        if (get_user_meta($userId, 'status_pegawai')) {
-            return true;
-        }
+        // if (get_user_meta($userId, 'status_pegawai')) {
+        //     return true;
+        // }
 
         try {
             $response = Http::retry(3, 100)->withHeaders([
