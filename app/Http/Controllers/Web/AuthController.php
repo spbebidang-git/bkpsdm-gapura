@@ -121,7 +121,7 @@ class AuthController
                 return to_route('home');
             }
 
-            return back()->withErrors(['danger' => 'Something went wrong.']);
+            return back()->withErrors(['danger' => 'Something went wrongs.']);
         }
 
         // First-time SSO login
