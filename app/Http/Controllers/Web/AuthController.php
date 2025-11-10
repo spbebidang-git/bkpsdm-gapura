@@ -149,6 +149,7 @@ class AuthController
 
     private function SyncUserMeta($userId, $username, $password)
     {
+        dd($username, $password);
         // if (get_user_meta($userId, 'status_pegawai')) {
         //     return true;
         // }
