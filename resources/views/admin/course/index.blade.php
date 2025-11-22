@@ -5,7 +5,7 @@
 @section('content')
     <div class="card p-0">
         <h5 class="card-header border-bottom d-flex justify-content-between align-items-center">
-            Course Lists
+            Daftar Kursus
         </h5>
         <div class="card-body p-0 overflow-hidden">
             <div class="table-responsive text-wrap overflow-hidden p-4">
@@ -13,12 +13,12 @@
                     <thead>
                         <tr class="text-nowrap">
                             <th>#</th>
-                            <th class="text-center">Image</th>
-                            <th class="text-center">Category</th>
-                            <th class="text-center">Title</th>
-                            <th class="text-center">Instructor</th>
-                            <th class="text-center">Type</th>
-                            <th class="text-center">Action</th>
+                            <th class="text-center">Gambar</th>
+                            <th class="text-center">Kategori</th>
+                            <th class="text-center">Judul</th>
+                            <th class="text-center">Instruktur</th>
+                            <th class="text-center">Tipe</th>
+                            <th class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="table-border-bottom-0"></tbody>
@@ -36,11 +36,11 @@
                 serverSide: true,
                 ajax: '{{ url()->current() }}',
                 stripeClasses: [],
-                "columnDefs": [{
-                    "className": "dt-center",
-                    "targets": "_all"
+                columnDefs: [{
+                    className: "dt-center",
+                    targets: "_all"
                 }],
-                "bPaginate": true,
+                bPaginate: true,
                 columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
@@ -50,27 +50,27 @@
                     },
                     {
                         data: 'image',
-                        name: 'image',
+                        name: 'image'
                     },
                     {
                         data: 'category',
-                        name: 'category',
+                        name: 'category'
                     },
                     {
                         data: 'title',
-                        name: 'title',
+                        name: 'title'
                     },
                     {
                         data: 'instructor',
-                        name: 'instructor',
+                        name: 'instructor'
                     },
                     {
                         data: 'type',
-                        name: 'type',
+                        name: 'type'
                     },
                     {
                         data: 'action',
-                        name: 'action',
+                        name: 'action'
                     },
                 ],
                 language: {
@@ -82,18 +82,17 @@
             });
         });
 
-        // swal delete
         const confirmDelete = (event) => {
             event.preventDefault();
             Swal.fire({
-                title: 'Are you sure you want to delete this data?',
-                text: "Deleted data cannot be recovered!",
+                title: 'Apakah Anda yakin ingin menghapus data ini?',
+                text: "Data yang dihapus tidak dapat dikembalikan!",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, delete it!',
-                cancelButtonText: 'Cancel',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal',
                 customClass: {
                     container: 'swal2-container',
                 },

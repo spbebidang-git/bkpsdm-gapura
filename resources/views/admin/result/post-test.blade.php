@@ -5,8 +5,8 @@
 @section('content')
     <div class="card p-0">
         <h5 class="card-header border-bottom d-flex justify-content-between align-items-center">
-            Post Test Results
-            <a class="btn btn-outline-secondary" href="{{ route('admin.result.index') }}">Back</a>
+            Hasil Post Test
+            <a class="btn btn-outline-secondary" href="{{ route('admin.result.index') }}">Kembali</a>
         </h5>
 
         <div class="card-body p-0 overflow-hidden">
@@ -15,10 +15,10 @@
                     <thead>
                         <tr class="text-nowrap">
                             <th>#</th>
-                            <th class="text-center">nip</th>
-                            <th class="text-center">nama</th>
-                            <th class="text-center">jabatan</th>
-                            <th class="text-center">rata rata nilai</th>
+                            <th class="text-center">NIP</th>
+                            <th class="text-center">Nama</th>
+                            <th class="text-center">Jabatan</th>
+                            <th class="text-center">Rata-rata Nilai</th>
                         </tr>
                     </thead>
                     <tbody class="table-border-bottom-0"></tbody>
@@ -31,7 +31,7 @@
 @push('scripts')
     <script>
         $(document).ready(function() {
-            var table = $('#table').DataTable({
+            $('#table').DataTable({
                 processing: true,
                 serverSide: true,
                 ajax: {
@@ -71,11 +71,15 @@
                     paginate: {
                         next: '&#8594;',
                         previous: '&#8592;'
-                    }
+                    },
+                    processing: "Memuat...",
+                    search: "Cari:",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    infoEmpty: "Tidak ada data tersedia",
+                    zeroRecords: "Tidak ada data yang cocok",
                 }
             });
-
-
         });
     </script>
 @endpush

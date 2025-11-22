@@ -5,7 +5,7 @@
 @section('content')
     <div class="card p-0">
         <h5 class="card-header border-bottom d-flex justify-content-between align-items-center">
-            Results
+            Hasil
         </h5>
         <div class="card-body p-0 overflow-hidden">
             <div class="table-responsive text-wrap overflow-hidden p-4">
@@ -13,8 +13,8 @@
                     <thead>
                         <tr class="text-nowrap">
                             <th>#</th>
-                            <th class="text-center">Title</th>
-                            <th class="text-center">Action</th>
+                            <th class="text-center">Judul</th>
+                            <th class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="table-border-bottom-0"></tbody>
@@ -32,11 +32,11 @@
                 serverSide: true,
                 ajax: '{{ url()->current() }}',
                 stripeClasses: [],
-                "columnDefs": [{
-                    "className": "dt-center",
-                    "targets": "_all"
+                columnDefs: [{
+                    className: "dt-center",
+                    targets: "_all"
                 }],
-                "bPaginate": true,
+                bPaginate: true,
                 columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
@@ -51,13 +51,21 @@
                     {
                         data: 'action',
                         name: 'action',
+                        orderable: false,
+                        searchable: false
                     },
                 ],
                 language: {
                     paginate: {
                         next: '&#8594;',
                         previous: '&#8592;'
-                    }
+                    },
+                    processing: "Memuat...",
+                    search: "Cari:",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                    infoEmpty: "Tidak ada data tersedia",
+                    zeroRecords: "Tidak ada data yang cocok",
                 }
             });
         });

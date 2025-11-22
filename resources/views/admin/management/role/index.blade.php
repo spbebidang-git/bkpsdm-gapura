@@ -5,19 +5,17 @@
         <h5 class="card-header border-bottom d-flex justify-content-between align-items-center">
             Roles
         </h5>
+
         <div class="card-body p-4">
-            {{-- DataTable --}}
             <div class="table-responsive">
                 <table class="table table-bordered" id="table">
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>name</th>
+                            <th>Name</th>
                         </tr>
                     </thead>
-                    <tbody>
-
-                    </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
         </div>
@@ -33,11 +31,11 @@
                 stateSave: true,
                 ajax: '{{ url()->current() }}',
                 stripeClasses: [],
-                "columnDefs": [{
-                    "className": "dt-center",
-                    "targets": "_all"
+                columnDefs: [{
+                    className: "dt-center",
+                    targets: "_all"
                 }],
-                "bPaginate": true,
+                bPaginate: true,
                 columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
@@ -59,7 +57,6 @@
             });
         });
 
-        // swal delete
         const confirmDelete = (event) => {
             event.preventDefault();
             Swal.fire({
@@ -71,10 +68,6 @@
                 cancelButtonColor: '#3085d6',
                 confirmButtonText: 'Yes, delete it!',
                 cancelButtonText: 'Cancel',
-                customClass: {
-                    container: 'swal2-container',
-                },
-
             }).then((result) => {
                 if (result.isConfirmed) {
                     event.target.submit();

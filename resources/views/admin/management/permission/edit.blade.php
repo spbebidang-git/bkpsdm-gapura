@@ -6,23 +6,24 @@
         @method('put')
         <div class="card p-0">
             <h5 class="card-header border-bottom">
-                Edit Permission
+                Edit Izin Akses
             </h5>
+
             <div class="card-body border-bottom p-4">
-                {{-- name --}}
                 <div class="mb-3">
-                    <label for="name" class="form-label">name</label>
+                    <label for="name" class="form-label">Nama Izin</label>
                     <input type="text" class="form-control @error('name') is-invalid @enderror" name="name"
-                        id="name" value="{{ old('name') ?? $permission->name }}">
+                        id="name" value="{{ old('name', $permission->name) }}">
                     @error('name')
                         <small class="invalid-feedback">{{ $message }}</small>
                     @enderror
                 </div>
             </div>
+
             <div class="card-footer">
                 <div class="d-flex gap-2 justify-content-end">
-                    <button class="btn btn-primary">Save</button>
-                    <a href="{{ route('admin.management.permission.index') }}" class="btn btn-outline-secondary">Back</a>
+                    <button class="btn btn-primary">Simpan</button>
+                    <a href="{{ route('admin.management.permission.index') }}" class="btn btn-outline-secondary">Kembali</a>
                 </div>
             </div>
         </div>
