@@ -39,8 +39,8 @@
                             <td style="white-space: nowrap;">Thumbnail</td>
                             <th>
                                 @if ($course->thumbnail)
-                                    <a href="{{ asset('storage/' . $course->thumbnail) }}" target="_blank"
-                                        class="text-primary text-decoration-underline">Lihat Thumbnail</a>
+                                    <a href="{{ asset('assets/media/images/courses/' . $course->thumbnail) }}"
+                                        target="_blank" class="text-primary text-decoration-underline">Lihat Thumbnail</a>
                                 @else
                                     <span class="text-muted">Tidak Ada Gambar</span>
                                 @endif
