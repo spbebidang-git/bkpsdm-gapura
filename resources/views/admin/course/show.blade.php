@@ -50,7 +50,7 @@
                             <td style="white-space: nowrap;">Video Teaser</td>
                             <th>
                                 @if ($course->teaser_video)
-                                    <a href="{{ asset('storage/' . $course->teaser_video) }}" target="_blank"
+                                    <a href="{{ $course->teaser_video }}" target="_blank"
                                         class="text-primary text-decoration-underline">Lihat Video</a>
                                 @else
                                     <span class="text-muted">Tidak Ada Video</span>

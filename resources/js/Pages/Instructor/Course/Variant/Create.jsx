@@ -14,7 +14,7 @@ const Create = ({ slug, activityId, variant }) => {
     });
 
     function handleChange(e) {
-        const { id, type, value, checked } = e.target;
+        const { id, value } = e.target;
         setValues((values) => ({
             ...values,
             [id]: value,
@@ -37,30 +37,35 @@ const Create = ({ slug, activityId, variant }) => {
     return (
         <App>
             <div className="text-center text-2xl font-bold text-gray-700 mb-5">
-                Add New Variant
+                Tambah Variant Baru
             </div>
 
             <form onSubmit={handleSubmit}>
                 <div className="max-w-2xl mx-auto shadow bg-white rounded-xl">
                     <div className="p-6">
                         <FormInput
-                            title={"code"}
+                            title="code"
+                            label="Kode"
                             value={values.code}
                             onChange={handleChange}
                             isRequired={true}
                             error={errors.code}
                         />
+
                         <FormInput
-                            title={"variant"}
+                            title="variant"
+                            label="Variant"
                             value={values.variant}
                             onChange={handleChange}
                             isRequired={true}
                             error={errors.variant}
                             readOnly={true}
                         />
+
                         <FormSelect
-                            title={"mix"}
-                            value={values.type}
+                            title="mix"
+                            label="Acak Soal"
+                            value={values.mix}
                             onChange={handleChange}
                             isRequired={true}
                             options={typeOptions}
@@ -69,12 +74,13 @@ const Create = ({ slug, activityId, variant }) => {
                 </div>
 
                 <div className="max-w-80 mx-auto gap-3 flex justify-center mt-8">
-                    <button className="button-primary">Save</button>
+                    <button className="button-primary">Simpan</button>
+
                     <Link
                         className="w-full"
                         href={`/instructor/course/${slug}/activity/variant/${activityId}`}
                     >
-                        <button className="button-secondary">Back</button>
+                        <button className="button-secondary">Kembali</button>
                     </Link>
                 </div>
             </form>

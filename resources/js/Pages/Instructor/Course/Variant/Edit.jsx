@@ -8,12 +8,13 @@ const Edit = ({ slug, activityId, variant }) => {
     const { errors } = usePage().props;
 
     const [values, setValues] = useState({
-        variant: variant.variant,
-        mix: variant.mix,
+        code: "",
+        variant: "",
+        mix: 0,
     });
 
     function handleChange(e) {
-        const { id, type, value, checked } = e.target;
+        const { id, value } = e.target;
         setValues((values) => ({
             ...values,
             [id]: value,
@@ -51,23 +52,27 @@ const Edit = ({ slug, activityId, variant }) => {
                 <div className="max-w-2xl mx-auto shadow bg-white rounded-xl">
                     <div className="p-6">
                         <FormInput
-                            title={"code"}
+                            title="code"
+                            label="Kode"
                             value={values.code}
                             onChange={handleChange}
                             isRequired={true}
                             error={errors.code}
-                            readOnly={false}
                         />
+
                         <FormInput
-                            title={"variant"}
+                            title="variant"
+                            label="Variant"
                             value={values.variant}
                             onChange={handleChange}
-                            isRequired={true}
+                            isRequired={false}
                             error={errors.variant}
                             readOnly={true}
                         />
+
                         <FormSelect
-                            title={"mix"}
+                            title="mix"
+                            label="Acak Soal"
                             value={values.mix}
                             selectedValue={values.mix}
                             onChange={handleChange}
@@ -79,12 +84,13 @@ const Edit = ({ slug, activityId, variant }) => {
                 </div>
 
                 <div className="max-w-80 mx-auto gap-3 flex justify-center mt-8">
-                    <button className="button-primary">Save</button>
+                    <button className="button-primary">Simpan</button>
+
                     <Link
                         className="w-full"
                         href={`/instructor/course/${slug}/activity/variant/${activityId}`}
                     >
-                        <button className="button-secondary">Back</button>
+                        <button className="button-secondary">Kembali</button>
                     </Link>
                 </div>
             </form>

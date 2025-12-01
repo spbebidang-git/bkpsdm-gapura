@@ -48,7 +48,7 @@ class CourseController
             'title' => 'required|string',
             'short_description' => 'required|string',
             'description' => 'required|string',
-            'thumbnail' => 'required|image|max:10240|mimes:png,jpg',
+            'thumbnail' => 'required|image|max:1024|mimes:png,jpg',
             'teaser_video' => 'nullable|string',
             'expired' => 'required_if:type,unschedule',
             'status' => 'required|string',

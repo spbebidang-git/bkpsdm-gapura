@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\Course\Course;
 use App\Services\Course\CourseService;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
@@ -23,13 +24,21 @@ class CourseController
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="d-flex justify-content-center gap-2">';
                     $btn .= '<a class="btn btn-sm btn-warning" href=' . route('admin.course.show', $row['id']) . '>';
-                    $btn .= '<i class="bx bx-eye"></i></a>';
+                    $btn .= 'Detail</a>';
                     $btn .= '</div>';
                     return $btn;
                 })
-                ->rawColumns(['action'])
+                ->rawColumns(['action', 'image'])
                 ->addColumn('image', function ($row) {
-                    return $row['thumbnail'];
+                    $thumbnail = $row['thumbnail']
+                        ? asset($row['thumbnail'])
+                        : asset('images/no-image.png');
+
+                    return '
+                <div class="d-flex justify-content-center">
+                    <img src="' . $thumbnail . '" alt="thumbnail" width="60" class="img-thumbnail">
+                </div>
+            ';
                 })
                 ->addColumn('category', function ($row) {
                     return $row['category'];
@@ -38,5 +47,27 @@ class CourseController
         }
 
         return view('admin.course.index');
+    }
+
+    public function show(Course $course)
+    {
+        $schedules = $course->load('schedules');
+        $finishedParticipant = \DB::table('learns')
+            ->join('users', 'users.id', '=', 'learns.participant_id')
+            ->leftJoin('user_meta as job_title_meta', function ($join) {
+                $join->on('job_title_meta.user_id', '=', 'users.id')
+                    ->where('job_title_meta.key', '=', 'job_title');
+            })
+            ->where('learns.course_id', $course->id)
+            ->whereNotNull('learns.finished_at')
+            ->select(
+                'users.name',
+                'job_title_meta.value as job_title'
+            )
+            ->get();
+
+        $onGoingParticipant = [];
+
+        return view('admin.course.show', compact('course', 'schedules', 'finishedParticipant', 'onGoingParticipant'));
     }
 }

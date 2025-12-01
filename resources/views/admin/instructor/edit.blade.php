@@ -14,9 +14,11 @@
 
                 {{-- Nama --}}
                 <div class="mb-3">
-                    <label for="name" class="form-label">Nama Instruktur</label>
+                    <label for="name" class="form-label">
+                        Nama Instruktur <span class="text-danger">*</span>
+                    </label>
                     <input type="text" class="form-control @error('name') is-invalid @enderror" name="name"
-                        id="name" value="{{ old('name') ?? $instructor->name }}">
+                        id="name" placeholder="John Doe" value="{{ old('name') ?? $instructor->name }}">
                     @error('name')
                         <small class="invalid-feedback">{{ $message }}</small>
                     @enderror
@@ -24,35 +26,48 @@
 
                 {{-- Email --}}
                 <div class="mb-3">
-                    <label for="email" class="form-label">Email</label>
+                    <label for="email" class="form-label">
+                        Email <span class="text-danger">*</span>
+                    </label>
                     <input type="text" class="form-control @error('email') is-invalid @enderror" name="email"
-                        id="email" value="{{ old('email') ?? $instructor->email }}">
+                        id="email" placeholder="yourmail@example.com" value="{{ old('email') ?? $instructor->email }}">
                     @error('email')
                         <small class="invalid-feedback">{{ $message }}</small>
                     @enderror
                 </div>
 
-                {{-- Password --}}
+                {{-- Password (Opsional) --}}
                 <div class="mb-3">
-                    <label for="password" class="form-label">Password (Opsional)</label>
+                    <label for="password" class="form-label">
+                        Password (Opsional)
+                    </label>
                     <input type="password" class="form-control @error('password') is-invalid @enderror" name="password"
                         id="password" placeholder="Kosongkan jika tidak ingin mengubah">
-                    <small class="text-muted">Kosongkan jika tidak ingin mengubah password.</small>
+
                     @error('password')
                         <small class="invalid-feedback">{{ $message }}</small>
                     @enderror
+
+                    <small class="text-muted d-block">
+                        Gunakan kombinasi huruf dan angka (min. 8 karakter).
+                    </small>
                 </div>
 
-                {{-- Foto --}}
+                {{-- Foto (Opsional) --}}
                 <div class="mb-3">
-                    <label for="image" class="form-label">Foto Instruktur (Opsional)</label>
+                    <label for="image" class="form-label">
+                        Foto Instruktur (Opsional)
+                    </label>
                     <input type="file" class="form-control @error('image') is-invalid @enderror" name="image"
                         id="image">
-                    <small class="text-muted">Kosongkan jika tidak ingin mengubah foto.</small>
 
                     @error('image')
                         <small class="invalid-feedback">{{ $message }}</small>
                     @enderror
+
+                    <small class="text-muted d-block">
+                        Maksimal ukuran file 1 MB. Format diperbolehkan: JPG, PNG.
+                    </small>
                 </div>
 
             </div>

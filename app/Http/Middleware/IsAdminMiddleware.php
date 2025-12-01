@@ -11,22 +11,27 @@ class IsAdminMiddleware
 
     public function handle(Request $request, Closure $next)
     {
-        if ($request->user() && $request->user()->is_admin) {
-            $this->admin = $request->user();
+        $user = $request->user();
 
-            view()->share('admin', $this->admin);
+        if ($user && $user->is_admin) {
+            view()->share('admin', $user);
+
+            // Pastikan tidak loop
+            if (!$request->routeIs('admin.*')) {
+                return to_route('admin.dashboard');
+            }
 
             return $next($request);
         }
 
-        if ($request->user() && $request->user()->is_instructor) {
+        if ($user && $user->is_instructor) {
             return to_route('instructor.dashboard');
         }
 
-        if ($request->user() && $request->user()->is_participant) {
+        if ($user && $user->is_participant) {
             return to_route('home');
         }
 
-        return to_route('sign-in.admin.create');
+        return to_route('sign-in.index');
     }
 }

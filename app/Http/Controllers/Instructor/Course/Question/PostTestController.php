@@ -67,7 +67,6 @@ class PostTestController
             return to_route('instructor.course.show', $course->slug)->with('success', 'Post-Test created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-
             return to_route('instructor.course.show', $course->slug)->with('danger', 'Something went wrong.');
         }
     }
@@ -82,6 +81,7 @@ class PostTestController
 
     public function update(Course $course, Activity $post_test, Request $request)
     {
+        // dd($request->all());
         $request->validate([
             'title' => 'required|string',
             'description' => 'required|string',
@@ -116,6 +116,7 @@ class PostTestController
             return to_route('instructor.course.show', $course->slug)->with('success', 'Post-Test updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
+            dd($th);
 
             return to_route('instructor.course.show', $course->slug)->with('danger', 'Something went wrong.');
         }

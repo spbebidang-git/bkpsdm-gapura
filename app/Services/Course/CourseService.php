@@ -7,15 +7,29 @@ use App\Models\Course\Activity;
 use App\Models\Course\Course;
 use App\Models\Course\Question;
 use App\Models\Course\Schedule;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class CourseService
 {
     public function getRandomCourse()
     {
-        return Course::inRandomOrder()
-            ->limit(8)
+        $now = Carbon::now();
+        $today = $now->toDateString();
+        $currentTime = $now->format('H:i:s');
+
+        return Course::query()
+            ->inRandomOrder()
             ->where('status', 'publish')
+            ->where(function ($q) use ($today, $currentTime) {
+                $q->where('type', '!=', 'schedule')
+                    ->orWhereHas('schedules', function ($query) use ($today, $currentTime) {
+                        $query->whereDate('date', $today)
+                            ->whereTime('time_from', '<=', $currentTime)
+                            ->whereTime('time_to', '>=', $currentTime);
+                    });
+            })
+            ->limit(8)
             ->get()
             ->map(function ($row) {
                 return [
@@ -25,21 +39,34 @@ class CourseService
                     'slug' => $row->slug,
                     'quota' => $row->quota,
                     'thumbnail' => $row->thumbnail_src,
-                    'category' => $row->category->title,
-                    'instructor' => $row->instructor->name,
+                    'category' => optional($row->category)->title,
+                    'instructor' => optional($row->instructor)->name,
                     'total_participant' => $row->total_participant,
                     'status' => $row->status,
                     'star' => $row->getRating()['star'],
-                    'total_participant' => $row->total_participant,
                     'total_passed' => $row->total_passed,
                 ];
             });
     }
 
+
     public function getAllCourse()
     {
-        return Course::OrderBy('id')
+        $now = Carbon::now();
+        $today = $now->toDateString();
+        $currentTime = $now->format('H:i:s');
+
+        return Course::query()
+            ->orderBy('id')
             ->where('status', 'publish')
+            ->where(function ($q) use ($today, $currentTime) {
+                $q->where('type', '!=', 'schedule')
+                    ->orWhereHas('schedules', function ($query) use ($today, $currentTime) {
+                        $query->whereDate('date', $today)
+                            ->whereTime('time_from', '<=', $currentTime)
+                            ->whereTime('time_to', '>=', $currentTime);
+                    });
+            })
             ->get()
             ->map(function ($row) {
                 return [
@@ -50,11 +77,11 @@ class CourseService
                     'slug' => $row->slug,
                     'quota' => $row->quota,
                     'thumbnail' => $row->thumbnail_src,
-                    'category' => $row->category->title,
-                    'instructor' => $row->instructor->name,
+                    'category' => optional($row->category)->title,
+                    'instructor' => optional($row->instructor)->name,
                     'total_participant' => $row->total_participant,
                     'status' => $row->status,
-                    'star' => $row->getRating()['star']
+                    'star' => $row->getRating()['star'],
                 ];
             });
     }

@@ -58,12 +58,25 @@ class LiteratureService
         $literature->sub_title = $request['sub_title'];
         $literature->duration = $request['duration'];
 
-        remove_file(Literature::$directoryDocument . $literature->content);
-        $literature->content = UploadMedia::file($request['content'], Literature::$directoryDocument);
+        // Hanya hapus jika ada file baru di-upload
+        if ($request['content']) {
+
+            // Cek file lama ada atau tidak
+            $oldFilePath = Literature::$directoryDocument . $literature->content;
+
+            if ($literature->content && file_exists(public_path($oldFilePath))) {
+                @unlink(public_path($oldFilePath));
+            }
+
+            // Upload file baru
+            $literature->content = UploadMedia::file($request['content'], Literature::$directoryDocument);
+        }
+
         $literature->save();
 
         return true;
     }
+
 
     public function getLiteratureForEdit($activity)
     {

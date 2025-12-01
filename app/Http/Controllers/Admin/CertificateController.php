@@ -2,42 +2,29 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Resources\Admin\CertificateResource;
-use Illuminate\Http\Request;
+use App\Models\Learn\Learn;
 use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Session;
 
 class CertificateController
 {
     public function index()
     {
         if (request()->ajax()) {
-            $token = Session::get('token');
-
-            $response = Http::withHeaders([
-                'apikey' => env('API_KEY'),
-                'auth' => $token
-            ])->post(env('SSO_BASE_URL') . '/api/get_data_sertifikat')->json();
-
-            $data = [];
-            foreach ($response as $item) {
-                foreach ($item['peserta'] as $item2) {
-                    $data[] = [
-                        'nip' => $item2['nip'],
-                        'sertifikat' => $item2['sertifikat'],
-                        'nama_kegiatan' => $item['nama_kegiatan'],
-                        'penyelenggara' => $item['penyelenggara'],
-                        'tempat_kegiatan' => $item['tempat_kegiatan'],
-                        'tanggal' => $item['tgl_mulai'] . ' - ' . $item['tgl_selesai'],
-                        'status' => $item['status']
+            $response = Learn::with(['course', 'participant'])
+                ->whereNotNull('url_certificate')
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'name' => $row->participant->name,
+                        'course' => $row->course->title,
+                        'url_certificate' => '<a href="' . $row->url_certificate . '" target="_blank" class="btn btn-sm btn-primary">Download Certificate</a>',
                     ];
-                }
-            }
+                });
 
-            return DataTables::of($data)
+            return DataTables::of($response)
                 ->addIndexColumn()
-                ->make();
+                ->rawColumns(['url_certificate'])
+                ->make(true);
         }
 
         return view('admin.certificate.index');

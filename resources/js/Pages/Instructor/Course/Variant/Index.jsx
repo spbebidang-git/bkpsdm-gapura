@@ -12,33 +12,34 @@ const Index = ({ slug, activity, variants }) => {
     return (
         <App>
             <div className="text-center text-2xl font-bold text-gray-700 mb-5">
-                Variant Questions
+                Daftar Variasi Soal
+                <p className="text-sm font-normal max-w-lg mx-auto text-gray-500 mt-2">
+                    Fitur ini digunakan untuk membuat paket - paket variasi pertanyaan. Antar varian pertanyaan diharapkan memiliki jumlah soal yang sama."
+                </p>
             </div>
+
+            {/* INFORMASI ACTIVITY */}
             <div className="max-w-7xl mx-auto bg-gray-100 border overflow-hidden rounded-xl shadow mb-8">
                 <div className="p-5 text-lg font-bold flex justify-between items-center">
-                    Activity
-                    <Link href={`/instructor/course/${slug}`} className="">
-                        <button className="button-secondary">Back</button>
+                    Kegiatan
+                    <Link href={`/instructor/course/${slug}`}>
+                        <button className="button-secondary">Kembali</button>
                     </Link>
                 </div>
+
                 <div className="relative overflow-x-auto max-h-[512px] overflow-auto">
-                    <table className="w-full text-sm text-left rtl:text-right text-gray-500 ">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 ">
+                    <table className="w-full text-sm text-left text-gray-500">
+                        <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                             <tr className="sticky top-0 z-10">
-                                <th
-                                    scope="col"
-                                    className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap"
-                                >
-                                    Title
+                                <th className="px-6 py-3 text-center whitespace-nowrap">
+                                    Judul
                                 </th>
-                                <th
-                                    scope="col"
-                                    className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap"
-                                >
-                                    Description
+                                <th className="px-6 py-3 text-center whitespace-nowrap">
+                                    Deskripsi
                                 </th>
                             </tr>
                         </thead>
+
                         <tbody>
                             <tr className="bg-white border-b">
                                 <td className="px-6 py-4 text-center">
@@ -53,59 +54,44 @@ const Index = ({ slug, activity, variants }) => {
                 </div>
             </div>
 
+            {/* LIST VARIANT */}
             <div className="max-w-7xl mx-auto bg-gray-100 border overflow-hidden rounded-xl shadow">
                 <div className="p-5 text-lg font-bold flex justify-between items-center">
-                    Variant List
+                    Daftar Variasi
                     <Link
                         href={`/instructor/course/${slug}/activity/variant/${activity.activity_id}/create`}
                         className="px-4 py-2 bg-purple-500 text-white rounded-xl shadow text-sm"
                     >
-                        Add New Variant
+                        Tambah Variant Baru
                     </Link>
                 </div>
+
                 <div className="relative overflow-x-auto max-h-[512px] overflow-auto">
-                    <table className="w-full text-sm text-left rtl:text-right text-gray-500 ">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 ">
+                    <table className="w-full text-sm text-left text-gray-500">
+                        <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                             <tr className="sticky top-0 z-10">
-                                <th
-                                    scope="col"
-                                    className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap"
-                                >
+                                <th className="px-6 py-3 text-center whitespace-nowrap">
                                     Variant
                                 </th>
-                                <th
-                                    scope="col"
-                                    className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap"
-                                >
-                                    Code
+                                <th className="px-6 py-3 text-center whitespace-nowrap">
+                                    Kode
                                 </th>
-                                <th
-                                    scope="col"
-                                    className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap"
-                                >
+                                <th className="px-6 py-3 text-center whitespace-nowrap">
                                     Jumlah Soal
                                 </th>
-                                <th
-                                    scope="col"
-                                    className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap"
-                                >
-                                    Acak
+                                <th className="px-6 py-3 text-center whitespace-nowrap">
+                                    Acak Soal
                                 </th>
-                                <th
-                                    scope="col"
-                                    className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap"
-                                >
-                                    Action
+                                <th className="px-6 py-3 text-center whitespace-nowrap">
+                                    Aksi
                                 </th>
                             </tr>
                         </thead>
+
                         <tbody>
                             {variants.length ? (
                                 variants.map((item, index) => (
-                                    <tr
-                                        className="bg-white border-b"
-                                        key={index}
-                                    >
+                                    <tr key={index} className="bg-white border-b">
                                         <td className="px-6 py-4 text-center">
                                             {item.variant}
                                         </td>
@@ -116,7 +102,7 @@ const Index = ({ slug, activity, variants }) => {
                                             {item.question_count}
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            {item.mix}
+                                            {item.mix ? "Ya" : "Tidak"}
                                         </td>
                                         <td>
                                             <div className="flex justify-center items-center gap-2">
@@ -124,9 +110,10 @@ const Index = ({ slug, activity, variants }) => {
                                                     href={`/instructor/course/${slug}/activity/variant/${activity.activity_id}/${item.id}/question-item`}
                                                 >
                                                     <button className="w-32 h-7 text-sm font-medium bg-primary text-white rounded-full shadow">
-                                                        Set Question
+                                                        Atur Soal
                                                     </button>
                                                 </Link>
+
                                                 <Link
                                                     href={`/instructor/course/${slug}/activity/variant/${activity.activity_id}/${item.id}/edit`}
                                                 >
@@ -134,16 +121,14 @@ const Index = ({ slug, activity, variants }) => {
                                                         Edit
                                                     </button>
                                                 </Link>
+
                                                 <button
                                                     onClick={(e) =>
-                                                        handleSubmitDelete(
-                                                            e,
-                                                            item.id
-                                                        )
+                                                        handleSubmitDelete(e, item.id)
                                                     }
                                                     className="button-danger"
                                                 >
-                                                    Delete
+                                                    Hapus
                                                 </button>
                                             </div>
                                         </td>
@@ -151,11 +136,8 @@ const Index = ({ slug, activity, variants }) => {
                                 ))
                             ) : (
                                 <tr className="bg-white border-b">
-                                    <td
-                                        className="p-3 text-center"
-                                        colspan="100%"
-                                    >
-                                        Variant not available.
+                                    <td colSpan="100%" className="p-3 text-center">
+                                        Variant belum tersedia.
                                     </td>
                                 </tr>
                             )}

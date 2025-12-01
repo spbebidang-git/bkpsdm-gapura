@@ -19,7 +19,7 @@ class CertificateController
         $learns = Learn::where('course_id', $course->id)->where('participant_id', Auth::user()->id)->first();
 
         if (!$learns->url_certificate || $learns->url_certificate == '-') {
-            return redirect()->back()->with('danger', 'Sertifikat tidak ditemukan atau belum tersedia.');
+            return redirect()->back()->with('danger', 'Sertifikat dikirim ke SIMPEG, menunggu approval admin');
         }
         return redirect()->back()->with('redirect_url', $learns->url_certificate);
     }

@@ -76,13 +76,13 @@ class CourseController extends Controller
     {
         // dd($this->course->checkEmployeeStatusCourse(Auth::user()->id, $course));
         # check valid employee status
-        // if (!$this->course->checkEmployeeStatusCourse(Auth::user()->id, $course)) {
-        //     return response()->json([
-        //         'status' => 400,
-        //         'message' => 'Kamu tidak memenuhi syarat untuk mengikuti pelatihan ini.',
-        //         'data' => false
-        //     ], 400);
-        // }
+        if (!$this->course->checkEmployeeStatusCourse(Auth::user()->id, $course)) {
+            return response()->json([
+                'status' => 400,
+                'message' => 'Kamu tidak memenuhi syarat untuk mengikuti pelatihan ini.',
+                'data' => false
+            ], 400);
+        }
 
         try {
             DB::beginTransaction();

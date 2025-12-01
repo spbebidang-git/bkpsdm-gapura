@@ -67,7 +67,7 @@ Route::prefix('/instructor')
 
 
         # result
-        Route::get('result', [\App\Http\Controllers\Instructor\Result\ResultController::class, 'index'])->name('result.index');
-        Route::get('result/{course}/post-test', [\App\Http\Controllers\Instructor\Result\ResultController::class, 'postTest'])->name('result.post-test');
-        Route::get('result/{course}', [\App\Http\Controllers\Instructor\Result\ResultController::class, 'show'])->name('result.show');
+        // Route::get('result', [\App\Http\Controllers\Instructor\Result\ResultController::class, 'index'])->name('result.index');
+        // Route::get('result/{course}/post-test', [\App\Http\Controllers\Instructor\Result\ResultController::class, 'postTest'])->name('result.post-test');
+        // Route::get('result/{course}', [\App\Http\Controllers\Instructor\Result\ResultController::class, 'show'])->name('result.show');
     });

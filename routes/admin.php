@@ -23,11 +23,17 @@ Route::prefix('/admin')
         # Course 
         Route::resource('course', \App\Http\Controllers\Admin\CourseController::class)->only('index', 'show');
         # Review
-        Route::resource('review', \App\Http\Controllers\Admin\ReviewController::class);
+        Route::resource('review', \App\Http\Controllers\Admin\ReviewController::class)
+            ->only(['index', 'destroy']);
+        # Help
+        Route::resource('help', \App\Http\Controllers\Admin\HelpController::class)->names('help');
         # Result
         Route::get('/result', [\App\Http\Controllers\Admin\ResultController::class, 'index'])->name('result.index');
         Route::get('/result/post-test/{course:slug}', [\App\Http\Controllers\Admin\ResultController::class, 'postTest'])->name('result.post-test');
         Route::get('/result/{course:slug}', [\App\Http\Controllers\Admin\ResultController::class, 'show'])->name('result.show');
+        # Course Performance
+        Route::get('course-performance', [\App\Http\Controllers\Admin\CoursePerformanceController::class, 'index'])
+            ->name('course-performance.index');
 
         # Management 
         Route::prefix('management')

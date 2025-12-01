@@ -80,7 +80,7 @@ export default function App({ children }) {
                                         Kelas Saya
                                     </Link>
                                 </li>
-                                {/* <li>
+                                <li>
                                     <Link
                                         href="/profile"
                                         className={`block py-2 px-3 md:p-0 rounded md:bg-transparent ${url === '/profile' ? 'text-primary' : 'text-gray-900'
@@ -88,7 +88,7 @@ export default function App({ children }) {
                                     >
                                         Profile
                                     </Link>
-                                </li> */}
+                                </li>
                             </ul>
                         </div>
                     </div>

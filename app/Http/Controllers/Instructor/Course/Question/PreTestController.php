@@ -107,6 +107,7 @@ class PreTestController
                 'activity_id' => $pre_test->id,
                 'type' => 'pre',
                 'description' => $request->description,
+                'min_score' => $request->min_score,
                 'is_loop' => $request->repetable ? 1 : 0
             ]);
 

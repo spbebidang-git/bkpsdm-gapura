@@ -51,7 +51,7 @@ class ImportQuestionController
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('instructor.course.activity.import-question.index', [$course->slug, $activity->id])->with('danger', 'Something went wrong.');
+            return to_route('instructor.course.activity.import-question.index', [$course->slug, $activity->id])->with('danger', $th->getMessage());
         }
     }
 

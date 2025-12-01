@@ -10,18 +10,17 @@ import { useEffect, useState } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
-
-const Edit = ({ slug, activity }) => { // Tambahkan activity untuk membawa data yang akan diedit
-    const { errors } = usePage().props
+const Edit = ({ slug, activity }) => {
+    const { errors } = usePage().props;
 
     const [values, setValues] = useState({
         title: activity?.title || "",
         description: activity?.description || "",
-        instruction: "",
-        min_score: activity?.min_score || 0,
-        is_loop: activity?.is_loop || false,
+        instruction: activity?.instruction || "",
         value: activity?.value || "",
-        timer: activity?.timer || ""
+        timer: activity?.timer || "",
+        min_score: activity?.min_score || 0,
+        is_loop: activity?.is_loop ? true : false,   // ← benar
     });
 
     useEffect(() => {
@@ -29,11 +28,11 @@ const Edit = ({ slug, activity }) => { // Tambahkan activity untuk membawa data 
             setValues({
                 title: activity.title,
                 description: activity.description,
-                min_score: activity.min_score,
                 instruction: activity.instruction,
-                is_loop: activity.is_loop,
                 value: activity.value,
-                timer: activity.timer
+                timer: activity.timer,
+                min_score: activity.min_score,
+                is_loop: activity.is_loop ? true : false,  // ← benar
             });
         }
     }, [activity]);
@@ -42,56 +41,123 @@ const Edit = ({ slug, activity }) => { // Tambahkan activity untuk membawa data 
         const { id, type, value, checked } = e.target;
         setValues((values) => ({
             ...values,
-            [id]: type === 'checkbox' ? checked : value,
+            [id]: type === "checkbox" ? checked : value,
         }));
     }
 
     function handleSubmit(e) {
         e.preventDefault();
-        router.put(`/instructor/course/${slug}/activity/post-test/${activity.id}`, values); // Menggunakan PUT untuk edit
+        router.put(`/instructor/course/${slug}/activity/post-test/${activity.id}`, values);
     }
 
     return (
         <App>
             <NumberActivity number={3} />
-            <TitleActivity number={3} title={'Edit Post-Test / Quiz'} />
+            <TitleActivity number={3} title={"Edit Post-Test / Kuis"} />
 
             <form onSubmit={handleSubmit}>
                 <div className="max-w-2xl mx-auto shadow bg-white rounded-xl">
                     <div className="p-6">
-                        <FormInput title={'title'} isRequired={true} onChange={handleChange} value={values.title} error={errors.title} />
-                        <FormTextArea title={'description'} isRequired={true} onChange={handleChange} value={values.description} error={errors.description} />
-                        <FormInput title={'min score'} isRequired={true} onChange={handleChange} value={values.min_score} error={errors.min_score} />
-                        <FormInput title={'value'} isRequired={true} onChange={handleChange} value={values.value} error={errors.value} />
-                        <FormInput title={'timer'} isRequired={true} onChange={handleChange} value={values.timer} error={errors.timer} />
+
+                        {/* JUDUL */}
+                        <FormInput
+                            title={"title"}
+                            label={"Judul Post-Test / Kuis"}
+                            isRequired={true}
+                            onChange={handleChange}
+                            value={values.title}
+                            error={errors.title}
+                            small={"Judul harus jelas dan sesuai dengan materi yang diuji. Contoh: 'Post-Test Bab 2'."}
+                        />
+
+                        {/* DESKRIPSI */}
+                        <FormTextArea
+                            title={"description"}
+                            label={"Deskripsi"}
+                            isRequired={true}
+                            onChange={handleChange}
+                            value={values.description}
+                            error={errors.description}
+                            small={"Deskripsikan secara singkat tujuan post-test atau materi yang diuji."}
+                        />
+
+                        {/* NILAI */}
+                        <FormInput
+                            title={"value"}
+                            label={"Bobot Nilai"}
+                            isRequired={true}
+                            type="number"
+                            onChange={handleChange}
+                            value={values.value}
+                            error={errors.value}
+                            small={"Masukkan bobot nilai untuk post-test (contoh: 20, 50, 100)."}
+                        />
+
+                        {/* TIMER */}
+                        <FormInput
+                            title={"timer"}
+                            label={"Durasi Waktu (Menit)"}
+                            isRequired={true}
+                            type="number"
+                            onChange={handleChange}
+                            value={values.timer}
+                            error={errors.timer}
+                            placeholder={"Contoh: 30"}
+                            small={"Durasi pengerjaan post-test dalam menit. Contoh: 15 = 15 menit."}
+                        />
+
+                        {/* INSTRUKSI */}
                         <div className="h-auto mb-3">
-                            <FormLabel title={'instruction'} />
+                            <FormLabel title={"Instruksi Soal"} />
+
                             <ReactQuill
                                 value={values.instruction}
-                                onChange={(value) => setValues((prevValues) => ({
-                                    ...prevValues,
-                                    instruction: value
-                                }))}
+                                onChange={(value) =>
+                                    setValues((prev) => ({
+                                        ...prev,
+                                        instruction: value,
+                                    }))
+                                }
                             />
+
+                            <small className="text-gray-500 text-xs mt-1 block">
+                                Tulis instruksi pengerjaan dengan jelas, seperti aturan menjawab,
+                                larangan, atau petunjuk teknis lainnya.
+                            </small>
                         </div>
+
+                        {/* NILAI MINIMUM */}
+                        <FormInput
+                            title={"min_score"}
+                            label={"Nilai Minimum Kelulusan"}
+                            isRequired={true}
+                            type="number"
+                            onChange={handleChange}
+                            value={values.min_score}
+                            error={errors.min_score}
+                            small={"Nilai minimal agar peserta dinyatakan lulus. Contoh: 70."}
+                        />
+
+                        {/* REPEATABLE */}
                         <FormCheckbox
                             id="is_loop"
                             title={'Pengulangan? (Maksimal pengulangan untuk post-test adalah 3x)'}
                             onChange={handleChange}
                             checked={values.is_loop}
                         />
+
                     </div>
                 </div>
 
                 <div className="max-w-80 mx-auto gap-3 flex justify-center mt-8">
-                    <button className="button-primary">Save</button>
+                    <button className="button-primary">Simpan Perubahan</button>
                     <Link className="w-full" href={`/instructor/course/${slug}/activity`}>
-                        <button className="button-secondary">Back</button>
+                        <button className="button-secondary" type="button">Kembali</button>
                     </Link>
                 </div>
             </form>
         </App>
     );
-}
+};
 
 export default Edit;

@@ -1,103 +1,60 @@
-import { useState } from "react";
-import { toast, ToastContainer } from "react-toastify";
-import App from "../../Layouts/App";
-
 import StarRating from "@/Components/StarRating";
 import { Link, usePage } from "@inertiajs/react";
+import { useState } from "react";
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import App from "../../Layouts/App";
 
-const Show = ({ course, schedules, reviews, rating }) => {
+const Show = ({ course, schedules, reviews = [], rating }) => {
     const [activeSchedules, setActiveSchedules] = useState([]);
+    const [loadingScheduleId, setLoadingScheduleId] = useState(null);
 
     const { auth } = usePage().props;
 
-    const [loadingScheduleId, setLoadingScheduleId] = useState(null);
-
-    // const handleActivation = (e, scheduleId) => {
-    //     e.preventDefault();
-    //     setLoadingScheduleId(scheduleId); // 🔄 start loading
-
-    //     e.preventDefault();
-    //     setLoadingScheduleId(scheduleId);
-
-    //     router.post(`/course/${course.slug}/${scheduleId}`, [], {
-    //         preserveScroll: true, // ✅ biar tidak scroll ke atas
-    //         onSuccess: () => {
-    //             setActiveSchedules((prev) => [...prev, scheduleId]);
-    //             setLoadingScheduleId(null);
-    //         },
-    //         onError: () => {
-    //             console.error("Gagal aktivasi");
-    //             setLoadingScheduleId(null);
-    //         },
-    //     });
-    // };
-
-    // const handleActivation = async (e, scheduleId) => {
-    //     e.preventDefault();
-    //     setLoadingScheduleId(scheduleId);
-
-    //     if (!auth || !auth.user) {
-    //         toast.warning("Silakan login terlebih dahulu untuk mengaktivasi kelas.");
-    //         router.visit('/login'); // Redirect menggunakan Inertia
-    //         return;
-    //     }
-
-    //     try {
-    //         const response = await axios.post(`/course/${course.slug}/${scheduleId}`);
-    //         console.log(response);
-    //         setActiveSchedules((prev) => [...prev, scheduleId]);
-    //         setLoadingScheduleId(null);
-    //         toast.success("Kelas berhasil diaktivasi!");
-    //     } catch (error) {
-    //         console.error(error);
-    //         toast.error("Aktivasi gagal. Coba lagi.");
-    //         setLoadingScheduleId(null);
-    //     }
-    // };
+    // 🔹 Pagination review
+    const [currentPage, setCurrentPage] = useState(1);
+    const reviewsPerPage = 5;
+    const totalPages = Math.ceil(reviews.length / reviewsPerPage);
+    const indexOfLast = currentPage * reviewsPerPage;
+    const indexOfFirst = indexOfLast - reviewsPerPage;
+    const currentReviews = reviews.slice(indexOfFirst, indexOfLast);
 
     const handleActivation = (e, scheduleId) => {
         e.preventDefault();
         setLoadingScheduleId(scheduleId);
 
-        axios.post(`/course/${course.slug}/${scheduleId}`)
+        axios
+            .post(`/course/${course.slug}/${scheduleId}`)
             .then((res) => {
-                console.log(res)
+                console.log(res);
                 setActiveSchedules((prev) => [...prev, scheduleId]);
                 toast.success("Berhasil!");
             })
-            .catch(error => {
-                // if (error.response && error.response.status === 409 && error.response.data.redirect) {
-                //     window.location.href = error.response.data.redirect;
-                // }
-
-                // if employee status not valid 
-                if (error.response.status == 400) {
-                    // toast.success("Berhasil!");
-
-                    // toast.error(error.response.data.message)
+            .catch((error) => {
+                if (error.response?.status === 400) {
+                    toast.error(error.response.data.message || "Aktivasi gagal.");
                 }
             })
             .finally(() => {
-                setLoadingScheduleId(null); // Tetap jalan
+                setLoadingScheduleId(null);
             });
     };
-
 
     return (
         <App>
             <div className="max-w-7xl mx-auto p-6">
                 <ToastContainer />
+
                 {/* Breadcrumb */}
-                <nav class="flex mb-4" aria-label="Breadcrumb">
-                    <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
-                        <li class="inline-flex items-center">
+                <nav className="flex mb-4" aria-label="Breadcrumb">
+                    <ol className="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+                        <li className="inline-flex items-center">
                             <a
                                 href="#"
-                                class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white"
+                                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
                             >
                                 <svg
-                                    class="w-3 h-3 me-2.5"
+                                    className="w-3 h-3 me-2.5"
                                     aria-hidden="true"
                                     xmlns="http://www.w3.org/2000/svg"
                                     fill="currentColor"
@@ -109,48 +66,46 @@ const Show = ({ course, schedules, reviews, rating }) => {
                             </a>
                         </li>
                         <li>
-                            <div class="flex items-center">
+                            <div className="flex items-center">
                                 <svg
-                                    class="rtl:rotate-180 w-3 h-3 text-gray-400 mx-1"
-                                    aria-hidden="true"
+                                    className="rtl:rotate-180 w-3 h-3 text-gray-400 mx-1"
                                     xmlns="http://www.w3.org/2000/svg"
                                     fill="none"
                                     viewBox="0 0 6 10"
                                 >
                                     <path
                                         stroke="currentColor"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
                                         d="m1 9 4-4-4-4"
                                     />
                                 </svg>
                                 <a
                                     href="#"
-                                    class="ms-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ms-2 dark:text-gray-400 dark:hover:text-white"
+                                    className="ms-1 text-sm font-medium text-gray-700 hover:text-blue-600"
                                 >
                                     Materi Pilihan
                                 </a>
                             </div>
                         </li>
                         <li aria-current="page">
-                            <div class="flex items-center">
+                            <div className="flex items-center">
                                 <svg
-                                    class="rtl:rotate-180 w-3 h-3 text-gray-400 mx-1"
-                                    aria-hidden="true"
+                                    className="rtl:rotate-180 w-3 h-3 text-gray-400 mx-1"
                                     xmlns="http://www.w3.org/2000/svg"
                                     fill="none"
                                     viewBox="0 0 6 10"
                                 >
                                     <path
                                         stroke="currentColor"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
                                         d="m1 9 4-4-4-4"
                                     />
                                 </svg>
-                                <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400 capitalize">
+                                <span className="ms-1 text-sm font-medium text-gray-500 capitalize">
                                     {course.title}
                                 </span>
                             </div>
@@ -161,9 +116,8 @@ const Show = ({ course, schedules, reviews, rating }) => {
                 {/* Course */}
                 <div className="grid grid-cols-3 gap-5 mb-5">
                     <div className="col-span-3 xl:col-span-1">
-
                         <div className="h-48 w-full rounded-lg overflow-hidden shadow relative">
-                            <div className="absolute top-2.5 right-2.5 bg-secondary text-white text-[10px] font-bold text-sm px-2 rounded">
+                            <div className="absolute top-2.5 right-2.5 bg-secondary text-white text-[10px] font-bold px-2 rounded">
                                 {course.employee_status}
                             </div>
                             <img
@@ -205,6 +159,7 @@ const Show = ({ course, schedules, reviews, rating }) => {
                         </div>
                     </div>
                 </div>
+
                 {/* Jadwal Kegiatan */}
                 <div className="bg-white p-6 rounded-xl shadow mb-5">
                     <div className="text-lg font-bold mb-5">
@@ -213,13 +168,12 @@ const Show = ({ course, schedules, reviews, rating }) => {
                     <div className="ring-8 ring-teal-200 rounded-xl overflow-hidden shadow">
                         {schedules.map((item, index) => {
                             return (
-                                <div className="shadow overflow-hidden">
+                                <div key={index} className="shadow overflow-hidden">
                                     <div className="px-5 border-b-2 pb-4 font-medium xl:text-lg flex flex-col xl:flex-row gap-3 xl:justify-between items-center my-4">
                                         {course.title}
                                         <div>
-                                            {activeSchedules.includes(
-                                                item.id
-                                            ) || item.is_active ? (
+                                            {activeSchedules.includes(item.id) ||
+                                                item.is_active ? (
                                                 <Link href={`/my-course`}>
                                                     <button className="button-primary">
                                                         Lihat Kelas
@@ -228,10 +182,7 @@ const Show = ({ course, schedules, reviews, rating }) => {
                                             ) : (
                                                 <form
                                                     onSubmit={(e) =>
-                                                        handleActivation(
-                                                            e,
-                                                            item.id
-                                                        )
+                                                        handleActivation(e, item.id)
                                                     }
                                                 >
                                                     <button
@@ -280,33 +231,31 @@ const Show = ({ course, schedules, reviews, rating }) => {
                                         </div>
                                     </div>
                                     <div className="mb-4 px-5 grid grid-cols-4 gap-5">
-                                        <div className="col-span-4 xl:col-span-1 flex items-center gap-1.5  text-sm text-gray-600 font-medium">
+                                        <div className="col-span-4 xl:col-span-1 flex items-center gap-1.5 text-sm text-gray-600 font-medium">
                                             <box-icon
                                                 name="calendar"
                                                 color="#5eead4"
                                                 size="sm"
                                             ></box-icon>
-                                            <div className="">{item.date}</div>
+                                            <div>{item.date}</div>
                                         </div>
-                                        <div className="col-span-4 xl:col-span-1 flex items-center gap-1.5  text-sm text-gray-600 font-medium">
+                                        <div className="col-span-4 xl:col-span-1 flex items-center gap-1.5 text-sm text-gray-600 font-medium">
                                             <box-icon
                                                 name="time"
                                                 color="#5eead4"
                                                 size="sm"
                                             ></box-icon>
-                                            <div className="">{item.time}</div>
+                                            <div>{item.time}</div>
                                         </div>
-                                        <div className="col-span-4 xl:col-span-1 flex items-center gap-1.5  text-sm text-gray-600 font-medium">
+                                        <div className="col-span-4 xl:col-span-1 flex items-center gap-1.5 text-sm text-gray-600 font-medium">
                                             <box-icon
                                                 name="user-circle"
                                                 color="#5eead4"
                                                 size="sm"
                                             ></box-icon>
-                                            <div className="">
-                                                {course.instructor}
-                                            </div>
+                                            <div>{course.instructor}</div>
                                         </div>
-                                        <div className="col-span-4 xl:col-span-1 flex items-center gap-1.5  text-sm text-gray-600 font-medium">
+                                        <div className="col-span-4 xl:col-span-1 flex items-center gap-1.5 text-sm text-gray-600 font-medium">
                                             <box-icon
                                                 name="check-circle"
                                                 color="#5eead4"
@@ -330,13 +279,13 @@ const Show = ({ course, schedules, reviews, rating }) => {
                         <div className="text-lg font-bold mb-3">
                             Teaser Video
                         </div>
-                        <div className=" flex justify-center">
+                        <div className="flex justify-center">
                             <div className="w-full aspect-video xl:h-[512px] rounded-xl shadow overflow-hidden">
                                 <iframe
                                     src={course.teaser_video}
                                     width="100%"
                                     height="100%"
-                                    title="PDF Viewer"
+                                    title="Teaser Video"
                                 ></iframe>
                             </div>
                         </div>
@@ -351,39 +300,84 @@ const Show = ({ course, schedules, reviews, rating }) => {
                     </div>
                 </div>
 
-                {/* Description */}
+                {/* Ulasan Peserta */}
                 <div className="bg-white p-6 rounded-xl shadow">
                     <div className="text-lg font-bold mb-5">Ulasan Peserta</div>
-                    {reviews ? (
-                        reviews.map((item, index) => {
+
+                    {reviews && reviews.length > 0 ? (
+                        (() => {
+                            // --- PAGINATION CONFIG ---
+                            const itemsPerPage = 25; // ✅ tampilkan 25 ulasan per halaman
+                            const totalPages = Math.ceil(reviews.length / itemsPerPage);
+                            const [currentPage, setCurrentPage] = useState(1);
+                            const startIndex = (currentPage - 1) * itemsPerPage;
+                            const currentReviews = reviews.slice(startIndex, startIndex + itemsPerPage);
+
                             return (
-                                <div className="text-gray-700 pb-4 mb-4">
-                                    <div className="flex flex-col xl:flex-row gap-1.5 items-start xl:items-center mb-1">
-                                        <div className="">
-                                            <StarRating value={item.star} />
+                                <>
+                                    {currentReviews.map((item, index) => (
+                                        <div key={index} className="text-gray-700 pb-4 mb-4 border-b last:border-none">
+                                            <div className="flex flex-col xl:flex-row gap-1.5 items-start xl:items-center mb-1">
+                                                <div>
+                                                    <StarRating value={item.star} />
+                                                </div>
+                                                <div className="text-gray-700">
+                                                    <span className="font-bold">{item.name}</span>{" "}
+                                                    |{" "}
+                                                    <span className="text-gray-500 text-sm italic">
+                                                        {item.created_at}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="text-gray-600">{item.description}</div>
                                         </div>
-                                        <div className="text-gray-700">
-                                            <span className="font-bold">
-                                                {item.name}
-                                            </span>{" "}
-                                            |{" "}
-                                            <span className="text-gray-500 text-sm italic">
-                                                {item.created_at}
-                                            </span>
+                                    ))}
+
+                                    {/* Pagination */}
+                                    {totalPages > 1 && (
+                                        <div className="mt-4">
+                                            <div className="flex justify-center flex-wrap gap-2">
+                                                <button
+                                                    onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                                                    disabled={currentPage === 1}
+                                                    className="px-3 py-1 text-sm rounded border disabled:opacity-50 hover:bg-gray-100"
+                                                >
+                                                    &laquo; Prev
+                                                </button>
+
+                                                {Array.from({ length: totalPages }, (_, i) => (
+                                                    <button
+                                                        key={i}
+                                                        onClick={() => setCurrentPage(i + 1)}
+                                                        className={`px-3 py-1 text-sm rounded border transition-colors duration-200 ${currentPage === i + 1
+                                                                ? "bg-teal-500 text-white border-teal-500"
+                                                                : "hover:bg-gray-100"
+                                                            }`}
+                                                    >
+                                                        {i + 1}
+                                                    </button>
+                                                ))}
+
+                                                <button
+                                                    onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                                                    disabled={currentPage === totalPages}
+                                                    className="px-3 py-1 text-sm rounded border disabled:opacity-50 hover:bg-gray-100"
+                                                >
+                                                    Next &raquo;
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="text-gray-600">
-                                        {item.description}
-                                    </div>
-                                </div>
+                                    )}
+                                </>
                             );
-                        })
+                        })()
                     ) : (
                         <div className="text-center border-2 p-5 text-gray-600 rounded-xl">
                             Ulasan peserta belum tersedia.
                         </div>
                     )}
                 </div>
+
             </div>
         </App>
     );

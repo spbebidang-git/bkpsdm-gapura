@@ -5,6 +5,7 @@
 /public/storage
 /public/build/*
 /public/assets/media/documents/*
+/public/assets/media/images/managements/*
 /storage/*.key
 /vendor
 /public/assets/media/tasks/*

@@ -24,9 +24,9 @@ export default function App({ children }) {
                         {/* User auth & hamburger */}
                         <div className="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
                             {auth.user?.name ? (
-                                <Link href="/dashboard">
+                                <a href="/dashboard">
                                     <button className="button-primary">Dashboard</button>
-                                </Link>
+                                </a>
                             ) : (
                                 <Link href="/sign-in">
                                     <button className="button-primary">Sign In</button>
@@ -83,7 +83,7 @@ export default function App({ children }) {
                                 </li>
                                 <li>
                                     <Link
-                                        href="/contact"
+                                        href="/help"
                                         className={`block py-2 px-3 md:p-0 ${url === '/contact' ? 'text-primary' : 'text-gray-900'}`}
                                     >
                                         Bantuan

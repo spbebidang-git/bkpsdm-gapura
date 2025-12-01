@@ -15,7 +15,7 @@ class ResultService
                 $join->on('nip_meta.user_id', '=', 'users.id')->where('nip_meta.key', '=', 'nip');
             })
             ->leftJoin('user_meta as jabatan_meta', function ($join) {
-                $join->on('jabatan_meta.user_id', '=', 'users.id')->where('jabatan_meta.key', '=', 'jabatan');
+                $join->on('jabatan_meta.user_id', '=', 'users.id')->where('jabatan_meta.key', '=', 'nama_jabatan');
             })
             ->join('activities', function ($join) {
                 $join->on('activities.course_id', '=', 'learns.course_id')

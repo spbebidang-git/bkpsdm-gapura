@@ -27,6 +27,6 @@ class IsInstructorMiddleware
             return to_route('home');
         }
 
-        return to_route('sign-in.instructor.create');
+        return to_route('sign-in.index');
     }
 }

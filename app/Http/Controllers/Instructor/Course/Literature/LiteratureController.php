@@ -110,7 +110,6 @@ class LiteratureController
             return to_route('instructor.course.show', $course->slug)->with('success', 'Literature updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-
             return to_route('instructor.course.show', $course->slug)->with('danger', 'Something went wrong.');
         }
     }

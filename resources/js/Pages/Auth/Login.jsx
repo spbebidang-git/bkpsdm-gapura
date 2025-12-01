@@ -1,92 +1,179 @@
-import Checkbox from '@/Components/Checkbox';
-import GuestLayout from '@/Layouts/GuestLayout';
-import InputError from '@/Components/InputError';
-import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import { Head, Link, useForm } from '@inertiajs/react';
+import FlashMessageToast from "@/Components/FlashMessageToast";
+import FormInput from "@/Components/FormInput";
+import { Link, useForm, usePage } from "@inertiajs/react";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { Bounce, toast } from "react-toastify";
 
-export default function Login({ status, canResetPassword }) {
-    const { data, setData, post, processing, errors, reset } = useForm({
-        email: '',
-        password: '',
-        remember: false,
+const Login = () => {
+    const { site } = usePage().props;
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [captchaUrl, setCaptchaUrl] = useState("");
+    const [captchaInput, setCaptchaInput] = useState("");
+
+    const { data, setData, post, processing, errors } = useForm({
+        username: "",
+        password: "",
+        captcha: "",
     });
 
-    const submit = (e) => {
-        e.preventDefault();
+    useEffect(() => {
+        fetchCaptcha();
+    }, []);
 
-        post(route('login'), {
-            onFinish: () => reset('password'),
+    const fetchCaptcha = async () => {
+        try {
+            const res = await axios.get("/captcha-url");
+            setCaptchaUrl(res.data.captcha);
+            setCaptchaInput("");
+            setData("captcha", "");
+        } catch (err) {
+            console.error("Error fetching captcha:", err);
+        }
+    };
+
+    const handleChange = (e) => {
+        const key = e.target.id;
+        const value = e.target.value;
+        setData(key, value);
+    };
+
+    const handleCaptchaChange = (e) => {
+        const value = e.target.value;
+        setCaptchaInput(value);
+        setData("captcha", value);
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        post("/sign-in", {
+            onSuccess: (page) => {
+                // Cek apakah server memberi URL redirect ke luar Inertia
+                if (page.props.redirect_url) {
+                    window.location.href = page.props.redirect_url; // 🔥 paksa reload
+                }
+            },
+            onError: (errors) => {
+                toast.error(
+                    errors.danger ||
+                    errors.email_or_username ||
+                    "Login gagal.",
+                    {
+                        position: "top-right",
+                        autoClose: 3000,
+                        theme: "colored",
+                        transition: Bounce,
+                    }
+                );
+                fetchCaptcha();
+            },
         });
+
     };
 
     return (
-        <GuestLayout>
-            <Head title="Log in" />
+        <section className="min-h-screen flex flex-col bg-gray-100">
+            <FlashMessageToast />
+            <div className="bg-primary h-2"></div>
 
-            {status && <div className="mb-4 font-medium text-sm text-green-600">{status}</div>}
+            <div className="p-5 xl:p-0 flex-1 flex flex-col justify-center items-center">
+                <Link href="/" className="flex items-center max-w-56 mb-6 text-2xl font-semibold text-gray-900">
+                    <img src={site.logo} alt="Logo" className="w-full h-full object-fill" />
+                </Link>
 
-            <form onSubmit={submit}>
-                <div>
-                    <InputLabel htmlFor="email" value="Email" />
+                <div className="w-full bg-white rounded-lg shadow sm:max-w-md xl:p-0">
+                    <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
+                        <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">
+                            Sign In
+                        </h1>
 
-                    <TextInput
-                        id="email"
-                        type="email"
-                        name="email"
-                        value={data.email}
-                        className="mt-1 block w-full"
-                        autoComplete="username"
-                        isFocused={true}
-                        onChange={(e) => setData('email', e.target.value)}
-                    />
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <FormInput
+                                title="username"
+                                id="username"
+                                isRequired
+                                placeholder="Masukkan email atau NIP"
+                                value={data.username}
+                                onChange={handleChange}
+                                error={errors.username}
+                            />
 
-                    <InputError message={errors.email} className="mt-2" />
+                            <div>
+                                <label htmlFor="password" className="block mb-1 text-sm font-medium text-gray-900">
+                                    Password <span className="text-red-500">*</span>
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        id="password"
+                                        type={showPassword ? "text" : "password"}
+                                        value={data.password}
+                                        onChange={handleChange}
+                                        placeholder="********"
+                                        className={`form-control w-full pr-10 ${errors.password ? "border-red-500" : ""
+                                            }`}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-600 text-sm focus:outline-none"
+                                    >
+                                        {showPassword ? "Hide" : "Show"}
+                                    </button>
+                                </div>
+                                {errors.password && (
+                                    <div className="mt-1 text-red-500 text-sm">
+                                        {errors.password}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex-1 border border-gray-300 shadow flex items-center rounded-xl overflow-hidden">
+                                        <img
+                                            onClick={fetchCaptcha}
+                                            src={captchaUrl}
+                                            alt="captcha"
+                                            className="w-full h-full cursor-pointer"
+                                        />
+                                    </div>
+                                    <div className="w-1/3">
+                                        <input
+                                            type="text"
+                                            id="captcha"
+                                            value={captchaInput}
+                                            onChange={handleCaptchaChange}
+                                            placeholder="CAPTCHA"
+                                            className={`form-control ${errors.captcha ? "border-red-500" : ""
+                                                }`}
+                                        />
+                                    </div>
+                                </div>
+                                {errors.captcha && (
+                                    <div className="mt-1 text-red-500 text-sm">
+                                        {errors.captcha}
+                                    </div>
+                                )}
+                                <small className="text-gray-600 italic">
+                                    Klik gambar untuk refresh CAPTCHA.
+                                </small>
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="button-primary w-full mt-2"
+                                disabled={processing}
+                            >
+                                {processing ? "Please wait..." : "Sign In"}
+                            </button>
+                        </form>
+                    </div>
                 </div>
-
-                <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
-
-                    <TextInput
-                        id="password"
-                        type="password"
-                        name="password"
-                        value={data.password}
-                        className="mt-1 block w-full"
-                        autoComplete="current-password"
-                        onChange={(e) => setData('password', e.target.value)}
-                    />
-
-                    <InputError message={errors.password} className="mt-2" />
-                </div>
-
-                <div className="block mt-4">
-                    <label className="flex items-center">
-                        <Checkbox
-                            name="remember"
-                            checked={data.remember}
-                            onChange={(e) => setData('remember', e.target.checked)}
-                        />
-                        <span className="ms-2 text-sm text-gray-600 dark:text-gray-400">Remember me</span>
-                    </label>
-                </div>
-
-                <div className="flex items-center justify-end mt-4">
-                    {canResetPassword && (
-                        <Link
-                            href={route('password.request')}
-                            className="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
-                        >
-                            Forgot your password?
-                        </Link>
-                    )}
-
-                    <PrimaryButton className="ms-4" disabled={processing}>
-                        Log in
-                    </PrimaryButton>
-                </div>
-            </form>
-        </GuestLayout>
+            </div>
+        </section>
     );
-}
+};
+
+export default Login;

@@ -12,6 +12,17 @@ class ProfileController
 {
     public function index()
     {
-        return Inertia::render('Participant/Profile/Index');
+        $user = request()->user();
+
+        $profile = [
+            'nip' => get_user_meta($user->id, 'nip') ? get_user_meta($user->id, 'nip') : '-',
+            'name' => $user->name,
+            'status_pegawai' => get_user_meta($user->id, 'status_pegawai') ? get_user_meta($user->id, 'status_pegawai') : '-',
+            'jabatan' => get_user_meta($user->id, 'nama_jabatan') ? get_user_meta($user->id, 'nama_jabatan') : '-',
+        ];
+
+        return Inertia::render('Participant/Profile/Index', [
+            'profile' => $profile,
+        ]);
     }
 }

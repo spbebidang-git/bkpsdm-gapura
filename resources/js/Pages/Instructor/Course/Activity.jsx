@@ -11,7 +11,7 @@ const Activity = ({ slug }) => {
     return (
         <App>
             <NumberActivity number={activeSection ? 2 : 1} />
-            <TitleActivity number={activeSection ? 2 : 1} title={activeSection ? 'Activity Question' : 'All Activity'} />
+            <TitleActivity number={activeSection ? 2 : 1} title={activeSection ? 'Kegiatan Pertanyaan' : 'Semua Kegiatan'} />
 
             {!activeSection && (
                 <div className="max-w-6xl mx-auto grid grid-cols-4 gap-5">

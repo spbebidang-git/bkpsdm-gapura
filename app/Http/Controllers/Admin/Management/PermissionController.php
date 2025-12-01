@@ -106,20 +106,4 @@ class PermissionController
             return to_route('admin.management.permission.index')->with('danger', 'Something went wrong.');
         }
     }
-
-    public function import()
-    {
-        return view('admin.management.permission.import');
-    }
-
-    public function storeImport(Request $request)
-    {
-        $request->validate([
-            'file' => 'required|mimes:xlsx'
-        ]);
-
-        Excel::import(new PermissionImport(), $request->file);
-
-        return to_route('admin.management.permission.index')->with('success', 'Permission has been import');
-    }
 }

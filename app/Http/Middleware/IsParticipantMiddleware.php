@@ -25,7 +25,7 @@ class IsParticipantMiddleware
             return $this->redirectResponse($request, route('instructor.dashboard'));
         }
 
-        return $this->redirectResponse($request, route('sign-in.participant.create'));
+        return $this->redirectResponse($request, route('sign-in.index'));
     }
 
     protected function redirectResponse(Request $request, $route)

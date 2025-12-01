@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Models\User;
 use App\Helper\UploadMedia;
 use Illuminate\Http\Request;
-use GuzzleHttp\Promise\Create;
 use App\Services\User\UserService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -17,7 +16,7 @@ class InstructorController
 
     public function __construct(UserService $userService)
     {
-        $this->user =  $userService;
+        $this->user = $userService;
     }
 
     public function index()
@@ -26,16 +25,14 @@ class InstructorController
             return DataTables::of($this->user->getInstructor())
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
-                    $btn = '<div class="d-flex justify-content-center gap-2">';
-                    $btn .= '<a class="btn btn-sm btn-warning" href=' . route('admin.instructor.edit', $row->id) . '>';
+                    $btn  = '<div class="d-flex justify-content-center gap-2">';
+                    $btn .= '<a class="btn btn-sm btn-warning" href="' . route('admin.instructor.edit', $row->id) . '">';
                     $btn .= '<i class="bx bx-edit"></i></a>';
                     $btn .= '<form action="' . route('admin.instructor.destroy', $row->id) . '" method="POST" onsubmit="return confirmDelete(event)">';
-                    $btn .= '<input type="hidden" name="_token" value="' . csrf_token() . '">';
-                    $btn .= '<input type="hidden" name="_method" value="DELETE">';
-                    $btn .= '<button class="btn btn-sm btn-danger">';
-                    $btn .= '<i class="bx bx-trash"></i></button>';
-                    $btn .= '</form>';
-                    $btn .= '</div>';
+                    $btn .= csrf_field();
+                    $btn .= method_field('DELETE');
+                    $btn .= '<button class="btn btn-sm btn-danger"><i class="bx bx-trash"></i></button>';
+                    $btn .= '</form></div>';
                     return $btn;
                 })
                 ->addColumn('image', function ($row) {
@@ -56,18 +53,18 @@ class InstructorController
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|string|email',
+            'name'     => 'required|string',
+            'email'    => 'required|string|email',
             'password' => 'required|string|min:8',
-            'image' => 'nullable|image|mimes:png,jpg|max:512',
+            'image'    => 'nullable|image|mimes:png,jpg|max:512',
         ]);
 
         try {
             DB::beginTransaction();
 
             $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
+                'name'     => $request->name,
+                'email'    => $request->email,
                 'password' => Hash::make($request->password),
             ]);
 
@@ -80,11 +77,13 @@ class InstructorController
 
             DB::commit();
 
-            return to_route('admin.instructor.index')->with('success', 'Instructor has been saved.');
+            return to_route('admin.instructor.index')
+                ->with('success', 'Instruktur berhasil disimpan.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('admin.instructor.index')->with('danger', 'Something went wrong.');
+            return to_route('admin.instructor.index')
+                ->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
 
@@ -96,17 +95,17 @@ class InstructorController
     public function update(Request $request, User $instructor)
     {
         $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|string|email',
+            'name'     => 'required|string',
+            'email'    => 'required|string|email',
             'password' => 'nullable|string|min:8',
-            'image' => 'nullable|image|mimes:png,jpg|max:512',
+            'image'    => 'nullable|image|mimes:png,jpg|max:512',
         ]);
 
         try {
             DB::beginTransaction();
 
             $instructor->update([
-                'name' => $request->name,
+                'name'  => $request->name,
                 'email' => $request->email,
             ]);
 
@@ -122,11 +121,13 @@ class InstructorController
 
             DB::commit();
 
-            return to_route('admin.instructor.index')->with('success', 'Instructor has been updated.');
+            return to_route('admin.instructor.index')
+                ->with('success', 'Instruktur berhasil diperbarui.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('admin.instructor.index')->with('danger', 'Something went wrong.');
+            return to_route('admin.instructor.index')
+                ->with('danger', 'Terjadi kesalahan saat memperbarui data.');
         }
     }
 
@@ -139,11 +140,13 @@ class InstructorController
 
             DB::commit();
 
-            return to_route('admin.instructor.index')->with('success', 'Instructor has been deleted.');
+            return to_route('admin.instructor.index')
+                ->with('success', 'Instruktur berhasil dihapus.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('admin.instructor.index')->with('danger', 'Something went wrong.');
+            return to_route('admin.instructor.index')
+                ->with('danger', 'Terjadi kesalahan saat menghapus data.');
         }
     }
 }

@@ -1,4 +1,4 @@
-<?php
+    <?php
 
 namespace App\Http\Controllers\Web;
 
@@ -26,255 +26,234 @@ class AuthController
 
     public function captcha()
     {
-        return response()->json([
-            'captcha' => Captcha::src('default')
-        ]);
+        return response()->json(['captcha' => Captcha::src('default')]);
     }
 
-    public function createAdmin()
+    public function index()
     {
-        return view('admin.login');
+        return Inertia::render('Auth/Login');
     }
 
-    public function storeAdmin(Request $request)
+    public function store(Request $request)
     {
-        $request->validate([
-            'email' => 'required|string',
-            'password' => 'required|string',
-            'captcha' => 'required|captcha'
-        ], [
-            'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'
-        ]);
+        $request->validate(
+            [
+                'username' => 'required|string',
+                'password' => 'required|string',
+                'captcha' => 'required|captcha',
+            ],
+            [
+                'captcha.captcha' => 'CAPTCHA salah, silakan coba lagi.'
+            ]
+        );
 
-        $credentials = $request->only('email', 'password');
+        $input = $request->username;
 
+        // Jika input adalah email -> gunakan login Laravel biasa
+        if (filter_var($input, FILTER_VALIDATE_EMAIL)) {
+            return $this->handleLaravelLogin($request, $input);
+        }
+
+        // Kalau bukan email -> asumsikan NIP -> SSO
+        return $this->handleSSOLogin($request, $input);
+    }
+
+    private function handleLaravelLogin(Request $request, $email)
+    {
+        $credentials = ['email' => $email, 'password' => $request->password];
+
+        // 1. Coba login Laravel biasa
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return to_route('admin.dashboard');
+            return $this->redirectByRole(Auth::user());
         }
 
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->onlyInput('email');
-    }
+        // 2. Jika gagal → cek apakah user ini punya NIP (SSO-linked)
+        $user = User::where('email', $email)->first();
 
-    public function createInstructor()
-    {
-        return Inertia::render('Auth/LoginInstructor');
-    }
+        if ($user) {
+            $nip = get_user_meta($user->id, 'nip');
 
-    public function storeInstructor(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|string',
-            'password' => 'required|string',
-            'captcha' => 'required|captcha'
-        ], [
-            'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'
-        ]);
-
-        if (Auth::attempt($request->only('email', 'password'))) {
-            $request->session()->regenerate();
-            return to_route('instructor.dashboard');
-        }
-
-        return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
-        ])->onlyInput('email');
-    }
-
-    public function createParticipant()
-    {
-        return Inertia::render('Auth/LoginParticipant');
-    }
-
-    public function storeParticipant(Request $request)
-    {
-        $request->validate([
-            'username' => 'required|string',
-            'password' => 'required|string',
-            'captcha' => 'required|captcha'
-        ], [
-            'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'
-        ]);
-
-        $userMeta = UserMeta::with('user')
-            ->where('key', 'nip')
-            ->where('value', $request->username)
-            ->first();
-
-        if ($userMeta) {
-            $credentials = [
-                'email' => $userMeta->user->email,
-                'password' => $request->password,
-            ];
-
-            if ($this->SyncUserMeta($userMeta->user->id, $request->username, $request->password)) {
-                if (Auth::attempt($credentials)) {
-                    $request->session()->regenerate();
-                    return to_route('home');
+            if ($nip) {
+                // Coba login SSO
+                if ($this->attemptSSOLogin($request, $nip, $user)) {
+                    return $this->redirectByRole($user);
                 }
             }
+        }
 
-            // Try to refresh password via SSO if failed
-            if ($this->handleSSOPasswordRefresh($request, $userMeta->user)) {
-                return to_route('home');
+        // 3. Jika semuanya gagal
+        return back()->withErrors(['email_or_username' => 'Kredensial tidak valid.']);
+    }
+
+    /**
+     * Handle SSO login by NIP.
+     * - If an existing user (user_meta.nip) is found: login and redirect based on role.
+     * - If not found: attempt first-time SSO provisioning (handleSSOFirstLogin).
+     */
+    private function handleSSOLogin(Request $request, $nip)
+    {
+        $userMeta = UserMeta::with('user')
+            ->where('key', 'nip')
+            ->where('value', $nip)
+            ->first();
+
+        // Jika sudah punya akun Laravel
+        if ($userMeta && $userMeta->user) {
+            $user = $userMeta->user;
+
+            if ($this->attemptSSOLogin($request, $nip, $user)) {
+                return $this->redirectByRole($user);
             }
 
-            return back()->withErrors(['danger' => 'Something went wrongs.']);
+            return back()->withErrors(['email_or_username' => 'Password salah.']);
         }
 
         // First-time SSO login
-        if ($this->handleSSOFirstLogin($request)) {
+        if ($this->handleSSOFirstLogin($request, $nip)) {
             return to_route('home');
         }
 
-        return back()->withErrors(['danger' => 'Something went wrong.']);
+        return back()->withErrors(['email_or_username' => 'Autentikasi SSO gagal.']);
     }
+
+    private function attemptSSOLogin(Request $request, $nip, User $user)
+    {
+        try {
+            $response = Http::withHeaders([
+                'apikey' => env('API_KEY')
+            ])->post(env('SSO_BASE_URL') . '/oauth/token', [
+                'username'      => $nip,
+                'password'      => $request->password,
+                'grant_type'    => 'password',
+                'client_id'     => env('SSO_CLIENT_ID'),
+                'client_secret' => env('SSO_CLIENT_SECRET'),
+            ]);
+
+            if (!$response->successful() || !isset($response->json()['access_token'])) {
+                return false; // password salah
+            }
+
+            // Password valid → sinkron password Laravel
+            $user->update([
+                'password' => Hash::make($request->password)
+            ]);
+
+            // Login Laravel
+            Auth::login($user);
+            $request->session()->regenerate();
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::error('attemptSSOLogin error: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * First-time SSO provisioning — ambil data dari SSO, buat user & user_meta, lalu login.
+     * Mengembalikan true jika berhasil.
+     */
+    private function handleSSOFirstLogin(Request $request, $nip)
+    {
+        try {
+            $response = Http::retry(3, 100)->withHeaders([
+                'apikey' => env('API_KEY')
+            ])->post(env('SSO_BASE_URL') . '/oauth/token', [
+                'username'      => $nip,
+                'password'      => $request->password,
+                'grant_type'    => 'password',
+                'client_id'     => env('SSO_CLIENT_ID'),
+                'client_secret' => env('SSO_CLIENT_SECRET'),
+            ]);
+
+            if ($response->successful() && isset($response->json()['access_token'])) {
+                $token = 'Bearer ' . $response->json()['access_token'];
+                // simpan token jika perlu
+                Session::put('token', $token);
+
+                $dataApi = Http::retry(3, 100)->withHeaders([
+                    'apikey' => env('API_KEY'),
+                    'auth'   => $token
+                ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
+
+                if ($dataApi->successful()) {
+                    DB::beginTransaction();
+
+                    try {
+                        $data = $dataApi->json();
+
+                        // buat user baru (pastikan unique email jika mungkin)
+                        $user = User::create([
+                            'name'     => $data['fv_nama'] ?? 'User ' . $nip,
+                            'email'    => $data['fv_email'] ?? "{$nip}@example.com",
+                            'password' => Hash::make($request->password),
+                        ]);
+
+                        // simpan meta via service Anda (storeUserMeta harus menangani array $data dengan key 'nip' dsb.)
+                        $this->user->storeUserMeta($user->id, $data);
+
+                        // beri peran default
+                        $user->assignRole('Participant');
+
+                        // login user yang baru dibuat
+                        Auth::login($user);
+                        $request->session()->regenerate();
+
+                        DB::commit();
+
+                        return true;
+                    } catch (\Throwable $e) {
+                        DB::rollBack();
+                        Log::error('SSO provisioning failed (DB): ' . $e->getMessage(), [
+                            'nip' => $nip,
+                            'trace' => $e->getTraceAsString()
+                        ]);
+                        return false;
+                    }
+                } else {
+                    Log::warning('SSO get_nip_data failed', [
+                        'nip' => $nip,
+                        'status' => $dataApi->status(),
+                        'body' => $dataApi->body()
+                    ]);
+                }
+            } else {
+                Log::warning('SSO token request failed', [
+                    'nip' => $nip,
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('handleSSOFirstLogin error', ['message' => $e->getMessage()]);
+        }
+
+        return false;
+    }
+
+    private function redirectByRole($user)
+    {
+        if ($user->hasRole('Admin')) {
+            // Jangan lewat inertia, redirect langsung ke Blade
+            // return redirect()->to(route('admin.dashboard'));
+            return Inertia::location(route('admin.dashboard'));
+        }
+
+        if ($user->hasRole('Instructor')) {
+            return to_route('instructor.dashboard');
+        }
+
+        return to_route('home');
+    }
+
 
     public function logout(Request $request)
     {
-        $role = $request->user()->roles->first()->name;
-
-        Auth::guard('web')->logout();
+        Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return match ($role) {
-            'Admin' => to_route('sign-in.admin.create'),
-            'Instructor' => to_route('sign-in.instructor.create'),
-            default => to_route('sign-in.participant.create'),
-        };
-    }
-
-    private function SyncUserMeta($userId, $username, $password)
-    {
-        // dd($username, $password);
-        // if (get_user_meta($userId, 'status_pegawai')) {
-        //     return true;
-        // }
-
-        try {
-            $response = Http::retry(3, 100)->withHeaders([
-                'apikey' => env('API_KEY')
-            ])->post(env('SSO_BASE_URL') . '/oauth/token', [
-                'username'      => $username,
-                'password'      => $password,
-                'grant_type'    => 'password',
-                'client_id'     => env('SSO_CLIENT_ID'),
-                'client_secret' => env('SSO_CLIENT_SECRET'),
-            ]);
-
-            if ($response->successful() && isset($response->json()['access_token'])) {
-                $token = 'Bearer ' . $response->json()['access_token'];
-                Session::put('token', $token);
-
-                $participantApi = Http::retry(3, 100)->withHeaders([
-                    'apikey' => env('API_KEY'),
-                    'auth'   => $token
-                ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
-
-                if ($participantApi->successful()) {
-                    $this->user->storeUserMeta($userId, $participantApi->json());
-                    Log::info('SyncUserMeta success', ['user_id' => $userId]);
-                    return true;
-                }
-
-                Log::warning('SyncUserMeta: Failed to fetch user data.', ['response' => $participantApi->body()]);
-            } else {
-                Log::warning('SyncUserMeta: OAuth failed.', ['response' => $response->body()]);
-            }
-        } catch (\Throwable $e) {
-            Log::error('SyncUserMeta: Exception', ['message' => $e->getMessage()]);
-        }
-
-        return false;
-    }
-
-    private function handleSSOPasswordRefresh(Request $request, $user)
-    {
-        try {
-            $response = Http::retry(3, 100)->withHeaders([
-                'apikey' => env('API_KEY')
-            ])->post(env('SSO_BASE_URL') . '/oauth/token', [
-                'username'      => $request->username,
-                'password'      => $request->password,
-                'grant_type'    => 'password',
-                'client_id'     => env('SSO_CLIENT_ID'),
-                'client_secret' => env('SSO_CLIENT_SECRET'),
-            ]);
-
-            if ($response->successful() && isset($response->json()['access_token'])) {
-                $token = 'Bearer ' . $response->json()['access_token'];
-                Session::put('token', $token);
-
-                $participantApi = Http::retry(3, 100)->withHeaders([
-                    'apikey' => env('API_KEY'),
-                    'auth'   => $token
-                ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
-
-                if ($participantApi->successful()) {
-                    DB::beginTransaction();
-                    $user->update(['password' => Hash::make($request->password)]);
-                    DB::commit();
-
-                    Auth::login($user);
-                    $request->session()->regenerate();
-                    return true;
-                }
-            }
-        } catch (\Throwable $th) {
-            // logging opsional
-        }
-
-        return false;
-    }
-
-    private function handleSSOFirstLogin(Request $request)
-    {
-        try {
-            $response = Http::retry(3, 100)->withHeaders([
-                'apikey' => env('API_KEY')
-            ])->post(env('SSO_BASE_URL') . '/oauth/token', [
-                'username'      => $request->username,
-                'password'      => $request->password,
-                'grant_type'    => 'password',
-                'client_id'     => env('SSO_CLIENT_ID'),
-                'client_secret' => env('SSO_CLIENT_SECRET'),
-            ]);
-
-            if ($response->successful() && isset($response->json()['access_token'])) {
-                $token = 'Bearer ' . $response->json()['access_token'];
-                Session::put('token', $token);
-
-                $participantApi = Http::retry(3, 100)->withHeaders([
-                    'apikey' => env('API_KEY'),
-                    'auth'   => $token
-                ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
-
-                if ($participantApi->successful()) {
-                    DB::beginTransaction();
-
-                    $user = User::create([
-                        'name'     => $participantApi->json()['fv_nama'],
-                        'email'    => $participantApi->json()['fv_email'],
-                        'password' => Hash::make($request->password),
-                    ]);
-
-                    $this->user->storeUserMeta($user->id, $participantApi->json());
-                    $user->assignRole('Participant');
-
-                    Auth::login($user);
-                    DB::commit();
-
-                    return true;
-                }
-            }
-        } catch (\Throwable $th) {
-            // logging opsional
-            Log::info($th);
-        }
-
-        return false;
+        return to_route('sign-in.index');
     }
 }

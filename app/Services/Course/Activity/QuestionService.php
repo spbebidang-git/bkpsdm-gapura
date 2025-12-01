@@ -274,6 +274,7 @@ class QuestionService
             $question->update([
                 'description' => $request['description'],
                 'is_loop' => $request['is_loop'],
+                'min_score' => $request['min_score'],
             ]);
 
             return true;
