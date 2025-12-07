@@ -58,7 +58,7 @@ const Login = () => {
                 toast.error(
                     errors.danger ||
                     errors.email_or_username ||
-                    "Login gagal.",
+                    "Pastikan username dan password yang digunakan benar. Silahkan ulangi beberapa saat lagi",
                     {
                         position: "top-right",
                         autoClose: 3000,

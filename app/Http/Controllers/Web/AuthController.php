@@ -24,99 +24,136 @@ class AuthController
         $this->user = $userService;
     }
 
-    public function captcha()
-    {
-        return response()->json(['captcha' => Captcha::src('default')]);
-    }
-
     public function index()
     {
         return Inertia::render('Auth/Login');
     }
 
+    public function captcha()
+    {
+        return response()->json(['captcha' => Captcha::src('default')]);
+    }
+
     public function store(Request $request)
     {
-        $request->validate(
-            [
-                'username' => 'required|string',
-                'password' => 'required|string',
-                'captcha' => 'required|captcha',
-            ],
-            [
-                'captcha.captcha' => 'CAPTCHA salah, silakan coba lagi.'
-            ]
-        );
+        $request->validate([
+            'username' => 'required|string',
+            'password' => 'required|string',
+        ]);
 
         $input = $request->username;
 
-        // Jika input adalah email -> gunakan login Laravel biasa
-        if (filter_var($input, FILTER_VALIDATE_EMAIL)) {
-            return $this->handleLaravelLogin($request, $input);
+        /**
+         * RULE 1 — Admin & Instructor → login via Laravel email ONLY
+         */
+        if ($this->isAdminOrInstructor($input)) {
+            return $this->loginAdminInstructor($request, $input);
         }
 
-        // Kalau bukan email -> asumsikan NIP -> SSO
-        return $this->handleSSOLogin($request, $input);
+        /**
+         * RULE 2 — Participant → login via NIP ONLY (SSO first)
+         */
+        return $this->loginParticipant($request, $input);
     }
 
-    private function handleLaravelLogin(Request $request, $email)
+    private function isAdminOrInstructor($email)
     {
-        $credentials = ['email' => $email, 'password' => $request->password];
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) return false;
 
-        // 1. Coba login Laravel biasa
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-            return $this->redirectByRole(Auth::user());
-        }
-
-        // 2. Jika gagal → cek apakah user ini punya NIP (SSO-linked)
         $user = User::where('email', $email)->first();
+        if (!$user) return false;
 
-        if ($user) {
-            $nip = get_user_meta($user->id, 'nip');
-
-            if ($nip) {
-                // Coba login SSO
-                if ($this->attemptSSOLogin($request, $nip, $user)) {
-                    return $this->redirectByRole($user);
-                }
-            }
-        }
-
-        // 3. Jika semuanya gagal
-        return back()->withErrors(['email_or_username' => 'Kredensial tidak valid.']);
+        return $user->hasRole('Admin') || $user->hasRole('Instructor');
     }
 
     /**
-     * Handle SSO login by NIP.
-     * - If an existing user (user_meta.nip) is found: login and redirect based on role.
-     * - If not found: attempt first-time SSO provisioning (handleSSOFirstLogin).
+     * LOGIN ADMIN / INSTRUCTOR (Laravel only)
      */
-    private function handleSSOLogin(Request $request, $nip)
+    private function loginAdminInstructor(Request $request, $email)
     {
+        $credentials = ['email' => $email, 'password' => $request->password];
+
+        if (!Auth::attempt($credentials)) {
+            return back()->withErrors(['email_or_username' => 'Pastikan username dan password yang digunakan benar. Silahkan ulangi beberapa saat lagi']);
+        }
+
+        $user = Auth::user();
+
+        Log::info("LOGIN SUCCESS (Laravel): {$user->email} | role: {$user->getRoleNames()}");
+
+        $request->session()->regenerate();
+        return $this->redirectByRole($user);
+    }
+
+    /**
+     * LOGIN PARTICIPANT — NIP only, SSO first, fallback Laravel
+     */
+    private function loginParticipant(Request $request, $nip)
+    {
+        // participant wajib login NIP, tidak boleh email
+        if (filter_var($nip, FILTER_VALIDATE_EMAIL)) {
+            return back()->withErrors([
+                'email_or_username' => 'Participant harus login menggunakan NIP.'
+            ]);
+        }
+
         $userMeta = UserMeta::with('user')
             ->where('key', 'nip')
             ->where('value', $nip)
             ->first();
 
-        // Jika sudah punya akun Laravel
+        /**
+         * CASE 1 — Sudah ada user di Laravel
+         */
         if ($userMeta && $userMeta->user) {
             $user = $userMeta->user;
 
-            if ($this->attemptSSOLogin($request, $nip, $user)) {
+            if (!$user->hasRole('Participant')) {
+                return back()->withErrors([
+                    'email_or_username' => 'Role ini tidak dapat login menggunakan NIP.'
+                ]);
+            }
+
+            /**
+             * 1️⃣ Coba login Laravel DULU 
+             */
+            if (Auth::attempt(['email' => $user->email, 'password' => $request->password])) {
+                Log::info("LOGIN PARTICIPANT: Laravel success for NIP {$nip}");
+                $request->session()->regenerate();
                 return $this->redirectByRole($user);
             }
 
-            return back()->withErrors(['email_or_username' => 'Password salah.']);
+            /**
+             * 2️⃣ Jika Laravel gagal → fallback ke SSO
+             */
+            if ($this->attemptSSOLogin($request, $nip, $user)) {
+                Log::info("LOGIN PARTICIPANT: Fallback SSO success for NIP {$nip}");
+                return $this->redirectByRole($user);
+            }
+
+            /**
+             * 3️⃣ Gagal semua
+             */
+            Log::warning("LOGIN PARTICIPANT FAILED: NIP {$nip}");
+            return back()->withErrors(['email_or_username' => 'Pastikan username dan password yang digunakan benar. Silahkan ulangi beberapa saat lagi']);
         }
 
-        // First-time SSO login
+        /**
+         * CASE 2 — user belum ada → first-time SSO provisioning
+         */
         if ($this->handleSSOFirstLogin($request, $nip)) {
+            Log::info("LOGIN PARTICIPANT: First time SSO provisioning success for NIP {$nip}");
             return to_route('home');
         }
 
-        return back()->withErrors(['email_or_username' => 'Autentikasi SSO gagal.']);
+        Log::error("LOGIN PARTICIPANT FAILED: SSO provisioning failed for NIP {$nip}");
+        return back()->withErrors(['email_or_username' => 'Autentikasi gagal.']);
     }
 
+
+    /**
+     * Attempt login via SSO + update Laravel password
+     */
     private function attemptSSOLogin(Request $request, $nip, User $user)
     {
         try {
@@ -130,33 +167,36 @@ class AuthController
                 'client_secret' => env('SSO_CLIENT_SECRET'),
             ]);
 
-            if (!$response->successful() || !isset($response->json()['access_token'])) {
-                return false; // password salah
+            if (!$response->successful() || !isset($response['access_token'])) {
+                Log::warning("SSO LOGIN FAILED for NIP {$nip}");
+                return false;
             }
 
-            // Password valid → sinkron password Laravel
+            Log::info("SSO LOGIN SUCCESS for NIP {$nip}");
+
+            // sinkron password Laravel
             $user->update([
                 'password' => Hash::make($request->password)
             ]);
 
-            // Login Laravel
             Auth::login($user);
             $request->session()->regenerate();
 
             return true;
         } catch (\Throwable $e) {
-            Log::error('attemptSSOLogin error: ' . $e->getMessage());
+            Log::error("attemptSSOLogin ERROR for NIP {$nip}: " . $e->getMessage());
             return false;
         }
     }
 
+
     /**
-     * First-time SSO provisioning — ambil data dari SSO, buat user & user_meta, lalu login.
-     * Mengembalikan true jika berhasil.
+     * First-time provisioning via SSO
      */
     private function handleSSOFirstLogin(Request $request, $nip)
     {
         try {
+            // Step 1: test login
             $response = Http::retry(3, 100)->withHeaders([
                 'apikey' => env('API_KEY')
             ])->post(env('SSO_BASE_URL') . '/oauth/token', [
@@ -167,76 +207,51 @@ class AuthController
                 'client_secret' => env('SSO_CLIENT_SECRET'),
             ]);
 
-            if ($response->successful() && isset($response->json()['access_token'])) {
-                $token = 'Bearer ' . $response->json()['access_token'];
-                // simpan token jika perlu
-                Session::put('token', $token);
+            if (!$response->successful() || !isset($response['access_token'])) return false;
 
-                $dataApi = Http::retry(3, 100)->withHeaders([
-                    'apikey' => env('API_KEY'),
-                    'auth'   => $token
-                ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
+            $token = 'Bearer ' . $response['access_token'];
 
-                if ($dataApi->successful()) {
-                    DB::beginTransaction();
+            // Step 2: get profile
+            $dataApi = Http::retry(3, 100)->withHeaders([
+                'apikey' => env('API_KEY'),
+                'auth'   => $token
+            ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
 
-                    try {
-                        $data = $dataApi->json();
+            if (!$dataApi->successful()) return false;
 
-                        // buat user baru (pastikan unique email jika mungkin)
-                        $user = User::create([
-                            'name'     => $data['fv_nama'] ?? 'User ' . $nip,
-                            'email'    => $data['fv_email'] ?? "{$nip}@example.com",
-                            'password' => Hash::make($request->password),
-                        ]);
+            DB::beginTransaction();
 
-                        // simpan meta via service Anda (storeUserMeta harus menangani array $data dengan key 'nip' dsb.)
-                        $this->user->storeUserMeta($user->id, $data);
+            try {
+                $data = $dataApi->json();
 
-                        // beri peran default
-                        $user->assignRole('Participant');
-
-                        // login user yang baru dibuat
-                        Auth::login($user);
-                        $request->session()->regenerate();
-
-                        DB::commit();
-
-                        return true;
-                    } catch (\Throwable $e) {
-                        DB::rollBack();
-                        Log::error('SSO provisioning failed (DB): ' . $e->getMessage(), [
-                            'nip' => $nip,
-                            'trace' => $e->getTraceAsString()
-                        ]);
-                        return false;
-                    }
-                } else {
-                    Log::warning('SSO get_nip_data failed', [
-                        'nip' => $nip,
-                        'status' => $dataApi->status(),
-                        'body' => $dataApi->body()
-                    ]);
-                }
-            } else {
-                Log::warning('SSO token request failed', [
-                    'nip' => $nip,
-                    'status' => $response->status(),
-                    'body' => $response->body()
+                $user = User::create([
+                    'name'     => $data['fv_nama'] ?? "User $nip",
+                    'email'    => $data['fv_email'] ?? "{$nip}@example.com",
+                    'password' => Hash::make($request->password),
                 ]);
+
+                $this->user->storeUserMeta($user->id, $data);
+                $user->assignRole('Participant');
+
+                Auth::login($user);
+                $request->session()->regenerate();
+
+                DB::commit();
+                return true;
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                Log::error('SSO provisioning failed: ' . $e->getMessage());
+                return false;
             }
         } catch (\Throwable $e) {
-            Log::error('handleSSOFirstLogin error', ['message' => $e->getMessage()]);
+            Log::error('handleSSOFirstLogin error: ' . $e->getMessage());
+            return false;
         }
-
-        return false;
     }
 
     private function redirectByRole($user)
     {
         if ($user->hasRole('Admin')) {
-            // Jangan lewat inertia, redirect langsung ke Blade
-            // return redirect()->to(route('admin.dashboard'));
             return Inertia::location(route('admin.dashboard'));
         }
 
@@ -246,7 +261,6 @@ class AuthController
 
         return to_route('home');
     }
-
 
     public function logout(Request $request)
     {
