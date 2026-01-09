@@ -167,7 +167,11 @@ const Show = ({ course, activities }) => {
                                         <td className="px-6 py-4 text-center">{index + 1}</td>
 
                                         <td className="px-6 py-4 text-center capitalize whitespace-nowrap">
-                                            {item.type}
+                                            {item.type === 'pre-test'
+                                                ? 'Pre-Test / Kuis'
+                                                : item.type === 'post-test'
+                                                    ? 'Post-Test / Kuis'
+                                                    : item.type}
                                         </td>
 
                                         <td className="px-6 py-4 text-center font-medium text-gray-800">

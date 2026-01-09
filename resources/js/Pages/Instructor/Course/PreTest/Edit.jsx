@@ -96,14 +96,14 @@ const Edit = ({ slug, activity }) => {
                         {/* TIMER */}
                         <FormInput
                             title={"timer"}
-                            label={"Durasi Waktu (Menit)"}
+                            label={"Durasi Waktu (Detik)"}
                             isRequired={true}
                             type="number"
                             onChange={handleChange}
                             value={values.timer}
                             error={errors.timer}
-                            placeholder={"Waktu dalam menit"}
-                            small={"Masukkan durasi pengerjaan dalam menit. Contoh: 30 = 30 menit."}
+                            placeholder={"Waktu dalam detik"}
+                            small={"Masukkan durasi pengerjaan dalam detik. Contoh: 60 = 1 menit."}
                         />
 
                         {/* INSTRUKSI */}

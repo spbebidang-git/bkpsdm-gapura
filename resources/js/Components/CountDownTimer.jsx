@@ -1,11 +1,19 @@
 import { useEffect, useState } from 'react';
 
-const CountdownTimer = ({ initialSeconds = 600, onTimeout }) => {
+const CountdownTimer = ({ id, initialSeconds = 600, onTimeout, resetTrigger }) => {
     const [timeLeft, setTimeLeft] = useState(initialSeconds);
+    const storageKey = `countdownStartTime_${id}`;
+
+    // Fungsi untuk mereset timer ke awal
+    const resetTimer = () => {
+        const now = Math.floor(Date.now() / 1000);
+        localStorage.setItem(storageKey, now.toString());
+        setTimeLeft(initialSeconds);
+    };
 
     useEffect(() => {
-        const storedStartTime = localStorage.getItem('countdownStartTime');
         const now = Math.floor(Date.now() / 1000);
+        const storedStartTime = localStorage.getItem(storageKey);
 
         if (storedStartTime) {
             const elapsed = now - parseInt(storedStartTime, 10);
@@ -15,17 +23,16 @@ const CountdownTimer = ({ initialSeconds = 600, onTimeout }) => {
                 setTimeLeft(remainingTime);
             } else {
                 setTimeLeft(0);
-                if (onTimeout) onTimeout(); // Kirim event timeout ke parent
+                if (onTimeout) onTimeout();
             }
         } else {
-            localStorage.setItem('countdownStartTime', now.toString());
+            resetTimer();
         }
-    }, [initialSeconds]);
+    }, [id, initialSeconds, resetTrigger]); // resetTrigger ditambahkan di sini
 
     useEffect(() => {
         if (timeLeft <= 0) {
-            localStorage.removeItem('countdownStartTime');
-            if (onTimeout) onTimeout();
+            localStorage.removeItem(storageKey);
             return;
         }
 
@@ -34,15 +41,16 @@ const CountdownTimer = ({ initialSeconds = 600, onTimeout }) => {
                 const newTime = prevTime - 1;
                 if (newTime <= 0) {
                     clearInterval(timer);
-                    localStorage.removeItem('countdownStartTime');
+                    localStorage.removeItem(storageKey);
                     if (onTimeout) onTimeout();
+                    return 0;
                 }
                 return newTime;
             });
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [timeLeft, onTimeout]);
+    }, [timeLeft, onTimeout, storageKey]);
 
     const formatTime = (time) => {
         const minutes = Math.floor(time / 60).toString().padStart(2, '0');
@@ -53,11 +61,11 @@ const CountdownTimer = ({ initialSeconds = 600, onTimeout }) => {
     const { minutes, seconds } = formatTime(timeLeft);
 
     return (
-        <div className="flex gap-2 items-center text-red-500 text-3xl">
+        <div className="flex gap-2 items-center text-red-500">
             <div className="w-11 h-11 text-white bg-red-500 rounded-md shadow flex items-center justify-center text-2xl font-bold">
                 {minutes}
             </div>
-
+            <span className="text-2xl font-bold">:</span>
             <div className="w-11 h-11 text-white bg-red-500 rounded-md shadow flex items-center justify-center text-2xl font-bold">
                 {seconds}
             </div>

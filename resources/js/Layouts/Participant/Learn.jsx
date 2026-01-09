@@ -121,6 +121,7 @@ const Learn = ({
                             {(activity.type === "pre-test" || activity.type === "post-test") &&
                                 type === "material" ? (
                                 <CountdownTimer
+                                    id={activity_id} // WAJIB TAMBAHKAN INI
                                     initialSeconds={timer}
                                     onTimeout={handleTimeout}
                                 />

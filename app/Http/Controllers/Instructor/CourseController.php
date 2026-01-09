@@ -33,7 +33,6 @@ class CourseController
 
     public function store(Request $request)
     {
-        // dd($request->all());
         if (is_string($request->schedules)) {
             $request->merge([
                 'schedules' => json_decode($request->schedules, true)  // Dekode menjadi array
@@ -43,8 +42,8 @@ class CourseController
         $request->validate([
             'type' => 'required|string',
             'category' => 'required|numeric',
-            // 'employee_status'   => 'required|min:1',
-            // 'employee_status.*' => 'in:CPNS,PNS,PPPK,THL',
+            'employee_status'   => 'required|min:1',
+            'employee_status.*' => 'in:1,2,3',
             'title' => 'required|string',
             'short_description' => 'required|string',
             'description' => 'required|string',
@@ -129,7 +128,8 @@ class CourseController
         $request->validate([
             'type' => 'required|string',
             'category' => 'required|numeric',
-            // 'employee_status' => 'required|in:1,2,3,4',
+            'employee_status'   => 'required|min:1',
+            'employee_status.*' => 'in:1,2,3',
             'title' => 'required|string',
             'short_description' => 'required|string',
             'description' => 'required|string',

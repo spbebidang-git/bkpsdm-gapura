@@ -135,6 +135,8 @@ const Edit = ({ course, categories, employee_status, selected_employee_status })
         localStorage.setItem("scheduleData", JSON.stringify(updated));
     };
 
+    const isTypeLocked = Boolean(course.type);
+
     return (
         <App>
             <form onSubmit={handleSubmit}>
@@ -152,7 +154,9 @@ const Edit = ({ course, categories, employee_status, selected_employee_status })
                             options={typeOptions}
                             isRequired={true}
                             error={errors.type}
+                            disabled={isTypeLocked}
                         />
+
 
                         <FormSelect
                             title="category"

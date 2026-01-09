@@ -37,6 +37,8 @@ const handleSubmit = (e, slug, scheduleId, activityId) => {
 const handleLoopTest = (e, slug, scheduleId, activityId) => {
     e.preventDefault();
 
+
+
     router.get(
         route("participant.learn.index", {
             course: slug,
@@ -59,6 +61,10 @@ const Index = ({
     schedule
 }) => {
     if (activity.type == "pre-test" || activity.type == "post-test") {
+        // Menghapus record timer di local storage agar saat mengulang, timer balik ke awal
+        const storageKey = `countdownStartTime_${activity_id}`;
+        localStorage.removeItem(storageKey);
+
         return (
             <Learn
                 type="result"

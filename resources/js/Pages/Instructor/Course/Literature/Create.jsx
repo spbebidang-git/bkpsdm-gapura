@@ -15,7 +15,7 @@ const Create = ({ slug }) => {
 
     const [values, setValues] = useState({
         title: "",
-        subtitle: "",
+        sub_title: "",
         value: "",
         instruction: "",
         duration: "",
@@ -55,7 +55,7 @@ const Create = ({ slug }) => {
 
         const formData = new FormData();
         formData.append("title", values.title);
-        formData.append("subtitle", values.subtitle);
+        formData.append("sub_title", values.subtitle);
         formData.append("value", values.value);
         formData.append("duration", values.duration);
         formData.append("instruction", values.instruction);
@@ -87,14 +87,14 @@ const Create = ({ slug }) => {
 
                         {/* SUBTITLE */}
                         <FormInput
-                            title="subtitle"
+                            title="sub_title"
                             label="Sub Judul"
                             placeholder="Masukkan sub judul materi"
                             small="Sub judul digunakan untuk menjelaskan detail tambahan dari materi."
                             isRequired
                             onChange={handleChange}
-                            value={values.subtitle}
-                            error={errors.subtitle}
+                            value={values.sub_title}
+                            error={errors.sub_title}
                         />
 
                         {/* NILAI */}

@@ -5,6 +5,7 @@ namespace App\Services\Course\Activity;
 use App\Models\Course\Activity;
 use App\Models\Course\Interactive;
 use App\Models\Course\Question;
+use App\Models\Course\Question\QuestionVariant;
 use App\Models\Learn\Learn;
 
 class ActivityService
@@ -33,9 +34,22 @@ class ActivityService
                     $endMeeting = Interactive::where('activity_id', $row->id)->first()->end_meeting;
                 }
 
-                $hasImported = null;
-                if ($row->type == 'pre-test' || $row->type == 'post-test') {
-                    $hasImported = Question::where('activity_id', $row->id)->first()->has_imported;
+                // $hasImported = null;
+                // if ($row->type == 'pre-test' || $row->type == 'post-test') {
+                //     $hasImported = Question::where('activity_id', $row->id)->first()->has_imported;
+                // }
+
+                $hasImported = false;
+
+                if (in_array($row->type, ['pre-test', 'post-test'])) {
+
+                    $question = Question::where('activity_id', $row->id)->first();
+
+                    if ($question) {
+                        $hasImported =
+                            $question->has_imported == 1
+                            || QuestionVariant::where('question_id', $question->id)->exists();
+                    }
                 }
 
                 return [

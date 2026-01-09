@@ -60,7 +60,7 @@ class PreTestController
                 'description' => $request->description,
                 'type' => 'pre',
                 'min_score' => $request->min_score,
-                'is_loop' => $request->repetable ? 1 : 0
+                'is_loop' => $request->repeatable
             ]);
 
             DB::commit();
@@ -108,7 +108,7 @@ class PreTestController
                 'type' => 'pre',
                 'description' => $request->description,
                 'min_score' => $request->min_score,
-                'is_loop' => $request->repetable ? 1 : 0
+                'is_loop' => $request->repeatable
             ]);
 
             DB::commit();

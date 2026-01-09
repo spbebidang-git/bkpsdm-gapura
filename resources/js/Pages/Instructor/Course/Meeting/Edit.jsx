@@ -61,7 +61,7 @@ const Edit = ({ slug, activity }) => {
 
                         {/* Judul */}
                         <FormInput
-                            title={"Judul Pertemuan"}
+                            title={"title"}
                             label={"Judul Pertemuan"}
                             isRequired={true}
                             onChange={handleChange}
@@ -72,7 +72,7 @@ const Edit = ({ slug, activity }) => {
 
                         {/* Deskripsi */}
                         <FormTextArea
-                            title={"Deskripsi Pertemuan"}
+                            title={"description"}
                             label={"Deskripsi Pertemuan"}
                             isRequired={true}
                             onChange={handleChange}
@@ -83,7 +83,7 @@ const Edit = ({ slug, activity }) => {
 
                         {/* Nilai */}
                         <FormInput
-                            title={"Bobot Nilai"}
+                            title={"value"}
                             label={"Bobot Nilai"}
                             type="number"
                             isRequired={true}
@@ -120,7 +120,7 @@ const Edit = ({ slug, activity }) => {
 
                         {/* URL Meeting */}
                         <FormInput
-                            title={"Tautan Meeting"}
+                            title={"url"}
                             label={"Tautan Meeting (URL)"}
                             isRequired={true}
                             onChange={handleChange}
@@ -131,14 +131,14 @@ const Edit = ({ slug, activity }) => {
 
                         {/* Durasi */}
                         <FormInput
-                            title={"Durasi Pertemuan"}
-                            label={"Durasi Pertemuan (Menit)"}
+                            title={"duration"}
+                            label={"Durasi Pertemuan (Detik)"}
                             type="number"
                             isRequired={true}
                             onChange={handleChange}
                             value={values.duration}
                             error={errors.duration}
-                            small="Gunakan satuan menit. Contoh: 60 = 60 detik (1 menit)."
+                            small="Gunakan satuan detik. Contoh: 60 = 60 detik (1 menit)."
                         />
 
                     </div>

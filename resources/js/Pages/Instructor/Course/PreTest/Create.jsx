@@ -82,14 +82,14 @@ const Create = ({ slug }) => {
                         {/* TIMER */}
                         <FormInput
                             title={"timer"}
-                            label={"Durasi Waktu (Menit)"}
+                            label={"Durasi Waktu (Detik)"}
                             isRequired={true}
                             onChange={handleChange}
                             value={values.timer}
                             error={errors.timer}
                             type="number"
-                            placeholder={"Waktu dalam menit"}
-                            small={"Masukkan durasi pengerjaan dalam menit. Contoh: 30 = 30 menit."}
+                            placeholder={"Waktu dalam detik"}
+                            small={"Masukkan durasi pengerjaan dalam detik. Contoh: 60 = 1 menit."}
                         />
 
                         {/* INSTRUKSI */}

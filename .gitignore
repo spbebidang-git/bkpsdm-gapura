@@ -3,7 +3,7 @@
 /node_modules
 /public/hot
 /public/storage
-/public/build/*
+# /public/build/*
 /public/assets/media/documents/*
 /public/assets/media/images/managements/*
 /storage/*.key

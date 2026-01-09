@@ -54,10 +54,18 @@ class InstructorController
     {
         $request->validate([
             'name'     => 'required|string',
-            'email'    => 'required|string|email',
-            'password' => 'required|string|min:8',
-            'image'    => 'nullable|image|mimes:png,jpg|max:512',
+            'email'    => 'required|string|email|unique:users,email',
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/',
+            ],
+            'image'    => 'nullable|image|mimes:png,jpg|max:1024',
+        ], [
+            'password.regex' => 'Password harus menggunakan kombinasi huruf dan angka.',
         ]);
+
 
         try {
             DB::beginTransaction();
@@ -96,9 +104,16 @@ class InstructorController
     {
         $request->validate([
             'name'     => 'required|string',
-            'email'    => 'required|string|email',
-            'password' => 'nullable|string|min:8',
+            'email'    => 'required|string|email|unique:users,email,' . $instructor->id,
+            'password' => [
+                'nullable',
+                'string',
+                'min:8',
+                'regex:/^(?=.*[A-Za-z])(?=.*\d).+$/',
+            ],
             'image'    => 'nullable|image|mimes:png,jpg|max:512',
+        ], [
+            'password.regex' => 'Password harus menggunakan kombinasi huruf dan angka.',
         ]);
 
         try {

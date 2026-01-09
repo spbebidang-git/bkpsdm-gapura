@@ -20,13 +20,13 @@ const ListActivity = ({
         switch (type) {
             case "pre-test":
                 localStorage.removeItem("countdownStartTime");
-                setTitle("Pre Test");
+                setTitle("Pre Test / Kuis");
                 setDescription("Mengerjakan Quiz");
                 setIcon("pencil"); // Misalnya ikon untuk quiz adalah 'pencil'
                 break;
             case "post-test":
                 localStorage.removeItem("countdownStartTime");
-                setTitle("Post Test");
+                setTitle("Post Test / Kuis");
                 setDescription("Mengerjakan Quiz");
                 setIcon("pencil"); // Ikon yang sama dengan pre-test
                 break;

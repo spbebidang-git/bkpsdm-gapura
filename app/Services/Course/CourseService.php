@@ -50,6 +50,42 @@ class CourseService
     }
 
 
+    // public function getAllCourse()
+    // {
+    //     $now = Carbon::now();
+    //     $today = $now->toDateString();
+    //     $currentTime = $now->format('H:i:s');
+
+    //     return Course::query()
+    //         ->orderBy('id')
+    //         ->where('status', 'publish')
+    //         ->where(function ($q) use ($today, $currentTime) {
+    //             $q->where('type', '!=', 'schedule')
+    //                 ->orWhereHas('schedules', function ($query) use ($today, $currentTime) {
+    //                     $query->whereDate('date', $today)
+    //                         ->whereTime('time_from', '<=', $currentTime)
+    //                         ->whereTime('time_to', '>=', $currentTime);
+    //                 });
+    //         })
+    //         ->get()
+    //         ->map(function ($row) {
+    //             return [
+    //                 'id' => $row->id,
+    //                 'type' => $row->type,
+    //                 'title' => $row->title,
+    //                 'employee_status' => $row->employee_status,
+    //                 'slug' => $row->slug,
+    //                 'quota' => $row->quota,
+    //                 'thumbnail' => $row->thumbnail_src,
+    //                 'category' => optional($row->category)->title,
+    //                 'instructor' => optional($row->instructor)->name,
+    //                 'total_participant' => $row->total_participant,
+    //                 'status' => $row->status,
+    //                 'star' => $row->getRating()['star'],
+    //             ];
+    //         });
+    // }
+
     public function getAllCourse()
     {
         $now = Carbon::now();
@@ -60,11 +96,19 @@ class CourseService
             ->orderBy('id')
             ->where('status', 'publish')
             ->where(function ($q) use ($today, $currentTime) {
+                // Tampilkan yang tipenya bukan schedule (Video/Modul)
                 $q->where('type', '!=', 'schedule')
+                    // ATAU yang punya jadwal aktif/mendatang
                     ->orWhereHas('schedules', function ($query) use ($today, $currentTime) {
-                        $query->whereDate('date', $today)
-                            ->whereTime('time_from', '<=', $currentTime)
-                            ->whereTime('time_to', '>=', $currentTime);
+                        $query->where(function ($sub) use ($today, $currentTime) {
+                            // Kondisi 1: Jadwal di hari-hari mendatang (Besok dan seterusnya)
+                            $sub->where('date', '>', $today)
+                                // Kondisi 2: Jadwal hari ini, tapi waktunya belum berakhir (masih berlangsung atau akan datang)
+                                ->orWhere(function ($dayQuery) use ($today, $currentTime) {
+                                    $dayQuery->whereDate('date', $today)
+                                        ->whereTime('time_to', '>=', $currentTime);
+                                });
+                        });
                     });
             })
             ->get()

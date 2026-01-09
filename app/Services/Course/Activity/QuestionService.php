@@ -108,7 +108,7 @@ class QuestionService
                 'question_items' => $mappedQuestionItems,
                 'mix' => $questionVariant->mix,
                 'is_loop' => $question->is_loop,
-                'min_score' => 100
+                'min_score' => $question->min_score
             ]
         ];
     }

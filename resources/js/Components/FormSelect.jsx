@@ -5,24 +5,26 @@ const FormSelect = ({
     onChange,
     isRequired,
     error,
-    selectedValue
+    value,
+    disabled = false,
 }) => {
     const renderLabel = label ?? title;
 
     return (
         <div className="mb-3">
             <label
-                htmlFor={title.replace(/\s+/g, '_')}
+                htmlFor={title.replace(/\s+/g, "_")}
                 className="form-label"
             >
                 {renderLabel} {isRequired && <span className="text-red-500">*</span>}
             </label>
 
             <select
-                id={title.replace(/\s+/g, '_')}
-                className={`${error ? 'error' : ''} form-control`}
+                id={title.replace(/\s+/g, "_")}
+                className={`form-control ${error ? "error" : ""} ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
                 onChange={onChange}
-                value={selectedValue}
+                value={value}
+                disabled={disabled}
             >
                 <option value="">Pilih Opsi</option>
                 {options.map((option, index) => (
