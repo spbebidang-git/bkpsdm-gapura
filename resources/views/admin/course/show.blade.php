@@ -13,11 +13,13 @@
                     <table class="table table-bordered text-center align-middle">
                         <tr>
                             <td style="white-space: nowrap;">Kategori</td>
-                            <th>{{ $course->category->name ?? '-' }}</th>
+                            {{-- Mengganti name menjadi title sesuai instruksi --}}
+                            <th>{{ $course->category->title ?? '-' }}</th>
                         </tr>
                         <tr>
                             <td style="white-space: nowrap;">Instruktur</td>
-                            <th>{{ $course->instructor->name ?? '-' }}</th>
+                            {{-- Mengganti name menjadi title sesuai instruksi --}}
+                            <th>{{ $course->instructor->title ?? '-' }}</th>
                         </tr>
                         <tr>
                             <td style="white-space: nowrap;">Tipe</td>
@@ -27,75 +29,79 @@
                             <td style="white-space: nowrap;">Judul</td>
                             <th>{{ $course->title ?? '-' }}</th>
                         </tr>
-                        <tr>
-                            <td style="white-space: nowrap;">Deskripsi Singkat</td>
-                            <th>{{ $course->short_description ?? '-' }}</th>
-                        </tr>
-                        <tr>
-                            <td style="white-space: nowrap;">Deskripsi</td>
-                            <th>{!! $course->description ?? '-' !!}</th>
-                        </tr>
-                        <tr>
-                            <td style="white-space: nowrap;">Thumbnail</td>
-                            <th>
-                                @if ($course->thumbnail)
-                                    <a href="{{ asset('assets/media/images/courses/' . $course->thumbnail) }}"
-                                        target="_blank" class="text-primary text-decoration-underline">Lihat Thumbnail</a>
-                                @else
-                                    <span class="text-muted">Tidak Ada Gambar</span>
-                                @endif
-                            </th>
-                        </tr>
-                        <tr>
-                            <td style="white-space: nowrap;">Video Teaser</td>
-                            <th>
-                                @if ($course->teaser_video)
-                                    <a href="{{ $course->teaser_video }}" target="_blank"
-                                        class="text-primary text-decoration-underline">Lihat Video</a>
-                                @else
-                                    <span class="text-muted">Tidak Ada Video</span>
-                                @endif
-                            </th>
-                        </tr>
-                        <tr>
-                            <td style="white-space: nowrap;">Status</td>
-                            <th>
-                                <span class="badge bg-{{ $course->status == 'active' ? 'success' : 'secondary' }}">
-                                    {{ ucfirst($course->status) }}
-                                </span>
-                            </th>
-                        </tr>
                     </table>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="mb-4">
-        <div class="card p-0">
-            <h5 class="card-header border-bottom d-flex justify-content-between align-items-center">
-                Jadwal Kursus
-            </h5>
-            <div class="card-body p-0 overflow-hidden">
-                <div class="table-responsive text-wrap overflow-hidden p-4">
-                    <table class="table table-bordered text-center">
+    {{-- Logika: Hanya tampil jika type adalah schedule --}}
+    @if ($course->type == 'schedule')
+        <div class="mb-4">
+            <div class="card p-0">
+                <h5 class="card-header border-bottom d-flex justify-content-between align-items-center">
+                    Jadwal Kursus
+                </h5>
+                <div class="card-body p-0 overflow-hidden">
+                    <div class="table-responsive text-wrap overflow-hidden p-4">
+                        <table class="table table-bordered text-center align-middle">
+                            <thead>
+                                <tr class="table-light">
+                                    <th>Tanggal</th>
+                                    <th>Jam Mulai</th>
+                                    <th>Jam Selesai</th>
+                                    <th>Kuota</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($schedules as $schedule)
+                                    <tr>
+                                        {{-- Kolom 1: Tanggal (22/01/2026) --}}
+                                        <td>{{ \Carbon\Carbon::parse($schedule->date)->format('d/m/Y') }}</td>
+
+                                        {{-- Kolom 2: Jam Mulai (09:00) --}}
+                                        <td>{{ \Carbon\Carbon::parse($schedule->time_from)->format('H:i') }}</td>
+
+                                        {{-- Kolom 3: Jam Selesai (11:00) --}}
+                                        <td>{{ \Carbon\Carbon::parse($schedule->time_to)->format('H:i') }}</td>
+
+                                        {{-- Kolom 4: Kuota --}}
+                                        <td>{{ $schedule->quota ?? '-' }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-muted">Data tidak ditemukan</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <div class="row">
+        <div class="col-6">
+            <div class="card p-0 h-100">
+                <h5 class="card-header border-bottom">Peserta Selesai</h5>
+                <div class="card-body p-4">
+                    <table class="table table-sm table-bordered text-center">
                         <thead>
                             <tr>
-                                <th>Tanggal</th>
-                                <th>Waktu</th>
-                                <th>Kuota</th>
+                                <th>Nama</th>
+                                <th>Jabatan</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse ($schedules as $schedule)
+                            @forelse ($finishedParticipant as $participant)
                                 <tr>
-                                    <td>{{ $schedule->date ?? '-' }}</td>
-                                    <td>{{ $schedule->time ?? '-' }}</td>
-                                    <td>{{ $schedule->quota ?? '-' }}</td>
+                                    <td>{{ $participant->name }}</td>
+                                    <td>{{ $participant->job_title ?? '-' }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="text-muted">Data tidak ditemukan</td>
+                                    <td colspan="2" class="text-muted">Belum ada peserta selesai</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -103,71 +109,8 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="row">
-        <div class="col-6">
-            <div class="card p-0">
-                <h5 class="card-header border-bottom d-flex justify-content-between align-items-center">
-                    Peserta Selesai
-                </h5>
-                <div class="card-body p-0 overflow-hidden">
-                    <div class="table-responsive text-wrap overflow-hidden p-4">
-                        <table class="table table-bordered text-center">
-                            <thead>
-                                <tr>
-                                    <th>Nama</th>
-                                    <th>Jabatan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($finishedParticipant as $participant)
-                                    <tr>
-                                        <td>{{ $participant->name ?? '-' }}</td>
-                                        <td>{{ $participant->job_title ?? '-' }}</td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="2" class="text-muted">Data tidak ditemukan</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <div class="col-6">
-            <div class="card p-0">
-                <h5 class="card-header border-bottom d-flex justify-content-between align-items-center">
-                    Peserta Berlangsung
-                </h5>
-                <div class="card-body p-0 overflow-hidden">
-                    <div class="table-responsive text-wrap overflow-hidden p-4">
-                        <table class="table table-bordered text-center">
-                            <thead>
-                                <tr>
-                                    <th>Nama</th>
-                                    <th>Jabatan</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($onGoingParticipant as $participant)
-                                    <tr>
-                                        <td>{{ $participant->name ?? '-' }}</td>
-                                        <td>{{ $participant->job_title ?? '-' }}</td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="2" class="text-muted">Data tidak ditemukan</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 @endsection
