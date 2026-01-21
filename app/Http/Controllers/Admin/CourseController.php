@@ -51,7 +51,9 @@ class CourseController
 
     public function show(Course $course)
     {
-        $schedules = $course->load('schedules');
+        // Load schedules dari relasi
+        $schedules = $course->schedules;
+
         $finishedParticipant = \DB::table('learns')
             ->join('users', 'users.id', '=', 'learns.participant_id')
             ->leftJoin('user_meta as job_title_meta', function ($join) {
@@ -61,12 +63,18 @@ class CourseController
             ->where('learns.course_id', $course->id)
             ->whereNotNull('learns.finished_at')
             ->select(
-                'users.name',
+                'users.name', // Ini nama user, tetap 'name' (kecuali jika kolom DB user juga berubah)
                 'job_title_meta.value as job_title'
             )
             ->get();
 
-        $onGoingParticipant = [];
+        // Contoh pengisian ongoing jika diperlukan:
+        $onGoingParticipant = \DB::table('learns')
+            ->join('users', 'users.id', '=', 'learns.participant_id')
+            ->where('learns.course_id', $course->id)
+            ->whereNull('learns.finished_at')
+            ->select('users.name')
+            ->get();
 
         return view('admin.course.show', compact('course', 'schedules', 'finishedParticipant', 'onGoingParticipant'));
     }
