@@ -23,10 +23,10 @@ class PreTestController
         $this->question = $questionService;
     }
 
-    public function create($slug)
+    public function create(Course $course)
     {
         return Inertia::render('Instructor/Course/PreTest/Create', [
-            'slug' => $slug
+            'slug' => $course->slug
         ]);
     }
 
@@ -73,10 +73,10 @@ class PreTestController
         }
     }
 
-    public function edit($slug, Activity $pre_test)
+    public function edit(Course $course, Activity $pre_test)
     {
         return Inertia::render('Instructor/Course/PreTest/Edit', [
-            'slug' => $slug,
+            'slug' => $course->slug,
             'activity' => $this->question->getQuestion($pre_test),
         ]);
     }

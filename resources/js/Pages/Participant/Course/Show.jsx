@@ -1,3 +1,4 @@
+import BreadcrumbLearn from "@/Components/BreadcrumbLearn";
 import App from "@/Layouts/Participant/App";
 import { Link, router } from "@inertiajs/react";
 
@@ -17,140 +18,129 @@ const Show = ({ course, learn }) => {
         );
     };
 
-    const scrollToSection = (id) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-    };
 
 
     return (
         <App>
-            <div className="max-w-7xl mx-auto p-6">
+            <div className="max-w-7xl mx-auto">
 
-                {/* HEADER COURSE */}
-                <div className="flex justify-between items-start mb-6">
-                    <div className="grid grid-cols-3 gap-5 w-full">
-
-                        {/* Thumbnail */}
-                        <div className="col-span-3 xl:col-span-1">
-                            <div className="h-48 w-full rounded-lg overflow-hidden shadow relative">
-                                <div className="absolute top-2 right-2 bg-secondary text-white text-[10px] font-bold px-2 rounded">
-                                    {course.employee_status}
-                                </div>
-                                <img
-                                    src={course.thumbnail}
-                                    alt={course.title}
-                                    className="w-full h-full object-fill"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Judul + Instruktor */}
-                        <div className="col-span-3 xl:col-span-2">
-                            <h1 className="text-xl font-bold text-gray-800 mb-1 capitalize">
-                                {course.title}
-                            </h1>
-
-                            <p className="text-sm italic text-gray-700 mb-2">
-                                oleh{" "}
-                                <span className="not-italic font-bold">{course.instructor}</span>
-                            </p>
-
-                            <p className="text-sm text-gray-700 mb-3">
-                                {course.short_description}
-                            </p>
-
-                            <div className="flex flex-col xl:flex-row w-full xl:max-w-sm gap-3">
-                                <button
-                                    className="button-primary"
-                                    onClick={(e) => handleSubmit(e, course.slug)}
-                                >
-                                    Unduh Sertifikat
-                                </button>
-
-                                <a
-                                    target="_blank"
-                                    className="w-full"
-                                    href={route("course.show", { course: course.slug })}
-                                >
-                                    <button className="button-primary w-full">
-                                        Detail Kelas
-                                    </button>
-                                </a>
-                            </div>
-                        </div>
-
+                <div className="flex justify-center mb-10 w-full relative z-10">
+                    <div className="inline-flex flex-wrap items-center gap-2 md:gap-4 bg-white/90 backdrop-blur-md py-3 px-8 rounded-full shadow-[0_4px_25px_-4px_rgba(0,0,0,0.06)] border border-gray-100/80 transition-all hover:shadow-[0_4px_30px_-4px_rgba(0,0,0,0.1)]">
+                        <Link href={route("participant.course.index")} className="transition-transform hover:-translate-y-0.5 opacity-80 hover:opacity-100">
+                            <BreadcrumbLearn title="Kelas Saya" activeTab={false} icon="book-bookmark" size="lg" />
+                        </Link>
+                        <box-icon name="chevron-right" color="#cbd5e1" size="22px"></box-icon>
+                        <BreadcrumbLearn title={course.title} activeTab={true} icon="chalkboard" size="lg" />
                     </div>
-
-                    {/* Back */}
-                    <Link href={route("participant.course.index")}>
-                        <button className="button-secondary">Back</button>
-                    </Link>
                 </div>
 
-                {/* NAVIGATION SECTION LINKS */}
-                <div className="flex gap-6 bg-white p-4 shadow mb-6 rounded-lg text-sm">
-                    <button onClick={() => scrollToSection("schedule")} className="hover:text-blue-600">
-                        Schedule
-                    </button>
-                    <button onClick={() => scrollToSection("teaser")} className="hover:text-blue-600">
-                        Teaser Video
-                    </button>
-                    <button onClick={() => scrollToSection("description")} className="hover:text-blue-600">
-                        Description
-                    </button>
-                    <button onClick={() => scrollToSection("review")} className="hover:text-blue-600">
-                        Review
-                    </button>
+                <div className="flex flex-col gap-8 mb-8">
+                    {/* LEADING CONTENT */}
+                    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-5 md:p-8 w-full">
+
+
+                        <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
+                            {/* Thumbnail */}
+                            <div className="w-full lg:w-1/3 shrink-0">
+                                <div className="aspect-video lg:aspect-square w-full rounded-2xl overflow-hidden shadow-sm relative group">
+                                    <div className="absolute top-3 right-3 bg-secondary/90 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-full z-10 uppercase tracking-wider shadow-sm">
+                                        {course.employee_status}
+                                    </div>
+                                    <img
+                                        src={course.thumbnail}
+                                        alt={course.title}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Judul + Instruktor */}
+                            <div className="w-full lg:w-2/3 flex flex-col pt-2">
+                                <div className="flex justify-between items-start flex-col sm:flex-row gap-4 mb-2">
+                                    <h1 className="text-xl md:text-2xl lg:text-3xl font-extrabold text-gray-900 leading-tight">
+                                        {course.title}
+                                    </h1>
+                                    <Link href={route("participant.course.index")} className="shrink-0 w-full sm:w-auto">
+                                        <button className="flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 hover:text-primary transition-colors shadow-sm">
+                                            <box-icon name="left-arrow-alt" color="currentColor"></box-icon>
+                                            Kembali
+                                        </button>
+                                    </Link>
+                                </div>
+
+                                <p className="text-sm md:text-base text-gray-500 mb-4 flex items-center gap-1.5">
+                                    <span className="italic">Oleh</span>
+                                    <span className="font-semibold text-gray-800">{course.instructor}</span>
+                                </p>
+
+                                <p className="text-sm md:text-base text-gray-600 mb-8 leading-relaxed">
+                                    {course.short_description}
+                                </p>
+
+                                <div className="mt-auto flex flex-col sm:flex-row gap-4 w-full md:max-w-lg">
+                                    <button
+                                        className="button-primary w-full shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 text-sm md:text-base py-2.5 md:py-3"
+                                        onClick={(e) => handleSubmit(e, course.slug)}
+                                    >
+                                        <div className="flex items-center justify-center gap-2">
+                                            <box-icon name="download" color="white" size="sm"></box-icon>
+                                            Unduh Sertifikat
+                                        </div>
+                                    </button>
+
+                                    <a
+                                        target="_blank"
+                                        className="w-full"
+                                        href={route("course.show", { course: course.slug })}
+                                    >
+                                        <button className="button-secondary w-full bg-white border-2 border-primary text-primary hover:bg-primary/5 shadow-sm transition-all duration-300 text-sm md:text-base py-2.5 md:py-3 flex justify-center items-center h-full">
+                                            Detail Kelas
+                                        </button>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* LEARN DATA */}
-                <div className="bg-white shadow rounded-lg p-4">
-                    <table className="w-full text-center text-sm">
-                        <thead>
-                            <tr className="bg-gray-50">
-                                <th className="border p-3">Activation Date</th>
-                                <th className="border p-3">Finished At</th>
-                                <th className="border p-3">Post Test Avg</th>
-                                <th className="border p-3">Jam Pelajaran</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td className="border p-3">{learn.activation_date}</td>
-                                <td className="border p-3">{learn.finished_at}</td>
-                                <td className="border p-3">{learn.post_test_avg}</td>
-                                <td className="border p-3">{learn.jam_pelajaran}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* SECTION TARGETS */}
-                <div className="mt-10">
-
-                    <div id="schedule" className="mb-12">
-                        <h2 className="text-lg font-bold mb-2">Schedule</h2>
-                        <p className="text-sm text-gray-600">Isi schedule di sini…</p>
+                <div className="bg-white shadow-sm border border-gray-100 rounded-3xl p-5 md:p-8">
+                    <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <box-icon name="bar-chart-alt-2" color="#018083"></box-icon>
+                        Data Pembelajaran
+                    </h2>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm text-gray-600 border border-gray-100 rounded-xl overflow-hidden">
+                            <thead className="bg-gray-50 border-b border-gray-100 text-gray-700 font-semibold">
+                                <tr>
+                                    <th className="px-6 py-4 uppercase tracking-wider text-xs">Activation Date</th>
+                                    <th className="px-6 py-4 uppercase tracking-wider text-xs">Finished At</th>
+                                    <th className="px-6 py-4 uppercase tracking-wider text-xs">Post Test Avg</th>
+                                    <th className="px-6 py-4 uppercase tracking-wider text-xs">Jam Pelajaran</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr className="hover:bg-blue-50/30 transition-colors">
+                                    <td className="px-6 py-5 font-medium text-gray-800 border-b border-gray-50">{learn.activation_date || '-'}</td>
+                                    <td className="px-6 py-5 border-b border-gray-50">
+                                        {learn.finished_at ? (
+                                            <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium text-xs">
+                                                {learn.finished_at}
+                                            </span>
+                                        ) : (
+                                            <span className="text-gray-400 italic">Belum Selesai</span>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-5 font-bold text-gray-800 border-b border-gray-50">{learn.post_test_avg || '0'}</td>
+                                    <td className="px-6 py-5 border-b border-gray-50 whitespace-nowrap">
+                                        <span className="font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full text-xs">
+                                            {learn.jam_pelajaran || '0'} JP
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-
-                    <div id="teaser" className="mb-12">
-                        <h2 className="text-lg font-bold mb-2">Teaser Video</h2>
-                        <p className="text-sm text-gray-600">Video teaser muncul di sini…</p>
-                    </div>
-
-                    <div id="description" className="mb-12">
-                        <h2 className="text-lg font-bold mb-2">Description</h2>
-                        <p className="text-sm text-gray-600">{course.description}</p>
-                    </div>
-
-                    <div id="review" className="mb-12">
-                        <h2 className="text-lg font-bold mb-2">Review</h2>
-                        <p className="text-sm text-gray-600">Review peserta muncul di sini…</p>
-                    </div>
-
                 </div>
 
             </div>

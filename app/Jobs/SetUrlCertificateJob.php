@@ -4,7 +4,6 @@ namespace App\Jobs;
 
 use App\Models\Learn\Learn;
 use Illuminate\Bus\Queueable;
-use Illuminate\Container\Attributes\Log;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -23,11 +22,12 @@ class SetUrlCertificateJob implements ShouldQueue
 
     public function handle(): void
     {
-        # update url certificate
+        # update url certificate & mark as posted
         Learn::where('course_id', $this->data['course'])
             ->where('participant_id', $this->data['participant'])
             ->update([
-                'url_certificate' => $this->data['url_certificate']
+                'url_certificate'    => $this->data['url_certificate'],
+                'is_post_certificate' => 1,
             ]);
     }
 }

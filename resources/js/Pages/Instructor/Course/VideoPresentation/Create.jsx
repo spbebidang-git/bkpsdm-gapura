@@ -121,7 +121,7 @@ const Create = ({ slug }) => {
                             onChange={handleChange}
                             value={values.duration}
                             error={errors.duration}
-                            placeholder={"Contoh: 300 = 5 menit"}
+                            placeholder={"Waktu dalam detik (contoh: 300 = 5 menit)"}
                             small={"Durasi diperlukan untuk pengaturan waktu dan statistik pembelajaran."}
                         />
 

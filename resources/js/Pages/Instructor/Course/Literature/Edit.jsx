@@ -144,18 +144,10 @@ const Edit = ({ slug, activity }) => {
 
                         {/* Upload File PDF */}
                         <div className="mb-3">
-                            <FormLabel title="content" isRequired={true} />
+                            <FormLabel title="content" isRequired={false} />
                             <p className="text-xs text-gray-500 mb-2">
-                                Unggah file PDF baru jika diperlukan. Ukuran maksimal 5MB.
+                                Unggah file PDF baru jika ingin mengganti. Ukuran maksimal 5MB.
                             </p>
-
-                            {/* Jika ada file lama */}
-                            {activity.content && (
-                                <p className="text-sm mb-2">
-                                    <span className="font-semibold">File saat ini:</span>{" "}
-                                    {activity.content}
-                                </p>
-                            )}
 
                             <div className="flex items-center justify-center w-full">
                                 <label
@@ -212,6 +204,34 @@ const Edit = ({ slug, activity }) => {
                                     {errors.content}
                                 </small>
                             )}
+
+                            {/* Tombol lihat / download PDF yang sudah ada */}
+                            {activity.content_url && (
+                                <div className="mt-3 flex gap-2">
+                                    <a
+                                        href={activity.content_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:opacity-90 transition"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                            <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7Z" />
+                                        </svg>
+                                        Lihat PDF
+                                    </a>
+                                    <a
+                                        href={activity.content_url}
+                                        download
+                                        className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-primary border border-primary rounded-lg hover:bg-primary hover:text-white transition"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M12 3v12m0 0-4-4m4 4 4-4M3 17v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2" />
+                                        </svg>
+                                        Download PDF
+                                    </a>
+                                </div>
+                            )}
                         </div>
 
                     </div>
@@ -221,7 +241,7 @@ const Edit = ({ slug, activity }) => {
                     <button className="button-primary">Simpan Perubahan</button>
                     <Link
                         className="w-full"
-                        href={`/instructor/course/${slug}/activity`}
+                        href={`/instructor/course/${slug}`}
                     >
                         <button className="button-secondary">Kembali</button>
                     </Link>

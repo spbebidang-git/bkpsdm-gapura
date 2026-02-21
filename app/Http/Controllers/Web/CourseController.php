@@ -51,15 +51,47 @@ class CourseController extends Controller
                 'total_participant' => $course->total_participant,
                 'status' => $course->status,
             ],
-            'schedules' => $course->schedules->map(function ($row) {
-                return [
-                    'id' => $row->id,
-                    'date' => $row->date,
-                    'time' => $row->time,
-                    'quota' => $row->quota,
-                    'is_active' => $row->participants()->where('participant_id', $this->participantId)->count() == 1 ? 1 : 0,
-                ];
-            }),
+            'schedules' => $course->schedules
+                ->filter(function ($row) {
+                    $now  = \Carbon\Carbon::now();
+                    $date = \Carbon\Carbon::parse($row->getRawOriginal('date'));
+
+                    // Tanggal sudah lewat → sembunyikan
+                    if ($date->isPast() && !$date->isToday()) {
+                        return false;
+                    }
+
+                    // Tanggal hari ini tapi jam selesai sudah lewat → sembunyikan
+                    if ($date->isToday() && $row->time_to) {
+                        // Gunakan parse() agar mendukung format H:i maupun H:i:s
+                        $timeTo = \Carbon\Carbon::parse($row->time_to);
+                        return $timeTo->greaterThan($now);
+                    }
+
+                    return true;
+                })
+                ->map(function ($row) {
+                    $now     = \Carbon\Carbon::now();
+                    $date    = \Carbon\Carbon::parse($row->getRawOriginal('date'))->startOfDay();
+                    $timeFrom = $row->time_from ? \Carbon\Carbon::parse($row->time_from) : null;
+
+                    // Kelas bisa dimasuki jika: tanggal hari ini DAN jam sudah mulai (atau unschedule)
+                    $canEnter = !$date->isFuture() // bukan hari depan
+                        && (!$timeFrom || $timeFrom->lessThanOrEqualTo($now));
+
+                    return [
+                        'id'          => $row->id,
+                        'date'        => $row->date,
+                        'date_raw'    => $row->getRawOriginal('date'),
+                        'time'        => $row->time,
+                        'time_from'   => $row->time_from,
+                        'quota'       => $row->quota,
+                        'can_enter'   => $canEnter,
+                        'start_label' => $timeFrom ? $timeFrom->format('H:i') : null,
+                        'is_active'   => $row->participants()->where('participant_id', $this->participantId)->count() == 1 ? 1 : 0,
+                    ];
+                })
+                ->values(),
             'reviews' => $reviews->map(function ($row) {
                 return [
                     'name' => $row->user->name,

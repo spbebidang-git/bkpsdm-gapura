@@ -24,10 +24,10 @@ class TaskController
         $this->task = $taskService;
     }
 
-    public function create($slug)
+    public function create(Course $course)
     {
         return Inertia::render('Instructor/Course/Task/Create', [
-            'slug' => $slug
+            'slug' => $course->slug
         ]);
     }
 
@@ -63,15 +63,14 @@ class TaskController
             return to_route('instructor.course.show', $course->slug)->with('success', 'Task created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th->getMessage());
             return to_route('instructor.course.show', $course->slug)->with('danger', 'Something went wrong.');
         }
     }
 
-    public function edit($slug, Activity $task)
+    public function edit(Course $course, Activity $task)
     {
         return Inertia::render('Instructor/Course/Task/Edit', [
-            'slug' => $slug,
+            'slug' => $course->slug,
             'activity' => $this->task->getTaskForEdit($task),
         ]);
     }
@@ -107,12 +106,11 @@ class TaskController
             return to_route('instructor.course.show', $course->slug)->with('success', 'Task updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th->getMessage());
             return to_route('instructor.course.show', $course->slug)->with('danger', 'Something went wrong.');
         }
     }
 
-    public function result($course, $activityId)
+    public function result(Course $course, $activityId)
     {
         $tasks = LearnItem::with('learn.participant')->where('activity_id', $activityId)->get()->map(function ($row) {
             // dd($row);
@@ -124,7 +122,7 @@ class TaskController
         });
 
         return Inertia::render('Instructor/Course/Task/Result', [
-            'slug' => $course,
+            'slug' => $course->slug,
             'activity' => $activityId,
             'tasks' => $tasks
         ]);

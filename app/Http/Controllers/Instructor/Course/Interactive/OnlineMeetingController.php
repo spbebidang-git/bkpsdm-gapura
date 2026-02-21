@@ -23,10 +23,10 @@ class OnlineMeetingController
         $this->interactive = $interactiveService;
     }
 
-    public function create($slug)
+    public function create(Course $course)
     {
         return Inertia::render('Instructor/Course/Meeting/Create', [
-            'slug' => $slug
+            'slug' => $course->slug
         ]);
     }
 
@@ -71,10 +71,10 @@ class OnlineMeetingController
         }
     }
 
-    public function edit($slug, Activity $meeting)
+    public function edit(Course $course, Activity $meeting)
     {
         return Inertia::render('Instructor/Course/Meeting/Edit', [
-            'slug' => $slug,
+            'slug' => $course->slug,
             'activity' => $this->interactive->getInteractive($meeting),
         ]);
     }

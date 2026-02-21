@@ -88,16 +88,15 @@ const Edit = ({ course, categories, employee_status, selected_employee_status })
         formData.append("jam_pelajaran", values.jam_pelajaran);
         formData.append("status", values.status);
 
-        const localData = localStorage.getItem("scheduleData");
-        if (values.type === "schedule" && localData) {
-            formData.append("schedules", localData);
+        // Selalu kirim jadwal dari state `data` (bukan hanya dari localStorage)
+        // Ini mencegah jadwal dianggap kosong saat user tidak mengubah jadwal
+        if (values.type === "schedule" && data.length > 0) {
+            formData.append("schedules", JSON.stringify(data));
         }
 
         router.post(`/instructor/course/${course.slug}`, formData, {
             onSuccess: () => {
-                if (localData) {
-                    localStorage.clear();
-                }
+                localStorage.removeItem("scheduleData");
             },
         });
     };

@@ -50,8 +50,8 @@ class ImportQuestionController
             return to_route('instructor.course.show', [$course->slug])->with('success', 'Import question successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
-            return to_route('instructor.course.activity.import-question.index', [$course->slug, $activity->id])->with('danger', $th->getMessage());
+
+            return to_route('instructor.course.activity.import-question.index', [$course->slug, $activity->id])->with('danger', 'Terjadi kesalahan saat melakukan import soal');
         }
     }
 

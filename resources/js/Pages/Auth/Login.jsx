@@ -51,25 +51,69 @@ const Login = () => {
             onSuccess: (page) => {
                 // Cek apakah server memberi URL redirect ke luar Inertia
                 if (page.props.redirect_url) {
-                    window.location.href = page.props.redirect_url; // 🔥 paksa reload
+                    window.location.href = page.props.redirect_url;
                 }
             },
             onError: (errors) => {
-                toast.error(
-                    errors.danger ||
-                    errors.email_or_username ||
-                    "Pastikan username dan password yang digunakan benar. Silahkan ulangi beberapa saat lagi",
-                    {
-                        position: "top-right",
-                        autoClose: 3000,
-                        theme: "colored",
-                        transition: Bounce,
+                const toastConfig = {
+                    position: "top-right",
+                    autoClose: 4000,
+                    theme: "colored",
+                    transition: Bounce,
+                };
+
+                // Captcha error (dari validasi Laravel)
+                if (errors.captcha) {
+                    toast.error("❌ CAPTCHA salah. Silakan coba lagi.", toastConfig);
+                    fetchCaptcha();
+                    return;
+                }
+
+                // Username / password kosong (validasi required)
+                if (errors.username) {
+                    toast.warning("⚠️ Username atau NIP wajib diisi.", toastConfig);
+                    return;
+                }
+
+                if (errors.password) {
+                    toast.warning("⚠️ Password wajib diisi.", toastConfig);
+                    return;
+                }
+
+                // Error dari logika login controller
+                if (errors.email_or_username) {
+                    const msg = errors.email_or_username;
+
+                    if (msg.includes("Kredensial tidak ditemukan") || msg.includes("akses ditolak")) {
+                        toast.error("🚫 Akun tidak ditemukan atau akses ditolak.", toastConfig);
+                    } else if (msg.includes("Username atau password salah")) {
+                        toast.error("🔑 Username atau password yang Anda masukkan salah.", toastConfig);
+                    } else if (msg.includes("hak akses berbeda")) {
+                        toast.error("⛔ NIP ini terdaftar dengan hak akses yang berbeda.", toastConfig);
+                    } else if (msg.includes("SSO tidak merespon") || msg.includes("Kredensial salah")) {
+                        toast.error("🌐 Kredensial salah atau server SSO tidak merespon. Coba beberapa saat lagi.", {
+                            ...toastConfig,
+                            autoClose: 6000,
+                        });
+                    } else if (msg.includes("Gagal autentikasi SSO") || msg.includes("data NIP tidak ditemukan")) {
+                        toast.error("❓ NIP tidak ditemukan di sistem. Pastikan NIP Anda benar.", toastConfig);
+                    } else {
+                        // Fallback untuk pesan lainnya
+                        toast.error(`❌ ${msg}`, toastConfig);
                     }
+
+                    fetchCaptcha();
+                    return;
+                }
+
+                // Fallback umum
+                toast.error(
+                    errors.danger || "Terjadi kesalahan. Pastikan username dan password benar, lalu coba lagi.",
+                    { ...toastConfig, autoClose: 5000 }
                 );
                 fetchCaptcha();
             },
         });
-
     };
 
     return (

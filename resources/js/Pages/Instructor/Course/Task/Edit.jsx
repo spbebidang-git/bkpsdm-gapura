@@ -89,7 +89,7 @@ const Edit = ({ slug, activity }) => {
 
                 <div className="max-w-80 mx-auto gap-3 flex justify-center mt-8">
                     <button className="button-primary">Save</button>
-                    <Link className="w-full" href={`/instructor/course/${slug}/activity`}>
+                    <Link className="w-full" href={`/instructor/course/${slug}`}>
                         <button className="button-secondary">Back</button>
                     </Link>
                 </div>

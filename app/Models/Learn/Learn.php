@@ -16,6 +16,11 @@ class Learn extends Model
 
     public $guarded = [];
 
+    protected $casts = [
+        'finished_at' => 'datetime',
+    ];
+
+
     public function learnItems()
     {
         return $this->hasMany(LearnItem::class);

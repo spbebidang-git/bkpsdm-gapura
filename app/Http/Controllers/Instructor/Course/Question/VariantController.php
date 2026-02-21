@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Instructor\Course\Question;
 
+use App\Models\Course\Course;
 use App\Models\Course\Question\QuestionVariant;
 use App\Services\Course\Activity\ActivityService;
 use App\Services\Course\Activity\Question\VariantService;
@@ -19,29 +20,29 @@ class VariantController
         $this->activity = $activityService;
     }
 
-    public function index($slug, $activityId)
+    public function index(Course $course, $activityId)
     {
         if (!$this->variant->getVariant($activityId)) {
-            return to_route('instructor.course.show', $slug);
+            return to_route('instructor.course.show', $course->slug);
         }
 
         return Inertia::render('Instructor/Course/Variant/Index', [
-            'slug' => $slug,
+            'slug' => $course->slug,
             'activity' => $this->activity->getDetailActivity($activityId),
             'variants' => $this->variant->getVariant($activityId)
         ]);
     }
 
-    public function create($slug, $activityId)
+    public function create(Course $course, $activityId)
     {
         return Inertia::render('Instructor/Course/Variant/Create', [
-            'slug' => $slug,
+            'slug' => $course->slug,
             'variant' => $this->variant->generateVariantNumber($activityId),
             'activityId' => $activityId,
         ]);
     }
 
-    public function store($slug, $activityId, Request $request)
+    public function store(Course $course, $activityId, Request $request)
     {
         try {
             DB::beginTransaction();
@@ -50,24 +51,24 @@ class VariantController
 
             DB::commit();
 
-            return to_route('instructor.course.activity.variant.index', [$slug, $activityId])->with('success', 'Variant created successfully.');
+            return to_route('instructor.course.activity.variant.index', [$course->slug, $activityId])->with('success', 'Variant created successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('instructor.course.activity.variant.index', [$slug, $activityId])->with('danger', 'Something went wrong.');
+            return to_route('instructor.course.activity.variant.index', [$course->slug, $activityId])->with('danger', 'Something went wrong.');
         }
     }
 
-    public function edit($slug, $activityId, QuestionVariant $variant)
+    public function edit(Course $course, $activityId, QuestionVariant $variant)
     {
         return Inertia::render('Instructor/Course/Variant/Edit', [
-            'slug' => $slug,
+            'slug' => $course->slug,
             'activityId' => $activityId,
             'variant' => $variant
         ]);
     }
 
-    public function update($slug, $activityId, QuestionVariant $variant, Request $request)
+    public function update(Course $course, $activityId, QuestionVariant $variant, Request $request)
     {
         try {
             DB::beginTransaction();
@@ -80,15 +81,15 @@ class VariantController
 
             DB::commit();
 
-            return to_route('instructor.course.activity.variant.index', [$slug, $activityId])->with('success', 'Variant updated successfully.');
+            return to_route('instructor.course.activity.variant.index', [$course->slug, $activityId])->with('success', 'Variant updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('instructor.course.activity.variant.index', [$slug, $activityId])->with('danger', 'Something went wrong.');
+            return to_route('instructor.course.activity.variant.index', [$course->slug, $activityId])->with('danger', 'Something went wrong.');
         }
     }
 
-    public function destroy($slug, $activityId, QuestionVariant $variant)
+    public function destroy(Course $course, $activityId, QuestionVariant $variant)
     {
         try {
             DB::beginTransaction();
@@ -97,11 +98,11 @@ class VariantController
 
             DB::commit();
 
-            return to_route('instructor.course.activity.variant.index', [$slug, $activityId]);
+            return to_route('instructor.course.activity.variant.index', [$course->slug, $activityId]);
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('instructor.course.activity.variant.index', [$slug, $activityId])->with('danger', 'Something went wrong.');
+            return to_route('instructor.course.activity.variant.index', [$course->slug, $activityId])->with('danger', 'Something went wrong.');
         }
     }
 }

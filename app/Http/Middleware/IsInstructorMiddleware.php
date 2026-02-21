@@ -11,7 +11,7 @@ class IsInstructorMiddleware
 
     public function handle(Request $request, Closure $next)
     {
-        if ($request->user() && $request->user()->is_instructor) {
+        if ($request->user() && $request->user()->hasRole('Instructor')) {
             $this->instructor = $request->user();
 
             view()->share('instructor', $this->instructor);
@@ -19,11 +19,11 @@ class IsInstructorMiddleware
             return $next($request);
         }
 
-        if ($request->user() && $request->user()->is_admin) {
+        if ($request->user() && $request->user()->hasRole('Admin')) {
             return to_route('admin.dashboard');
         }
 
-        if ($request->user() && $request->user()->is_participant) {
+        if ($request->user() && $request->user()->hasRole('Participant')) {
             return to_route('home');
         }
 

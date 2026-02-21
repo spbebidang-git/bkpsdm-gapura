@@ -11,17 +11,17 @@ class IsParticipantMiddleware
 
     public function handle(Request $request, Closure $next)
     {
-        if ($request->user() && $request->user()->is_participant) {
+        if ($request->user() && $request->user()->hasRole('Participant')) {
             $this->participant = $request->user();
             view()->share('participant', $this->participant);
             return $next($request);
         }
 
-        if ($request->user() && $request->user()->is_admin) {
+        if ($request->user() && $request->user()->hasRole('Admin')) {
             return $this->redirectResponse($request, route('admin.dashboard'));
         }
 
-        if ($request->user() && $request->user()->is_instructor) {
+        if ($request->user() && $request->user()->hasRole('Instructor')) {
             return $this->redirectResponse($request, route('instructor.dashboard'));
         }
 

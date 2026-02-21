@@ -8,6 +8,7 @@ use App\Services\Course\ScheduleUserService;
 use App\Services\Learn\LearnService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class CourseController
@@ -34,35 +35,48 @@ class CourseController
 
     public function show(Course $course)
     {
-        # tgl aktivasi , tgl selesai , nilai post test, jam pelajaran
-        $data = [
-            'activation_date' => $this->scheduleUser->getActivationDate($course->schedules->first()->id, $this->participantId),
-            'finished_at' => $this->learn->getFinishedAt($course->id, $this->participantId),
-            'post_test_avg' => $this->learn->getPostTestAvg($course->id, $this->participantId),
-            'jam_pelajaran' => $course->jam_pelajaran,
-        ];
+        try {
+            $firstSchedule = $course->schedules->first();
 
-        $course = $this->course->findBySlug($course->slug);
-        // dd($course);
+            # tgl aktivasi , tgl selesai , nilai post test, jam pelajaran
+            $data = [
+                'activation_date' => $firstSchedule
+                    ? $this->scheduleUser->getActivationDate($firstSchedule->id, $this->participantId)
+                    : null,
+                'finished_at'   => $this->learn->getFinishedAt($course->id, $this->participantId),
+                'post_test_avg' => $this->learn->getPostTestAvg($course->id, $this->participantId),
+                'jam_pelajaran' => $course->jam_pelajaran,
+            ];
 
-        return Inertia::render('Participant/Course/Show', [
-            'course' => [
-                'id' => $course->id,
-                'type' => $course->type,
-                'title' => $course->title,
-                'employee_status' => $course->employee_status,
-                'short_description' => $course->short_description,
-                'description' => $course->description,
-                'teaser_video' => $course->teaser_video,
-                'slug' => $course->slug,
-                'quota' => $course->quota,
-                'thumbnail' => $course->thumbnail_src,
-                'category' => $course->category->title,
-                'instructor' => $course->instructor->name,
-                'total_participant' => $course->total_participant,
-                'status' => $course->status,
-            ],
-            'learn' => $data
-        ]);
+            $course = $this->course->findBySlug($course->slug);
+            // dd($course);
+
+            return Inertia::render('Participant/Course/Show', [
+                'course' => [
+                    'id'               => $course->id,
+                    'type'             => $course->type,
+                    'title'            => $course->title,
+                    'employee_status'  => $course->employee_status,
+                    'short_description'=> $course->short_description,
+                    'description'      => $course->description,
+                    'teaser_video'     => $course->teaser_video,
+                    'slug'             => $course->slug,
+                    'quota'            => $course->quota,
+                    'thumbnail'        => $course->thumbnail_src,
+                    'category'         => $course->category->title,
+                    'instructor'       => $course->instructor->name,
+                    'total_participant'=> $course->total_participant,
+                    'status'           => $course->status,
+                ],
+                'learn' => $data
+            ]);
+        } catch (\Throwable $e) {
+            \Log::channel('app_errors')->error('Participant CourseController@show error: ' . $e->getMessage(), [
+                'course' => $course->slug ?? null,
+                'user'   => $this->participantId,
+            ]);
+            return redirect()->route('participant.course.index')
+                ->with('danger', 'Terjadi kesalahan saat memuat halaman kursus. Silakan coba lagi.');
+        }
     }
 }

@@ -126,9 +126,9 @@ class AuthController
             if (!$response->successful()) return;
 
             $dataApi = Http::withHeaders([
-                'apikey' => env('API_KEY'),
+                'apikey' => config('services.sso.api_key'),
                 'auth'   => 'Bearer ' . $response['access_token']
-            ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
+            ])->post(config('services.sso.base_url') . '/api/get_nip_data');
 
             if ($dataApi->successful()) {
                 $data = $dataApi->json();
@@ -144,10 +144,8 @@ class AuthController
 
     private function attemptSSOAndSync(Request $request, $nip, User $user)
     {
-        $response = $this->callSSOApi($nip, $request->password);
         try {
             $response = $this->callSSOApi($nip, $request->password);
-            dd($response);
             if ($response->successful() && isset($response['access_token'])) {
                 // Sinkron password lokal
                 $user->update(['password' => Hash::make($request->password)]);
@@ -172,14 +170,21 @@ class AuthController
             if (!$response->successful()) return false;
 
             $dataApi = Http::withHeaders([
-                'apikey' => env('API_KEY'),
+                'apikey' => config('services.sso.api_key'),
                 'auth'   => 'Bearer ' . $response['access_token']
-            ])->post(env('SSO_BASE_URL') . '/api/get_nip_data');
+            ])->post(config('services.sso.base_url') . '/api/get_nip_data');
 
             if (!$dataApi->successful()) return false;
 
             $data = $dataApi->json();
-            $email = $data['fv_email'] ?? "{$nip}@example.com";
+
+            // Jika SSO tidak mengembalikan email, tidak bisa provisioning
+            if (empty($data['fv_email'])) {
+                Log::error("Provisioning gagal NIP {$nip}: SSO tidak mengembalikan email.");
+                return false;
+            }
+
+            $email = $data['fv_email'];
 
             // Cek jika email ternyata sudah ada di database
             if (User::where('email', $email)->exists()) {
@@ -210,13 +215,13 @@ class AuthController
     private function callSSOApi($nip, $password)
     {
         return Http::retry(2, 100)->withHeaders([
-            'apikey' => env('API_KEY')
-        ])->post(env('SSO_BASE_URL') . '/oauth/token', [
+            'apikey' => config('services.sso.api_key')
+        ])->post(config('services.sso.base_url') . '/oauth/token', [
             'username'      => $nip,
             'password'      => $password,
             'grant_type'    => 'password',
-            'client_id'     => env('SSO_CLIENT_ID'),
-            'client_secret' => env('SSO_CLIENT_SECRET'),
+            'client_id'     => config('services.sso.client_id'),
+            'client_secret' => config('services.sso.client_secret'),
         ]);
     }
 

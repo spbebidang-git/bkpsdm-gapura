@@ -22,10 +22,10 @@ class PresentationVideoController
         $this->interactive = $interactiveService;
     }
 
-    public function create($slug)
+    public function create(Course $course)
     {
         return Inertia::render('Instructor/Course/VideoPresentation/Create', [
-            'slug' => $slug
+            'slug' => $course->slug
         ]);
     }
 
@@ -70,10 +70,10 @@ class PresentationVideoController
         }
     }
 
-    public function edit($slug, Activity $video)
+    public function edit(Course $course, Activity $video)
     {
         return Inertia::render('Instructor/Course/VideoPresentation/Edit', [
-            'slug' => $slug,
+            'slug' => $course->slug,
             'activity' => $this->interactive->getInteractive($video),
         ]);
     }
@@ -102,7 +102,7 @@ class PresentationVideoController
             # Update Pre Test
             $this->interactive->updateInteractive([
                 'activity_id' => $video->id,
-                'type' => 'meeting',
+                'type' => 'video',
                 'description' => $request->description,
                 'url' => $request->url,
                 'duration' => $request->duration

@@ -96,14 +96,14 @@ const Edit = ({ slug, activity }) => {
                         {/* TIMER */}
                         <FormInput
                             title={"timer"}
-                            label={"Durasi Waktu (Menit)"}
+                            label={"Durasi Waktu (Detik)"}
                             isRequired={true}
                             type="number"
                             onChange={handleChange}
                             value={values.timer}
                             error={errors.timer}
-                            placeholder={"Contoh: 30"}
-                            small={"Durasi pengerjaan post-test dalam menit. Contoh: 15 = 15 menit."}
+                            placeholder={"Waktu dalam detik (contoh: 60 = 1 menit)"}
+                            small={"Durasi pengerjaan post-test dalam detik. Contoh: 1800 = 30 menit."}
                         />
 
                         {/* INSTRUKSI */}
@@ -151,7 +151,7 @@ const Edit = ({ slug, activity }) => {
 
                 <div className="max-w-80 mx-auto gap-3 flex justify-center mt-8">
                     <button className="button-primary">Simpan Perubahan</button>
-                    <Link className="w-full" href={`/instructor/course/${slug}/activity`}>
+                    <Link className="w-full" href={`/instructor/course/${slug}`}>
                         <button className="button-secondary" type="button">Kembali</button>
                     </Link>
                 </div>

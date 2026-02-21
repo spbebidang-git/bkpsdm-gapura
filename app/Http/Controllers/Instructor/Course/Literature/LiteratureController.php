@@ -22,10 +22,10 @@ class LiteratureController
         $this->literature = $literatureService;
     }
 
-    public function create($slug)
+    public function create(Course $course)
     {
         return Inertia::render('Instructor/Course/Literature/Create', [
-            'slug' => $slug
+            'slug' => $course->slug
         ]);
     }
 
@@ -69,10 +69,10 @@ class LiteratureController
         }
     }
 
-    public function edit($slug, Activity $literature)
+    public function edit(Course $course, Activity $literature)
     {
         return Inertia::render('Instructor/Course/Literature/Edit', [
-            'slug' => $slug,
+            'slug' => $course->slug,
             'activity' => $this->literature->getLiteratureForEdit($literature),
         ]);
     }
@@ -83,7 +83,8 @@ class LiteratureController
             'title' => 'required',
             'sub_title' => 'required',
             'value' => 'required|numeric',
-            'content' => 'required|mimes:pdf|max:10240',
+            'content' => 'nullable|mimes:pdf|max:10240',
+            'duration' => 'required|numeric',
         ]);
 
         try {

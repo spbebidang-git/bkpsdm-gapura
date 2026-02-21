@@ -22,10 +22,10 @@ class PostTestController
         $this->question = $questionService;
     }
 
-    public function create($slug)
+    public function create(Course $course)
     {
         return Inertia::render('Instructor/Course/PostTest/Create', [
-            'slug' => $slug
+            'slug' => $course->slug
         ]);
     }
 
@@ -71,10 +71,10 @@ class PostTestController
         }
     }
 
-    public function edit($slug, Activity $post_test)
+    public function edit(Course $course, Activity $post_test)
     {
         return Inertia::render('Instructor/Course/PostTest/Edit', [
-            'slug' => $slug,
+            'slug' => $course->slug,
             'activity' => $this->question->getQuestion($post_test),
         ]);
     }
@@ -116,7 +116,6 @@ class PostTestController
             return to_route('instructor.course.show', $course->slug)->with('success', 'Post-Test updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
 
             return to_route('instructor.course.show', $course->slug)->with('danger', 'Something went wrong.');
         }

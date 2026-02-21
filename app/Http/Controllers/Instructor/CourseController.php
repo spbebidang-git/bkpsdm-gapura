@@ -69,7 +69,6 @@ class CourseController
             return to_route('instructor.dashboard')->with('success', 'Course saved successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
             return to_route('instructor.dashboard')->with('danger', 'Something went wrong.');
         }
     }
@@ -156,7 +155,6 @@ class CourseController
             return to_route('instructor.dashboard')->with('success', 'Course updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
             return to_route('instructor.dashboard')->with('danger', 'Something went wrong.');
         }
     }

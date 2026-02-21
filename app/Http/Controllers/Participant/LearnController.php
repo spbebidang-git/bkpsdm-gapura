@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class LearnController extends Controller
@@ -29,41 +30,24 @@ class LearnController extends Controller
     ) {
         $this->activity = $activityService;
         $this->course = $courseService;
-        $this->participantId = Auth::user()->id;
+        $this->participantId = Auth::id(); // Optimized Auth call
         $this->learn = $learnService;
         $this->question = $questionService;
     }
 
-    public function index(Course $course, Schedule $schedule, Activity $activity)
+    /**
+     * Helper to check learning sequence and prerequisites.
+     * Returns a redirect response if check fails, or null if passes.
+     */
+    private function checkLearningSequence(Course $course, Schedule $schedule, Activity $activity)
     {
-
-        if ($activity->type === 'post-test' && request()->loop) {
-            // dd(123);
-            // Check Total looping
-            $checkTrial = $this->learn->checkTrial($this->participantId, $course->id, $activity->id);
-            // dd($checkTrial);
-            if ($checkTrial) {
-                if ($checkTrial === 2) {
-                    // $this->learn->resetFromPostTest($this->participantId, $course->id);
-
-                    return to_route('participant.learn.instruction.index', [$course->slug, $schedule->id, $this->learn->getInititalActivityId($course->id)]);
-                }
-
-                $this->learn->setTrialTotal($checkTrial->learnItems->first());
-                // return response(null, 200);
-            }
-        }
-
-        $course = $this->course->findBySlug($course->slug);
-        // $this->learn->resetLearning($this->participantId, $course->id, $course->expired);
-
         if (!$this->learn->isLearned($this->participantId, $course->id)) {
             $initActivity = $this->learn->getInititalActivityId($course->id);
             if ($initActivity !== intval($activity->id)) {
                 return to_route('participant.learn.instruction.index', [$course->slug, $schedule->id, $initActivity]);
             }
         } else {
-            // ✅ Cek activity sebelumnya
+            // Check previous activity score (if pre-test/post-test)
             $prev = $this->activity->getPreviousActivity($course->id, $activity->id);
 
             if ($prev && in_array($prev->type, ['pre-test', 'post-test'])) {
@@ -74,14 +58,36 @@ class LearnController extends Controller
                 }
             }
 
-
             $validOpenActivity = $this->learn->checkValidOpenActivity($this->participantId, $course->id, $activity->id);
-            // dd($validOpenActivity);
+
             if (is_array($validOpenActivity)) {
                 return redirect()->back()->withErrors(['error' => 'Kamu belum menyelesaikan kegiatan sebelumnya. Selesaikan sesuai urutan kegiatan.']);
             }
         }
-        $timer = 0;
+
+        return null;
+    }
+
+    public function index(Course $course, Schedule $schedule, Activity $activity)
+    {
+        // Handle Post-Test Trial Loop
+        if ($activity->type === 'post-test' && request()->loop) {
+            $checkTrial = $this->learn->checkTrial($this->participantId, $course->id, $activity->id);
+            if ($checkTrial) {
+                if ($checkTrial === 2) {
+                    return to_route('participant.learn.instruction.index', [$course->slug, $schedule->id, $this->learn->getInititalActivityId($course->id)]);
+                }
+                $this->learn->setTrialTotal($checkTrial->learnItems->first());
+            }
+        }
+
+        $course = $this->course->findBySlug($course->slug);
+
+        // Check Sequence
+        $sequenceCheck = $this->checkLearningSequence($course, $schedule, $activity);
+        if ($sequenceCheck) {
+            return $sequenceCheck;
+        }
 
         return Inertia::render('Learn/Material/Index', [
             'course' => $course,
@@ -95,44 +101,32 @@ class LearnController extends Controller
 
     public function store(Course $course, Schedule $schedule, Activity $activity, Request $request)
     {
-        // dd($request->all());
-        # validate pre test & post test
-        // if ($activity->type == 'pre-test' || $activity->type == 'post-test') {
-        //     if (!$this->question->validateQuestion(count($request->all()), $this->participantId, $activity->id)) {
-        //         return redirect()->back()->withErrors(['error' => 'Please answer all questions']);
-        //     }
-        // }
-
         if ($activity->type == 'task') {
             $request->validate([
                 'file' => 'required|mimes:pdf|max:2048'
             ]);
         }
 
-
         try {
             DB::beginTransaction();
 
-            # For Pre Test, Post Test & Task
-            if (!empty($request->all()) && ($activity->type == 'pre-test' || $activity->type == 'post-test')) {
-                $this->activity->storeActivity($this->participantId, $course->id, $activity->id, $request->all());
-            }
-            # For Task
-            if ($activity->type  == 'task') {
-                $this->activity->storeActivity($this->participantId, $course->id, $activity->id, $request->all());
+            $stored = false;
+
+            // Handle Pre-Test, Post-Test, Task
+            if (!empty($request->all()) && ($activity->type == 'pre-test' || $activity->type == 'post-test' || $activity->type == 'task')) {
+                $stored = $this->activity->storeActivity($this->participantId, $course->id, $activity->id, $request->all());
             }
 
-            # For Meeting, Video & Literature
-            if (empty($request->all()) && ($activity->type == 'meeting' || $activity->type == 'video' || $activity->type == 'literature')) {
-                $this->activity->storeActivity($this->participantId, $course->id, $activity->id, $request->all());
+            // Handle Meeting, Video, Literature (No answers required)
+            if (empty($request->all()) && in_array($activity->type, ['meeting', 'video', 'literature'])) {
+                $stored = $this->activity->storeActivity($this->participantId, $course->id, $activity->id, $request->all());
             }
 
-            # For Submit Meeting 
+            // Specific handler for Meeting submission if needed (logic preserved from original)
             if (!empty($request->all()) && $activity->type == 'meeting') {
-
-                $q = $this->activity->storeActivity($this->participantId, $course->id, $activity->id, $request->all());
-                // dd($q);
-                if (!$q) {
+                $stored = $this->activity->storeActivity($this->participantId, $course->id, $activity->id, $request->all());
+                if (!$stored) {
+                    DB::rollBack();
                     return to_route('participant.learn.index', [$course->slug, $schedule->id, $activity->id])->with('danger', 'error');
                 }
             }
@@ -149,39 +143,33 @@ class LearnController extends Controller
 
             return to_route('participant.learn.result.index', [$course->slug, $schedule->id, $activity->id]);
 
-            // // if question test
-
-
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
-            return to_route('participant.learn.index', [$course->slug, $schedule->id, $activity->id]);
+            Log::error('LearnController@store Error: ' . $th->getMessage());
+            return to_route('participant.learn.index', [$course->slug, $schedule->id, $activity->id])
+                ->withErrors(['error' => 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.']);
         }
     }
 
     public function instruction(Course $course, Schedule $schedule, Activity $activity)
     {
         if ($course->type === 'schedule') {
-            $scheduleDate = Carbon::parse($schedule->date);
-            $scheduleTime = Carbon::parse($schedule->time_from);
+            $now          = Carbon::now();
+            $scheduleDate = Carbon::parse($schedule->getRawOriginal('date') ?? $schedule->date)->startOfDay();
 
-            if ($scheduleDate->isFuture() || ($scheduleDate->isToday() && $scheduleTime->greaterThan(now()))) {
-                return to_route('participant.course.index')->with('danger', 'Kelas belum dimulai');
+            $isFutureDate = $scheduleDate->greaterThan($now->copy()->startOfDay());
+            $isTodayButNotYetStarted = $scheduleDate->isToday()
+                && Carbon::parse($schedule->time_from)->greaterThan($now);
+
+            if ($isFutureDate || $isTodayButNotYetStarted) {
+                return to_route('participant.course.index')->with('danger', 'Kelas belum dimulai. Silakan masuk sesuai jadwal.');
             }
         }
 
-
-        if (!$this->learn->isLearned($this->participantId, $course->id)) {
-            $initActivity = $this->learn->getInititalActivityId($course->id);
-            if ($initActivity !== intval($activity->id)) {
-                return to_route('participant.learn.instruction.index', [$course->slug, $schedule->id, $initActivity]);
-            }
-        } else {
-            $validOpenActivity = $this->learn->checkValidOpenActivity($this->participantId, $course->id, $activity->id);
-            // dd($validOpenActivity);
-            if (is_array($validOpenActivity)) {
-                return redirect()->back()->withErrors(['error' => 'Kamu belum menyelesaikan kegiatan sebelumnya. Selesaikan sesuai urutan kegiatan.']);
-            }
+        // Check Sequence
+        $sequenceCheck = $this->checkLearningSequence($course, $schedule, $activity);
+        if ($sequenceCheck) {
+            return $sequenceCheck;
         }
 
         $instruction = $activity->instruction;
@@ -192,7 +180,7 @@ class LearnController extends Controller
             'activities' => $this->activity->getActivityByParticipant($this->participantId, $course->id),
             'activity' => $this->activity->getDetailActivityParticipant($this->participantId, $activity->id),
             'activity_id' => $activity->id,
-            'question_result' =>  null,
+            'question_result' => null,
             'instruction' => $instruction,
             'schedule' => $schedule
         ]);
@@ -205,17 +193,9 @@ class LearnController extends Controller
 
     public function result(Course $course, Schedule $schedule, Activity $activity)
     {
+        $questionResult = null;
         if ($activity->type == 'pre-test' || $activity->type == 'post-test') {
             $questionResult = $this->learn->getResultQuestion($this->participantId, $course->id, $activity->id);
-            return Inertia::render('Learn/Result/Index', [
-                'course' => $course,
-                'progress' => Learn::where('participant_id', $this->participantId)->where('course_id', $course->id)->first()->progress ?? '0 %',
-                'activities' => $this->activity->getActivityByParticipant($this->participantId, $course->id),
-                'activity' => $this->activity->getDetailActivityParticipant($this->participantId, $activity->id),
-                'activity_id' => $activity->id,
-                'question_result' => $questionResult ?? null,
-                'schedule' => $schedule
-            ]);
         }
 
         return Inertia::render('Learn/Result/Index', [
@@ -224,33 +204,29 @@ class LearnController extends Controller
             'activities' => $this->activity->getActivityByParticipant($this->participantId, $course->id),
             'activity' => $this->activity->getDetailActivityParticipant($this->participantId, $activity->id),
             'activity_id' => $activity->id,
-            'question_result' =>  null,
+            'question_result' => $questionResult,
             'schedule' => $schedule
         ]);
     }
 
     public function storeResult(Course $course, Schedule $schedule, Activity $activity, Request $request)
     {
-        $nextActivity =  $this->activity->nextActivity($course->id, $activity->id);
+        $nextActivity = $this->activity->nextActivity($course->id, $activity->id);
 
         if (!$nextActivity) {
             return to_route('participant.rating.index', [$course->slug, $schedule->id])->with('success', 'Saved');
         }
 
-        // ✅ CEGAH LANJUT JIKA NILAI BELUM MENCAPAI MINIMUM
+        // Prevent proceeding if minimum score not met
         if (in_array($activity->type, ['pre-test', 'post-test'])) {
             $isPassed = $this->learn->isPassedMinimumScore($this->participantId, $course->id, $activity->id);
 
             if (!$isPassed) {
-                // return response(null, 400);
                 return redirect()->back()->withErrors(['error' => 'Nilai minimal dari aktivitas sebelumnya belum tercapai. Silahkan ulangi test ini.']);
             }
-        }
-
-        if (($activity->type == 'pre-test' || $activity->type == 'post-test') && empty($request->all())) {
-            return to_route('participant.learn.instruction.index', [$course->slug, $schedule->id, $nextActivity])->with('success', 'Saved');
         }
 
         return to_route('participant.learn.instruction.index', [$course->slug, $schedule->id, $nextActivity])->with('success', 'Saved');
     }
 }
+

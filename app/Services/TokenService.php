@@ -5,12 +5,16 @@ namespace App\Services;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class TokenService
 {
     private $fileName = 'token.txt';
 
+    /**
+     * Ambil token yang valid. Jika expired secara lokal, refresh otomatis.
+     */
     public function getToken(): string
     {
         if ($this->isExpired()) {
@@ -21,6 +25,24 @@ class TokenService
         $data = json_decode(Crypt::decryptString($encrypted), true);
 
         return 'Bearer ' . $data['access_token'];
+    }
+
+    /**
+     * Paksa refresh token dari SSO tanpa cek cache.
+     * Dipanggil saat API mengembalikan 401 (token stale di server).
+     */
+    public function forceRefresh(): string
+    {
+        if (app()->isLocal()) {
+            Log::debug('[TokenService] Force refresh token dipanggil.');
+        }
+
+        // Hapus cache token agar refreshToken menyimpan ulang
+        if (Storage::exists($this->fileName)) {
+            Storage::delete($this->fileName);
+        }
+
+        return $this->refreshToken();
     }
 
     private function setToken(string $token, int $expiresIn): void
@@ -48,7 +70,13 @@ class TokenService
 
     private function refreshToken(): string
     {
-        // Request token baru ke API OAuth
+        if (app()->isLocal()) {
+            Log::debug('[TokenService] Melakukan refresh token dari SSO.', [
+                'username' => env('SSO_ADMIN_USERNAME'),
+                'url'      => env('SSO_BASE_URL') . '/oauth/token',
+            ]);
+        }
+
         $response = Http::retry(3, 100)->withHeaders([
             'apikey' => env('API_KEY')
         ])->post(env('SSO_BASE_URL') . '/oauth/token', [
@@ -59,14 +87,23 @@ class TokenService
             'client_secret' => env('SSO_CLIENT_SECRET'),
         ]);
 
+        if (app()->isLocal()) {
+            Log::debug('[TokenService] SSO OAuth response.', [
+                'http_status' => $response->status(),
+                'body'        => $response->body(),
+            ]);
+        }
+
         if ($response->failed()) {
-            throw new \Exception('Gagal mengambil token dari API');
+            throw new \Exception(
+                'Gagal mengambil token dari SSO (HTTP ' . $response->status() . '): ' . $response->body()
+            );
         }
 
         $data = $response->json();
 
         $this->setToken($data['access_token'], $data['expires_in']);
 
-        return $data['access_token'];
+        return 'Bearer ' . $data['access_token'];
     }
 }

@@ -90,40 +90,116 @@
 
     </div>
 
-    <!-- Performa Kursus -->
-    <div class="card p-0">
-        <h5 class="card-header border-bottom d-flex justify-content-between align-items-center">
-            Performa Margin Kursus
-        </h5>
+    {{-- ─── PERFORMA MARGIN KURSUS ─── --}}
+    <div class="card border-0 shadow-sm p-0">
+        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3 px-4">
+            <h6 class="mb-0 fw-bold">📊 Performa Margin Kursus</h6>
+            <a href="{{ route('admin.course-performance.index') }}" class="btn btn-sm btn-outline-primary">
+                Lihat Detail →
+            </a>
+        </div>
 
-        <div class="card-body row p-4">
+        <div class="card-body p-4">
 
-            <!-- Tabel -->
-            <div class="col-5">
-                <div class="table-responsive mb-4">
-                    <table class="table table-bordered text-center">
-                        <thead>
-                            <tr>
-                                <th>Materi</th>
-                                <th class="text-nowrap" style="width: 50px;">Margin Performa</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($result as $row)
-                                <tr>
-                                    <td>{{ $row['course_title'] }}</td>
-                                    <td>{{ $row['avg_margin'] }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+            {{-- Summary Cards --}}
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #6366f1 !important;">
+                        <div class="card-body py-3 px-4">
+                            <p class="text-muted small mb-1">Total Materi</p>
+                            <div class="fs-2 fw-bold text-dark">{{ count($result) }}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #f59e0b !important;">
+                        <div class="card-body py-3 px-4">
+                            <p class="text-muted small mb-1">Rata-rata Pre Test</p>
+                            <div class="fs-2 fw-bold" style="color:#f59e0b">
+                                {{ count($result) ? round($result->avg('avg_pre_test'), 1) : 0 }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #10b981 !important;">
+                        <div class="card-body py-3 px-4">
+                            <p class="text-muted small mb-1">Rata-rata Post Test</p>
+                            <div class="fs-2 fw-bold" style="color:#10b981">
+                                {{ count($result) ? round($result->avg('avg_post_test'), 1) : 0 }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid #3b82f6 !important;">
+                        <div class="card-body py-3 px-4">
+                            <p class="text-muted small mb-1">Rata-rata Margin</p>
+                            <div class="fs-2 fw-bold" style="color:#3b82f6">
+                                {{ count($result) ? round($result->avg('avg_margin'), 1) : 0 }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Chart -->
-            <div class="col-7">
-                <canvas id="performanceChart" class="border p-3" height="250"></canvas>
+            {{-- Tabel Ringkas --}}
+            @if(count($result) > 0)
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 0.875rem;">
+                    <thead style="background:#f8fafc">
+                        <tr>
+                            <th class="ps-3 py-3 fw-semibold text-muted" style="width:40px">#</th>
+                            <th class="py-3 fw-semibold text-muted">Nama Materi</th>
+                            <th class="py-3 fw-semibold text-muted text-center">Peserta</th>
+                            <th class="py-3 fw-semibold text-muted text-center" style="color:#f59e0b!important">Pre Test</th>
+                            <th class="py-3 fw-semibold text-muted text-center" style="color:#10b981!important">Post Test</th>
+                            <th class="py-3 fw-semibold text-muted text-center">Margin</th>
+                            <th class="pe-3 py-3 fw-semibold text-muted text-center">Efektivitas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($result as $i => $row)
+                            @php
+                                $margin    = $row['avg_margin'];
+                                $efek      = $row['peserta_mengikuti'] > 0
+                                    ? round(($row['peserta_selesai'] / $row['peserta_mengikuti']) * 100, 1)
+                                    : 0;
+                                $marginColor = $margin >= 20 ? '#10b981' : ($margin >= 0 ? '#f59e0b' : '#ef4444');
+                                $marginIcon  = $margin > 0 ? '▲' : ($margin == 0 ? '─' : '▼');
+                                $efekColor   = $efek >= 70 ? 'success' : ($efek >= 40 ? 'warning' : 'danger');
+                            @endphp
+                            <tr>
+                                <td class="ps-3 text-muted">{{ $i + 1 }}</td>
+                                <td><span class="fw-semibold text-dark">{{ $row['course_title'] }}</span></td>
+                                <td class="text-center">
+                                    <span class="fw-semibold">{{ $row['peserta_selesai'] }}</span>
+                                    <span class="text-muted">/{{ $row['peserta_mengikuti'] }}</span>
+                                </td>
+                                <td class="text-center fw-bold" style="color:#f59e0b">{{ $row['avg_pre_test'] }}</td>
+                                <td class="text-center fw-bold" style="color:#10b981">{{ $row['avg_post_test'] }}</td>
+                                <td class="text-center fw-bold" style="color:{{ $marginColor }}">
+                                    {{ $marginIcon }} {{ abs($margin) }}
+                                </td>
+                                <td class="pe-3 text-center">
+                                    <div class="d-flex align-items-center justify-content-center gap-2">
+                                        <div class="progress flex-grow-1" style="height:6px;max-width:80px">
+                                            <div class="progress-bar bg-{{ $efekColor }}" style="width:{{ $efek }}%"></div>
+                                        </div>
+                                        <span class="badge text-bg-{{ $efekColor }} rounded-pill">{{ $efek }}%</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
+            @else
+            <div class="text-center py-4">
+                <div class="fs-1 mb-2">📭</div>
+                <p class="text-muted small mb-0">Belum ada data performa. Data akan muncul setelah peserta menyelesaikan pelatihan beserta pre &amp; post test-nya.</p>
+            </div>
+            @endif
 
         </div>
     </div>
@@ -155,48 +231,4 @@
 @endpush
 
 
-@push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <script>
-        const ctx = document.getElementById('performanceChart').getContext('2d');
-
-        const chartData = {
-            labels: @json($result->pluck('course_title')),
-            datasets: [{
-                label: 'Margin Performa',
-                data: @json($result->pluck('avg_margin')),
-                backgroundColor: '#2563eb',
-                borderRadius: 6,
-            }]
-        };
-
-        new Chart(ctx, {
-            type: 'bar',
-            data: chartData,
-            options: {
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Grafik Margin Performa Kursus',
-                        font: {
-                            size: 18
-                        }
-                    },
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        ticks: {
-                            stepSize: 10
-                        }
-                    }
-                }
-            }
-        });
-    </script>
-@endpush

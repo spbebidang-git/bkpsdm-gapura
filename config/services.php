@@ -36,9 +36,10 @@ return [
     ],
 
     'sso' => [
-        'base_url' => env('SSO_BASE_URL'),
-        'client_id' => env('SSO_CLIENT_ID'),
-        'client_secret' => env('SSO_CLIENT_SECRET')
+        'base_url'      => env('SSO_BASE_URL'),
+        'api_key'       => env('API_KEY'),
+        'client_id'     => env('SSO_CLIENT_ID'),
+        'client_secret' => env('SSO_CLIENT_SECRET'),
     ],
 
 ];

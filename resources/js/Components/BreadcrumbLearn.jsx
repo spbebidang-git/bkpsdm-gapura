@@ -1,17 +1,18 @@
 
-const BreadcrumbLearn = ({ title, activeTab, icon }) => {
-    // const isActive = activeTab === title;
+const BreadcrumbLearn = ({ title, activeTab, icon, size = 'md' }) => {
+    const isLg = size === 'lg';
     return (
-        <div
-            className={`rounded-full border-2 w-fit px-6 py-1.5 font-semibold flex items-center gap-1 
-          ${activeTab ? "bg-teal-50 text-primary border-primary" : "text-gray-500"}`}
+        <span
+            className={`flex items-center gap-2 transition-colors duration-300 capitalize
+          ${isLg ? 'text-base md:text-[17px]' : 'text-sm md:text-[15px]'}
+          ${activeTab
+                    ? "text-primary font-bold tracking-wide"
+                    : "text-gray-500 font-medium hover:text-primary"}`}
         >
-            <box-icon name={icon} color={`${!activeTab ? '#64748b' : '#018083'}`}></box-icon>
+            {icon && <box-icon name={icon} color={activeTab ? '#018083' : '#9ca3af'} size={isLg ? '22px' : '20px'}></box-icon>}
             {title}
-        </div>
+        </span>
     );
 };
 
 export default BreadcrumbLearn;
-
-

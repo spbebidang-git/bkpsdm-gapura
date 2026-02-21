@@ -127,6 +127,17 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        // Channel khusus untuk error aplikasi
+        // - File harian: storage/logs/app-errors-YYYY-MM-DD.log
+        // - Auto-delete setelah 7 hari
+        'app_errors' => [
+            'driver'              => 'daily',
+            'path'                => storage_path('logs/app-errors.log'),
+            'level'               => 'error',
+            'days'                => 7,
+            'replace_placeholders'=> true,
+        ],
+
     ],
 
 ];

@@ -132,7 +132,7 @@ const Create = ({ slug }) => {
                         <FormInput
                             title="duration"
                             label="Durasi Membaca (Detik)"
-                            placeholder="Contoh: 300 = 5 menit"
+                            placeholder="Waktu dalam detik (contoh: 300 = 5 menit)"
                             small="Durasi diperlukan untuk estimasi waktu belajar peserta."
                             isRequired
                             onChange={handleChange}

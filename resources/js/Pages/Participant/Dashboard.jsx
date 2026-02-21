@@ -13,7 +13,7 @@ const Dashboard = () => {
 
                 {/* Statistik singkat */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card title="Total Course" value={stats.totalCourses} color="bg-blue-500" />
+                    <Card title="Total Course" value={stats.totalCourses} color="bg-primary" />
                     <Card title="Selesai" value={stats.completedCourses} color="bg-green-500" />
                     <Card title="On Going" value={stats.ongoingCourses} color="bg-yellow-500" />
                     <Card title="Sertifikat" value={stats.certificates} color="bg-purple-500" />
@@ -36,13 +36,13 @@ const Dashboard = () => {
                             {ongoingCourses.map((course) => (
                                 <div
                                     key={course.id}
-                                    className="p-4 border rounded-lg hover:bg-gray-50 transition"
+                                    className="p-5 border border-gray-100 rounded-xl hover:shadow-md hover:border-primary/30 transition-all duration-300 bg-gray-50/50 hover:bg-white group"
                                 >
-                                    <div className="flex justify-between items-center mb-1">
-                                        <h3 className="font-medium text-gray-800">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <h3 className="font-semibold text-gray-800 group-hover:text-primary transition-colors">
                                             {course.title}
                                         </h3>
-                                        <span className="text-sm text-gray-500">
+                                        <span className="text-sm font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full">
                                             {course.progress}%
                                         </span>
                                     </div>
@@ -59,24 +59,26 @@ const Dashboard = () => {
                 <div className="bg-white rounded-xl shadow p-6 border border-gray-100">
                     <h2 className="font-semibold text-gray-700 mb-4">Course Selesai</h2>
                     {completedCourses.length > 0 ? (
-                        <table className="w-full text-sm text-left text-gray-600 border">
-                            <thead className="bg-gray-100">
-                                <tr>
-                                    <th className="px-4 py-2">Judul</th>
-                                    <th className="px-4 py-2 text-right">Tanggal Selesai</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {completedCourses.map((course) => (
-                                    <tr key={course.id} className="border-t hover:bg-gray-50">
-                                        <td className="px-4 py-2">{course.title}</td>
-                                        <td className="px-4 py-2 text-right">
-                                            {course.date}
-                                        </td>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left text-gray-600 border border-gray-100 rounded-lg overflow-hidden">
+                                <thead className="bg-gray-50 text-gray-700 font-semibold border-b border-gray-100">
+                                    <tr>
+                                        <th className="px-5 py-3">Judul</th>
+                                        <th className="px-5 py-3 text-right">Tanggal Selesai</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {completedCourses.map((course) => (
+                                        <tr key={course.id} className="border-b border-gray-50 last:border-0 hover:bg-primary/5 transition-colors">
+                                            <td className="px-5 py-4 font-medium text-gray-800">{course.title}</td>
+                                            <td className="px-5 py-4 text-right text-gray-500 whitespace-nowrap">
+                                                {course.date}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     ) : (
                         <p className="text-gray-500 text-sm">Belum ada course yang selesai.</p>
                     )}
@@ -88,13 +90,13 @@ const Dashboard = () => {
 
 // Card Component
 const Card = ({ title, value, color }) => (
-    <div className="bg-white rounded-xl shadow border border-gray-100 p-4 flex flex-col items-center justify-center text-center">
+    <div className="bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1.5 border border-gray-100 p-6 flex flex-col items-center justify-center text-center group cursor-default">
         <div
-            className={`w-12 h-12 flex items-center justify-center rounded-full text-white ${color}`}
+            className={`w-16 h-16 flex items-center justify-center rounded-2xl text-white ${color} shadow-sm group-hover:scale-110 transition-transform duration-300 ring-4 ring-white`}
         >
-            <span className="text-lg font-bold">{value}</span>
+            <span className="text-2xl font-bold">{value}</span>
         </div>
-        <p className="text-sm text-gray-500 mt-2">{title}</p>
+        <p className="font-medium text-gray-600 mt-4 group-hover:text-gray-900 transition-colors">{title}</p>
     </div>
 );
 
@@ -102,7 +104,7 @@ const Card = ({ title, value, color }) => (
 const Progress = ({ value }) => (
     <div className="w-full bg-gray-200 rounded-full h-2">
         <div
-            className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+            className="bg-primary h-2 rounded-full transition-all duration-500"
             style={{ width: `${value}%` }}
         ></div>
     </div>

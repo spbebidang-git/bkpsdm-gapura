@@ -118,6 +118,8 @@ Route::prefix('/admin')
         });
 
         Route::get('/certificate', [App\Http\Controllers\Admin\CertificateController::class, 'index'])->name('certificate.index');
+        Route::post('/certificate/sync-push', [App\Http\Controllers\Admin\CertificateController::class, 'syncPush'])->name('certificate.sync-push');
+        Route::post('/certificate/sync-pull', [App\Http\Controllers\Admin\CertificateController::class, 'syncPull'])->name('certificate.sync-pull');
 
         Route::get('bulk-certificate/{courseId}', function ($courseId) {
             $results = DB::table('users')

@@ -83,12 +83,16 @@ class LiteratureService
         $literature = Literature::where('activity_id', $activity->id)->first();
 
         return [
-            'id' => $activity->id,
-            'title' => $activity->title,
-            'value' => $activity->value,
+            'id'          => $activity->id,
+            'title'       => $activity->title,
+            'value'       => $activity->value,
             'instruction' => $activity->instruction,
-            'sub_title' => $literature->sub_title,
-            'duration' => $literature->duration,
+            'sub_title'   => $literature->sub_title,
+            'duration'    => $literature->duration,
+            'content'     => $literature->content,
+            'content_url' => $literature->content
+                ? asset(Literature::$directoryDocument . $literature->content)
+                : null,
         ];
     }
 }

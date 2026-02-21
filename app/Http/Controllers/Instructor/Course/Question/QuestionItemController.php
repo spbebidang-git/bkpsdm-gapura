@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Instructor\Course\Question;
 
+use App\Models\Course\Course;
 use App\Models\Course\Question\QuestionItem;
 use App\Models\Course\Question\QuestionOption;
 use App\Services\Course\Activity\Question\QuestionItemService;
@@ -19,15 +20,15 @@ class QuestionItemController
         $this->questionItem = $questionItemService;
     }
 
-    public function index($slug, $activityId, $questionId)
+    public function index(Course $course, $activityId, $variantId)
     {
-        $activity = $this->questionItem->getActivity($activityId, $questionId);
+        $activity = $this->questionItem->getActivity($activityId, $variantId);
         // dd($activity);
         return Inertia::render('Instructor/Course/Variant/QuestionItem/Index', [
-            'slug' => $slug,
+            'slug' => $course->slug,
             'activityId' => $activityId,
-            'questionId' => $questionId,
-            'questionItems' => $this->questionItem->getQuestionItems($questionId),
+            'questionId' => $variantId,
+            'questionItems' => $this->questionItem->getQuestionItems($variantId),
             'activity' => [
                 'type' => $activity->type == 'pre' ? 'Pre-Test' : 'Post-Test',
                 'title' => $activity->title,
@@ -38,16 +39,16 @@ class QuestionItemController
         ]);
     }
 
-    public function create($slug, $activityId, $questionId)
+    public function create(Course $course, $activityId, $variantId)
     {
         return Inertia::render('Instructor/Course/Variant/QuestionItem/Create', [
-            'slug' => $slug,
+            'slug' => $course->slug,
             'activityId' => $activityId,
-            'questionId' => $questionId,
+            'questionId' => $variantId,
         ]);
     }
 
-    public function store($slug, $activityId, $questionId, Request $request)
+    public function store(Course $course, $activityId, $variantId, Request $request)
     {
         $request->validate([
             'description' => 'required|string',
@@ -64,7 +65,7 @@ class QuestionItemController
             DB::beginTransaction();
 
             $questionItem = QuestionItem::create([
-                'question_variant_id' => $questionId,
+                'question_variant_id' => $variantId,
                 'description' => $request->description,
                 'score' => $request->score
             ]);
@@ -82,16 +83,15 @@ class QuestionItemController
 
             DB::commit();
 
-            return to_route('instructor.course.activity.variant.question-item.index', [$slug, $activityId, $questionId]);
+            return to_route('instructor.course.activity.variant.question-item.index', [$course->slug, $activityId, $variantId])->with('success', 'Soal berhasil ditambahkan.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
 
-            return to_route('instructor.course.activity.variant.question-item.index', [$slug, $activityId, $questionId]);
+            return to_route('instructor.course.activity.variant.question-item.index', [$course->slug, $activityId, $variantId])->with('danger', 'Gagal menambahkan soal.');
         }
     }
 
-    public function edit($slug, $activityId, $questionId, QuestionItem $question_item)
+    public function edit(Course $course, $activityId, $variantId, QuestionItem $question_item)
     {
         return Inertia::render('Instructor/Course/Variant/QuestionItem/Edit', [
             'question' => [
@@ -104,13 +104,13 @@ class QuestionItemController
                 'option4' =>  $question_item->questionOptions[3]->option,
                 'is_correct' => $question_item->questionOptions->where('is_correct', 1)->first()->option
             ],
-            'slug' => $slug,
+            'slug' => $course->slug,
             'activityId' => $activityId,
-            'questionId' => $questionId,
+            'questionId' => $variantId,
         ]);
     }
 
-    public function update($slug, $activityId, $questionId, QuestionItem $question_item, Request $request)
+    public function update(Course $course, $activityId, $variantId, QuestionItem $question_item, Request $request)
     {
         $request->validate([
             'description' => 'required|string|max:255',
@@ -153,23 +153,22 @@ class QuestionItemController
             DB::commit();
 
             return to_route('instructor.course.activity.variant.question-item.index', [
-                $slug,
+                $course->slug,
                 $activityId,
-                $questionId
-            ]);
+                $variantId
+            ])->with('success', 'Soal berhasil diubah.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            dd($th);
 
             return to_route('instructor.course.activity.variant.question-item.index', [
-                $slug,
+                $course->slug,
                 $activityId,
-                $questionId
-            ]);
+                $variantId
+            ])->with('danger', 'Gagal mengubah soal.');
         }
     }
 
-    public function destroy($slug, $activityId, $questionId, QuestionItem $question_item)
+    public function destroy(Course $course, $activityId, $variantId, QuestionItem $question_item)
     {
         try {
             DB::beginTransaction();
@@ -179,18 +178,18 @@ class QuestionItemController
             DB::commit();
 
             return to_route('instructor.course.activity.variant.question-item.index', [
-                $slug,
+                $course->slug,
                 $activityId,
-                $questionId
-            ]);
+                $variantId
+            ])->with('success', 'Soal berhasil dihapus.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
             return to_route('instructor.course.activity.variant.question-item.index', [
-                $slug,
+                $course->slug,
                 $activityId,
-                $questionId
-            ]);
+                $variantId
+            ])->with('danger', 'Gagal menghapus soal.');
         }
     }
 }

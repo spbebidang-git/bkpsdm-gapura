@@ -13,7 +13,7 @@ class IsAdminMiddleware
     {
         $user = $request->user();
 
-        if ($user && $user->is_admin) {
+        if ($user && $user->hasRole('Admin')) {
             view()->share('admin', $user);
 
             // Pastikan tidak loop
@@ -24,11 +24,11 @@ class IsAdminMiddleware
             return $next($request);
         }
 
-        if ($user && $user->is_instructor) {
+        if ($user && $user->hasRole('Instructor')) {
             return to_route('instructor.dashboard');
         }
 
-        if ($user && $user->is_participant) {
+        if ($user && $user->hasRole('Participant')) {
             return to_route('home');
         }
 
