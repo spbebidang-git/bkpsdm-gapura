@@ -32,7 +32,7 @@
         <!-- Peserta -->
         <li class="menu-item {{ request()->routeIs('admin.participant*') ? 'active' : '' }}">
             <a href="{{ route('admin.participant.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-data"></i>
+                <i class="menu-icon tf-icons bx bx-group"></i>
                 <div>Peserta</div>
             </a>
         </li>
@@ -40,7 +40,7 @@
         <!-- Instruktur -->
         <li class="menu-item {{ request()->routeIs('admin.instructor.*') ? 'active' : '' }}">
             <a href="{{ route('admin.instructor.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-data"></i>
+                <i class="menu-icon tf-icons bx bx-user-voice"></i>
                 <div>Instruktur</div>
             </a>
         </li>
@@ -53,7 +53,7 @@
         <!-- Kategori -->
         <li class="menu-item {{ request()->routeIs('admin.category.*') ? 'active' : '' }}">
             <a href="{{ route('admin.category.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-data"></i>
+                <i class="menu-icon tf-icons bx bx-category"></i>
                 <div>Kategori</div>
             </a>
         </li>
@@ -61,7 +61,7 @@
         <!-- Kursus -->
         <li class="menu-item {{ request()->routeIs('admin.course.*') ? 'active' : '' }}">
             <a href="{{ route('admin.course.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-data"></i>
+                <i class="menu-icon tf-icons bx bx-book-open"></i>
                 <div>Kursus</div>
             </a>
         </li>
@@ -69,7 +69,7 @@
         <!-- Ulasan -->
         <li class="menu-item {{ request()->routeIs('admin.review.*') ? 'active' : '' }}">
             <a href="{{ route('admin.review.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-data"></i>
+                <i class="menu-icon tf-icons bx bx-star"></i>
                 <div>Ulasan</div>
             </a>
         </li>
@@ -77,7 +77,7 @@
         <!-- Sertifikat -->
         <li class="menu-item {{ request()->routeIs('admin.certificate.*') ? 'active' : '' }}">
             <a href="{{ route('admin.certificate.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-data"></i>
+                <i class="menu-icon tf-icons bx bx-certification"></i>
                 <div>Sertifikat</div>
             </a>
         </li>
@@ -85,7 +85,7 @@
         <!-- Hasil -->
         <li class="menu-item {{ request()->routeIs('admin.result.*') ? 'active' : '' }}">
             <a href="{{ route('admin.result.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-data"></i>
+                <i class="menu-icon tf-icons bx bx-bar-chart-alt-2"></i>
                 <div>Hasil</div>
             </a>
         </li>
@@ -93,7 +93,7 @@
         <!-- Performa Kursus -->
         <li class="menu-item {{ request()->routeIs('admin.course-performance.*') ? 'active' : '' }}">
             <a href="{{ route('admin.course-performance.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-data"></i>
+                <i class="menu-icon tf-icons bx bx-line-chart"></i>
                 <div>Performa Kursus</div>
             </a>
         </li>
@@ -106,7 +106,7 @@
         <!-- Bantuan -->
         <li class="menu-item {{ request()->routeIs('admin.help.*') ? 'active' : '' }}">
             <a href="{{ route('admin.help.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-dock-top"></i>
+                <i class="menu-icon tf-icons bx bx-help-circle"></i>
                 <div>Bantuan</div>
             </a>
         </li>
@@ -119,7 +119,7 @@
         <!-- Peran -->
         <li class="menu-item {{ request()->routeIs('admin.management.role.*') ? 'active' : '' }}">
             <a href="{{ route('admin.management.role.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-dock-top"></i>
+                <i class="menu-icon tf-icons bx bx-shield"></i>
                 <div>Peran</div>
             </a>
         </li>
@@ -127,7 +127,7 @@
         <!-- Hak Akses -->
         <li class="menu-item {{ request()->routeIs('admin.management.permission.*') ? 'active' : '' }}">
             <a href="{{ route('admin.management.permission.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-dock-top"></i>
+                <i class="menu-icon tf-icons bx bx-key"></i>
                 <div>Hak Akses</div>
             </a>
         </li>
@@ -135,7 +135,7 @@
         <!-- Pengguna -->
         <li class="menu-item {{ request()->routeIs('admin.management.user.*') ? 'active' : '' }}">
             <a href="{{ route('admin.management.user.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-dock-top"></i>
+                <i class="menu-icon tf-icons bx bx-user"></i>
                 <div>Pengguna</div>
             </a>
         </li>
@@ -143,7 +143,7 @@
         <!-- Pengaturan -->
         <li class="menu-item {{ request()->routeIs('admin.management.setting.*') ? 'active' : '' }}">
             <a href="{{ route('admin.management.setting.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-dock-top"></i>
+                <i class="menu-icon tf-icons bx bx-cog"></i>
                 <div>Pengaturan</div>
             </a>
         </li>

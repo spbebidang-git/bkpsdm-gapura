@@ -35,21 +35,23 @@ export default function App({ children }) {
 
                         {/* User auth & hamburger */}
                         <div className="flex md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
-                            {auth.user?.name ? (
-                                <a href="/dashboard">
-                                    <button className="button-primary flex items-center gap-2">
-                                        <box-icon name="grid-alt" color="white" size="18px"></box-icon>
-                                        Dashboard
-                                    </button>
-                                </a>
-                            ) : (
-                                <Link href="/sign-in">
-                                    <button className="button-primary flex items-center gap-2">
-                                        <box-icon name="log-in" color="white" size="18px"></box-icon>
-                                        Sign In
-                                    </button>
-                                </Link>
-                            )}
+                            <div className="hidden md:flex gap-3">
+                                {auth.user?.name ? (
+                                    <a href="/dashboard">
+                                        <button className="button-primary flex items-center gap-2">
+                                            <box-icon name="grid-alt" color="white" size="18px"></box-icon>
+                                            Dashboard
+                                        </button>
+                                    </a>
+                                ) : (
+                                    <Link href="/sign-in">
+                                        <button className="button-primary flex items-center gap-2">
+                                            <box-icon name="log-in" color="white" size="18px"></box-icon>
+                                            Sign In
+                                        </button>
+                                    </Link>
+                                )}
+                            </div>
 
                             <button
                                 onClick={toggleNavbar}
@@ -106,6 +108,24 @@ export default function App({ children }) {
                                     >
                                         Bantuan
                                     </Link>
+                                </li>
+                                {/* Mobile Auth Buttons */}
+                                <li className="md:hidden mt-4 pt-4 border-t border-gray-200">
+                                    {auth.user?.name ? (
+                                        <a href="/dashboard" className="block w-full">
+                                            <button className="button-primary w-full flex justify-center items-center gap-2">
+                                                <box-icon name="grid-alt" color="white" size="18px"></box-icon>
+                                                Dashboard
+                                            </button>
+                                        </a>
+                                    ) : (
+                                        <Link href="/sign-in" className="block w-full">
+                                            <button className="button-primary w-full flex justify-center items-center gap-2">
+                                                <box-icon name="log-in" color="white" size="18px"></box-icon>
+                                                Sign In
+                                            </button>
+                                        </Link>
+                                    )}
                                 </li>
                             </ul>
                         </div>

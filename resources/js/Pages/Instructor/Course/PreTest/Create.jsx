@@ -1,9 +1,8 @@
+import ActivityFormLayout from "@/Components/ActivityFormLayout";
 import FormCheckbox from "@/Components/FormCheckbox";
 import FormInput from "@/Components/FormInput";
 import FormLabel from "@/Components/FormLabel";
 import FormTextArea from "@/Components/FormTextArea";
-import NumberActivity from "@/Components/NumberActivity";
-import TitleActivity from "@/Components/TitleActivity";
 import App from "@/Layouts/Instructor/App";
 import { Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
@@ -38,12 +37,16 @@ const Create = ({ slug }) => {
 
     return (
         <App>
-            <NumberActivity number={3} />
-            <TitleActivity number={3} title={"Pengaturan Pre-Test / Kuis"} />
+            <ActivityFormLayout
+                slug={slug}
+                type="pre-test"
+                title="Pengaturan Pre-Test / Kuis"
+                description="Atur soal pilihan ganda untuk menilai pemahaman awal peserta."
+            />
 
             <form onSubmit={handleSubmit}>
-                <div className="max-w-2xl mx-auto shadow bg-white rounded-xl">
-                    <div className="p-6">
+                <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="p-8">
 
                         {/* JUDUL */}
                         <FormInput
@@ -135,11 +138,15 @@ const Create = ({ slug }) => {
                     </div>
                 </div>
 
-                <div className="max-w-80 mx-auto gap-3 flex justify-center mt-8">
-                    <button className="button-primary">Simpan</button>
-                    <Link className="w-full" href={`/instructor/course/${slug}/activity`}>
-                        <button className="button-secondary">Kembali</button>
+                <div className="max-w-3xl mx-auto flex flex-col sm:flex-row justify-end gap-3 mt-8">
+                    <Link href={`/instructor/course/${slug}/activity`} className="w-full sm:w-auto">
+                        <button type="button" className="w-full sm:w-auto px-6 py-2.5 rounded-xl border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 font-semibold transition-colors">
+                            Kembali
+                        </button>
                     </Link>
+                    <button type="submit" className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 font-semibold shadow-sm transition-colors">
+                        Simpan
+                    </button>
                 </div>
             </form>
         </App>

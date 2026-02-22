@@ -13,7 +13,8 @@ class ActivityController
     public function index(Request $request, Course $course)
     {
         return Inertia::render('Instructor/Course/Activity', [
-            'slug' => $course->slug
+            'slug' => $course->slug,
+            'type' => $course->type
         ]);
     }
 

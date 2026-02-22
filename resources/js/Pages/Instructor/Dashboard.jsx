@@ -6,78 +6,94 @@ const Dashboard = ({ courses }) => {
 
     const handleSubmitDelete = (e, slug) => {
         e.preventDefault();
-        router.delete(`/instructor/course/${slug}`);
+        if (confirm("Apakah anda yakin ingin menghapus kursus ini?")) {
+            router.delete(`/instructor/course/${slug}`);
+        }
     };
 
     return (
         <App>
-            <div className="text-2xl max-w-7xl mx-auto font-bold text-gray-700 mb-5">
-                Hai, {auth.user.name}
+            <div className="max-w-7xl mx-auto mb-8">
+                <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight">
+                    Hai, {auth.user.name} 👋
+                </h1>
+                <p className="text-gray-500 mt-2">Selamat datang kembali di dashboard instruktur Anda.</p>
             </div>
 
-            <div className="max-w-7xl mx-auto bg-gray-100 border overflow-hidden rounded-xl shadow">
-                <div className="p-5 text-lg font-bold flex justify-between items-center">
-                    Daftar Kursus
+            <div className="max-w-7xl mx-auto bg-white border border-gray-100 overflow-hidden rounded-2xl shadow-sm">
+                <div className="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/50">
+                    <h2 className="text-xl font-bold text-gray-800">Daftar Kursus</h2>
                     <Link
                         href="/instructor/course/create"
-                        className="px-4 py-2 bg-primary text-white rounded-xl shadow text-sm"
+                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-sm hover:shadow text-sm font-semibold transition-all whitespace-nowrap"
                     >
+                        <box-icon name='plus' color='#ffffff' size='18px'></box-icon>
                         Tambah Kursus
                     </Link>
                 </div>
 
-                <div className="relative overflow-x-auto max-h-[512px] overflow-auto">
-                    <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                            <tr className="sticky top-0 z-10">
-                                <th className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap">#</th>
-                                <th className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap">Tipe</th>
-                                <th className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap">Judul</th>
-                                <th className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap">Kuota</th>
-                                <th className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap">
-                                    Total Peserta
-                                </th>
-                                <th className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap">Status</th>
-                                <th className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap">Aksi</th>
+                <div className="relative overflow-x-auto max-h-[600px] w-full">
+                    <table className="w-full text-sm text-left text-gray-600">
+                        <thead className="text-xs text-gray-500 uppercase bg-gray-50/80 sticky top-0 z-10 backdrop-blur-sm">
+                            <tr>
+                                <th className="px-6 py-4 font-semibold whitespace-nowrap">#</th>
+                                <th className="px-6 py-4 font-semibold whitespace-nowrap">Tipe</th>
+                                <th className="px-6 py-4 font-semibold whitespace-nowrap min-w-[200px]">Judul</th>
+                                <th className="px-6 py-4 font-semibold text-center whitespace-nowrap">Kuota</th>
+                                <th className="px-6 py-4 font-semibold text-center whitespace-nowrap">Total Peserta</th>
+                                <th className="px-6 py-4 font-semibold text-center whitespace-nowrap">Status</th>
+                                <th className="px-6 py-4 font-semibold text-center whitespace-nowrap min-w-[200px]">Aksi</th>
                             </tr>
                         </thead>
 
-                        <tbody>
+                        <tbody className="divide-y divide-gray-100">
                             {courses.length > 0 ? (
                                 courses.map((item, index) => (
                                     <tr
                                         key={index}
-                                        className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
+                                        className="bg-white hover:bg-gray-50/50 transition-colors group"
                                     >
-                                        <td className="px-6 py-4 text-center">{index + 1}</td>
-                                        <td className="px-6 py-4 text-center">{item.type}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{index + 1}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${item.type === 'schedule' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                                                {item.type}
+                                            </span>
+                                        </td>
 
                                         <th
                                             scope="row"
-                                            className="px-6 py-4 text-center font-medium text-gray-900 dark:text-white"
+                                            className="px-6 py-4 font-semibold text-gray-800"
                                         >
-                                            {item.title}
+                                            <div className="line-clamp-2 leading-relaxed">
+                                                {item.title}
+                                            </div>
                                         </th>
 
-                                        <td className="px-6 py-4 text-center">{item.quota}</td>
-                                        <td className="px-6 py-4 text-center">{item.total_participant}</td>
-                                        <td className="px-6 py-4 text-center">{item.status}</td>
+                                        <td className="px-6 py-4 text-center text-gray-600 whitespace-nowrap">{item.quota || '-'}</td>
+                                        <td className="px-6 py-4 text-center font-medium text-gray-700 whitespace-nowrap">{item.total_participant}</td>
+                                        <td className="px-6 py-4 text-center whitespace-nowrap">
+                                            <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${item.status === 'publish' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                                                {item.status}
+                                            </span>
+                                        </td>
 
-                                        <td className="px-6 py-4 text-center">
-                                            <div className="flex justify-center items-center gap-2">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex justify-center items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                                                 <Link href={`/instructor/course/${item.slug}`}>
-                                                    <button className="w-24 h-7 text-sm font-medium bg-primary text-white rounded-full shadow">
+                                                    <button className="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
                                                         Detail
                                                     </button>
                                                 </Link>
 
                                                 <Link href={`/instructor/course/${item.slug}/edit`}>
-                                                    <button className="button-warning">Edit</button>
+                                                    <button className="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg transition-colors">
+                                                        Edit
+                                                    </button>
                                                 </Link>
 
                                                 <button
                                                     onClick={(e) => handleSubmitDelete(e, item.slug)}
-                                                    className="button-danger"
+                                                    className="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors"
                                                 >
                                                     Hapus
                                                 </button>
@@ -86,9 +102,12 @@ const Dashboard = ({ courses }) => {
                                     </tr>
                                 ))
                             ) : (
-                                <tr className="bg-white border-b">
-                                    <td className="p-3 text-center" colSpan="100%">
-                                        Data tidak tersedia.
+                                <tr>
+                                    <td className="p-8 text-center text-gray-500" colSpan="100%">
+                                        <div className="flex flex-col items-center justify-center">
+                                            <box-icon name='folder-open' color='#cbd5e1' size='48px'></box-icon>
+                                            <p className="mt-3 text-sm font-medium">Belum ada kursus yang ditambahkan.</p>
+                                        </div>
                                     </td>
                                 </tr>
                             )}

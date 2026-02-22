@@ -24,14 +24,16 @@ export default function App({ children }) {
                             <img src={site.logo} alt="Logo" className="h-10 w-auto object-contain" />
                         </Link>
 
-                        {/* Right menu */}
+                        {/* Right menu (Desktop Keluar Button + Mobile Toggle) */}
                         <div className="flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
-                            <Link href={route('logout')} method="post" as="button">
-                                <button className="button-primary flex items-center justify-center gap-2 px-4 py-2 hover:shadow-md transition-all">
-                                    <box-icon name="log-out" color="white" size="20px"></box-icon>
-                                    Keluar
-                                </button>
-                            </Link>
+                            <div className="hidden md:block">
+                                <Link href={route('logout')} method="post" as="button">
+                                    <button className="button-primary flex items-center justify-center gap-2 px-5 py-2 hover:shadow-md transition-all rounded-xl">
+                                        <box-icon name="log-out" color="white" size="20px"></box-icon>
+                                        Keluar
+                                    </button>
+                                </Link>
+                            </div>
 
                             <button
                                 onClick={toggleNavbar}
@@ -90,6 +92,16 @@ export default function App({ children }) {
                                             }`}
                                     >
                                         Profile
+                                    </Link>
+                                </li>
+
+                                {/* Mobile Keluar Button */}
+                                <li className="md:hidden mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <Link href={route('logout')} method="post" as="button" className="w-full block">
+                                        <button className="button-primary w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl hover:shadow-md transition-all">
+                                            <box-icon name="log-out" color="white" size="20px"></box-icon>
+                                            Keluar
+                                        </button>
                                     </Link>
                                 </li>
                             </ul>
