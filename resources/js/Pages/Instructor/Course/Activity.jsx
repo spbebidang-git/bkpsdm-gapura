@@ -43,10 +43,10 @@ const Activity = ({ slug, type }) => {
                         return (
                             <div key={i} className="flex items-center gap-3">
                                 <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all ${isDone
-                                        ? 'bg-green-100 text-green-700'
-                                        : isActive
-                                            ? 'bg-primary text-white shadow-sm'
-                                            : 'bg-gray-100 text-gray-400'
+                                    ? 'bg-green-100 text-green-700'
+                                    : isActive
+                                        ? 'bg-primary text-white shadow-sm'
+                                        : 'bg-gray-100 text-gray-400'
                                     }`}>
                                     <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${isDone ? 'bg-green-200' : isActive ? 'bg-white/20' : 'bg-gray-200'}`}>
                                         {isDone ? '✓' : i + 1}
@@ -73,7 +73,7 @@ const Activity = ({ slug, type }) => {
 
                 {/* Cards — Semua Kegiatan */}
                 {!activeSection && (
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                         <CardActivity
                             title="Pertanyaan"
                             description="Buat soal pilihan ganda untuk Pre Test, Quiz, dan Post Test guna menilai pemahaman peserta."

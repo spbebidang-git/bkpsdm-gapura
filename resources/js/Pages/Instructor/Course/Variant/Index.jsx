@@ -81,7 +81,7 @@ const Index = ({ slug, activity, variants }) => {
                         <table className="w-full text-sm text-left text-gray-600">
                             <thead className="text-xs text-gray-500 uppercase bg-gray-50/80">
                                 <tr>
-                                    <th className="px-6 py-4 font-semibold whitespace-nowrap text-center">Varian</th>
+                                    <th className="px-6 py-4 font-semibold whitespace-nowrap text-center">Judul Variasi</th>
                                     <th className="px-6 py-4 font-semibold whitespace-nowrap text-center">Kode</th>
                                     <th className="px-6 py-4 font-semibold whitespace-nowrap text-center">Jml Soal</th>
                                     <th className="px-6 py-4 font-semibold whitespace-nowrap text-center">Acak Soal</th>

@@ -1,3 +1,4 @@
+import ActivityFormLayout from "@/Components/ActivityFormLayout";
 import App from "@/Layouts/Instructor/App";
 import { Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
@@ -41,9 +42,13 @@ const Edit = ({ slug, activityId, questionId, question }) => {
 
     return (
         <App>
-            <div className="text-center text-2xl font-bold text-gray-700 mb-5">
-                Edit Soal
-            </div>
+            <ActivityFormLayout
+                slug={slug}
+                type="question-item"
+                title="Edit Soal"
+                description="Ubah butir soal pada variasi ini."
+                isEdit={true}
+            />
 
             <form onSubmit={handleSubmit}>
                 <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -85,19 +90,19 @@ const Edit = ({ slug, activityId, questionId, question }) => {
                         </div>
 
                         {/* HEADER */}
-                        <div className="grid grid-cols-4 items-center gap-5 py-3 font-semibold text-primary">
-                            <div className="col-span-3">Opsi Jawaban</div>
-                            <div className="text-center">Jawaban Benar</div>
+                        <div className="flex sm:grid sm:grid-cols-4 items-center justify-between sm:gap-5 py-3 font-semibold text-primary text-sm sm:text-base">
+                            <div className="sm:col-span-3">Opsi Jawaban</div>
+                            <div className="w-20 sm:w-auto text-center shrink-0 leading-tight">Jawaban Benar</div>
                         </div>
 
                         {/* INPUT OPSI JAWABAN */}
                         {['option1', 'option2', 'option3', 'option4'].map((option, index) => (
                             <div
-                                className="grid grid-cols-4 items-center justify-center mb-5"
+                                className="flex sm:grid sm:grid-cols-4 items-center justify-between gap-3 sm:gap-5 mb-5"
                                 key={option}
                             >
                                 {/* Input teks */}
-                                <div className="col-span-3">
+                                <div className="flex-1 sm:col-span-3">
                                     <input
                                         type="text"
                                         id={option}
@@ -115,7 +120,7 @@ const Edit = ({ slug, activityId, questionId, question }) => {
                                 </div>
 
                                 {/* Radio */}
-                                <div className="flex justify-center">
+                                <div className="flex justify-center w-20 sm:w-auto shrink-0">
                                     <input
                                         type="radio"
                                         name="correct_answer"
@@ -160,7 +165,7 @@ const Edit = ({ slug, activityId, questionId, question }) => {
 
                 {/* BUTTON */}
                 <div className="max-w-3xl mx-auto flex flex-col sm:flex-row justify-end gap-3 mt-8">
-                    <Link href={`/instructor/course/${slug}/activity`} className="w-full sm:w-auto">
+                    <Link href={`/instructor/course/${slug}/activity/variant/${activityId}/${questionId}/question-item`} className="w-full sm:w-auto">
                         <button type="button" className="w-full sm:w-auto px-6 py-2.5 rounded-xl border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 font-semibold transition-colors">
                             Kembali
                         </button>

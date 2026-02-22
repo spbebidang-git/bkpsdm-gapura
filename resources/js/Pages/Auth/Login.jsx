@@ -85,8 +85,8 @@ const Login = () => {
 
                     if (msg.includes("Kredensial tidak ditemukan") || msg.includes("akses ditolak")) {
                         toast.error("🚫 Akun tidak ditemukan atau akses ditolak.", toastConfig);
-                    } else if (msg.includes("Username atau password salah")) {
-                        toast.error("🔑 Username atau password yang Anda masukkan salah.", toastConfig);
+                    } else if (msg.includes("Username atau password salah") || msg.includes("Email atau password salah")) {
+                        toast.error("🔑 Email atau password salah.", toastConfig);
                     } else if (msg.includes("hak akses berbeda")) {
                         toast.error("⛔ NIP ini terdaftar dengan hak akses yang berbeda.", toastConfig);
                     } else if (msg.includes("SSO tidak merespon") || msg.includes("Kredensial salah")) {

@@ -117,7 +117,13 @@ export default function App({ children }) {
             </main>
 
             {/* Footer */}
-            <footer className="bg-primary h-12" />
+            <footer className="bg-primary py-4 mt-auto shadow-inner">
+                <div className="max-w-screen-xl mx-auto px-4 text-center">
+                    <p className="text-white/90 text-sm font-medium">
+                        &copy; {new Date().getFullYear()} GAPURA. All Rights Reserved.
+                    </p>
+                </div>
+            </footer>
         </div>
     );
 }

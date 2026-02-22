@@ -171,17 +171,21 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
     };
 
     return <Learn type="material" course={course} progress={progress} activities={activities} activity={activity} timer={timer} formattedAnswers={formattedAnswers} activity_id={activity_id} schedule={schedule}>
-        <div className='flex flex-col justify-between'>
-            <div className='flex-1 rounded-xl bg-gray-50 py-2.5 mb-8 '>
-                <div className='p-3 flex-1 h-[550px] overflow-scroll'>
+        <div className="flex flex-col h-full bg-white">
+            <div className="flex-1 rounded-xl bg-gray-50 p-3 lg:p-4 mb-4 shadow-inner border border-gray-100 flex flex-col min-h-0">
+                <div className="flex-1 overflow-y-auto pr-2 flex flex-col">
                     <Activity question_result={question_result} slug={course.slug} id={activity_id} type={activity.type} data={activity.data} status={activity.status} answers={answers} file={file} setFile={setFile}
                         setAnswers={setAnswers} schedule={schedule} />
                 </div>
             </div>
-            <div className='h-14 w-56 mx-auto'>
-                {activeButton ? <button onClick={(e) => handleSubmit(e, course.slug)} className='button-primary'>Kirim Jawaban</button>
-                    : <button className="button-disable max-w-56">
+            <div className="w-full sm:w-64 mx-auto shrink-0 pb-1">
+                {activeButton ? <button onClick={(e) => handleSubmit(e, course.slug)} className="w-full px-6 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5 flex justify-center items-center gap-2">
+                    Kirim Jawaban
+                    <box-icon name="send" color="white" size="20px"></box-icon>
+                </button>
+                    : <button className="w-full px-6 py-3.5 bg-gray-300 text-gray-500 font-bold rounded-xl shadow-sm cursor-not-allowed flex justify-center items-center gap-2">
                         Selanjutnya
+                        <box-icon name="time" color="#6b7280" size="20px"></box-icon>
                     </button>}
             </div>
         </div>

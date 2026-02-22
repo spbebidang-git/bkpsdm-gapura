@@ -72,7 +72,7 @@ const Index = ({ slug, activityId, questionId, questionItems, activity }) => {
                                     <th className="px-6 py-4 font-semibold whitespace-nowrap text-center">Tipe</th>
                                     <th className="px-6 py-4 font-semibold whitespace-nowrap text-center">Kegiatan</th>
                                     <th className="px-6 py-4 font-semibold whitespace-nowrap text-center">Ulangi</th>
-                                    <th className="px-6 py-4 font-semibold whitespace-nowrap text-center">Variasi</th>
+                                    <th className="px-6 py-4 font-semibold whitespace-nowrap text-center">Judul Variasi</th>
                                     <th className="px-6 py-4 font-semibold whitespace-nowrap text-center">Acak</th>
                                 </tr>
                             </thead>
