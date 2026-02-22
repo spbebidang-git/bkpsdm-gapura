@@ -31,6 +31,11 @@ const Show = ({ course, schedules, reviews = [], rating }) => {
     const handleActivation = (e, item) => {
         e.preventDefault();
 
+        if (!auth.user) {
+            window.location.href = route('login');
+            return;
+        }
+
         if (!item.can_enter) {
             const jam = item.start_label ?? item.time_from ?? '';
             toast.warn(
@@ -82,7 +87,7 @@ const Show = ({ course, schedules, reviews = [], rating }) => {
                 {/* Hero Section & Breadcrumb Container */}
                 <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-6 md:p-8 mb-8">
                     {/* Breadcrumb */}
-                    <div className="flex mb-8 w-full relative z-10">
+                    <div className="hidden md:flex mb-8 w-full relative z-10">
                         <div className="inline-flex flex-wrap items-center gap-2 md:gap-4 bg-gray-50 py-2.5 px-6 rounded-full border border-gray-100/80">
                             <Link href="/" className="transition-transform hover:-translate-y-0.5 opacity-80 hover:opacity-100">
                                 <BreadcrumbLearn title="Beranda" activeTab={false} icon="home" />
@@ -321,8 +326,8 @@ const Show = ({ course, schedules, reviews = [], rating }) => {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="bg-white px-2 py-1 rounded-lg border border-gray-100 shadow-sm">
-                                            <StarRating value={item.star} />
+                                        <div className="bg-amber-50/50 px-3 py-1.5 rounded-xl border border-amber-100/50 shadow-sm flex items-center">
+                                            <StarRating value={item.star} size="16px" />
                                         </div>
                                     </div>
                                     <div className="text-gray-600 leading-relaxed italic text-[15px]">"{item.description}"</div>

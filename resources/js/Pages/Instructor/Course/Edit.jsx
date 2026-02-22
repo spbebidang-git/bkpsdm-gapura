@@ -139,39 +139,41 @@ const Edit = ({ course, categories, employee_status, selected_employee_status })
     return (
         <App>
             <form onSubmit={handleSubmit}>
-                <div className="max-w-4xl mx-auto bg-white rounded-xl shadow">
-                    <h4 className="p-5 border-b text-center text-xl font-bold">
+                <div className="max-w-4xl mx-auto bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden mb-8">
+                    <h4 className="p-6 sm:p-8 bg-gray-50/50 border-b border-gray-100 text-center text-xl font-extrabold text-gray-800">
                         Edit Kursus
                     </h4>
 
-                    <div className="p-6">
-                        <FormSelect
-                            title="type"
-                            label="Tipe Kursus"
-                            value={values.type}
-                            onChange={handleChange}
-                            options={typeOptions}
-                            isRequired={true}
-                            error={errors.type}
-                            disabled={isTypeLocked}
-                        />
+                    <div className="p-6 sm:p-10">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                            <FormSelect
+                                title="type"
+                                label="Tipe Kursus"
+                                value={values.type}
+                                onChange={handleChange}
+                                options={typeOptions}
+                                isRequired={true}
+                                error={errors.type}
+                                disabled={isTypeLocked}
+                            />
 
 
-                        <FormSelect
-                            title="category"
-                            label="Kategori"
-                            value={values.category}
-                            onChange={handleChange}
-                            options={typeCategories}
-                            isRequired={true}
-                            error={errors.category}
-                        />
+                            <FormSelect
+                                title="category"
+                                label="Kategori"
+                                value={values.category}
+                                onChange={handleChange}
+                                options={typeCategories}
+                                isRequired={true}
+                                error={errors.category}
+                            />
+                        </div>
 
-                        <div className="mb-1">
-                            <p className="mb-2 text-sm font-medium text-gray-900">
-                                Status Pegawai
+                        <div className="mb-4">
+                            <p className="mb-3 text-sm font-bold text-gray-700">
+                                Status Pegawai <span className="text-red-500">*</span>
                             </p>
-                            <div className="flex gap-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                                 {employee_status.map((item) => (
                                     <FormCheckbox
                                         key={item.id}
@@ -229,29 +231,31 @@ const Edit = ({ course, categories, employee_status, selected_employee_status })
                             error={errors.teaser_video}
                         />
 
-                        {!type ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                            {!type ? (
+                                <FormInput
+                                    title="expired"
+                                    label="Kedaluwarsa (Jam)"
+                                    value={values.expired}
+                                    onChange={handleChange}
+                                    placeholder="Atur kedaluwarsa dalam jam"
+                                    isRequired={true}
+                                    error={errors.expired}
+                                />
+                            ) : null}
+
                             <FormInput
-                                title="expired"
-                                label="Kedaluwarsa (Jam)"
-                                value={values.expired}
+                                title="jam_pelajaran"
+                                label="Jam Pelajaran"
+                                value={values.jam_pelajaran}
                                 onChange={handleChange}
-                                placeholder="Atur kedaluwarsa dalam jam"
+                                placeholder="Atur jam pelajaran dalam jam"
                                 isRequired={true}
-                                error={errors.expired}
+                                error={errors.jam_pelajaran}
                             />
-                        ) : null}
+                        </div>
 
-                        <FormInput
-                            title="jam_pelajaran"
-                            label="Jam Pelajaran"
-                            value={values.jam_pelajaran}
-                            onChange={handleChange}
-                            placeholder="Atur jam pelajaran dalam jam"
-                            isRequired={true}
-                            error={errors.jam_pelajaran}
-                        />
-
-                        <div className="mb-3">
+                        <div className="mb-3 mt-2">
                             <FormLabel title="Thumbnail" isRequired={false} />
 
                             {course.thumbnail_url && (
@@ -324,24 +328,22 @@ const Edit = ({ course, categories, employee_status, selected_employee_status })
                 </div>
 
                 {type ? (
-                    <div className="max-w-4xl mx-auto bg-white rounded-xl shadow mt-5">
-                        <div className="flex justify-between border-b p-5 items-center">
-                            <h4 className="text-lg font-bold w-full">
-                                Atur Jadwal
-                            </h4>
+                    <div className="max-w-4xl mx-auto bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden mb-8">
+                        <div className="flex flex-col sm:flex-row justify-between border-b border-gray-100 bg-gray-50/50 p-6 sm:p-8 items-center gap-4">
+                            <h4 className="text-lg font-extrabold text-gray-800 w-full sm:w-auto text-center sm:text-left">Atur Jadwal Kegiatan</h4>
 
                             <button
                                 type="button"
-                                className="button-primary max-w-56"
+                                className="button-primary w-full sm:w-auto"
                                 onClick={toggleModal}
                             >
                                 Tambah Jadwal
                             </button>
                         </div>
 
-                        <div className="p-5">
-                            <table className="w-full text-sm text-left">
-                                <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                        <div className="p-0 overflow-x-auto">
+                            <table className="w-full text-sm text-center">
+                                <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-100">
                                     <tr>
                                         <th className="px-6 py-3 text-center">#</th>
                                         <th className="px-6 py-3 text-center">Tanggal</th>
@@ -386,11 +388,15 @@ const Edit = ({ course, categories, employee_status, selected_employee_status })
                     </div>
                 ) : null}
 
-                <div className="max-w-80 mx-auto flex justify-center gap-3 mt-8">
-                    <button className="button-primary">Update</button>
-                    <Link href="/instructor" className="button-secondary">
-                        Kembali
+                <div className="max-w-4xl mx-auto flex flex-col sm:flex-row justify-end gap-4 mt-8 pb-12">
+                    <Link href={`/dashboard`} className="w-full sm:w-auto">
+                        <button type="button" className="w-full sm:w-auto px-6 py-3 rounded-xl border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 hover:text-gray-900 font-bold transition-all shadow-sm">
+                            Kembali
+                        </button>
                     </Link>
+                    <button type="submit" className="w-full sm:w-auto px-8 py-3 rounded-xl bg-primary text-white hover:bg-primary/90 font-bold shadow-sm hover:shadow transition-all hover:-translate-y-0.5">
+                        Simpan
+                    </button>
                 </div>
             </form>
 

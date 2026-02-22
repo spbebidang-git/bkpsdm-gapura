@@ -116,14 +116,14 @@ export default function Import({ course, activity }) {
                     )}
 
                     <div className="max-w-xs mx-auto flex gap-5">
-                        <button className="button-primary">Import</button>
+                        <button className="button-primary">Simpan</button>
                         <Link
                             href={route("instructor.course.show", {
                                 course: course.slug,
                             })}
                             className="w-full"
                         >
-                            <button className="button-secondary">Back</button>
+                            <button className="button-secondary">Kembali</button>
                         </Link>
                     </div>
                 </form>

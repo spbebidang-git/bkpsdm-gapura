@@ -1,3 +1,4 @@
+import BreadcrumbLearn from "@/Components/BreadcrumbLearn";
 import App from "@/Layouts/Instructor/App";
 import { Link, router } from "@inertiajs/react";
 import { useEffect, useState } from "react";
@@ -15,12 +16,12 @@ const Show = ({ course, activities }) => {
 
         Swal.fire({
             title: "Apakah Anda yakin?",
-            text: "Data ini akan diperbarui secara permanen!",
+            text: "Pertemuan ini akan diakhiri secara permanen!",
             icon: "warning",
             showCancelButton: true,
             confirmButtonColor: "#3085d6",
             cancelButtonColor: "#d33",
-            confirmButtonText: "Ya, lanjutkan!",
+            confirmButtonText: "Ya, akhiri!",
             cancelButtonText: "Batal",
         }).then((result) => {
             if (result.isConfirmed) {
@@ -47,11 +48,11 @@ const Show = ({ course, activities }) => {
 
         Swal.fire({
             title: "Apakah Anda yakin?",
-            text: "Data ini akan dihapus secara permanen!",
+            text: "Aktivitas ini akan dihapus secara permanen!",
             icon: "warning",
             showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
             confirmButtonText: "Ya, hapus!",
             cancelButtonText: "Batal",
         }).then((result) => {
@@ -63,7 +64,7 @@ const Show = ({ course, activities }) => {
                             router.get(`/instructor/course/${course.slug}`);
                             Swal.fire(
                                 "Berhasil!",
-                                "Data berhasil dihapus.",
+                                "Aktivitas berhasil dihapus.",
                                 "success"
                             );
                         },
@@ -75,196 +76,236 @@ const Show = ({ course, activities }) => {
 
     return (
         <App>
-            <div className="max-w-6xl mx-auto">
-                {/* Header Course */}
-                <div className="grid grid-cols-3 gap-5 mb-5">
-                    <div className="col-span-1">
-                        <div className="h-48 rounded-xl overflow-hidden shadow">
-                            <img src={course.thumbnail} alt={course.title} />
-                        </div>
+            <div className="max-w-7xl mx-auto mb-8">
+                {/* Breadcrumb */}
+                <div className="flex justify-center mb-8 w-full relative z-10">
+                    <div className="inline-flex flex-wrap items-center gap-2 md:gap-4 bg-white/90 backdrop-blur-md py-3 px-8 rounded-full shadow-[0_4px_25px_-4px_rgba(0,0,0,0.06)] border border-gray-100/80 transition-all hover:shadow-[0_4px_30px_-4px_rgba(0,0,0,0.1)]">
+                        <Link href="/instructor" className="transition-transform hover:-translate-y-0.5 opacity-80 hover:opacity-100">
+                            <BreadcrumbLearn title="Dashboard" activeTab={false} icon="grid-alt" size="lg" />
+                        </Link>
+                        <box-icon name="chevron-right" color="#cbd5e1" size="22px"></box-icon>
+                        <BreadcrumbLearn title="Detail Course" activeTab={true} icon="book-bookmark" size="lg" />
                     </div>
+                </div>
 
-                    <div className="col-span-2">
-                        <div className="text-xl font-bold text-gray-800 mb-0.5">
-                            {course.title}
-                        </div>
-                        <div className="text-sm italic mb-1 text-gray-700">
-                            oleh{" "}
-                            <span className="not-italic font-bold">
-                                {course.instructor}
-                            </span>
+                {/* Header Course */}
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
+                        <div className="col-span-1">
+                            <div className="w-full aspect-video md:h-full md:aspect-auto rounded-2xl overflow-hidden shadow-sm relative group">
+                                <img
+                                    src={course.thumbnail}
+                                    alt={course.title}
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            </div>
                         </div>
 
-                        <div className="mb-2.5 text-gray-700">
-                            {course.short_description}
-                        </div>
+                        <div className="col-span-1 md:col-span-2 flex flex-col justify-center">
+                            <div className="mb-4">
+                                <h1 className="text-2xl md:text-3xl font-extrabold text-gray-800 leading-tight mb-2">
+                                    {course.title}
+                                </h1>
+                                <p className="text-sm text-gray-500 flex items-center gap-2">
+                                    <box-icon name='user-circle' color='#9ca3af' size='18px'></box-icon>
+                                    Instruktur: <span className="font-semibold text-gray-700">{course.instructor}</span>
+                                </p>
+                            </div>
 
-                        <div className="flex justify-between items-center max-w-2xl">
-                            <div>
-                                <div className="flex flex-col gap-1 text-sm text-gray-700 font-medium">
-                                    <div className="flex gap-2 items-center">
-                                        <div className="w-12 h-12 rounded-full">
-                                            <img
-                                                src="/assets/media/images/static/peserta-icon.png"
-                                                alt=""
-                                            />
+                            <div className="text-gray-600 leading-relaxed mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                {course.short_description}
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mt-auto">
+                                <div className="flex flex-wrap gap-4 sm:gap-6">
+                                    <div className="flex items-center gap-3 bg-blue-50/50 px-4 py-2.5 rounded-xl border border-blue-100/50">
+                                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                                            <box-icon name='group' color='currentColor'></box-icon>
                                         </div>
                                         <div>
-                                            <b>{course.total_participant}</b> Peserta
+                                            <p className="text-xs text-blue-600/80 font-semibold uppercase tracking-wider mb-0.5">Peserta</p>
+                                            <p className="text-lg font-bold text-blue-900 leading-none">{course.total_participant}</p>
                                         </div>
                                     </div>
-                                    <div className="flex gap-2 items-center">
-                                        <div className="w-12 h-12 rounded-full">
-                                            <img
-                                                src="/assets/media/images/static/lulus-icon.png"
-                                                alt=""
-                                            />
+
+                                    <div className="flex items-center gap-3 bg-green-50/50 px-4 py-2.5 rounded-xl border border-green-100/50">
+                                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600">
+                                            <box-icon name='check-circle' color='currentColor'></box-icon>
                                         </div>
                                         <div>
-                                            <b>{course.total_passed}</b> Peserta Selesai
+                                            <p className="text-xs text-green-600/80 font-semibold uppercase tracking-wider mb-0.5">Lulus</p>
+                                            <p className="text-lg font-bold text-green-900 leading-none">{course.total_passed}</p>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="text-right">
-                                <h4 className="text-xl font-bold">
-                                    Efektivitas Penerimaan Materi :
-                                </h4>
-                                <h2 className="text-5xl">{course.efektifitas}%</h2>
+                                <div className="text-right bg-gradient-to-br from-primary/10 to-primary/5 px-6 py-4 rounded-2xl border border-primary/10 w-full sm:w-auto flex flex-row items-center justify-between sm:flex-col sm:items-end">
+                                    <h4 className="text-xs font-bold text-primary/80 uppercase tracking-wider mb-1">
+                                        Efektivitas
+                                    </h4>
+                                    <div className="flex items-baseline gap-1 text-primary">
+                                        <span className="text-4xl font-extrabold tracking-tight">{course.efektifitas}</span>
+                                        <span className="text-xl font-bold">%</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Activities */}
-                <div className="border-2 rounded-xl shadow">
-                    <div className="flex items-center p-5 border-b">
-                        <h4 className="w-full title-card">Aktivitas</h4>
+                <div className="bg-white border border-gray-100 overflow-hidden rounded-2xl shadow-sm">
+                    <div className="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/50">
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                <box-icon name='list-ul' color='var(--color-primary)' size='20px'></box-icon>
+                            </div>
+                            <h2 className="text-xl font-bold text-gray-800">Daftar Aktivitas</h2>
+                        </div>
                         <Link
                             href={`/instructor/course/${course.slug}/activity`}
-                            className="max-w-44 text-center button-primary"
+                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-sm hover:shadow text-sm font-semibold transition-all w-full sm:w-auto whitespace-nowrap"
                         >
+                            <box-icon name='plus' color='#ffffff' size='18px'></box-icon>
                             Tambah Aktivitas
                         </Link>
                     </div>
 
-                    <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-700 dark:text-gray-400">
-                            <tr className="sticky top-0 z-10">
-                                <th className="px-6 py-3 text-center">#</th>
-                                <th className="px-6 py-3 text-center">Tipe</th>
-                                <th className="px-6 py-3 text-center">Judul</th>
-                                <th className="px-6 py-3 text-center">Nilai</th>
-                                <th className="px-6 py-3 text-center">Aksi</th>
-                            </tr>
-                        </thead>
+                    <div className="relative overflow-x-auto w-full">
+                        <table className="w-full text-sm text-left text-gray-600">
+                            <thead className="text-xs text-gray-500 uppercase bg-gray-50/80">
+                                <tr>
+                                    <th className="px-6 py-4 font-semibold whitespace-nowrap text-center">#</th>
+                                    <th className="px-6 py-4 font-semibold whitespace-nowrap min-w-[150px]">Tipe</th>
+                                    <th className="px-6 py-4 font-semibold whitespace-nowrap min-w-[250px]">Judul</th>
+                                    <th className="px-6 py-4 font-semibold whitespace-nowrap text-center">Nilai</th>
+                                    <th className="px-6 py-4 font-semibold whitespace-nowrap text-center min-w-[300px]">Aksi</th>
+                                </tr>
+                            </thead>
 
-                        <tbody>
-                            {dataActivities.length > 0 ? (
-                                dataActivities.map((item, index) => (
-                                    <tr key={index} className="border-b dark:border-gray-700">
-                                        <td className="px-6 py-4 text-center">{index + 1}</td>
+                            <tbody className="divide-y divide-gray-100">
+                                {dataActivities.length > 0 ? (
+                                    dataActivities.map((item, index) => (
+                                        <tr key={index} className="bg-white hover:bg-gray-50/50 transition-colors group">
+                                            <td className="px-6 py-4 text-center text-gray-500 font-medium">{index + 1}</td>
 
-                                        <td className="px-6 py-4 text-center capitalize whitespace-nowrap">
-                                            {item.type === 'pre-test'
-                                                ? 'Pre-Test / Kuis'
-                                                : item.type === 'post-test'
-                                                    ? 'Post-Test / Kuis'
-                                                    : item.type}
-                                        </td>
+                                            <td className="px-6 py-4 capitalize whitespace-nowrap">
+                                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+                                                    ${item.type === 'pre-test' || item.type === 'post-test' ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' :
+                                                        item.type === 'meeting' ? 'bg-orange-50 text-orange-700 border border-orange-100' :
+                                                            item.type === 'task' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                                                                'bg-gray-100 text-gray-700 border border-gray-200'}
+                                                `}>
+                                                    {item.type === 'pre-test'
+                                                        ? 'Pre-Test / Kuis'
+                                                        : item.type === 'post-test'
+                                                            ? 'Post-Test'
+                                                            : item.type}
+                                                </span>
+                                            </td>
 
-                                        <td className="px-6 py-4 text-center font-medium text-gray-800">
-                                            {item.title}
-                                        </td>
+                                            <td className="px-6 py-4 font-medium text-gray-800">
+                                                <div className="line-clamp-2 leading-relaxed">
+                                                    {item.title}
+                                                </div>
+                                            </td>
 
-                                        <td className="px-6 py-4 text-center font-medium text-gray-800">
-                                            {item.value}
-                                        </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <span className="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold font-mono">
+                                                    {item.value || '-'}
+                                                </span>
+                                            </td>
 
-                                        <td className="px-6 py-4 text-center w-96">
-                                            <div className="flex justify-end gap-2 h-8">
+                                            <td className="px-6 py-4">
+                                                <div className="flex justify-center items-center gap-2 flex-wrap sm:flex-nowrap opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
 
-                                                {/* Pre-test / Post-test */}
-                                                {(item.type === "pre-test" || item.type === "post-test") && (
-                                                    <div className="flex gap-2">
-                                                        {!item.has_imported && (
+                                                    {/* Pre-test / Post-test */}
+                                                    {(item.type === "pre-test" || item.type === "post-test") && (
+                                                        <div className="flex gap-2">
+                                                            {!item.has_imported && (
+                                                                <Link
+                                                                    href={route(
+                                                                        "instructor.course.activity.import-question.index",
+                                                                        {
+                                                                            course: course.slug,
+                                                                            activity: item.id,
+                                                                        }
+                                                                    )}
+                                                                >
+                                                                    <button className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-lg transition-colors border border-emerald-200/50">
+                                                                        Import
+                                                                    </button>
+                                                                </Link>
+                                                            )}
+
                                                             <Link
-                                                                href={route(
-                                                                    "instructor.course.activity.import-question.index",
-                                                                    {
-                                                                        course: course.slug,
-                                                                        activity: item.id,
-                                                                    }
-                                                                )}
+                                                                href={`/instructor/course/${course.slug}/activity/variant/${item.id}`}
                                                             >
-                                                                <button className="w-20 h-7 text-sm font-medium bg-green-500 text-white rounded-full shadow">
-                                                                    Import
+                                                                <button className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg transition-colors border border-indigo-200/50">
+                                                                    Variasi
                                                                 </button>
                                                             </Link>
-                                                        )}
+                                                        </div>
+                                                    )}
 
-                                                        <Link
-                                                            href={`/instructor/course/${course.slug}/activity/variant/${item.id}`}
+                                                    {/* Meeting */}
+                                                    {item.type === "meeting" && item.end_meeting === 0 && (
+                                                        <button
+                                                            onClick={(e) => handleEndMeeting(e, item.id)}
+                                                            className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-lg transition-colors border border-orange-200/50"
                                                         >
-                                                            <button className="w-20 h-7 text-sm font-medium bg-primary text-white rounded-full shadow">
-                                                                Variasi
+                                                            Akhiri Sesi
+                                                        </button>
+                                                    )}
+
+                                                    {/* Task Result */}
+                                                    {item.type === "task" && (
+                                                        <Link
+                                                            href={route("instructor.course.activity.result", {
+                                                                course: course.slug,
+                                                                activityId: item.id,
+                                                            })}
+                                                        >
+                                                            <button className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors border border-blue-200/50">
+                                                                Hasil Tugas
                                                             </button>
                                                         </Link>
-                                                    </div>
-                                                )}
+                                                    )}
 
-                                                {/* Meeting */}
-                                                {item.type === "meeting" && item.end_meeting === 0 && (
-                                                    <button
-                                                        onClick={(e) => handleEndMeeting(e, item.id)}
-                                                        className="w-20 h-7 text-sm font-medium bg-primary text-white rounded-full shadow"
-                                                    >
-                                                        End Meet
-                                                    </button>
-                                                )}
-
-                                                {/* Task Result */}
-                                                {item.type === "task" && (
+                                                    {/* Edit */}
                                                     <Link
-                                                        href={route("instructor.course.activity.result", {
-                                                            course: course.slug,
-                                                            activityId: item.id,
-                                                        })}
+                                                        href={`/instructor/course/${course.slug}/activity/${item.type}/${item.id}/edit`}
                                                     >
-                                                        <button className="w-20 h-7 text-sm font-medium bg-primary text-white rounded-full shadow">
-                                                            Result
+                                                        <button className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg transition-colors border border-amber-200/50">
+                                                            Edit
                                                         </button>
                                                     </Link>
-                                                )}
 
-                                                {/* Edit */}
-                                                <Link
-                                                    href={`/instructor/course/${course.slug}/activity/${item.type}/${item.id}/edit`}
-                                                >
-                                                    <button className="button-warning">Edit</button>
-                                                </Link>
-
-                                                {/* Delete */}
-                                                <button
-                                                    onClick={(e) => handleSubmitDelete(e, item.id)}
-                                                    className="button-danger"
-                                                >
-                                                    Hapus
-                                                </button>
+                                                    {/* Delete */}
+                                                    <button
+                                                        onClick={(e) => handleSubmitDelete(e, item.id)}
+                                                        className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors border border-red-200/50"
+                                                    >
+                                                        Hapus
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="100%" className="p-8 text-center text-gray-500">
+                                            <div className="flex flex-col items-center justify-center">
+                                                <box-icon name='task' color='#cbd5e1' size='48px'></box-icon>
+                                                <p className="mt-3 text-sm font-medium">Belum ada aktivitas yang ditambahkan.</p>
                                             </div>
                                         </td>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="100%" className="text-center py-4">
-                                        Tidak ada data.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </App>

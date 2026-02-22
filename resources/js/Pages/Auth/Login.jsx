@@ -1,5 +1,4 @@
 import FlashMessageToast from "@/Components/FlashMessageToast";
-import FormInput from "@/Components/FormInput";
 import { Link, useForm, usePage } from "@inertiajs/react";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -117,103 +116,199 @@ const Login = () => {
     };
 
     return (
-        <section className="min-h-screen flex flex-col bg-gray-100">
+        <section className="min-h-screen flex text-gray-900 bg-white">
             <FlashMessageToast />
-            <div className="bg-primary h-2"></div>
 
-            <div className="p-5 xl:p-0 flex-1 flex flex-col justify-center items-center">
-                <Link href="/" className="flex items-center max-w-56 mb-6 text-2xl font-semibold text-gray-900">
-                    <img src={site.logo} alt="Logo" className="w-full h-full object-fill" />
-                </Link>
+            {/* Left Column - Image/Branding (Hidden on mobile) */}
+            <div className="hidden lg:flex lg:w-1/2 bg-primary items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary text-primary-content to-blue-900 opacity-95"></div>
 
-                <div className="w-full bg-white rounded-lg shadow sm:max-w-md xl:p-0">
-                    <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
-                        <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">
-                            Sign In
-                        </h1>
+                {/* Decorative circles */}
+                <div className="absolute -top-32 -left-32 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+                <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] border-[40px] border-white/5 rounded-full pointer-events-none"></div>
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <FormInput
-                                title="username"
-                                id="username"
-                                isRequired
-                                placeholder="Masukkan email atau NIP"
-                                value={data.username}
-                                onChange={handleChange}
-                                error={errors.username}
-                            />
+                <div className="relative z-10 p-12 text-center text-white max-w-xl flex flex-col items-center">
+                    <div className="bg-white/95 p-6 rounded-3xl shadow-2xl mb-10 backdrop-blur-sm transform transition-transform hover:scale-105 duration-300">
+                        <img src={site.logo} alt="Logo" className="h-24 w-auto object-contain" />
+                    </div>
+                    <h1 className="text-4xl md:text-5xl font-extrabold mb-6 leading-tight tracking-tight">
+                        Selamat Datang di
+                        <br /> <span className="text-blue-100">Portal Edukasi Gapura</span>
+                    </h1>
+                    <p className="text-lg text-blue-50/90 leading-relaxed max-w-md mx-auto font-medium">
+                        Tingkatkan wawasan dan kembangkan potensi Anda melalui platform pembelajaran interaktif.
+                    </p>
+                </div>
+            </div>
 
+            {/* Right Column - Login Form */}
+            <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-6 sm:p-12 xl:p-24 bg-gray-50 relative">
+
+                {/* Mobile Header / Logo */}
+                <div className="lg:hidden w-full max-w-md mb-8 flex flex-col items-center">
+                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6">
+                        <img src={site.logo} alt="Logo" className="h-16 w-auto object-contain drop-shadow-sm" />
+                    </div>
+                    <h1 className="text-2xl font-bold text-gray-800 text-center">Masuk ke Akun</h1>
+                </div>
+
+                <div className="w-full max-w-md bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden transform transition-all">
+                    <div className="p-8 sm:p-10">
+                        <div className="hidden lg:block text-center mb-8">
+                            <h2 className="text-3xl font-extrabold text-gray-800 mb-2 tracking-tight">Masuk</h2>
+                            <p className="text-gray-500 font-medium">Silakan login untuk melanjutkan</p>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="space-y-6">
+
+                            {/* Username / NIP */}
                             <div>
-                                <label htmlFor="password" className="block mb-1 text-sm font-medium text-gray-900">
+                                <label htmlFor="username" className="block mb-2 text-sm font-bold text-gray-700">
+                                    Email / NIP <span className="text-red-500">*</span>
+                                </label>
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <box-icon name='user' color='#9ca3af' size='20px'></box-icon>
+                                    </div>
+                                    <input
+                                        id="username"
+                                        type="text"
+                                        value={data.username}
+                                        onChange={handleChange}
+                                        placeholder="user@example.com / NIP"
+                                        className={`block w-full pl-11 pr-4 py-3.5 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-xl focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${errors.username ? "border-red-500 bg-red-50 ring-red-100" : "hover:border-gray-300"}`}
+                                        required
+                                    />
+                                </div>
+                                {errors.username && (
+                                    <div className="mt-1.5 text-red-500 text-sm font-medium flex items-center gap-1">
+                                        <box-icon name='error-circle' color='#ef4444' size='16px'></box-icon>
+                                        {errors.username}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Password */}
+                            <div>
+                                <label htmlFor="password" className="block mb-2 text-sm font-bold text-gray-700">
                                     Password <span className="text-red-500">*</span>
                                 </label>
-                                <div className="relative">
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <box-icon name='lock-alt' color='#9ca3af' size='20px'></box-icon>
+                                    </div>
                                     <input
                                         id="password"
                                         type={showPassword ? "text" : "password"}
                                         value={data.password}
                                         onChange={handleChange}
-                                        placeholder="********"
-                                        className={`form-control w-full pr-10 ${errors.password ? "border-red-500" : ""
-                                            }`}
+                                        placeholder="••••••••"
+                                        className={`block w-full pl-11 pr-12 py-3.5 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-xl focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${errors.password ? "border-red-500 bg-red-50 ring-red-100" : "hover:border-gray-300"}`}
                                         required
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-600 text-sm focus:outline-none"
+                                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary transition-colors focus:outline-none"
                                     >
-                                        {showPassword ? "Hide" : "Show"}
+                                        <box-icon name={showPassword ? "hide" : "show"} color="currentColor" size="22px"></box-icon>
                                     </button>
                                 </div>
                                 {errors.password && (
-                                    <div className="mt-1 text-red-500 text-sm">
+                                    <div className="mt-1.5 text-red-500 text-sm font-medium flex items-center gap-1">
+                                        <box-icon name='error-circle' color='#ef4444' size='16px'></box-icon>
                                         {errors.password}
                                     </div>
                                 )}
                             </div>
 
-                            <div>
-                                <div className="flex items-center gap-3">
-                                    <div className="flex-1 border border-gray-300 shadow flex items-center rounded-xl overflow-hidden">
+                            {/* Captcha */}
+                            <div className="pt-2">
+                                <label className="block mb-2 text-sm font-bold text-gray-700">
+                                    Verifikasi Keamanan <span className="text-red-500">*</span>
+                                </label>
+                                <div className="flex flex-row items-center gap-3">
+                                    <div className="relative w-[55%] sm:w-[200px] flex-shrink-0 bg-gray-50 border border-gray-200 shadow-sm flex items-center justify-center rounded-xl overflow-hidden group cursor-pointer transition-all h-[52px] ring-2 ring-transparent hover:ring-primary/30" onClick={fetchCaptcha}>
                                         <img
-                                            onClick={fetchCaptcha}
                                             src={captchaUrl}
                                             alt="captcha"
-                                            className="w-full h-full cursor-pointer"
+                                            className="w-full h-full object-fill opacity-90 group-hover:opacity-100 transition-opacity"
+                                            onError={(e) => {
+                                                e.target.style.display = 'none';
+                                                e.target.nextSibling.style.display = 'flex';
+                                            }}
+                                            onLoad={(e) => {
+                                                e.target.style.display = 'block';
+                                                if (e.target.nextSibling) e.target.nextSibling.style.display = 'none';
+                                            }}
                                         />
+                                        <div className="absolute inset-0 hidden flex-col items-center justify-center bg-gray-100 gap-1">
+                                            <box-icon name='image-alt' color='#9ca3af' size='28px'></box-icon>
+                                            <span className="text-[10px] text-gray-400 font-medium">Klik muat ulang</span>
+                                        </div>
+                                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <box-icon name='refresh' color='white' size='26px'></box-icon>
+                                        </div>
                                     </div>
-                                    <div className="w-1/3">
-                                        <input
-                                            type="text"
-                                            id="captcha"
-                                            value={captchaInput}
-                                            onChange={handleCaptchaChange}
-                                            placeholder="CAPTCHA"
-                                            className={`form-control ${errors.captcha ? "border-red-500" : ""
-                                                }`}
-                                        />
-                                    </div>
+                                    <input
+                                        type="text"
+                                        id="captcha"
+                                        value={captchaInput}
+                                        onChange={handleCaptchaChange}
+                                        placeholder="Captcha"
+                                        style={{ height: '52px' }}
+                                        className={`flex-1 min-w-0 px-4 bg-gray-50/50 border border-gray-200 text-gray-900 font-mono tracking-widest text-center rounded-xl focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${errors.captcha ? "border-red-500 bg-red-50 ring-red-100" : "hover:border-gray-300"}`}
+                                        required
+                                    />
                                 </div>
                                 {errors.captcha && (
-                                    <div className="mt-1 text-red-500 text-sm">
+                                    <div className="mt-1.5 text-red-500 text-sm font-medium flex items-center gap-1">
+                                        <box-icon name='error-circle' color='#ef4444' size='16px'></box-icon>
                                         {errors.captcha}
                                     </div>
                                 )}
-                                <small className="text-gray-600 italic">
-                                    Klik gambar untuk refresh CAPTCHA.
-                                </small>
+                                <p className="mt-2 text-xs font-medium text-gray-500 text-center sm:text-left flex items-center justify-center sm:justify-start gap-1">
+                                    <box-icon name='info-circle' color='#6b7280' size='14px'></box-icon>
+                                    Klik gambar untuk mengganti kode
+                                </p>
                             </div>
 
-                            <button
-                                type="submit"
-                                className="button-primary w-full mt-2"
-                                disabled={processing}
-                            >
-                                {processing ? "Please wait..." : "Sign In"}
-                            </button>
+                            <div className="pt-4">
+                                <button
+                                    type="submit"
+                                    className="w-full flex items-center justify-center gap-2 py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-base font-bold text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/50 transition-all transform hover:-translate-y-0.5"
+                                    disabled={processing}
+                                >
+                                    {processing ? (
+                                        <>
+                                            <box-icon name='loader-alt' animation='spin' color='white'></box-icon>
+                                            Memproses...
+                                        </>
+                                    ) : (
+                                        <>
+                                            Sign In
+                                            <box-icon name='right-arrow-alt' color='white' size='24px'></box-icon>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                         </form>
                     </div>
+
+                    <div className="px-8 py-5 bg-gray-50/80 border-t border-gray-100 text-center">
+                        <p className="text-sm font-medium text-gray-500">
+                            Mengalami kendala login? <a href="#" className="font-semibold text-primary hover:underline transition-all">Hubungi Admin</a>
+                        </p>
+                    </div>
+                </div>
+
+                {/* Footer simple on mobile/desktop right column */}
+                <div className="mt-8 text-center text-sm font-medium text-gray-400">
+                    Copyright © {new Date().getFullYear()}{" "}
+                    <Link href="/" className="font-bold hover:text-primary transition-colors">
+                        bkpsdmkabupatengresik
+                    </Link>. All Rights Reserved.
                 </div>
             </div>
         </section>

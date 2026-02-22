@@ -140,7 +140,7 @@ const ModalAddSchedule = ({ isOpen, onClose, onScheduleAdded }) => {
                                     </div>
                                     {/* quota */}
                                     <FormInput title={'quota'} value={values.quota} onChange={handleChange} isRequired={true} />
-                                    <button type='submit' className='button-primary'>Add Schedule</button>
+                                    <button type='submit' className='button-primary'>Simpan</button>
                                 </form>
                             </p>
                         </div>
