@@ -59,11 +59,11 @@ class AuthController
         $user = User::where('email', $email)->first();
 
         if (!$user || $user->hasRole('Participant')) {
-            return back()->withErrors(['email_or_username' => 'Kredensial tidak ditemukan atau akses ditolak.']);
+            return back()->withErrors(['email_or_username' => 'Email atau password salah.']);
         }
 
         if (!Auth::attempt(['email' => $email, 'password' => $request->password])) {
-            return back()->withErrors(['email_or_username' => 'Username atau password salah.']);
+            return back()->withErrors(['email_or_username' => 'Email atau password salah.']);
         }
 
         $request->session()->regenerate();

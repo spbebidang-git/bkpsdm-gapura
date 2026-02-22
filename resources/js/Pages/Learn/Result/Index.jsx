@@ -74,55 +74,43 @@ const Index = ({
                 activity={activity}
                 schedule={schedule}
             >
-                <div className="flex flex-col justify-between">
-                    <div className="flex-1 rounded-xl bg-gray-50 py-2.5 mb-8 ">
-                        <div className="p-3 flex-1 h-[550px] flex flex-col justify-center overflow-scroll">
+                <div className="flex flex-col h-full bg-white">
+                    <div className="flex-1 rounded-xl bg-gray-50 p-4 mb-4 shadow-inner border border-gray-100 flex flex-col min-h-0">
+                        <div className="flex-1 overflow-y-auto flex flex-col justify-center">
                             {question_result.score >=
                                 activity.data.min_score ? (
-                                <div className="border-2 bg-white max-w-lg w-full mx-auto flex flex-col items-center p-8">
-                                    <div className="border-2 w-24 h-24 flex items-center justify-center rounded-full border-green-400 mb-3">
+                                <div className="border border-green-100 shadow-sm rounded-2xl bg-white max-w-lg w-full mx-auto flex flex-col items-center p-4 sm:p-8 my-auto">
+                                    <div className="border-4 w-20 h-20 sm:w-24 sm:h-24 shrink-0 flex items-center justify-center rounded-full border-green-400 mb-4 bg-green-50 text-green-500">
                                         <box-icon
                                             name="like"
-                                            size="lg"
+                                            size="md"
                                             color="#22c55e"
                                         ></box-icon>
                                     </div>
-                                    <div className="text-center text-xl text-gray-700 font-semibold mb-5">
+                                    <div className="text-center text-lg sm:text-xl text-gray-700 font-semibold mb-5 leading-snug">
                                         <b>Selamat</b>, kamu telah menyelesaikan{" "}
-                                        <br /> {activity.type} ini.
+                                        <br className="hidden sm:block" /> {activity.type} ini.
                                     </div>
                                     <div className="w-full">
-                                        <table className="w-full">
-                                            <tr>
-                                                <th className="p-3 border w-24">
-                                                    Benar
-                                                </th>
-                                                <th className="p-3 border w-24">
-                                                    Salah
-                                                </th>
-                                                <th className="p-3 border w-24">
-                                                    Nilai
-                                                </th>
-                                                <th className="p-3 border w-24 whitespace-nowrap">
-                                                    Min Score
-                                                </th>
-                                            </tr>
-                                            <tr className="font-bold">
-                                                <td className="p-3 border w-24 text-center">
-                                                    {question_result.correct}
-                                                </td>
-                                                <td className="p-3 border w-24 text-center">
-                                                    {question_result.wrong}
-                                                </td>
-                                                <td className="p-3 border w-24 text-center">
-                                                    {question_result.score}
-                                                </td>
-                                                <td className="p-3 border w-24 text-center whitespace-nowrap">
-                                                    {activity.data.min_score}
-                                                </td>
-                                            </tr>
-                                        </table>
-                                        <div className="w-full justify-center flex mx-auto mt-6">
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 w-full">
+                                            <div className="bg-emerald-50/50 border border-emerald-100/50 rounded-xl p-3 sm:p-4 text-center shadow-[0_2px_10px_-3px_rgba(16,185,129,0.1)] transition-transform hover:-translate-y-0.5">
+                                                <div className="text-emerald-700 text-[11px] sm:text-xs uppercase font-bold tracking-wider mb-1">Benar</div>
+                                                <div className="text-2xl sm:text-3xl font-extrabold text-emerald-600">{question_result.correct}</div>
+                                            </div>
+                                            <div className="bg-rose-50/50 border border-rose-100/50 rounded-xl p-3 sm:p-4 text-center shadow-[0_2px_10px_-3px_rgba(244,63,94,0.1)] transition-transform hover:-translate-y-0.5">
+                                                <div className="text-rose-700 text-[11px] sm:text-xs uppercase font-bold tracking-wider mb-1">Salah</div>
+                                                <div className="text-2xl sm:text-3xl font-extrabold text-rose-600">{question_result.wrong}</div>
+                                            </div>
+                                            <div className="bg-indigo-50/50 border border-indigo-100/50 rounded-xl p-3 sm:p-4 text-center shadow-[0_2px_10px_-3px_rgba(99,102,241,0.1)] transition-transform hover:-translate-y-0.5">
+                                                <div className="text-indigo-700 text-[11px] sm:text-xs uppercase font-bold tracking-wider mb-1">Nilai</div>
+                                                <div className="text-2xl sm:text-3xl font-extrabold text-indigo-600">{question_result.score}</div>
+                                            </div>
+                                            <div className="bg-gray-50/80 border border-gray-200/60 rounded-xl p-3 sm:p-4 text-center shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] transition-transform hover:-translate-y-0.5">
+                                                <div className="text-gray-500 text-[10px] sm:text-[11px] uppercase font-bold tracking-wider mb-1 whitespace-nowrap pt-0.5">Min. Skor</div>
+                                                <div className="text-2xl sm:text-3xl font-extrabold text-gray-700">{activity.data.min_score}</div>
+                                            </div>
+                                        </div>
+                                        <div className="w-full justify-center flex mx-auto">
                                             {activity.data.is_loop == 1 ? (
                                                 <button
                                                     onClick={(e) =>
@@ -144,50 +132,38 @@ const Index = ({
                                     </div>
                                 </div>
                             ) : (
-                                <div className="border-2 bg-white max-w-lg w-full mx-auto flex flex-col items-center p-8">
-                                    <div className="border-2 w-24 h-24 flex items-center justify-center rounded-full border-red-400 mb-3">
+                                <div className="border border-red-100 shadow-sm rounded-2xl bg-white max-w-lg w-full mx-auto flex flex-col items-center p-4 sm:p-8 my-auto">
+                                    <div className="border-4 w-20 h-20 sm:w-24 sm:h-24 shrink-0 flex items-center justify-center rounded-full border-red-400 mb-4 bg-red-50 text-red-500">
                                         <box-icon
                                             name="dislike"
-                                            size="lg"
+                                            size="md"
                                             color="#f87171"
                                         ></box-icon>
                                     </div>
-                                    <div className="text-center text-xl text-gray-700 font-semibold mb-5">
+                                    <div className="text-center text-lg sm:text-xl text-gray-700 font-semibold mb-5 leading-snug">
                                         Nilai kamu belum cukup untuk lulus{" "}
-                                        <br /> dari {activity.type} ini
+                                        <br className="hidden sm:block" /> dari {activity.type} ini
                                     </div>
                                     <div className="w-full">
-                                        <table className="w-full">
-                                            <tr>
-                                                <th className="p-3 border w-24">
-                                                    Benar
-                                                </th>
-                                                <th className="p-3 border w-24">
-                                                    Salah
-                                                </th>
-                                                <th className="p-3 border w-24">
-                                                    Nilai
-                                                </th>
-                                                <th className="p-3 border w-24 whitespace-nowrap">
-                                                    Min Score
-                                                </th>
-                                            </tr>
-                                            <tr className="font-bold">
-                                                <td className="p-3 border w-24 text-center">
-                                                    {question_result.correct}
-                                                </td>
-                                                <td className="p-3 border w-24 text-center">
-                                                    {question_result.wrong}
-                                                </td>
-                                                <td className="p-3 border w-24 text-center">
-                                                    {question_result.score}
-                                                </td>
-                                                <td className="p-3 border w-24 text-center whitespace-nowrap">
-                                                    {activity.data.min_score}
-                                                </td>
-                                            </tr>
-                                        </table>
-                                        <div className="w-full justify-center flex mx-auto mt-6">
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 w-full">
+                                            <div className="bg-emerald-50/50 border border-emerald-100/50 rounded-xl p-3 sm:p-4 text-center shadow-[0_2px_10px_-3px_rgba(16,185,129,0.1)] transition-transform hover:-translate-y-0.5">
+                                                <div className="text-emerald-700 text-[11px] sm:text-xs uppercase font-bold tracking-wider mb-1">Benar</div>
+                                                <div className="text-2xl sm:text-3xl font-extrabold text-emerald-600">{question_result.correct}</div>
+                                            </div>
+                                            <div className="bg-rose-50/50 border border-rose-100/50 rounded-xl p-3 sm:p-4 text-center shadow-[0_2px_10px_-3px_rgba(244,63,94,0.1)] transition-transform hover:-translate-y-0.5">
+                                                <div className="text-rose-700 text-[11px] sm:text-xs uppercase font-bold tracking-wider mb-1">Salah</div>
+                                                <div className="text-2xl sm:text-3xl font-extrabold text-rose-600">{question_result.wrong}</div>
+                                            </div>
+                                            <div className="bg-indigo-50/50 border border-indigo-100/50 rounded-xl p-3 sm:p-4 text-center shadow-[0_2px_10px_-3px_rgba(99,102,241,0.1)] transition-transform hover:-translate-y-0.5">
+                                                <div className="text-indigo-700 text-[11px] sm:text-xs uppercase font-bold tracking-wider mb-1">Nilai</div>
+                                                <div className="text-2xl sm:text-3xl font-extrabold text-indigo-600">{question_result.score}</div>
+                                            </div>
+                                            <div className="bg-gray-50/80 border border-gray-200/60 rounded-xl p-3 sm:p-4 text-center shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] transition-transform hover:-translate-y-0.5">
+                                                <div className="text-gray-500 text-[10px] sm:text-[11px] uppercase font-bold tracking-wider mb-1 whitespace-nowrap pt-0.5">Min. Skor</div>
+                                                <div className="text-2xl sm:text-3xl font-extrabold text-gray-700">{activity.data.min_score}</div>
+                                            </div>
+                                        </div>
+                                        <div className="w-full justify-center flex mx-auto">
                                             {activity.data.is_loop == 1 ? (
                                                 <button
                                                     onClick={(e) =>
@@ -211,14 +187,15 @@ const Index = ({
                             )}
                         </div>
                     </div>
-                    <div className="h-14 w-56 mx-auto">
+                    <div className="w-full sm:w-64 mx-auto shrink-0 pb-1">
                         <button
                             onClick={(e) =>
                                 handleSubmit(e, course.slug, schedule.id, activity_id)
                             }
-                            className="button-primary"
+                            className="w-full px-6 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5 flex justify-center items-center gap-2"
                         >
                             Kegiatan Selanjutnya
+                            <box-icon name="right-arrow-alt" color="white" size="20px"></box-icon>
                         </button>
                     </div>
                 </div>
@@ -235,32 +212,33 @@ const Index = ({
             activity={activity}
             schedule={schedule}
         >
-            <div className="flex flex-col justify-between">
-                <div className="flex-1 rounded-xl bg-gray-50 py-2.5 mb-8 ">
-                    <div className="p-3 flex-1 h-[550px] flex flex-col justify-center overflow-scroll">
-                        <div className="border-2 h-80 bg-white max-w-lg w-full mx-auto flex flex-col justify-center items-center p-8">
-                            <div className="border-2 w-24 h-24 flex items-center justify-center rounded-full border-green-400 mb-3">
+            <div className="flex flex-col h-full bg-white">
+                <div className="flex-1 rounded-xl bg-gray-50 p-4 mb-4 shadow-inner border border-gray-100 flex flex-col min-h-0">
+                    <div className="flex-1 overflow-y-auto flex flex-col justify-center">
+                        <div className="border border-green-100 shadow-sm rounded-2xl bg-white max-w-lg w-full mx-auto flex flex-col justify-center items-center p-6 sm:p-8 my-auto min-h-[250px] sm:h-80">
+                            <div className="border-4 w-20 h-20 sm:w-24 sm:h-24 shrink-0 flex items-center justify-center rounded-full border-green-400 mb-4 bg-green-50 text-green-500">
                                 <box-icon
                                     name="like"
-                                    size="lg"
+                                    size="md"
                                     color="#22c55e"
                                 ></box-icon>
                             </div>
-                            <div className="text-center text-xl text-gray-700 font-semibold mb-5">
-                                <b>Selamat</b>, kamu telah menyelesaikan <br />{" "}
+                            <div className="text-center text-lg sm:text-xl text-gray-700 font-semibold mb-5 leading-snug">
+                                <b>Selamat</b>, kamu telah menyelesaikan <br className="hidden sm:block" />{" "}
                                 {activity.type} ini.
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className="h-14 w-56 mx-auto">
+                <div className="w-full sm:w-64 mx-auto shrink-0 pb-1">
                     <button
                         onClick={(e) =>
                             handleSubmit(e, course.slug, schedule.id, activity_id)
                         }
-                        className="button-primary"
+                        className="w-full px-6 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5 flex justify-center items-center gap-2"
                     >
                         Kegiatan Selanjutnya
+                        <box-icon name="right-arrow-alt" color="white" size="20px"></box-icon>
                     </button>
                 </div>
             </div>

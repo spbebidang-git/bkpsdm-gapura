@@ -1,3 +1,4 @@
+import ActivityFormLayout from "@/Components/ActivityFormLayout";
 import FormInput from "@/Components/FormInput";
 import FormSelect from "@/Components/FormSelect";
 import App from "@/Layouts/Instructor/App";
@@ -44,9 +45,13 @@ const Edit = ({ slug, activityId, variant }) => {
 
     return (
         <App>
-            <div className="text-center text-2xl font-bold text-gray-700 mb-5">
-                Edit Variant
-            </div>
+            <ActivityFormLayout
+                slug={slug}
+                type="variant"
+                title="Edit Variasi"
+                description="Ubah konfigurasi pada variasi soal ini."
+                isEdit={true}
+            />
 
             <form onSubmit={handleSubmit}>
                 <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -62,7 +67,7 @@ const Edit = ({ slug, activityId, variant }) => {
 
                         <FormInput
                             title="variant"
-                            label="Variant"
+                            label="Judul Variasi"
                             value={values.variant}
                             onChange={handleChange}
                             isRequired={false}

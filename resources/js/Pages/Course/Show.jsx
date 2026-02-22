@@ -82,10 +82,10 @@ const Show = ({ course, schedules, reviews = [], rating }) => {
 
     return (
         <App>
-            <div className="max-w-7xl mx-auto p-4 md:p-8">
+            <div className="max-w-7xl mx-auto px-2 py-4 md:p-8">
 
                 {/* Hero Section & Breadcrumb Container */}
-                <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-6 md:p-8 mb-8">
+                <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-4 sm:p-6 md:p-8 mb-8">
                     {/* Breadcrumb */}
                     <div className="hidden md:flex mb-8 w-full relative z-10">
                         <div className="inline-flex flex-wrap items-center gap-2 md:gap-4 bg-gray-50 py-2.5 px-6 rounded-full border border-gray-100/80">
@@ -166,7 +166,7 @@ const Show = ({ course, schedules, reviews = [], rating }) => {
                 </div>
 
                 {/* 🔹 Section Jadwal Kegiatan */}
-                <div id="section-schedule" className="bg-white p-6 md:p-8 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-gray-100 mb-8 scroll-mt-24">
+                <div id="section-schedule" className="bg-white p-4 sm:p-6 md:p-8 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-gray-100 mb-8 scroll-mt-24">
                     <div className="flex items-center gap-3 mb-8">
                         <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
                             <box-icon name="calendar" size="24px" color="currentColor"></box-icon>
@@ -262,7 +262,7 @@ const Show = ({ course, schedules, reviews = [], rating }) => {
                 </div>
 
                 {/* 🔹 Section Teaser Video */}
-                <div id="section-teaser" className="bg-white p-6 md:p-8 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-gray-100 mb-8 scroll-mt-24">
+                <div id="section-teaser" className="bg-white p-4 sm:p-6 md:p-8 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-gray-100 mb-8 scroll-mt-24">
                     <div className="flex items-center gap-3 mb-8">
                         <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-500">
                             <box-icon name="video" size="24px" color="currentColor"></box-icon>
@@ -285,7 +285,7 @@ const Show = ({ course, schedules, reviews = [], rating }) => {
                 </div>
 
                 {/* 🔹 Section Description */}
-                <div id="section-description" className="bg-white p-6 md:p-8 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-gray-100 mb-8 scroll-mt-24">
+                <div id="section-description" className="bg-white p-4 sm:p-6 md:p-8 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-gray-100 mb-8 scroll-mt-24">
                     <div className="flex items-center gap-3 mb-6">
                         <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center text-gray-600">
                             <box-icon name="info-circle" size="24px" color="currentColor"></box-icon>
@@ -298,7 +298,7 @@ const Show = ({ course, schedules, reviews = [], rating }) => {
                 </div>
 
                 {/* 🔹 Section Ulasan Peserta */}
-                <div id="section-review" className="bg-white p-6 md:p-8 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-gray-100 mb-8 scroll-mt-24">
+                <div id="section-review" className="bg-white p-4 sm:p-6 md:p-8 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-gray-100 mb-8 scroll-mt-24">
                     <div className="flex items-center gap-3 mb-8">
                         <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500">
                             <box-icon name="message-square-detail" size="24px" color="currentColor"></box-icon>

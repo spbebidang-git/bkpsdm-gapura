@@ -109,7 +109,7 @@ const Show = ({ course, learn }) => {
                         <box-icon name="bar-chart-alt-2" color="#018083"></box-icon>
                         Data Pembelajaran
                     </h2>
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto whitespace-nowrap">
                         <table className="w-full text-left text-sm text-gray-600 border border-gray-100 rounded-xl overflow-hidden">
                             <thead className="bg-gray-50 border-b border-gray-100 text-gray-700 font-semibold">
                                 <tr>

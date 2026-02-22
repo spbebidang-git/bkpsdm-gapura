@@ -146,8 +146,8 @@ const LoginParticipant = () => {
                                 </div>
                                 {/* CAPTCHA */}
                                 <div className="py-2.5">
-                                    <div className=" flex items-center gap-3 -mt-1">
-                                        <div className="flex-1 border border-gray-300 shadow flex items-center rounded-xl overflow-hidden ">
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 -mt-1">
+                                        <div className="w-full sm:flex-1 border border-gray-300 shadow flex items-center rounded-xl overflow-hidden ">
                                             <img
                                                 onClick={fetchCaptcha}
                                                 src={captchaUrl}
@@ -156,7 +156,7 @@ const LoginParticipant = () => {
                                                 style={{ cursor: "pointer" }}
                                             />
                                         </div>
-                                        <div className="w-1/3">
+                                        <div className="w-full sm:w-1/3">
                                             <input
                                                 type="text"
                                                 id="captcha"

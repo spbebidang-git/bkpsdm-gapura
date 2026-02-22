@@ -91,7 +91,7 @@ const Learn = ({
                         </div>
                         <div className="text-xl font-bold text-gray-800 flex items-center gap-1">
                             {/* Tombol Toggle */}
-                            <div className="p-2">
+                            <div className="p-2 hidden lg:block">
                                 <button
                                     className="bg-primary text-sm shadow text-white font-medium  px-5 py-2 rounded-full w-full"
                                     onClick={toggleSidebar}
@@ -113,9 +113,9 @@ const Learn = ({
 
 
                     {/* Konten */}
-                    <div className="flex-1 m-5 xl:m-5 rounded-xl shadow bg-white overflow-hidden">
-                        <div className="h-[74px] bg-orange-50 flex items-center px-6 justify-between">
-                            <div className="xl:text-xl font-bold text-gray-800 capitalize">
+                    <div className="flex-1 m-3 lg:m-5 xl:m-5 rounded-xl shadow bg-white overflow-hidden flex flex-col min-h-0">
+                        <div className="h-auto min-h-[74px] shrink-0 bg-orange-50 flex flex-col sm:flex-row items-center px-4 py-3 sm:py-0 lg:px-6 justify-center sm:justify-between gap-2 sm:gap-0">
+                            <div className="text-center sm:text-left text-lg xl:text-xl font-bold text-gray-800 capitalize w-full sm:w-auto">
                                 {activity.title}
                             </div>
                             {(activity.type === "pre-test" || activity.type === "post-test") &&
@@ -130,8 +130,8 @@ const Learn = ({
                             )}
                         </div>
 
-                        <div className="mx-2 my-4 xl:m-6 h-full flex flex-col border-b">
-                            <div className="flex gap-2.5 mb-4">
+                        <div className="p-4 lg:p-6 flex-1 flex flex-col border-b min-h-0">
+                            <div className="flex justify-center sm:justify-start gap-2.5 mb-4 shrink-0 overflow-x-auto pb-2 scrollbar-hide w-full">
                                 <BreadcrumbLearn
                                     title="Instruksi"
                                     activeTab={type === "instruction"}
@@ -149,7 +149,7 @@ const Learn = ({
                                 />
                             </div>
 
-                            <div className="flex-1">
+                            <div className="flex-1 min-h-0">
                                 {React.Children.map(children, (child) =>
                                     child
                                         ? React.cloneElement(child, {
