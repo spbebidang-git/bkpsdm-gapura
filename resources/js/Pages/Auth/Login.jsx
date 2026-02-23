@@ -132,10 +132,14 @@ const Login = () => {
                     <div className="bg-white/95 p-6 rounded-3xl shadow-2xl mb-10 backdrop-blur-sm transform transition-transform hover:scale-105 duration-300">
                         <img src={site.logo} alt="Logo" className="h-24 w-auto object-contain" />
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-extrabold mb-6 leading-tight tracking-tight">
-                        Selamat Datang di
-                        <br /> <span className="text-blue-100">Portal Edukasi Gapura</span>
-                    </h1>
+                    <div className="mb-6">
+                        <p className="text-base font-medium text-blue-200/80 uppercase tracking-widest mb-2">
+                            Selamat Datang di
+                        </p>
+                        <h1 className="text-2xl md:text-3xl font-extrabold leading-snug tracking-tight text-white">
+                            Gerbang Pengembangan Kompetensi Menuju SMART ASN
+                        </h1>
+                    </div>
                     <p className="text-lg text-blue-50/90 leading-relaxed max-w-md mx-auto font-medium">
                         Tingkatkan wawasan dan kembangkan potensi Anda melalui platform pembelajaran interaktif.
                     </p>

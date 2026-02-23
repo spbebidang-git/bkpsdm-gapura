@@ -20,11 +20,11 @@ Route::middleware(HandleInertiaRequests::class)->group(function () {
     });
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    # Home Page (Bisa diakses Instructor)
-    Route::get('/', \App\Http\Controllers\Web\HomeController::class)->name('home');
-
-    // Mencegah instruktur mengakses halaman publik lainnya
+    // Mencegah instruktur & admin mengakses halaman publik lainnya
     Route::middleware(BlockInstructorFromPublicRoutes::class)->group(function () {
+        # Home Page (Tidak bisa diakses Admin dan Instructor)
+        Route::get('/', \App\Http\Controllers\Web\HomeController::class)->name('home');
+        
         # About Page
         Route::get('/about', [\App\Http\Controllers\Web\StaticPageController::class, 'about'])->name('about');
         # Contact Page

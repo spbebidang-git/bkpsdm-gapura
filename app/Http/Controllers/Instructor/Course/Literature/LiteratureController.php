@@ -36,7 +36,7 @@ class LiteratureController
             'sub_title' => 'required',
             'value' => 'required|numeric',
             'duration' => 'required|numeric',
-            'content' => 'required|mimes:pdf|max:10240',
+            'content' => 'required|mimes:pdf|max:5120',
         ]);
 
         try {
@@ -83,7 +83,7 @@ class LiteratureController
             'title' => 'required',
             'sub_title' => 'required',
             'value' => 'required|numeric',
-            'content' => 'nullable|mimes:pdf|max:10240',
+            'content' => 'nullable|mimes:pdf|max:5120',
             'duration' => 'required|numeric',
         ]);
 

@@ -26,6 +26,10 @@ return Application::configure(basePath: dirname(__DIR__))
             // App\Http\Middleware\IsInstructorMiddleware::class
         ]);
 
+        $middleware->alias([
+            'course.lock' => \App\Http\Middleware\CheckCourseLock::class,
+        ]);
+
         //
     })
     ->withExceptions(function (Exceptions $exceptions) {

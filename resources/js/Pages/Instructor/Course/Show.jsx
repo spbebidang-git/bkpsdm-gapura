@@ -74,6 +74,29 @@ const Show = ({ course, activities }) => {
         });
     };
 
+    const handleLock = () => {
+        Swal.fire({
+            title: "Kunci Kegiatan?",
+            text: "Dengan melakukan kunci kegiatan, berarti Anda menyetujui bahwa semua detil Pelatihan dan Kegiatan yang berada di dalamnya TIDAK dapat dilakukan pemutahiran lagi. Pilih 'Batal' jika ingin memeriksa kembali detil Pelatihan dan Kegiatan.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Ya, Kunci Kegiatan",
+            cancelButtonText: "Batal",
+            customClass: {
+                confirmButton: 'px-6 py-2.5 rounded-xl font-bold text-white transition-all shadow-sm',
+                cancelButton: 'px-6 py-2.5 rounded-xl font-bold text-white transition-all shadow-sm'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                router.post(route("instructor.course.lock", course.slug), {}, {
+                    preserveScroll: true
+                });
+            }
+        });
+    };
+
     return (
         <App>
             <div className="max-w-7xl mx-auto mb-8">
@@ -140,7 +163,7 @@ const Show = ({ course, activities }) => {
                                     </div>
                                 </div>
 
-                                <div className="text-right bg-gradient-to-br from-primary/10 to-primary/5 px-6 py-4 rounded-2xl border border-primary/10 w-full sm:w-auto flex flex-row items-center justify-between sm:flex-col sm:items-end">
+                                <div className="text-right bg-gradient-to-br from-primary/10 to-primary/5 px-6 py-4 rounded-2xl border border-primary/10 w-full sm:w-auto flex flex-row items-center justify-between sm:flex-col sm:items-end shadow-sm">
                                     <h4 className="text-xs font-bold text-primary/80 uppercase tracking-wider mb-1">
                                         Efektivitas
                                     </h4>
@@ -157,19 +180,34 @@ const Show = ({ course, activities }) => {
                 {/* Activities */}
                 <div className="bg-white border border-gray-100 overflow-hidden rounded-2xl shadow-sm">
                     <div className="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/50">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <box-icon name='list-ul' color='var(--color-primary)' size='20px'></box-icon>
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                    <box-icon name='list-ul' color='var(--color-primary)' size='20px'></box-icon>
+                                </div>
+                                <h2 className="text-xl font-bold text-gray-800">Daftar Aktivitas</h2>
                             </div>
-                            <h2 className="text-xl font-bold text-gray-800">Daftar Aktivitas</h2>
+
+                            {!course.is_locked && (
+                                <button
+                                    onClick={handleLock}
+                                    className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-bold transition-all shadow-sm text-xs sm:text-sm bg-red-50 text-red-700 hover:bg-red-100 border border-red-200`}
+                                >
+                                    <box-icon name='lock-alt' color='#b91c1c' size='16px'></box-icon>
+                                    Kunci Kegiatan
+                                </button>
+                            )}
                         </div>
-                        <Link
-                            href={`/instructor/course/${course.slug}/activity`}
-                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-sm hover:shadow text-sm font-semibold transition-all w-full sm:w-auto whitespace-nowrap"
-                        >
-                            <box-icon name='plus' color='#ffffff' size='18px'></box-icon>
-                            Tambah Aktivitas
-                        </Link>
+
+                        {!course.is_locked && (
+                            <Link
+                                href={`/instructor/course/${course.slug}/activity`}
+                                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-sm hover:shadow text-sm font-semibold transition-all w-full sm:w-auto whitespace-nowrap"
+                            >
+                                <box-icon name='plus' color='#ffffff' size='18px'></box-icon>
+                                Tambah Aktivitas
+                            </Link>
+                        )}
                     </div>
 
                     <div className="relative overflow-x-auto w-full">
@@ -223,7 +261,7 @@ const Show = ({ course, activities }) => {
                                                     {/* Pre-test / Post-test */}
                                                     {(item.type === "pre-test" || item.type === "post-test") && (
                                                         <div className="flex gap-2">
-                                                            {!item.has_imported && (
+                                                            {!course.is_locked && !item.has_imported && (
                                                                 <Link
                                                                     href={route(
                                                                         "instructor.course.activity.import-question.index",
@@ -239,18 +277,20 @@ const Show = ({ course, activities }) => {
                                                                 </Link>
                                                             )}
 
-                                                            <Link
-                                                                href={`/instructor/course/${course.slug}/activity/variant/${item.id}`}
-                                                            >
-                                                                <button className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg transition-colors border border-indigo-200/50">
-                                                                    Variasi
-                                                                </button>
-                                                            </Link>
+                                                            {!course.is_locked && (
+                                                                <Link
+                                                                    href={`/instructor/course/${course.slug}/activity/variant/${item.id}`}
+                                                                >
+                                                                    <button className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg transition-colors border border-indigo-200/50">
+                                                                        Variasi
+                                                                    </button>
+                                                                </Link>
+                                                            )}
                                                         </div>
                                                     )}
 
                                                     {/* Meeting */}
-                                                    {item.type === "meeting" && item.end_meeting === 0 && (
+                                                    {!course.is_locked && item.type === "meeting" && item.end_meeting === 0 && (
                                                         <button
                                                             onClick={(e) => handleEndMeeting(e, item.id)}
                                                             className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold bg-orange-50 hover:bg-orange-100 text-orange-600 rounded-lg transition-colors border border-orange-200/50"
@@ -274,21 +314,25 @@ const Show = ({ course, activities }) => {
                                                     )}
 
                                                     {/* Edit */}
-                                                    <Link
-                                                        href={`/instructor/course/${course.slug}/activity/${item.type}/${item.id}/edit`}
-                                                    >
-                                                        <button className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg transition-colors border border-amber-200/50">
-                                                            Edit
-                                                        </button>
-                                                    </Link>
+                                                    {!course.is_locked && (
+                                                        <Link
+                                                            href={`/instructor/course/${course.slug}/activity/${item.type}/${item.id}/edit`}
+                                                        >
+                                                            <button className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg transition-colors border border-amber-200/50">
+                                                                Edit
+                                                            </button>
+                                                        </Link>
+                                                    )}
 
                                                     {/* Delete */}
-                                                    <button
-                                                        onClick={(e) => handleSubmitDelete(e, item.id)}
-                                                        className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors border border-red-200/50"
-                                                    >
-                                                        Hapus
-                                                    </button>
+                                                    {!course.is_locked && (
+                                                        <button
+                                                            onClick={(e) => handleSubmitDelete(e, item.id)}
+                                                            className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-colors border border-red-200/50"
+                                                        >
+                                                            Hapus
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>

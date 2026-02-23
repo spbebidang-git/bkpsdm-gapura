@@ -87,6 +87,7 @@ class CourseController
                 'total_participant' => $course->total_participant,
                 'total_passed' => $course->total_passed,
                 'efektifitas' => $course->efektifitas,
+                'is_locked' => (bool)$course->is_locked,
             ],
             'activities' => $this->activity->getActivityByCourse($course->id)
         ]);
@@ -164,5 +165,18 @@ class CourseController
         $course->delete();
 
         return to_route('instructor.dashboard')->with('success', 'Course deleted successfully.');
+    }
+
+    public function lock(Course $course)
+    {
+        if ($course->is_locked) {
+            return redirect()->back()->with('danger', "Materi sudah dikunci.");
+        }
+
+        $course->update([
+            'is_locked' => true
+        ]);
+
+        return redirect()->back()->with('success', "Materi berhasil dikunci.");
     }
 }
