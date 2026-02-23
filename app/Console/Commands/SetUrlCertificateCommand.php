@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Jobs\SetUrlCertificateJob;
 use App\Models\Learn\Learn;
 use App\Services\TokenService;
 use Illuminate\Console\Command;
