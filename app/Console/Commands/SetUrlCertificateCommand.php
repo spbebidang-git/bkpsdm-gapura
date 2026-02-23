@@ -127,11 +127,13 @@ class SetUrlCertificateCommand extends Command
                                 ]);
                             }
 
-                            SetUrlCertificateJob::dispatch([
-                                'course'          => $learn->course->id,
-                                'participant'     => $learn->participant_id,
-                                'url_certificate' => $peserta['sertifikat'],
-                            ]);
+                            Learn::where('course_id', $learn->course->id)
+                                ->where('participant_id', $learn->participant_id)
+                                ->update([
+                                    'url_certificate'    => $peserta['sertifikat'],
+                                    'is_post_certificate' => 1,
+                                ]);
+
                             $dispatched++;
                         }
                     });

@@ -32,17 +32,6 @@ const Edit = ({ slug, activity }) => {
     function handleFileChange(e) {
         const file = e.target.files[0];
         if (!file) return;
-
-        if (file.type !== "application/pdf") {
-            alert("Format file harus PDF.");
-            return;
-        }
-
-        if (file.size > MAX_FILE_SIZE) {
-            alert("Ukuran file maksimal 5MB.");
-            return;
-        }
-
         setValues((prev) => ({ ...prev, content: file }));
     }
 

@@ -58,7 +58,7 @@ class QuestionItemController
             'options.option3' => 'required|string',
             'options.option4' => 'required|string',
             'correct_answer' => 'required|string',
-            'score' => 'required|integer|min:1',
+            'score' => 'required|integer|min:1|max:100',
         ]);
 
         try {
@@ -120,7 +120,7 @@ class QuestionItemController
             'options.option3' => 'required|string|max:255',
             'options.option4' => 'required|string|max:255',
             'correct_answer' => 'required|string',
-            'score' => 'required|integer|min:1',
+            'score' => 'required|integer|min:1|max:100',
         ]);
 
         try {

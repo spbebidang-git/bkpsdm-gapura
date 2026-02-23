@@ -43,7 +43,6 @@ class DashboardController
             $totalCount = DB::table('activities')
                 ->where('course_id', $item->course_id)
                 ->count();
-
             $progress = ($totalCount > 0) ? round(($doneCount / $totalCount) * 100) : 0;
 
             return [
@@ -57,7 +56,8 @@ class DashboardController
         $totalCourses = $learns->unique('course_id')->count();
 
         // Sertifikat: url_certificate ada dan bukan '-'
-        $certificates = $learns->filter(fn($item) =>
+        $certificates = $learns->filter(
+            fn($item) =>
             !empty($item->url_certificate) && $item->url_certificate !== '-'
         )->count();
 
@@ -74,7 +74,7 @@ class DashboardController
         return Inertia::render('Participant/Dashboard', [
             'stats' => [
                 'totalCourses'    => $totalCourses,
-                'completedCourses'=> $completed->count(),
+                'completedCourses' => $completed->count(),
                 'ongoingCourses'  => $ongoing->count(),
                 'certificates'    => $certificates,
                 'avgProgress'     => $avgProgress,

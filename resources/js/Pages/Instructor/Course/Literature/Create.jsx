@@ -33,19 +33,6 @@ const Create = ({ slug }) => {
     function handleFileChange(e) {
         const file = e.target.files[0];
         if (!file) return;
-
-        // validasi format
-        if (file.type !== "application/pdf") {
-            alert("Format file harus PDF.");
-            return;
-        }
-
-        // validasi ukuran
-        if (file.size > MAX_FILE_SIZE) {
-            alert("Ukuran file maksimal 5MB.");
-            return;
-        }
-
         setValues((prev) => ({ ...prev, content: file }));
     }
 

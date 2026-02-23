@@ -25,8 +25,10 @@ Route::prefix('/instructor')
                 Route::get('/{course:slug}/edit', [\App\Http\Controllers\Instructor\CourseController::class, 'edit'])->name('edit');
                 Route::put('/{course:slug}', [\App\Http\Controllers\Instructor\CourseController::class, 'update'])->name('update');
                 Route::delete('/{course:slug}', [\App\Http\Controllers\Instructor\CourseController::class, 'destroy'])->name('destroy');
+                Route::post('/{course:slug}/lock', [\App\Http\Controllers\Instructor\CourseController::class, 'lock'])->name('lock');
                 Route::prefix('/{course:slug}/activity')
                     ->name('activity.')
+                    ->middleware('course.lock')
                     ->group(function () {
                         Route::get('/', [\App\Http\Controllers\Instructor\Course\ActivityController::class, 'index'])->name('activity');
                         Route::delete('/{activityId}', [\App\Http\Controllers\Instructor\Course\ActivityController::class, 'destroy'])->name('destroy');
