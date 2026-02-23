@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Models\Learn\Learn;
+use App\Services\CertificateSyncService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Yajra\DataTables\Facades\DataTables;
@@ -37,16 +38,16 @@ class CertificateController
                     }
 
                     // NIP & unit from user_meta
-                    $nip      = get_user_meta($row->participant_id, 'nip') ?: '-';
-                    $satker   = get_user_meta($row->participant_id, 'nama_jabatan') ?: '-';
+                    $nip    = get_user_meta($row->participant_id, 'nip') ?: '-';
+                    $satker = get_user_meta($row->participant_id, 'nama_jabatan') ?: '-';
 
                     return [
-                        'name'         => $row->participant->name ?? '-',
-                        'nip'          => $nip,
-                        'satker'       => $satker,
-                        'course'       => $row->course->title ?? '-',
-                        'finished_at'  => $row->finished_at ? Carbon::parse($row->finished_at)->format('d/m/Y') : '-',
-                        'status'       => $status,
+                        'name'            => $row->participant->name ?? '-',
+                        'nip'             => $nip,
+                        'satker'          => $satker,
+                        'course'          => $row->course->title ?? '-',
+                        'finished_at'     => $row->finished_at ? Carbon::parse($row->finished_at)->format('d/m/Y') : '-',
+                        'status'          => $status,
                         'url_certificate' => $action,
                     ];
                 });
@@ -61,7 +62,8 @@ class CertificateController
     }
 
     /**
-     * Trigger push certificate manually from admin UI.
+     * Trigger push certificate manually dari admin UI.
+     * Menjalankan logika via Artisan command (sinkron).
      */
     public function syncPush()
     {
@@ -89,9 +91,10 @@ class CertificateController
     }
 
     /**
-     * Trigger pull (fetch URL) certificate manually from admin UI.
+     * Trigger pull (fetch URL) certificate manual dari admin UI.
+     * Mengeksekusi logika langsung tanpa job scheduler.
      */
-    public function syncPull()
+    public function syncPull(CertificateSyncService $syncService)
     {
         // Cegah DebugBar menyisipkan HTML ke JSON response
         if (app()->bound('debugbar')) {
@@ -99,17 +102,10 @@ class CertificateController
         }
 
         try {
-            $exitCode = Artisan::call('app:set-url-certificate-command');
-            $output   = trim(Artisan::output());
-
-            if ($exitCode !== 0) {
-                return response()->json([
-                    'message' => 'Sync Pull selesai dengan error: ' . ($output ?: 'Periksa log server.'),
-                ], 422);
-            }
+            $result = $syncService->syncPull();
 
             return response()->json([
-                'message' => 'Sync Pull berhasil. ' . $output,
+                'message' => $result['message'],
             ], 200);
         } catch (\Throwable $e) {
             return response()->json(['message' => 'Sync Pull gagal: ' . $e->getMessage()], 500);
