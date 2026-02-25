@@ -1,7 +1,7 @@
 import App from "@/Layouts/Instructor/App";
 import { Link, router } from "@inertiajs/react";
 
-const Index = ({ slug, activity, variants }) => {
+const Index = ({ slug, activity, variants, variantWarning }) => {
     function handleSubmitDelete(e, variantId) {
         e.preventDefault();
         router.delete(
@@ -58,6 +58,42 @@ const Index = ({ slug, activity, variants }) => {
                         </table>
                     </div>
                 </div>
+
+                {/* WARNING BANNER */}
+                {variantWarning && (
+                    <div className="mb-8 space-y-3">
+                        {variantWarning.hasEmpty && (
+                            <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-200">
+                                <div className="flex-shrink-0 mt-0.5">
+                                    <box-icon name='error-circle' color='#dc2626' size='20px'></box-icon>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-red-800">
+                                        Terdapat varian tanpa soal!
+                                    </p>
+                                    <p className="text-sm text-red-700 mt-0.5">
+                                        Varian <strong>{variantWarning.emptyVariants.join(', ')}</strong> belum memiliki pertanyaan. Varian tanpa soal akan dilewati saat peserta mengerjakan tes.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                        {variantWarning.hasMismatch && (
+                            <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200">
+                                <div className="flex-shrink-0 mt-0.5">
+                                    <box-icon name='error' color='#d97706' size='20px'></box-icon>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-amber-800">
+                                        Jumlah soal antar varian tidak sama!
+                                    </p>
+                                    <p className="text-sm text-amber-700 mt-0.5">
+                                        Pastikan semua varian memiliki jumlah pertanyaan yang sama agar penilaian peserta adil dan konsisten.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* LIST VARIANT */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">

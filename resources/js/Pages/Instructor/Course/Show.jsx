@@ -188,13 +188,21 @@ const Show = ({ course, activities }) => {
                                 <h2 className="text-xl font-bold text-gray-800">Daftar Aktivitas</h2>
                             </div>
 
-                            {!course.is_locked && (
+                            {!course.is_locked ? (
                                 <button
                                     onClick={handleLock}
                                     className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-bold transition-all shadow-sm text-xs sm:text-sm bg-red-50 text-red-700 hover:bg-red-100 border border-red-200`}
                                 >
                                     <box-icon name='lock-alt' color='#b91c1c' size='16px'></box-icon>
                                     Kunci Kegiatan
+                                </button>
+                            ) : (
+                                <button
+                                    disabled
+                                    className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-bold transition-all shadow-sm text-xs sm:text-sm bg-gray-100 text-gray-500 border border-gray-200 cursor-not-allowed`}
+                                >
+                                    <box-icon name='lock' color='#6b7280' size='16px'></box-icon>
+                                    Sudah Terkunci
                                 </button>
                             )}
                         </div>
