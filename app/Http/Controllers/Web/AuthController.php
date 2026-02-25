@@ -127,15 +127,21 @@ class AuthController
 
             $dataApi = Http::withHeaders([
                 'apikey' => config('services.sso.api_key'),
-                'auth'   => 'Bearer ' . $response['access_token']
+                'Authorization' => 'Bearer ' . $response['access_token'],
+                'Accept' => 'application/json'
             ])->post(config('services.sso.base_url') . '/api/get_nip_data');
 
             if ($dataApi->successful()) {
                 $data = $dataApi->json();
-                $this->userService->storeUserMeta($user->id, $data);
 
-                // Update nama jika ada perubahan di data pusat
-                $user->update(['name' => $data['fv_nama'] ?? $user->name]);
+                if (is_array($data)) {
+                    $this->userService->storeUserMeta($user->id, $data);
+
+                    // Update nama jika ada perubahan di data pusat
+                    $user->update(['name' => $data['fv_nama'] ?? $user->name]);
+                } else {
+                    Log::error("Sync Meta Error NIP {$nip}: Response JSON is null or not an array.");
+                }
             }
         } catch (\Exception $e) {
             Log::error("Sync Meta Error NIP {$nip}: " . $e->getMessage());
@@ -171,20 +177,21 @@ class AuthController
 
             $dataApi = Http::withHeaders([
                 'apikey' => config('services.sso.api_key'),
-                'auth'   => 'Bearer ' . $response['access_token']
+                'Authorization' => 'Bearer ' . $response['access_token'],
+                'Accept' => 'application/json'
             ])->post(config('services.sso.base_url') . '/api/get_nip_data');
 
             if (!$dataApi->successful()) return false;
 
             $data = $dataApi->json();
 
-            // Jika SSO tidak mengembalikan email, tidak bisa provisioning
-            if (empty($data['fv_email'])) {
-                Log::error("Provisioning gagal NIP {$nip}: SSO tidak mengembalikan email.");
+            if (!is_array($data)) {
+                Log::error("Provisioning gagal NIP {$nip}: Data dari SSO kosong atau bukan array.");
                 return false;
             }
 
-            $email = $data['fv_email'];
+            // Jika SSO tidak mengembalikan email, buat email dari NIP
+            $email = empty($data['fv_email']) ? "{$nip}@gresikkab.go.id" : $data['fv_email'];
 
             // Cek jika email ternyata sudah ada di database
             if (User::where('email', $email)->exists()) {
