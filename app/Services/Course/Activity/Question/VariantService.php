@@ -67,4 +67,29 @@ class VariantService
     {
         return Question::where('activity_id', $activityId)->first()->id;
     }
+
+    public function getVariantWarning($activityId)
+    {
+        $question = Question::where('activity_id', $activityId)->first();
+        if (!$question) return null;
+
+        $variants = QuestionVariant::withCount('questionItems')
+            ->where('question_id', $question->id)
+            ->get();
+
+        if ($variants->isEmpty()) return null;
+
+        $counts = $variants->pluck('question_items_count');
+        $hasEmpty = $counts->contains(0);
+        $hasMismatch = $counts->unique()->count() > 1;
+
+        if (!$hasEmpty && !$hasMismatch) return null;
+
+        return [
+            'hasEmpty' => $hasEmpty,
+            'hasMismatch' => $hasMismatch,
+            'emptyVariants' => $variants->where('question_items_count', 0)
+                ->pluck('variant')->toArray(),
+        ];
+    }
 }

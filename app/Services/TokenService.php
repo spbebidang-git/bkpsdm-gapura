@@ -49,7 +49,7 @@ class TokenService
     {
         $data = [
             'access_token' => $token,
-            'expires_at'   => Carbon::now()->addSeconds($expiresIn)->timestamp
+            'expires_at' => Carbon::now()->addSeconds($expiresIn)->timestamp
         ];
 
         $encrypted = Crypt::encryptString(json_encode($data));
@@ -73,24 +73,27 @@ class TokenService
         if (app()->isLocal()) {
             Log::debug('[TokenService] Melakukan refresh token dari SSO.', [
                 'username' => env('SSO_ADMIN_USERNAME'),
-                'url'      => env('SSO_BASE_URL') . '/oauth/token',
+                'url' => env('SSO_BASE_URL') . '/oauth/token',
             ]);
         }
 
-        $response = Http::retry(3, 100)->withHeaders([
-            'apikey' => env('API_KEY')
-        ])->post(env('SSO_BASE_URL') . '/oauth/token', [
-            'username'      => env('SSO_ADMIN_USERNAME'),
-            'password'      => env('SSO_ADMIN_PASS'),
-            'grant_type'    => 'password',
-            'client_id'     => env('SSO_CLIENT_ID'),
-            'client_secret' => env('SSO_CLIENT_SECRET'),
-        ]);
+        $response = Http::retry(3, 5000, function ($exception) {
+            return $exception instanceof \Illuminate\Http\Client\ConnectionException
+                || ($exception instanceof \Illuminate\Http\Client\RequestException && $exception->response->serverError());
+        }, throw: false)->withHeaders([
+                    'apikey' => env('API_KEY')
+                ])->post(env('SSO_BASE_URL') . '/oauth/token', [
+                    'username' => env('SSO_ADMIN_USERNAME'),
+                    'password' => env('SSO_ADMIN_PASS'),
+                    'grant_type' => 'password',
+                    'client_id' => env('SSO_CLIENT_ID'),
+                    'client_secret' => env('SSO_CLIENT_SECRET'),
+                ]);
 
         if (app()->isLocal()) {
             Log::debug('[TokenService] SSO OAuth response.', [
                 'http_status' => $response->status(),
-                'body'        => $response->body(),
+                'body' => $response->body(),
             ]);
         }
 

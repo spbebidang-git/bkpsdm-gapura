@@ -29,7 +29,8 @@ class VariantController
         return Inertia::render('Instructor/Course/Variant/Index', [
             'slug' => $course->slug,
             'activity' => $this->activity->getDetailActivity($activityId),
-            'variants' => $this->variant->getVariant($activityId)
+            'variants' => $this->variant->getVariant($activityId),
+            'variantWarning' => $this->variant->getVariantWarning($activityId),
         ]);
     }
 

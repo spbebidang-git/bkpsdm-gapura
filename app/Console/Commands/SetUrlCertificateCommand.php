@@ -33,8 +33,9 @@ class SetUrlCertificateCommand extends Command
             # Ambil data sertifikat dari API
             $response = Http::withHeaders([
                 'apikey' => env('API_KEY'),
-                'auth'   => $token,
+                'Authorization' => $token,
             ])
+                ->acceptJson()
                 ->asForm()
                 ->post(env('SSO_BASE_URL') . '/api/get_data_sertifikat');
 
@@ -44,8 +45,8 @@ class SetUrlCertificateCommand extends Command
                 $token = $this->tokenService->forceRefresh();
                 $response = Http::withHeaders([
                     'apikey' => env('API_KEY'),
-                    'auth'   => $token,
-                ])->asForm()->post(env('SSO_BASE_URL') . '/api/get_data_sertifikat');
+                    'Authorization' => $token,
+                ])->acceptJson()->asForm()->post(env('SSO_BASE_URL') . '/api/get_data_sertifikat');
             }
 
             if (app()->isLocal()) {

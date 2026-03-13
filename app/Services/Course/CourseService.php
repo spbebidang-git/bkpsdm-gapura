@@ -6,6 +6,7 @@ use App\Helper\UploadMedia;
 use App\Models\Course\Activity;
 use App\Models\Course\Course;
 use App\Models\Course\Question;
+use App\Models\Course\Question\QuestionVariant;
 use App\Models\Course\Schedule;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +22,7 @@ class CourseService
         return Course::query()
             ->inRandomOrder()
             ->where('status', 'publish')
+            ->where('is_locked', true)
             ->where(function ($q) use ($today, $currentTime) {
                 $q->where('type', '!=', 'schedule')
                     ->orWhereHas('schedules', function ($query) use ($today, $currentTime) {
@@ -95,6 +97,7 @@ class CourseService
         return Course::query()
             ->orderBy('id')
             ->where('status', 'publish')
+            ->where('is_locked', true)
             ->where(function ($q) use ($today, $currentTime) {
                 // Tampilkan yang tipenya bukan schedule (Video/Modul)
                 $q->where('type', '!=', 'schedule')
@@ -305,49 +308,34 @@ class CourseService
 
     public function generatePrePostTestVariant($participantId, $course)
     {
-        $queryActivities = DB::table('activities')
-            ->select('activities.id as key', DB::raw('MAX(question_variants.id) as value'))
-            ->join('questions', 'questions.activity_id', '=', 'activities.id')
-            ->join('question_variants', 'question_variants.question_id', '=', 'questions.id')
-            ->where('activities.course_id', $course->id)
-            ->where(function ($query) {
-                $query->where('activities.type', 'pre-test')
-                    ->orWhere('activities.type', 'post-test');
-            })->groupBy('activities.id')->get();
+        // Ambil semua activity pre-test/post-test untuk course ini
+        $activities = Activity::where('course_id', $course->id)
+            ->whereIn('type', ['pre-test', 'post-test'])
+            ->get();
 
-        $queryVariants = DB::table('activities')
-            ->select('activities.id as key', DB::raw('MAX(question_variants.id) as value'))
-            ->join('questions', 'questions.activity_id', '=', 'activities.id')
-            ->join('question_variants', 'question_variants.question_id', '=', 'questions.id')
-            ->where('activities.course_id', $course->id)
-            ->where(function ($query) {
-                $query->where('activities.type', 'pre-test')
-                    ->orWhere('activities.type', 'post-test');
-            })
-            ->groupBy('question_variants.id')
-            ->inRandomOrder()
-            ->get(); // Mengubah menjadi collection
+        foreach ($activities as $activity) {
+            $question = Question::where('activity_id', $activity->id)->first();
+            if (!$question) continue;
 
-        // dd($queryActivities);
-        # group by activity
-        $data = [];
-        foreach ($queryActivities as $item) {
-            $variant = $queryVariants->firstWhere('key', $item->key);
-            // dd($variant->value);
-            // $data[] = [
-            //     'key' => $item->key,
-            //     'value' => $variant->value, // Sesuaikan nama kolom 'value' sesuai data yang ada di $variant
-            // ];
-            update_user_meta($participantId, $item->key, $variant->value);
+            // Ambil semua variant beserta jumlah soalnya, hanya yang punya soal
+            $variants = QuestionVariant::withCount('questionItems')
+                ->where('question_id', $question->id)
+                ->get()
+                ->filter(fn($v) => $v->question_items_count > 0);
+
+            if ($variants->isEmpty()) continue;
+
+            // Cari jumlah soal terbanyak
+            $maxCount = $variants->max('question_items_count');
+
+            // Filter hanya variant yang jumlah soalnya sama dengan max
+            $eligibleVariants = $variants->where('question_items_count', $maxCount);
+
+            // Pilih random dari yang eligible
+            $selectedVariant = $eligibleVariants->random();
+
+            update_user_meta($participantId, $activity->id, $selectedVariant->id);
         }
-
-        // dd($data);
-
-        # loop data 
-
-
-
-        // dd($queryKeyValue);
     }
 
     // public function checkEmployeeStatusCourse($userId, $course)

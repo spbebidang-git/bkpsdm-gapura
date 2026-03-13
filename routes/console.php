@@ -10,3 +10,5 @@ use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('app:post-certificate-command')->hourly();
 Schedule::command('app:set-url-certificate-command')->hourlyAt(30);
+Schedule::command('db:backup')->daily();
+Schedule::command('db:backup --weekly')->weekly();

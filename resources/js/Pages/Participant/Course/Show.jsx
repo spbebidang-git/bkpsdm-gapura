@@ -79,11 +79,22 @@ const Show = ({ course, learn }) => {
 
                                 <div className="mt-auto flex flex-col sm:flex-row gap-4 w-full md:max-w-lg">
                                     <button
-                                        className="button-primary w-full shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 text-sm md:text-base py-2.5 md:py-3"
-                                        onClick={(e) => handleSubmit(e, course.slug)}
+                                        className={`button-secondary w-full bg-white border-2 transition-all duration-300 text-sm md:text-base py-2.5 md:py-3 flex justify-center items-center h-full ${learn.url_certificate
+                                                ? 'border-primary text-primary hover:bg-primary/5 shadow-sm'
+                                                : 'border-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+                                            }`}
+                                        disabled={!learn.url_certificate}
+                                        onClick={(e) => {
+                                            if (learn.url_certificate) {
+                                                window.open(learn.url_certificate, '_blank');
+                                            } else {
+                                                e.preventDefault();
+                                            }
+                                        }}
+                                        title={!learn.url_certificate ? "Sertifikat belum tersedia" : "Unduh Sertifikat"}
                                     >
                                         <div className="flex items-center justify-center gap-2">
-                                            <box-icon name="download" color="white" size="sm"></box-icon>
+                                            <box-icon name="download" color={learn.url_certificate ? "#018083" : "#9ca3af"} size="sm"></box-icon>
                                             Unduh Sertifikat
                                         </div>
                                     </button>

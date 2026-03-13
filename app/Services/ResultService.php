@@ -45,7 +45,17 @@ class ResultService
                 'activities.type as activity_type',
                 'learn_items.response as response',
             ])
-            ->get();
+            ->get()
+            ->map(function ($row) {
+                if ($row->nip !== '-') {
+                    try {
+                        $row->nip = \Illuminate\Support\Facades\Crypt::decryptString($row->nip);
+                    } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                         // Fallback to original if not encrypted
+                    }
+                }
+                return $row;
+            });
     }
 
     public function groupAverageScores($data)

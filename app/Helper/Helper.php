@@ -47,13 +47,46 @@ if (!function_exists('get_user_meta')) {
     function get_user_meta($user_id, $key)
     {
         $setting = \App\Models\Management\UserMeta::where('user_id', $user_id)->where('key', $key)->first();
-        return $setting ? $setting->value : false;
+        if ($setting) {
+            if ($key === 'nip') {
+                try {
+                    return \Illuminate\Support\Facades\Crypt::decryptString($setting->value);
+                } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                    return $setting->value;
+                }
+            }
+            return $setting->value;
+        }
+        return false;
+    }
+}
+
+if (!function_exists('find_user_by_nip')) {
+    function find_user_by_nip($nip)
+    {
+        $metas = \App\Models\Management\UserMeta::with('user')->where('key', 'nip')->get();
+        foreach ($metas as $meta) {
+            try {
+                if (\Illuminate\Support\Facades\Crypt::decryptString($meta->value) === $nip) {
+                    return $meta;
+                }
+            } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                if ($meta->value === $nip) {
+                    return $meta;
+                }
+            }
+        }
+        return null;
     }
 }
 
 if (!function_exists('update_user_meta')) {
     function update_user_meta($user_id, $key, $value)
     {
+        if ($key === 'nip') {
+            $value = \Illuminate\Support\Facades\Crypt::encryptString($value);
+        }
+
         $meta = \App\Models\Management\UserMeta::where('user_id', $user_id)->where('key', $key)->first();
         if ($meta) {
             $meta->value = $value;

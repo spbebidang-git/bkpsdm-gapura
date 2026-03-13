@@ -97,10 +97,7 @@ class AuthController
             ]);
         }
 
-        $userMeta = UserMeta::with('user')
-            ->where('key', 'nip')
-            ->where('value', $nip)
-            ->first();
+        $userMeta = find_user_by_nip($nip);
 
         /**
          * CASE 1 — Sudah ada user di Laravel

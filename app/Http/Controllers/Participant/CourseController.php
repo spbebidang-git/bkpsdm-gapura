@@ -38,6 +38,8 @@ class CourseController
         try {
             $firstSchedule = $course->schedules->first();
 
+            $learnModel = $this->learn->findLearn($course->id, $this->participantId);
+
             # tgl aktivasi , tgl selesai , nilai post test, jam pelajaran
             $data = [
                 'activation_date' => $firstSchedule
@@ -46,10 +48,10 @@ class CourseController
                 'finished_at'   => $this->learn->getFinishedAt($course->id, $this->participantId),
                 'post_test_avg' => $this->learn->getPostTestAvg($course->id, $this->participantId),
                 'jam_pelajaran' => $course->jam_pelajaran,
+                'url_certificate' => $learnModel ? $learnModel->url_certificate : null,
             ];
 
             $course = $this->course->findBySlug($course->slug);
-            // dd($course);
 
             return Inertia::render('Participant/Course/Show', [
                 'course' => [

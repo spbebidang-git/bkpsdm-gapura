@@ -16,7 +16,10 @@ class CategoryController
     public function show(Category $category)
     {
         return Inertia::render('Category/Show', [
-            'courses' => $category->courses
+            'courses' => $category->courses()
+                ->where('status', 'publish')
+                ->where('is_locked', true)
+                ->get()
         ]);
     }
 }
