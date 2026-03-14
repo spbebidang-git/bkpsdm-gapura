@@ -1,0 +1,328 @@
+{
+	"info": {
+		"_postman_id": "gapura-kominfo-api-v1",
+		"name": "Gapura - Kominfo API v1",
+		"description": "API Kominfo untuk Platform E-Learning Gapura (BKPSDM Gresik).\n\nSemua endpoint bersifat READ-ONLY (GET) dan memerlukan **Bearer Token** (Laravel Sanctum) untuk autentikasi.\n\nRate Limit: 60 request/menit.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{bearer_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://gapura.test/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "bearer_token",
+			"value": "1|aaKCN9Wx8u0X3NrsPA9NCql8ErvI1zKCxmOM7gjC3d1fea06",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "📚 Courses (Pelatihan)",
+			"item": [
+				{
+					"name": "List Courses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/courses?per_page=15&category_id=&type=&year=&search=",
+							"host": ["{{base_url}}"],
+							"path": ["courses"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Jumlah data per halaman (max 100)"
+								},
+								{
+									"key": "category_id",
+									"value": "",
+									"description": "Filter by category ID",
+									"disabled": true
+								},
+								{
+									"key": "type",
+									"value": "",
+									"description": "Filter by type: schedule / unschedule",
+									"disabled": true
+								},
+								{
+									"key": "year",
+									"value": "",
+									"description": "Filter by tahun pembuatan",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "",
+									"description": "Cari berdasarkan judul pelatihan",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Mengambil daftar semua pelatihan yang berstatus publish.\n\nSupport filter: category_id, type, year, search.\nSupport pagination: per_page, page."
+					}
+				},
+				{
+					"name": "Detail Course",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/courses/:slug",
+							"host": ["{{base_url}}"],
+							"path": ["courses", ":slug"],
+							"variable": [
+								{
+									"key": "slug",
+									"value": "test",
+									"description": "Slug pelatihan"
+								}
+							]
+						},
+						"description": "Mengambil detail pelatihan berdasarkan slug.\n\nTermasuk: schedules, activities, employee status, instructor, category."
+					}
+				},
+				{
+					"name": "Course Participants",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/courses/:slug/participants?per_page=15",
+							"host": ["{{base_url}}"],
+							"path": ["courses", ":slug", "participants"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Jumlah data per halaman"
+								}
+							],
+							"variable": [
+								{
+									"key": "slug",
+									"value": "test",
+									"description": "Slug pelatihan"
+								}
+							]
+						},
+						"description": "Mengambil daftar peserta yang terdaftar pada pelatihan tertentu.\n\nNIP peserta di-mask untuk privasi."
+					}
+				},
+				{
+					"name": "Course Statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/courses/:slug/statistics",
+							"host": ["{{base_url}}"],
+							"path": ["courses", ":slug", "statistics"],
+							"variable": [
+								{
+									"key": "slug",
+									"value": "test",
+									"description": "Slug pelatihan"
+								}
+							]
+						},
+						"description": "Mengambil statistik pelatihan: total peserta, total lulus, efektifitas, rating."
+					}
+				},
+				{
+					"name": "Course Results (Pre/Post Test)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/courses/:slug/results?per_page=15",
+							"host": ["{{base_url}}"],
+							"path": ["courses", ":slug", "results"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Jumlah data per halaman"
+								}
+							],
+							"variable": [
+								{
+									"key": "slug",
+									"value": "test",
+									"description": "Slug pelatihan"
+								}
+							]
+						},
+						"description": "Mengambil hasil pre-test dan post-test peserta yang sudah menyelesaikan pelatihan."
+					}
+				}
+			]
+		},
+		{
+			"name": "📂 Categories (Kategori)",
+			"item": [
+				{
+					"name": "List Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/categories",
+							"host": ["{{base_url}}"],
+							"path": ["categories"]
+						},
+						"description": "Mengambil daftar semua kategori pelatihan beserta jumlah course."
+					}
+				},
+				{
+					"name": "Courses by Category",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/categories/:id/courses?per_page=15",
+							"host": ["{{base_url}}"],
+							"path": ["categories", ":id", "courses"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Jumlah data per halaman"
+								}
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID kategori"
+								}
+							]
+						},
+						"description": "Mengambil daftar pelatihan berdasarkan kategori tertentu."
+					}
+				}
+			]
+		},
+		{
+			"name": "👤 Participants (Peserta)",
+			"item": [
+				{
+					"name": "List Participants",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/participants?per_page=15&employee_status=&search=",
+							"host": ["{{base_url}}"],
+							"path": ["participants"],
+							"query": [
+								{
+									"key": "per_page",
+									"value": "15",
+									"description": "Jumlah data per halaman (max 100)"
+								},
+								{
+									"key": "employee_status",
+									"value": "",
+									"description": "Filter by status: PNS, CPNS, PPPK, THL",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "",
+									"description": "Cari berdasarkan nama peserta",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Mengambil daftar semua peserta.\n\nSupport filter: employee_status, search.\nNIP di-mask untuk privasi."
+					}
+				},
+				{
+					"name": "Detail Participant",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/participants/:id",
+							"host": ["{{base_url}}"],
+							"path": ["participants", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "5",
+									"description": "ID peserta"
+								}
+							]
+						},
+						"description": "Mengambil detail peserta beserta riwayat pelatihan yang diikuti."
+					}
+				}
+			]
+		},
+		{
+			"name": "📈 Statistics (Statistik)",
+			"item": [
+				{
+					"name": "Platform Overview",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/statistics/overview",
+							"host": ["{{base_url}}"],
+							"path": ["statistics", "overview"]
+						},
+						"description": "Ringkasan statistik platform secara keseluruhan:\ntotal courses, participants, instructors, enrollments, completion rate, average rating."
+					}
+				},
+				{
+					"name": "Yearly Statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/statistics/yearly?year=2026",
+							"host": ["{{base_url}}"],
+							"path": ["statistics", "yearly"],
+							"query": [
+								{
+									"key": "year",
+									"value": "2026",
+									"description": "Tahun yang ingin dilihat (default: tahun sekarang)"
+								}
+							]
+						},
+						"description": "Statistik per tahun dengan breakdown bulanan:\ntotal courses, enrollments, completions, new participants."
+					}
+				},
+				{
+					"name": "Employee Status Distribution",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/statistics/employee-status",
+							"host": ["{{base_url}}"],
+							"path": ["statistics", "employee-status"]
+						},
+						"description": "Distribusi peserta berdasarkan status kepegawaian (PNS, CPNS, PPPK, THL)."
+					}
+				}
+			]
+		}
+	]
+}

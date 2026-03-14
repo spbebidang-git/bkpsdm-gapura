@@ -28,8 +28,8 @@ class BulkCertificateJob implements ShouldQueue
     {
         $response = Http::withHeaders([
             'apikey' => env('API_KEY'),
-            'auth' => $this->token
-        ])->asForm()
+            'Authorization' => $this->token
+        ])->acceptJson()->asForm()
             ->post(env('SSO_BASE_URL') . '/api/post_sertifikat', [
                 'fc_kduker' => $this->item->fc_kduker_meta ?? 0,
                 'fc_kdsatker' => $this->item->fc_kdsatker_meta ?? 0,

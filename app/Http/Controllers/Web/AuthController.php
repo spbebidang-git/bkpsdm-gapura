@@ -72,10 +72,7 @@ class AuthController
 
     private function loginParticipant(Request $request, $nip)
     {
-        $userMeta = UserMeta::with('user')
-            ->where('key', 'nip')
-            ->where('value', $nip)
-            ->first();
+        $userMeta = find_user_by_nip($nip);
 
         if ($userMeta && $userMeta->user) {
             $user = $userMeta->user;

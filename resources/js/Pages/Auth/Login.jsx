@@ -140,9 +140,6 @@ const Login = () => {
                             Gerbang Pengembangan Kompetensi Menuju SMART ASN
                         </h1>
                     </div>
-                    <p className="text-lg text-blue-50/90 leading-relaxed max-w-md mx-auto font-medium">
-                        Tingkatkan wawasan dan kembangkan potensi Anda melalui platform pembelajaran interaktif.
-                    </p>
                 </div>
             </div>
 

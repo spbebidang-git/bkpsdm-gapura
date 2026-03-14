@@ -72,10 +72,7 @@ class AuthService
             'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'
         ]);
 
-        $userNip = UserMeta::with('user')
-            ->where('key', 'nip')
-            ->where('value', $request->username)
-            ->first();
+        $userNip = find_user_by_nip($request->username);
 
         if ($userNip) {
             $credentials = [

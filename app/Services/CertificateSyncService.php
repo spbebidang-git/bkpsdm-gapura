@@ -29,8 +29,8 @@ class CertificateSyncService
         // Panggil API SSO
         $response = Http::withHeaders([
             'apikey' => env('API_KEY'),
-            'auth'   => $token,
-        ])->asForm()->post(env('SSO_BASE_URL') . '/api/get_data_sertifikat');
+            'Authorization' => $token,
+        ])->acceptJson()->asForm()->post(env('SSO_BASE_URL') . '/api/get_data_sertifikat');
 
         // Jika 401 (token stale), force refresh dan retry
         if ($response->status() === 401) {
@@ -38,8 +38,8 @@ class CertificateSyncService
             $token    = $this->tokenService->forceRefresh();
             $response = Http::withHeaders([
                 'apikey' => env('API_KEY'),
-                'auth'   => $token,
-            ])->asForm()->post(env('SSO_BASE_URL') . '/api/get_data_sertifikat');
+                'Authorization' => $token,
+            ])->acceptJson()->asForm()->post(env('SSO_BASE_URL') . '/api/get_data_sertifikat');
         }
 
         if (!$response->successful()) {

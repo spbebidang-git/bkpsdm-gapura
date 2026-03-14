@@ -76,14 +76,24 @@ class CertificateController
             $exitCode = Artisan::call('app:post-certificate-command');
             $output   = trim(Artisan::output());
 
+            $finalMessage = 'Periksa log server untuk detail.';
+            if (preg_match('/(Berhasil:\s*\d+,\s*Gagal:\s*\d+)/', $output, $matches)) {
+                $finalMessage = $matches[1];
+            } elseif (str_contains($output, 'Tidak ada data yang perlu di-push')) {
+                $finalMessage = 'Tidak ada data yang perlu di-push.';
+            } else if ($output) {
+                // If it's short enough we can just show it, otherwise fallback
+                $finalMessage = strlen($output) < 100 ? $output : $finalMessage;
+            }
+
             if ($exitCode !== 0) {
                 return response()->json([
-                    'message' => 'Sync Push selesai dengan error: ' . ($output ?: 'Periksa log server.'),
+                    'message' => 'Sync Push selesai dengan error. ' . $finalMessage,
                 ], 422);
             }
 
             return response()->json([
-                'message' => 'Sync Push berhasil. ' . $output,
+                'message' => 'Sync Push berhasil. ' . $finalMessage,
             ], 200);
         } catch (\Throwable $e) {
             return response()->json(['message' => 'Sync Push gagal: ' . $e->getMessage()], 500);

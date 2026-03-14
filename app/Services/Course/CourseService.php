@@ -22,6 +22,7 @@ class CourseService
         return Course::query()
             ->inRandomOrder()
             ->where('status', 'publish')
+            ->where('is_locked', true)
             ->where(function ($q) use ($today, $currentTime) {
                 $q->where('type', '!=', 'schedule')
                     ->orWhereHas('schedules', function ($query) use ($today, $currentTime) {
@@ -96,6 +97,7 @@ class CourseService
         return Course::query()
             ->orderBy('id')
             ->where('status', 'publish')
+            ->where('is_locked', true)
             ->where(function ($q) use ($today, $currentTime) {
                 // Tampilkan yang tipenya bukan schedule (Video/Modul)
                 $q->where('type', '!=', 'schedule')

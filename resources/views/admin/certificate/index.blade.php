@@ -119,16 +119,40 @@
                     const data = await response.json();
 
                     if (response.ok) {
-                        toastr.success(data.message || label + ' berhasil.');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: data.message || label + ' berhasil.',
+                            confirmButtonText: 'Tutup',
+                            customClass: {
+                                confirmButton: 'btn btn-primary'
+                            }
+                        });
                     } else {
-                        toastr.warning(data.message || label + ' selesai dengan error.');
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Peringatan',
+                            text: data.message || label + ' selesai dengan error.',
+                            confirmButtonText: 'Tutup',
+                            customClass: {
+                                confirmButton: 'btn btn-primary'
+                            }
+                        });
                     }
 
                     table.ajax.reload(null, false);
 
                 } catch (err) {
                     console.error(label + ' error:', err);
-                    toastr.error('Terjadi kesalahan. Periksa konsol browser.');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Terjadi kesalahan. Periksa konsol browser.',
+                        confirmButtonText: 'Tutup',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
                 } finally {
                     // Pastikan spinner SELALU berhenti
                     btn.prop('disabled', false).html(icon + label);

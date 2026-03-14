@@ -98,10 +98,7 @@ class AuthController
             'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'
         ]);
 
-        $userMeta = UserMeta::with('user')
-            ->where('key', 'nip')
-            ->where('value', $request->username)
-            ->first();
+        $userMeta = find_user_by_nip($request->username);
 
         if ($userMeta) {
             $credentials = [

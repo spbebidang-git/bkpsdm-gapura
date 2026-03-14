@@ -42,4 +42,6 @@ return [
         'client_secret' => env('SSO_CLIENT_SECRET'),
     ],
 
+    // Removed kominfo static api_key
+
 ];
