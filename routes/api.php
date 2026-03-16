@@ -1,10 +1,11 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\CourseController;
 use App\Http\Controllers\Api\V1\ParticipantController;
 use App\Http\Controllers\Api\V1\StatisticController;
-use App\Http\Middleware\VerifyApiKey;
+use App\Http\Middleware\DisableApiCookies;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -12,15 +13,23 @@ use Illuminate\Support\Facades\Route;
 | API Routes - Kominfo Integration
 |--------------------------------------------------------------------------
 |
-| Semua endpoint di bawah ini bersifat READ-ONLY (GET) dan memerlukan
-| API key via header X-API-Key untuk autentikasi.
+| Semua endpoint di bawah ini memerlukan Bearer token via Sanctum.
+| Gunakan POST /api/v1/login untuk mendapatkan token.
 |
 */
 
+// Auth endpoints (public - tidak perlu token)
+Route::prefix('v1')->name('api.v1.')->middleware([DisableApiCookies::class, 'throttle:10,1'])->group(function () {
+    Route::post('login', [AuthController::class, 'login'])->name('login');
+});
+
 Route::prefix('v1')
     ->name('api.v1.')
-    ->middleware(['auth:sanctum', 'throttle:60,1'])
+    ->middleware([DisableApiCookies::class, 'auth:sanctum', 'throttle:60,1'])
     ->group(function () {
+
+        // Auth (perlu token)
+        Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
         // ==========================================
         // Courses (Pelatihan)
