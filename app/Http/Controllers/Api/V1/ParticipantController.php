@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\ParticipantResource;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ParticipantController extends Controller
 {
@@ -64,6 +65,8 @@ class ParticipantController extends Controller
                 $learn = $course->learns()->where('participant_id', $participant->id)->first();
 
                 return [
+                'custom_unique_id' => Str::random(4),
+                    'data_date' => now()->format('Y-m-d H:i:s'),
                     'course_id' => $course->id,
                     'course_title' => $course->title,
                     'category' => $course->category?->title,
@@ -79,6 +82,8 @@ class ParticipantController extends Controller
             'success' => true,
             'message' => 'Detail peserta berhasil diambil.',
             'data' => [
+                'custom_unique_id' => Str::random(4),
+                'data_date' => now()->format('Y-m-d H:i:s'),
                 'id' => $participant->id,
                 'name' => $participant->name,
                 'nip' => $nip ? $this->maskNip($nip) : null,

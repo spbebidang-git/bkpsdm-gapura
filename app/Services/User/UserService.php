@@ -2,9 +2,8 @@
 
 namespace App\Services\User;
 
-use App\Helper\UploadMedia;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class UserService
 {
@@ -35,9 +34,60 @@ class UserService
         return $nip;
     }
 
-    public function storeUserMeta($participantId, $data)
+    public function storeUserMeta($participantId, array $data, ?string $loginNip = null)
     {
-        update_user_meta($participantId, 'nip', $data['fc_nipbr']);
-        update_user_meta($participantId, 'status_pegawai', $data['status_pegawai']);
+        $nip = $this->resolveParticipantNip($participantId, $data, $loginNip);
+
+        if ($nip !== null) {
+            update_user_meta($participantId, 'nip', $nip);
+        }
+
+        if (array_key_exists('status_pegawai', $data) && filled($data['status_pegawai'])) {
+            update_user_meta($participantId, 'status_pegawai', $data['status_pegawai']);
+        }
+    }
+
+    private function resolveParticipantNip($participantId, array $data, ?string $loginNip = null): ?string
+    {
+        $candidates = [
+            $loginNip,
+            $data['fc_nipbr'] ?? null,
+            $data['nip'] ?? null,
+            $data['fv_nipbr'] ?? null,
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (!is_scalar($candidate)) {
+                continue;
+            }
+
+            $candidate = trim((string) $candidate);
+
+            if ($candidate === '' || $this->looksLikeAccessToken($candidate)) {
+                continue;
+            }
+
+            return $candidate;
+        }
+
+        Log::warning('User meta sync skipped NIP update because no valid NIP candidate was found.', [
+            'participant_id' => $participantId,
+            'keys' => array_keys($data),
+        ]);
+
+        return null;
+    }
+
+    private function looksLikeAccessToken(string $value): bool
+    {
+        if (str_starts_with(strtolower($value), 'bearer ')) {
+            return true;
+        }
+
+        if (preg_match('/^[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/', $value) === 1) {
+            return true;
+        }
+
+        return strlen($value) > 80 && preg_match('/^[A-Za-z0-9\-_.]+$/', $value) === 1;
     }
 }

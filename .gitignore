@@ -36,3 +36,6 @@ public/assets/media/images/courses
 !public/assets/media/images/static/
 !public/assets/media/images/static/*
 
+# Ignore all Markdown files
+*.md
+

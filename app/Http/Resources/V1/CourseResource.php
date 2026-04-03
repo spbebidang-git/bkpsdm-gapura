@@ -4,6 +4,7 @@ namespace App\Http\Resources\V1;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Str;
 
 class CourseResource extends JsonResource
 {
@@ -13,6 +14,8 @@ class CourseResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'custom_unique_id' => Str::random(4),
+            'data_date' => now()->format('Y-m-d H:i:s'),
             'id' => $this->id,
             'title' => $this->title,
             'slug' => $this->slug,

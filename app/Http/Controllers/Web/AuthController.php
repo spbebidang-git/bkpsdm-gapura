@@ -132,7 +132,7 @@ class AuthController
                 $data = $dataApi->json();
 
                 if (is_array($data)) {
-                    $this->userService->storeUserMeta($user->id, $data);
+                    $this->userService->storeUserMeta($user->id, $data, $nip);
 
                     // Update nama jika ada perubahan di data pusat
                     $user->update(['name' => $data['fv_nama'] ?? $user->name]);
@@ -196,14 +196,14 @@ class AuthController
                 return false;
             }
 
-            return DB::transaction(function () use ($data, $request, $email) {
+            return DB::transaction(function () use ($data, $request, $email, $nip) {
                 $user = User::create([
                     'name'     => $data['fv_nama'] ?? "User $email",
                     'email'    => $email,
                     'password' => Hash::make($request->password),
                 ]);
 
-                $this->userService->storeUserMeta($user->id, $data);
+                $this->userService->storeUserMeta($user->id, $data, $nip);
                 $user->assignRole('Participant');
 
                 Auth::login($user);
