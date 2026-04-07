@@ -30,7 +30,8 @@ class SecurityHeaders
                 "font-src 'self' https://fonts.bunny.net https:; " .
                 "img-src 'self' data: blob:; " .
                 "connect-src 'self' https: http: ws:; " .
-                "frame-src 'self' https://www.youtube.com https://pdf-hosting.com;" // tambahkan di sini
+                "frame-src 'self' https://www.youtube.com https://pdf-hosting.com; " .
+                "frame-ancestors 'none';"
         );
 
 
