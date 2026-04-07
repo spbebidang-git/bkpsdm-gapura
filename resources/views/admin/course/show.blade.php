@@ -82,7 +82,7 @@
             <div class="mt-2">
                 <div class="text-muted small mb-1 fw-bold">Deskripsi Lengkap</div>
                 <div class="border rounded p-3 bg-light small" style="max-height:200px;overflow-y:auto">
-                    {!! $course->description ?? '-' !!}
+                    {!! nl2br(e($course->description ?? '-')) !!}
                 </div>
             </div>
         </div>

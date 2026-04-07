@@ -450,3 +450,30 @@ if (!function_exists('getFavourablePercent')) {
         return $result->percentage_sum;
     }
 }
+
+if (!function_exists('sanitize_html')) {
+    /**
+     * Sanitize HTML content (for WYSIWYG/rich text fields).
+     * Allows safe HTML tags, removes dangerous scripts/events.
+     */
+    function sanitize_html($html)
+    {
+        if (empty($html)) {
+            return $html;
+        }
+        return \Mews\Purifier\Facades\Purifier::clean($html);
+    }
+}
+
+if (!function_exists('sanitize_plain_text')) {
+    /**
+     * Strip all HTML tags from input (for plain text fields like textarea).
+     */
+    function sanitize_plain_text($text)
+    {
+        if (empty($text)) {
+            return $text;
+        }
+        return strip_tags($text);
+    }
+}

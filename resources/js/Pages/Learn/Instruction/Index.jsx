@@ -1,5 +1,6 @@
 import Learn from '@/Layouts/Participant/Learn';
 import { router, usePage } from '@inertiajs/react';
+import DOMPurify from 'dompurify';
 import { toast } from 'react-toastify';
 
 const handleSubmit = (e, slug, activityId, scheduleId) => {
@@ -30,7 +31,7 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
             <div className='flex flex-col h-full bg-white'>
                 <div className='flex-1 rounded-xl bg-gray-50 p-4 mb-4 shadow-inner border border-gray-100 flex flex-col min-h-0'>
                     <div className='flex-1 overflow-y-auto pr-2'>
-                        <div className='prose prose-sm sm:prose-base max-w-none text-gray-700' dangerouslySetInnerHTML={{ __html: instruction }} />
+                        <div className='prose prose-sm sm:prose-base max-w-none text-gray-700' dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(instruction) }} />
                     </div>
                 </div>
                 <div className='w-full sm:w-64 mx-auto shrink-0 pb-1'>

@@ -58,9 +58,13 @@ class CourseController
         try {
             DB::beginTransaction();
 
+            $data = $request->only('type', 'category', 'employee_status', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status', 'jam_pelajaran');
+            $data['description'] = sanitize_plain_text($data['description']);
+            $data['short_description'] = sanitize_plain_text($data['short_description']);
+
             $this->course->createCourse(
                 $this->instructorId,
-                $request->only('type', 'category', 'employee_status', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status', 'jam_pelajaran'),
+                $data,
                 $request->schedules
             );
 
@@ -144,10 +148,14 @@ class CourseController
         try {
             DB::beginTransaction();
 
+            $data = $request->only('type', 'category', 'employee_status', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status', 'jam_pelajaran');
+            $data['description'] = sanitize_plain_text($data['description']);
+            $data['short_description'] = sanitize_plain_text($data['short_description']);
+
             $this->course->updateCourse(
                 $course,
                 $this->instructorId,
-                $request->only('type', 'category', 'employee_status', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status', 'jam_pelajaran'),
+                $data,
                 $request->schedules
             );
 

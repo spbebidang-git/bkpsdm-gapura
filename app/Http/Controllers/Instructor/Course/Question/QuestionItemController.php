@@ -66,7 +66,7 @@ class QuestionItemController
 
             $questionItem = QuestionItem::create([
                 'question_variant_id' => $variantId,
-                'description' => $request->description,
+                'description' => sanitize_plain_text($request->description),
                 'score' => $request->score
             ]);
 
@@ -126,7 +126,7 @@ class QuestionItemController
         try {
             DB::beginTransaction();
             $question_item->update([
-                'description' => $request->description,
+                'description' => sanitize_plain_text($request->description),
                 'score' => $request->score
             ]);
 

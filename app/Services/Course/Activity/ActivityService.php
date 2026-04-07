@@ -104,6 +104,9 @@ class ActivityService
 
     public function createActivity($data)
     {
+        if (isset($data['instruction'])) {
+            $data['instruction'] = sanitize_html($data['instruction']);
+        }
         return Activity::create($data);
     }
 
@@ -206,7 +209,7 @@ class ActivityService
         $activity->update([
             'title' => $request['title'],
             'value' => $request['value'],
-            'instruction' => $request['instruction'],
+            'instruction' => isset($request['instruction']) ? sanitize_html($request['instruction']) : null,
         ]);
 
         if ($activity->type === 'pre-test' || $activity->type === 'post-test') {
