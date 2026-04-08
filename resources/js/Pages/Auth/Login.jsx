@@ -15,6 +15,7 @@ const Login = () => {
         username: "",
         password: "",
         captcha: "",
+        captcha_key: "",
     });
 
     useEffect(() => {
@@ -24,9 +25,10 @@ const Login = () => {
     const fetchCaptcha = async () => {
         try {
             const res = await axios.get("/captcha-url");
-            setCaptchaUrl(res.data.captcha);
+            setCaptchaUrl(res.data.img);
             setCaptchaInput("");
             setData("captcha", "");
+            setData("captcha_key", res.data.key);
         } catch (err) {
             console.error("Error fetching captcha:", err);
         }

@@ -8,41 +8,36 @@ import { toast } from "react-toastify";
 const Index = ({ course, progress, activities, activity, activity_id, question_result, schedule }) => {
     const [answers, setAnswers] = useState({});
     const [file, setFile] = useState(null);
-    const [activeButton, setActiveButton] = useState(false)
-    const [duration, setDuration] = useState(activity.data.duration)
-    const [timer, setTimer] = useState(activity.timer)
+    const [duration, setDuration] = useState(activity.data?.duration ?? 0)
+    const isTimedActivity = activity.type == 'video' || activity.type == 'literature'
+    const isSubmitEnabled = !isTimedActivity || duration === 0
 
     const formattedAnswers = Object.values(answers).map(answer => ({ ...answer }));
 
+    useEffect(() => {
+        setDuration(activity.data?.duration ?? 0)
+    }, [activity.data?.duration, activity.type, activity_id]);
 
     useEffect(() => {
-
-        if (activity.type == 'video' || activity.type == 'literature') {
-            // setDuration(data.duration)
+        if (isTimedActivity) {
             if (duration === 0) {
-                setActiveButton(true)
                 return;
             }
-            // Atur interval untuk menghitung mundur
+
             const interval = setInterval(() => {
                 setDuration(prevDuration => {
                     if (prevDuration > 1) {
                         return prevDuration - 1;
                     } else {
-                        clearInterval(interval); // Hentikan interval saat durasi mencapai 0
-                        setActiveButton(true); // Aktifkan tombol
+                        clearInterval(interval);
                         return 0;
                     }
                 });
             }, 1000);
 
-            // Bersihkan interval ketika komponen unmount
             return () => clearInterval(interval);
-        } else {
-            setActiveButton(true)
         }
-
-    }, [duration]);
+    }, [duration, isTimedActivity]);
 
     const handleSubmit = (e, slug) => {
         e.preventDefault();
@@ -170,7 +165,7 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
         // });
     };
 
-    return <Learn type="material" course={course} progress={progress} activities={activities} activity={activity} timer={timer} formattedAnswers={formattedAnswers} activity_id={activity_id} schedule={schedule}>
+    return <Learn type="material" course={course} progress={progress} activities={activities} activity={activity} timer={activity.timer} displayTimerSeconds={duration} formattedAnswers={formattedAnswers} activity_id={activity_id} schedule={schedule}>
         <div className="flex flex-col h-full bg-white">
             <div className="flex-1 rounded-xl bg-gray-50 p-3 lg:p-4 mb-4 shadow-inner border border-gray-100 flex flex-col min-h-0">
                 <div className="flex-1 overflow-y-auto pr-2 flex flex-col">
@@ -179,7 +174,7 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
                 </div>
             </div>
             <div className="w-full sm:w-64 mx-auto shrink-0 pb-1">
-                {activeButton ? <button onClick={(e) => handleSubmit(e, course.slug)} className="w-full px-6 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5 flex justify-center items-center gap-2">
+                {isSubmitEnabled ? <button onClick={(e) => handleSubmit(e, course.slug)} className="w-full px-6 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5 flex justify-center items-center gap-2">
                     Kirim Jawaban
                     <box-icon name="send" color="white" size="20px"></box-icon>
                 </button>

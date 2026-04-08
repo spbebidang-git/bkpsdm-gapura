@@ -30,17 +30,26 @@ class AuthController
 
     public function captcha()
     {
-        return response()->json(['captcha' => Captcha::src('default')]);
+        return response()->json(Captcha::create('default', true));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $rules = [
             'username' => 'required|string',
             'password' => 'required|string',
-            'captcha' => 'required|captcha'
-        ], [
-            'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.'
+            'captcha' => config('captcha.disable')
+                ? 'required|string'
+                : 'required|string|captcha_api:' . $request->input('captcha_key') . ',default',
+        ];
+
+        if (!config('captcha.disable')) {
+            $rules['captcha_key'] = 'required|string';
+        }
+
+        $request->validate($rules, [
+            'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.',
+            'captcha.captcha_api' => 'The CAPTCHA is incorrect. Please try again.',
         ]);
 
         $input = $request->username;
