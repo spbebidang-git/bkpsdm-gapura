@@ -4,40 +4,100 @@ import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { toast } from "react-toastify";
 
+const buildTimedActivityStorageKey = (scheduleId, activityId) => `materialCountdown_${scheduleId}_${activityId}`;
+
 
 const Index = ({ course, progress, activities, activity, activity_id, question_result, schedule }) => {
     const [answers, setAnswers] = useState({});
     const [file, setFile] = useState(null);
-    const [duration, setDuration] = useState(activity.data?.duration ?? 0)
-    const isTimedActivity = activity.type == 'video' || activity.type == 'literature'
-    const isSubmitEnabled = !isTimedActivity || duration === 0
+    const [duration, setDuration] = useState(activity.data?.duration ?? 0);
+    const isTimedActivity = activity.type == 'video' || activity.type == 'literature';
+    const isSubmitEnabled = !isTimedActivity || duration === 0;
+    const timedActivityStorageKey = buildTimedActivityStorageKey(schedule.id, activity_id);
 
     const formattedAnswers = Object.values(answers).map(answer => ({ ...answer }));
 
     useEffect(() => {
-        setDuration(activity.data?.duration ?? 0)
-    }, [activity.data?.duration, activity.type, activity_id]);
+        const initialDuration = activity.data?.duration ?? 0;
 
-    useEffect(() => {
-        if (isTimedActivity) {
-            if (duration === 0) {
+        if (!isTimedActivity) {
+            setDuration(initialDuration);
+            return;
+        }
+
+        const now = Math.floor(Date.now() / 1000);
+        const storedCountdown = localStorage.getItem(timedActivityStorageKey);
+
+        if (!storedCountdown) {
+            if (initialDuration > 0) {
+                localStorage.setItem(timedActivityStorageKey, JSON.stringify({
+                    startedAt: now,
+                    initialDuration,
+                }));
+            }
+
+            setDuration(initialDuration);
+            return;
+        }
+
+        try {
+            const parsedCountdown = JSON.parse(storedCountdown);
+            const hasChangedDuration = parsedCountdown.initialDuration !== initialDuration;
+
+            if (hasChangedDuration) {
+                if (initialDuration > 0) {
+                    localStorage.setItem(timedActivityStorageKey, JSON.stringify({
+                        startedAt: now,
+                        initialDuration,
+                    }));
+                } else {
+                    localStorage.removeItem(timedActivityStorageKey);
+                }
+
+                setDuration(initialDuration);
                 return;
             }
 
-            const interval = setInterval(() => {
-                setDuration(prevDuration => {
-                    if (prevDuration > 1) {
-                        return prevDuration - 1;
-                    } else {
-                        clearInterval(interval);
-                        return 0;
-                    }
-                });
-            }, 1000);
+            const elapsed = now - parsedCountdown.startedAt;
+            const remainingDuration = Math.max(initialDuration - elapsed, 0);
 
-            return () => clearInterval(interval);
+            setDuration(remainingDuration);
+        } catch {
+            localStorage.removeItem(timedActivityStorageKey);
+
+            if (initialDuration > 0) {
+                localStorage.setItem(timedActivityStorageKey, JSON.stringify({
+                    startedAt: now,
+                    initialDuration,
+                }));
+            }
+
+            setDuration(initialDuration);
         }
-    }, [duration, isTimedActivity]);
+    }, [activity.data?.duration, activity.type, activity_id, isTimedActivity, timedActivityStorageKey]);
+
+    useEffect(() => {
+        if (!isTimedActivity) {
+            return;
+        }
+
+        if (duration === 0) {
+            return;
+        }
+
+        const interval = setInterval(() => {
+            setDuration(prevDuration => {
+                if (prevDuration > 1) {
+                    return prevDuration - 1;
+                }
+
+                clearInterval(interval);
+                return 0;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [duration, isTimedActivity, timedActivityStorageKey]);
 
     const handleSubmit = (e, slug) => {
         e.preventDefault();
@@ -144,12 +204,14 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
 
         // store video
         if (activity.type == 'video') {
+            localStorage.removeItem(timedActivityStorageKey);
             const formattedAnswers = Object.values(answers).map(answer => ({ ...answer }));
             router.post(route('participant.learn.store', { course: slug, schedule: schedule.id, activity: activity_id }), formattedAnswers);
         }
 
         // store literature
         if (activity.type == 'literature') {
+            localStorage.removeItem(timedActivityStorageKey);
             const formattedAnswers = Object.values(answers).map(answer => ({ ...answer }));
             router.post(route('participant.learn.store', { course: slug, schedule: schedule.id, activity: activity_id }), formattedAnswers);
         }

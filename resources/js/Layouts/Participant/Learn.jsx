@@ -131,7 +131,6 @@ const Learn = ({
                                 <CountdownTimer
                                     currentSeconds={displayTimerSeconds}
                                     variant="muted"
-                                    display="minutes"
                                 />
                             ) : null}
                         </div>

@@ -86,10 +86,10 @@ const CountdownTimer = ({
             helper: 'text-red-400'
         },
         muted: {
-            wrapper: 'text-slate-500',
-            box: 'bg-slate-600 text-white shadow-sm',
-            accent: 'text-slate-600',
-            helper: 'text-slate-400'
+            wrapper: 'bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-gray-800 shadow-sm',
+            box: 'text-gray-900',
+            accent: 'text-gray-700',
+            helper: 'text-gray-600'
         }
     };
 
@@ -109,6 +109,22 @@ const CountdownTimer = ({
                     <div className={`text-[11px] ${selectedVariant.helper}`}>
                         tersisa
                     </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (variant === 'muted') {
+        return (
+            <div className={`inline-flex items-center ${selectedVariant.wrapper}`}>
+                <div className="flex items-center gap-1.5">
+                    <span className={`min-w-[34px] text-center text-lg font-bold tabular-nums ${selectedVariant.box}`}>
+                        {minutes}
+                    </span>
+                    <span className={`text-lg font-bold tabular-nums ${selectedVariant.accent}`}>:</span>
+                    <span className={`min-w-[34px] text-center text-lg font-bold tabular-nums ${selectedVariant.box}`}>
+                        {seconds}
+                    </span>
                 </div>
             </div>
         );
