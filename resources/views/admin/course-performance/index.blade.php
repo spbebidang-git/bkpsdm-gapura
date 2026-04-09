@@ -213,7 +213,7 @@
 @push('scripts')
 <script nonce="{{ Vite::cspNonce() }}" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 @if(count($result) > 0)
-<script>
+<script nonce="{{ Vite::cspNonce() }}">
     new Chart(document.getElementById('performanceChart'), {
         type: 'bar',
         data: {

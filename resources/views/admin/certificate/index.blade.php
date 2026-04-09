@@ -48,7 +48,7 @@
 @endsection
 
 @push('scripts')
-    <script>
+    <script nonce="{{ Vite::cspNonce() }}">
         $(document).ready(function() {
             const table = $('#table').DataTable({
                 processing: true,

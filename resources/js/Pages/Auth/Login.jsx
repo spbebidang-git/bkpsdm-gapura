@@ -138,6 +138,9 @@ const Login = () => {
                         <p className="text-base font-medium text-blue-200/80 uppercase tracking-widest mb-2">
                             Selamat Datang di
                         </p>
+                        <div className="text-4xl md:text-5xl font-black tracking-[0.1em] text-white mb-3">
+                            GAPURA
+                        </div>
                         <h1 className="text-2xl md:text-3xl font-extrabold leading-snug tracking-tight text-white">
                             Gerbang Pengembangan Kompetensi Menuju SMART ASN
                         </h1>

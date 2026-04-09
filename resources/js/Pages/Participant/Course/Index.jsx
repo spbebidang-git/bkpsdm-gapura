@@ -1,6 +1,8 @@
 import BreadcrumbLearn from "@/Components/BreadcrumbLearn";
 import App from "@/Layouts/Participant/App";
+import { getBrowserSupportStatus, getUnsupportedBrowserMessage } from "@/Utils/browserSupport";
 import { Link, router } from "@inertiajs/react";
+import { toast } from "react-toastify";
 
 const Index = ({ courses }) => {
     const handleSubmit = (e, slug) => {
@@ -21,6 +23,20 @@ const Index = ({ courses }) => {
                 },
             }
         );
+    };
+
+    const handleJoinClass = (e, item) => {
+        e.preventDefault();
+
+        const browserSupport = getBrowserSupportStatus();
+        if (!browserSupport.supported) {
+            toast.error(getUnsupportedBrowserMessage(browserSupport.reason), {
+                toastId: 'unsupported-browser-join-class',
+            });
+            return;
+        }
+
+        router.visit(`/learn/${item.slug}/${item.schedule_id}/${item.initial_activity}/instruction`);
     };
 
     return (
@@ -65,14 +81,13 @@ const Index = ({ courses }) => {
                                             </button>
                                         </Link>
                                         {item.finished_at == null && (
-                                            <a
-                                                className="w-full transition-transform active:scale-95"
-                                                href={`/learn/${item.slug}/${item.schedule_id}/${item.initial_activity}/instruction`}
+                                            <button
+                                                className="button-primary w-full shadow-sm hover:shadow-md transition-transform active:scale-95"
+                                                type="button"
+                                                onClick={(e) => handleJoinClass(e, item)}
                                             >
-                                                <button className="button-primary w-full shadow-sm hover:shadow-md">
-                                                    Ikuti Kelas
-                                                </button>
-                                            </a>
+                                                Ikuti Kelas
+                                            </button>
                                         )}
                                     </div>
                                 </div>

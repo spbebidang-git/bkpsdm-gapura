@@ -96,7 +96,7 @@
     </form>
 
     {{-- Show Password Script --}}
-    <script>
+    <script nonce="{{ Vite::cspNonce() }}">
         document.getElementById('togglePassword').addEventListener('click', function() {
             const input = document.getElementById('password');
             const type = input.type === 'password' ? 'text' : 'password';
