@@ -166,6 +166,13 @@ const Login = () => {
                             <p className="text-gray-500 font-medium">Silakan login untuk melanjutkan</p>
                         </div>
 
+                        {errors.email_or_username && (
+                            <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-700 text-sm font-semibold animate-pulse">
+                                <box-icon name='error-circle' color='#ef4444' size='24px'></box-icon>
+                                <p>{errors.email_or_username}</p>
+                            </div>
+                        )}
+
                         <form onSubmit={handleSubmit} className="space-y-6">
 
                             {/* Username / NIP */}

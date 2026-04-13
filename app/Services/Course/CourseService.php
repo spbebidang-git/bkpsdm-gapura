@@ -220,7 +220,7 @@ class CourseService
             'title' => $data['title'],
             'slug' => str()->slug($data['title']),
             'short_description' => sanitize_plain_text($data['short_description']),
-            'description' => sanitize_plain_text($data['description']),
+            'description' => sanitize_html($data['description']),
             'thumbnail' => UploadMedia::file($data['thumbnail'], Course::$directoryImage),
             'teaser_video' => $data['teaser_video'],
             'expired' => $data['expired'],
@@ -259,9 +259,9 @@ class CourseService
             // 'employee_status' => $data['employee_status'],
             'type' => $data['type'],
             'title' => $data['title'],
-            'slug' => str()->slug($data['title']),
+            // 'slug' => str()->slug($data['title']),
             'short_description' => sanitize_plain_text($data['short_description']),
-            'description' => sanitize_plain_text($data['description']),
+            'description' => sanitize_html($data['description']),
             'teaser_video' => $data['teaser_video'],
             'expired' => $data['expired'] == 'undefined' ? null :  $data['expired'],
             'jam_pelajaran' => $data['jam_pelajaran'],
@@ -279,26 +279,25 @@ class CourseService
             $course->save();
         }
         // dd($schedules);
-        # Update Schedule
-        if ($schedules) {
-            # Remove all schedules by course
-            // dd($course->load('schedules'));
-            // Memuat relasi schedules
-            $course->load('schedules');
-
-            // Menghapus setiap schedule terkait
-            $course->schedules->each(function ($schedule) {
-                $schedule->delete();  // Menghapus setiap schedule
-            });
+         if ($schedules) {
+            $keepIds = [];
             foreach ($schedules as $item) {
-                Schedule::create([
-                    'course_id' => $course->id,
-                    'date' => $item['date'],
-                    'time_from' => $item['time_from'],
-                    'time_to' => $item['time_to'],
-                    'quota' => $item['quota'],
-                ]);
+                // Pastikan ID ada dan valid, jika tidak maka buat baru
+                $schedule = Schedule::updateOrCreate(
+                    ['id' => isset($item['id']) && is_numeric($item['id']) ? $item['id'] : null],
+                    [
+                        'course_id' => $course->id,
+                        'date' => $item['date'],
+                        'time_from' => $item['time_from'],
+                        'time_to' => $item['time_to'],
+                        'quota' => $item['quota'],
+                    ]
+                );
+                $keepIds[] = $schedule->id;
             }
+
+            // Hapus jadwal yang tidak ada dalam daftar kiriman terbaru
+            $course->schedules()->whereNotIn('id', $keepIds)->delete();
 
             return true;
         }

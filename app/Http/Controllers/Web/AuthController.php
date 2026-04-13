@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Mews\Captcha\Facades\Captcha;
 
@@ -47,10 +48,14 @@ class AuthController
             $rules['captcha_key'] = 'required|string';
         }
 
-        $request->validate($rules, [
+        $validator = Validator::make($request->all(), $rules, [
             'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.',
             'captcha.captcha_api' => 'The CAPTCHA is incorrect. Please try again.',
         ]);
+
+        if ($validator->fails()) {
+            return to_route('sign-in.index')->withErrors($validator)->withInput();
+        }
 
         $input = $request->username;
 
@@ -68,11 +73,11 @@ class AuthController
         $user = User::where('email', $email)->first();
 
         if (!$user || $user->hasRole('Participant')) {
-            return back()->withErrors(['email_or_username' => 'Email atau password salah.']);
+            return to_route('sign-in.index')->withErrors(['email_or_username' => 'Email atau password salah.']);
         }
 
         if (!Auth::attempt(['email' => $email, 'password' => $request->password])) {
-            return back()->withErrors(['email_or_username' => 'Email atau password salah.']);
+            return to_route('sign-in.index')->withErrors(['email_or_username' => 'Email atau password salah.']);
         }
 
         $request->session()->regenerate();
@@ -87,7 +92,7 @@ class AuthController
             $user = $userMeta->user;
 
             if (!$user->hasRole('Participant')) {
-                return back()->withErrors(['email_or_username' => 'NIP terdaftar dengan hak akses berbeda.']);
+                return to_route('sign-in.index')->withErrors(['email_or_username' => 'NIP terdaftar dengan hak akses berbeda.']);
             }
 
             // 1. Coba login lokal Laravel
@@ -112,14 +117,14 @@ class AuthController
                 return $this->redirectByRole($user);
             }
 
-            return back()->withErrors(['email_or_username' => 'Kredensial salah atau SSO tidak merespon.']);
+            return to_route('sign-in.index')->withErrors(['email_or_username' => 'Kredensial salah atau SSO tidak merespon.']);
         }
         // CASE 2 — User Baru (First-time provisioning)
         if ($this->handleSSOFirstLogin($request, $nip)) {
             return to_route('home');
         }
 
-        return back()->withErrors(['email_or_username' => 'Gagal autentikasi SSO atau data NIP tidak ditemukan.']);
+        return to_route('sign-in.index')->withErrors(['email_or_username' => 'Gagal autentikasi SSO atau data NIP tidak ditemukan.']);
     }
 
     /**

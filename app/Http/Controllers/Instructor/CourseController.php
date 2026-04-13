@@ -43,11 +43,11 @@ class CourseController
             'type' => 'required|string',
             'category' => 'required|numeric',
             'employee_status'   => 'required|min:1',
-            'employee_status.*' => 'in:1,2,3',
+            'employee_status.*' => 'exists:employee_status,id',
             'title' => 'required|string',
             'short_description' => 'required|string',
             'description' => 'required|string',
-            'thumbnail' => 'required|image|max:1024|mimes:png,jpg',
+            'thumbnail' => 'required|image|max:10240|mimes:png,jpg',
             'teaser_video' => 'nullable|string',
             'expired' => 'required_if:type,unschedule',
             'status' => 'required|string',
@@ -59,7 +59,7 @@ class CourseController
             DB::beginTransaction();
 
             $data = $request->only('type', 'category', 'employee_status', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status', 'jam_pelajaran');
-            $data['description'] = sanitize_plain_text($data['description']);
+            $data['description'] = sanitize_html($data['description']);
             $data['short_description'] = sanitize_plain_text($data['short_description']);
 
             $this->course->createCourse(
@@ -133,7 +133,7 @@ class CourseController
             'type' => 'required|string',
             'category' => 'required|numeric',
             'employee_status'   => 'required|min:1',
-            'employee_status.*' => 'in:1,2,3',
+            'employee_status.*' => 'exists:employee_status,id',
             'title' => 'required|string',
             'short_description' => 'required|string',
             'description' => 'required|string',
@@ -149,7 +149,7 @@ class CourseController
             DB::beginTransaction();
 
             $data = $request->only('type', 'category', 'employee_status', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status', 'jam_pelajaran');
-            $data['description'] = sanitize_plain_text($data['description']);
+            $data['description'] = sanitize_html($data['description']);
             $data['short_description'] = sanitize_plain_text($data['short_description']);
 
             $this->course->updateCourse(
