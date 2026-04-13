@@ -9,6 +9,7 @@ use App\Services\Course\Activity\ActivityService;
 use App\Services\Course\CourseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -73,7 +74,10 @@ class CourseController
             return to_route('instructor.dashboard')->with('success', 'Course saved successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            return to_route('instructor.dashboard')->with('danger', 'Something went wrong.');
+            Log::error('Course store failed: ' . $th->getMessage(), [
+                'trace' => $th->getTraceAsString(),
+            ]);
+            return redirect()->back()->withInput()->with('danger', 'Something went wrong: ' . $th->getMessage());
         }
     }
 
@@ -164,7 +168,10 @@ class CourseController
             return to_route('instructor.dashboard')->with('success', 'Course updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            return to_route('instructor.dashboard')->with('danger', 'Something went wrong.');
+            Log::error('Course update failed: ' . $th->getMessage(), [
+                'trace' => $th->getTraceAsString(),
+            ]);
+            return redirect()->back()->withInput()->with('danger', 'Something went wrong: ' . $th->getMessage());
         }
     }
 
