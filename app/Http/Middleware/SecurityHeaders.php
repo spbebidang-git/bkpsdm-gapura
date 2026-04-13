@@ -23,7 +23,7 @@ class SecurityHeaders
         if (app()->environment('production')) {
             $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
         }
-        $response->headers->set('Referrer-Policy', 'no-referrer');
+        $response->headers->set('Referrer-Policy', 'same-origin');
         $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=()');
 
         // Content Security Policy – nonce-based untuk mencegah XSS

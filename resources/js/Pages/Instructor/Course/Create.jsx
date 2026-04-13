@@ -83,7 +83,9 @@ const Create = ({ categories, employee_status }) => {
         formData.append("title", values.title);
         formData.append("short_description", values.short_description);
         formData.append("description", values.description);
-        formData.append("thumbnail", values.thumbnail);
+        if (values.thumbnail) {
+            formData.append("thumbnail", values.thumbnail);
+        }
         formData.append("teaser_video", values.teaser_video);
         formData.append("expired", values.expired);
         formData.append("jam_pelajaran", values.jam_pelajaran);

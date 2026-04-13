@@ -53,6 +53,14 @@ class LearnService
             ->where('course_id', $courseId)
             ->first();
 
+        if (!$learn) {
+            return [
+                'score' => 0,
+                'correct' => 0,
+                'wrong' => 0
+            ];
+        }
+
         return [
             'score' => $learn->learnItems->first() ? $this->getTotalScore(unserialize($learn->learnItems->first()->response)) : 0,
             'correct' => $learn->learnItems->first() ? $this->getCorrectAnswer(unserialize($learn->learnItems->first()->response)) : 0,
@@ -136,10 +144,9 @@ class LearnService
             ->where('participant_id', $participantId)
             ->first();
 
-        if (!$learn && $learn->learnItems->first()) {
+        if (!$learn || !$learn->learnItems->first()) {
             return false;
         }
-        // dd($learn->learnItems);
 
         if ($learn->learnItems->first()->trial_total == 2) {
             return 2;
@@ -170,6 +177,14 @@ class LearnService
         $currentActivityId = $activityId; // Ganti dengan activity_id saat ini
 
         $sortedActivityIds = $activities->pluck('id')->sort()->values()->toArray(); // Mengambil daftar activity_id yang sudah diurutkan
+
+        if (!$learn) {
+            // If no learning record, only allow the first activity
+            if (isset($sortedActivityIds[0]) && $currentActivityId === $sortedActivityIds[0]) {
+                return true;
+            }
+            return [2];
+        }
 
         $learnedActivityIds = $learn->learnItems->pluck('activity_id')->toArray(); // Mengambil daftar activity_id yang sudah ada di learnItems
 
@@ -269,9 +284,13 @@ class LearnService
 
     public function getFinishedAt($courseId, $participantId)
     {
-        $finishedAt =  $this->findLearn($courseId, $participantId)->finished_at;
+        $learn = $this->findLearn($courseId, $participantId);
 
-        return Carbon::parse($finishedAt)->format('Y-m-d H:i');
+        if (!$learn || !$learn->finished_at) {
+            return null;
+        }
+
+        return Carbon::parse($learn->finished_at)->format('Y-m-d H:i');
     }
 
     public function getPostTestAvg($courseId, $participantId)

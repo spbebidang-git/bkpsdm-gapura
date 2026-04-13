@@ -395,7 +395,7 @@ const Edit = ({ course, categories, employee_status, selected_employee_status })
                 ) : null}
 
                 <div className="max-w-4xl mx-auto flex flex-col sm:flex-row justify-end gap-4 mt-8 pb-12">
-                    <Link href={`/dashboard`} className="w-full sm:w-auto">
+                    <Link href={`/instructor`} className="w-full sm:w-auto">
                         <button type="button" className="w-full sm:w-auto px-6 py-3 rounded-xl border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 hover:text-gray-900 font-bold transition-all shadow-sm">
                             Kembali
                         </button>

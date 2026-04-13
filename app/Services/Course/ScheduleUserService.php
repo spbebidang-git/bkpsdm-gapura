@@ -14,6 +14,10 @@ class ScheduleUserService
             ->where('participant_id', $participantId)
             ->first();
 
+        if (!$query) {
+            return null;
+        }
+
         return Carbon::parse($query->created_at)->format('Y-m-d');
     }
 }
