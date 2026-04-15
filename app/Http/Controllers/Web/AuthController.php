@@ -57,7 +57,7 @@ class AuthController
             return to_route('sign-in.index')->withErrors($validator)->withInput();
         }
 
-        $input = $request->username;
+        $input = trim($request->username);
 
         // RULE 1 — Admin & Instructor (Login via Email)
         if (filter_var($input, FILTER_VALIDATE_EMAIL)) {
@@ -204,10 +204,27 @@ class AuthController
             // Jika SSO tidak mengembalikan email, buat email dari NIP
             $email = empty($data['fv_email']) ? "{$nip}@gresikkab.go.id" : $data['fv_email'];
 
-            // Cek jika email ternyata sudah ada di database
-            if (User::where('email', $email)->exists()) {
-                Log::error("Provisioning gagal: Email {$email} sudah digunakan.");
-                return false;
+            // Cek jika email ternyata sudah ada di database (Skenario Recovery Meta Hilang/Corrupted)
+            $existingUser = User::where('email', $email)->first();
+            
+            if ($existingUser) {
+                Log::info("Provisioning Recovery: NIP {$nip} menghubungkan ulang ke email {$email} yang sudah ada.");
+                
+                return DB::transaction(function () use ($data, $request, $existingUser, $nip) {
+                    $existingUser->update([
+                        'password' => Hash::make($request->password)
+                    ]);
+                    
+                    $this->userService->storeUserMeta($existingUser->id, $data, $nip);
+                    
+                    if (!$existingUser->hasRole('Participant')) {
+                        $existingUser->assignRole('Participant');
+                    }
+
+                    Auth::login($existingUser);
+                    $request->session()->regenerate();
+                    return true;
+                });
             }
 
             return DB::transaction(function () use ($data, $request, $email, $nip) {

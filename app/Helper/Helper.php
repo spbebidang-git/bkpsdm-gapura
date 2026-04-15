@@ -64,6 +64,19 @@ if (!function_exists('get_user_meta')) {
 if (!function_exists('find_user_by_nip')) {
     function find_user_by_nip($nip)
     {
+        $nipHash = hash('sha256', $nip);
+        $metaHash = \App\Models\Management\UserMeta::with('user')->where('key', 'nip_hash')->where('value', $nipHash)->first();
+
+        // Jika hash ditemukan di database, tarik item orisinil (yang key-nya nip) sebagai return
+        if ($metaHash) {
+            $metaNip = \App\Models\Management\UserMeta::with('user')
+                        ->where('user_id', $metaHash->user_id)
+                        ->where('key', 'nip')
+                        ->first();
+            return $metaNip ?? $metaHash;
+        }
+
+        // --- FALLBACK UNTUK NIP YANG BELUM TER-MIGRATE ---
         $metas = \App\Models\Management\UserMeta::with('user')->where('key', 'nip')->get();
         foreach ($metas as $meta) {
             try {
@@ -84,6 +97,20 @@ if (!function_exists('update_user_meta')) {
     function update_user_meta($user_id, $key, $value)
     {
         if ($key === 'nip') {
+            // Save the hash implementation 
+            $hashValue = hash('sha256', $value);
+            $metaHash = \App\Models\Management\UserMeta::where('user_id', $user_id)->where('key', 'nip_hash')->first();
+            if ($metaHash) {
+                $metaHash->value = $hashValue;
+                $metaHash->save();
+            } else {
+                $newMetaHash = new \App\Models\Management\UserMeta();
+                $newMetaHash->user_id = $user_id;
+                $newMetaHash->key = 'nip_hash';
+                $newMetaHash->value = $hashValue;
+                $newMetaHash->save();
+            }
+
             $value = \Illuminate\Support\Facades\Crypt::encryptString($value);
         }
 
