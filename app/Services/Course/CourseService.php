@@ -154,15 +154,13 @@ class CourseService
 
     public function getByParticipant($participantId)
     {
-        // dd($participantId);
         return Schedule::whereRelation('participants', 'participant_id', '=', $participantId)
             ->with(['course', 'course.learns' => function ($query) use ($participantId) {
                 $query->where('participant_id', $participantId);
             }, 'course.activities'])
             ->get()
+            ->filter(fn ($row) => $row->course !== null)
             ->map(function ($row) {
-                // dd($row->course->id);
-                // dd($row->course->activities->first()->id);
                 return [
                     'id' => $row->course->id,
                     'type' => $row->course->type,
@@ -172,15 +170,16 @@ class CourseService
                     'thumbnail' => $row->course->thumbnail_src,
                     'short_description' => $row->course->short_description,
                     'description' => $row->course->description,
-                    'category' => $row->course->category->title,
-                    'instructor' => $row->course->instructor->name,
+                    'category' => optional($row->course->category)->title,
+                    'instructor' => optional($row->course->instructor)->name,
                     'total_participant' => $row->course->total_participant,
                     'status' => $row->course->status,
                     'schedule_id' => $row->id,
                     'initial_activity' => $row->course->activities->first() ? $row->course->activities->first()->id : 0,
                     'finished_at' => $row->course->learns->first()->finished_at ?? null
                 ];
-            });
+            })
+            ->values();
     }
 
     public function getByAdmin()
