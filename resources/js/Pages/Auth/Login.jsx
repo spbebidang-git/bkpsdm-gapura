@@ -1,4 +1,3 @@
-import FlashMessageToast from "@/Components/FlashMessageToast";
 import { Link, useForm, usePage } from "@inertiajs/react";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -119,7 +118,6 @@ const Login = () => {
 
     return (
         <section className="min-h-screen flex text-gray-900 bg-white">
-            <FlashMessageToast />
 
             {/* Left Column - Image/Branding (Hidden on mobile) */}
             <div className="hidden lg:flex lg:w-1/2 bg-primary items-center justify-center relative overflow-hidden">
