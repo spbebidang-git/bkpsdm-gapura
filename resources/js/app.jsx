@@ -32,7 +32,7 @@ createInertiaApp({
                 <App {...props} />
 
                 {/* Global Flash Message Handler */}
-                <FlashMessageToast />
+                <FlashMessageToast initialFlash={props.initialPage.props.flash ?? {}} />
 
                 {/* Global Toast Container */}
                 <ToastContainer
