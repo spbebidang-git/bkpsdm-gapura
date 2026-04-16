@@ -20,7 +20,7 @@ class CourseService
         $currentTime = $now->format('H:i:s');
 
         return Course::query()
-            ->inRandomOrder()
+            ->orderByDesc('id')
             ->where('status', 'publish')
             ->where(function ($q) use ($today, $currentTime) {
                 $q->where('type', '!=', 'schedule')
@@ -101,16 +101,16 @@ class CourseService
                 $q->where('type', '!=', 'schedule')
                     // ATAU yang punya jadwal aktif/mendatang
                     ->orWhereHas('schedules', function ($query) use ($today, $currentTime) {
-                        $query->where(function ($sub) use ($today, $currentTime) {
-                            // Kondisi 1: Jadwal di hari-hari mendatang (Besok dan seterusnya)
-                            $sub->where('date', '>', $today)
-                                // Kondisi 2: Jadwal hari ini, tapi waktunya belum berakhir (masih berlangsung atau akan datang)
-                                ->orWhere(function ($dayQuery) use ($today, $currentTime) {
-                                    $dayQuery->whereDate('date', $today)
-                                        ->whereTime('time_to', '>=', $currentTime);
-                                });
+                    $query->where(function ($sub) use ($today, $currentTime) {
+                        // Kondisi 1: Jadwal di hari-hari mendatang (Besok dan seterusnya)
+                        $sub->where('date', '>', $today)
+                            // Kondisi 2: Jadwal hari ini, tapi waktunya belum berakhir (masih berlangsung atau akan datang)
+                            ->orWhere(function ($dayQuery) use ($today, $currentTime) {
+                            $dayQuery->whereDate('date', $today)
+                                ->whereTime('time_to', '>=', $currentTime);
                         });
                     });
+                });
             })
             ->get()
             ->map(function ($row) {
@@ -155,11 +155,15 @@ class CourseService
     public function getByParticipant($participantId)
     {
         return Schedule::whereRelation('participants', 'participant_id', '=', $participantId)
-            ->with(['course', 'course.learns' => function ($query) use ($participantId) {
-                $query->where('participant_id', $participantId);
-            }, 'course.activities'])
+            ->with([
+                'course',
+                'course.learns' => function ($query) use ($participantId) {
+                    $query->where('participant_id', $participantId);
+                },
+                'course.activities'
+            ])
             ->get()
-            ->filter(fn ($row) => $row->course !== null)
+            ->filter(fn($row) => $row->course !== null)
             ->map(function ($row) {
                 return [
                     'id' => $row->course->id,
@@ -262,7 +266,7 @@ class CourseService
             'short_description' => sanitize_plain_text($data['short_description']),
             'description' => sanitize_html($data['description']),
             'teaser_video' => $data['teaser_video'],
-            'expired' => $data['expired'] == 'undefined' ? null :  $data['expired'],
+            'expired' => $data['expired'] == 'undefined' ? null : $data['expired'],
             'jam_pelajaran' => $data['jam_pelajaran'],
             'status' => $data['status'],
         ]);
@@ -278,7 +282,7 @@ class CourseService
             $course->save();
         }
         // dd($schedules);
-         if ($schedules) {
+        if ($schedules) {
             $keepIds = [];
             foreach ($schedules as $item) {
                 // Pastikan ID ada dan valid, jika tidak maka buat baru
@@ -311,7 +315,8 @@ class CourseService
 
         foreach ($activities as $activity) {
             $question = Question::where('activity_id', $activity->id)->first();
-            if (!$question) continue;
+            if (!$question)
+                continue;
 
             // Ambil semua variant beserta jumlah soalnya, hanya yang punya soal
             $variants = QuestionVariant::withCount('questionItems')
@@ -319,7 +324,8 @@ class CourseService
                 ->get()
                 ->filter(fn($v) => $v->question_items_count > 0);
 
-            if ($variants->isEmpty()) continue;
+            if ($variants->isEmpty())
+                continue;
 
             // Cari jumlah soal terbanyak
             $maxCount = $variants->max('question_items_count');
