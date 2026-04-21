@@ -21,16 +21,53 @@ class CertificateSyncService
      * @return array{updated: int, message: string}
      * @throws \Throwable
      */
-    public function syncPull(): array
+    public function syncPull(?int $courseId = null, ?int $learnId = null, bool $onlyHasUrl = false): array
     {
         // Ambil token
         $token = $this->tokenService->getToken();
 
+        // Jika testing di local, buat mock data palsu agar status UI berubah 
+        if (app()->environment('local')) {
+            Log::info('--- SIMULASI PULL LOKAL (Menyuntikkan URL dummy ke data) ---');
+            
+            $mockData = [];
+            $mq = Learn::with('course');
+            if ($learnId) $mq->where('id', $learnId);
+            elseif ($courseId) $mq->where('course_id', $courseId);
+            
+            $learnsMock = $mq->get();
+            $grouped = $learnsMock->groupBy(function($l) { return $l->course?->title ?? 'Unknown'; });
+            
+            foreach ($grouped as $title => $items) {
+                $pesertaGroup = [];
+                foreach ($items as $item) {
+                    $nip = get_user_meta($item->participant_id, 'nip');
+                    if ($nip) {
+                        $pesertaGroup[] = [
+                            'nip' => trim($nip),
+                            'sertifikat' => 'https://gapura.test/dummy-cert-view/' . $item->id . '.pdf'
+                        ];
+                    }
+                }
+                $mockData[] = [
+                    'nama_kegiatan' => $title,
+                    'peserta' => $pesertaGroup
+                ];
+            }
+
+            Http::fake([
+                config('services.sso.base_url') . '*' => Http::response($mockData, 200)
+            ]);
+        }
+
         // Panggil API SSO
         $response = Http::withHeaders([
-            'apikey' => env('API_KEY'),
+            'apikey' => config('services.sso.api_key'),
             'Authorization' => $token,
-        ])->acceptJson()->asForm()->post(env('SSO_BASE_URL') . '/api/get_data_sertifikat');
+        ])
+            ->acceptJson()
+            ->asForm()
+            ->post(config('services.sso.base_url') . '/api/get_data_sertifikat');
 
         // Jika 401 (token stale), force refresh dan retry
         if ($response->status() === 401) {
@@ -53,60 +90,68 @@ class CertificateSyncService
             return ['updated' => 0, 'message' => 'Tidak ada data sertifikat dari SSO.'];
         }
 
-        // Kelompokkan & filter data (hanya peserta yang sudah punya URL valid)
-        $groupedData = [];
+        // OPTIMASI: Buat Map data dari SSO untuk lookup cepat O(1)
+        // Key: "Nama Kegiatan|NIP" => Value: "URL Sertifikat"
+        $ssoMap = [];
         foreach ($dataKelas as $kelas) {
-            $key = $kelas['nama_kegiatan'] . '|' . $kelas['tgl_mulai'] . '|' . $kelas['tgl_selesai'];
-
-            if (!isset($groupedData[$key])) {
-                $groupedData[$key] = [
-                    'nama_kegiatan' => $kelas['nama_kegiatan'],
-                    'peserta'       => [],
-                ];
-            }
-
+            $courseName = trim($kelas['nama_kegiatan']);
             foreach ($kelas['peserta'] as $peserta) {
-                $sertifikat = $peserta['sertifikat'];
-                if (strpos($sertifikat, 'http') !== false && $sertifikat !== '-') {
-                    $groupedData[$key]['peserta'][] = [
-                        'nip'        => $peserta['nip'],
-                        'sertifikat' => $sertifikat,
-                    ];
+                $nip = trim($peserta['nip']);
+                $url = trim($peserta['sertifikat']);
+
+                if (strpos($url, 'http') !== false && $url !== '-') {
+                    $ssoMap[$courseName . '|' . $nip] = $url;
                 }
             }
         }
 
-        $filteredData = array_values($groupedData);
+        // Ambil records learn, filter per course/learn jika diberikan
+        $learnQuery = Learn::with('course');
+        if ($learnId) {
+            $learnQuery->where('id', $learnId);
+        } elseif ($courseId) {
+            $learnQuery->where('course_id', $courseId);
+        }
 
-        // Ambil learns yang belum punya url_certificate
-        $learns = Learn::with('course')
-            ->whereNull('url_certificate')
-            ->get();
+        // Jika diminta khusus update domain data existing
+        if ($onlyHasUrl) {
+            $learnQuery->whereNotNull('url_certificate')
+                       ->where('url_certificate', '!=', '')
+                       ->where('url_certificate', '!=', '-');
+        }
+        
+        $learns = $learnQuery->get();
 
         $updated = 0;
-        foreach ($filteredData as $kelas) {
-            foreach ($kelas['peserta'] as $peserta) {
-                $learns->each(function ($learn) use ($kelas, $peserta, &$updated) {
-                    if (
-                        $kelas['nama_kegiatan'] === $learn->course->title &&
-                        get_user_meta($learn->participant_id, 'nip') === $peserta['nip']
-                    ) {
-                        Learn::where('course_id', $learn->course->id)
-                            ->where('participant_id', $learn->participant_id)
-                            ->update([
-                                'url_certificate'     => $peserta['sertifikat'],
-                                'is_post_certificate' => 1,
-                            ]);
+        foreach ($learns as $learn) {
+            $courseTitle = trim($learn->course?->title);
+            if (!$courseTitle) continue;
 
-                        $updated++;
-                    }
-                });
+            // Dapatkan NIP untuk pencocokan
+            $userNip = get_user_meta($learn->participant_id, 'nip');
+            if (!$userNip) continue;
+
+            $lookupKey = $courseTitle . '|' . $userNip;
+
+            // Jika ditemukan di SSO data terbaru
+            if (isset($ssoMap[$lookupKey])) {
+                $newSertifikatUrl = $ssoMap[$lookupKey];
+
+                // Update hanya jika ada perubahan URL
+                if ($learn->url_certificate !== $newSertifikatUrl) {
+                    $learn->update([
+                        'url_certificate'     => $newSertifikatUrl,
+                        'is_post_certificate' => 1,
+                    ]);
+                    $updated++;
+                }
             }
+            // Jika tidak ditemukan di SSO, record lama akan tetap menggunakan url_certificate yang lama (tidak tersentuh)
         }
 
         return [
             'updated' => $updated,
-            'message' => "Pull selesai. {$updated} sertifikat berhasil diperbarui.",
+            'message' => "Pull selesai. {$updated} sertifikat berhasil disinkronisasi ulang.",
         ];
     }
 }

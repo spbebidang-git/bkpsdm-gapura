@@ -36,10 +36,12 @@ return [
     ],
 
     'sso' => [
-        'base_url'      => env('SSO_BASE_URL'),
-        'api_key'       => env('API_KEY'),
-        'client_id'     => env('SSO_CLIENT_ID'),
-        'client_secret' => env('SSO_CLIENT_SECRET'),
+        'base_url'       => env('SSO_BASE_URL'),
+        'api_key'        => env('API_KEY'),
+        'client_id'      => env('SSO_CLIENT_ID'),
+        'client_secret'  => env('SSO_CLIENT_SECRET'),
+        'admin_username' => env('SSO_ADMIN_USERNAME'),
+        'admin_pass'     => env('SSO_ADMIN_PASS'),
     ],
 
     // Removed kominfo static api_key
