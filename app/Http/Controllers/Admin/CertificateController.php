@@ -31,23 +31,23 @@ class CertificateController
             if ($statusFilter === 'menunggu') {
                 $query->where(function ($q) {
                     $q->where('is_post_certificate', false)
-                      ->orWhereNull('is_post_certificate');
+                        ->orWhereNull('is_post_certificate');
                 })->where(function ($q) {
                     $q->whereNull('url_certificate')
-                      ->orWhere('url_certificate', '')
-                      ->orWhere('url_certificate', '-');
+                        ->orWhere('url_certificate', '')
+                        ->orWhere('url_certificate', '-');
                 });
             } elseif ($statusFilter === 'dikirim') {
                 $query->where('is_post_certificate', true)
-                      ->where(function ($q) {
-                          $q->whereNull('url_certificate')
+                    ->where(function ($q) {
+                        $q->whereNull('url_certificate')
                             ->orWhere('url_certificate', '')
                             ->orWhere('url_certificate', '-');
-                      });
+                    });
             } elseif ($statusFilter === 'tersedia') {
                 $query->whereNotNull('url_certificate')
-                      ->where('url_certificate', '!=', '')
-                      ->where('url_certificate', '!=', '-');
+                    ->where('url_certificate', '!=', '')
+                    ->where('url_certificate', '!=', '-');
             }
 
             // Apply course filter
