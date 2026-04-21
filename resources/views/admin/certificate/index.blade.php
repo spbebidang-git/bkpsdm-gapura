@@ -73,7 +73,6 @@
                             <th class="text-center">Unit Kerja</th>
                             <th class="text-center">Nama Kegiatan</th>
                             <th class="text-center">Tanggal Selesai</th>
-                            <th class="text-center">Progress</th>
                             <th class="text-center">Status</th>
                             <th class="text-center">Aksi</th>
                         </tr>
@@ -133,13 +132,6 @@
                         data: 'finished_at',
                         name: 'finished_at',
                         searchable: false
-                    },
-                    {
-                        data: 'progress',
-                        name: 'progress',
-                        orderable: false,
-                        searchable: false,
-                        className: 'text-center'
                     },
                     {
                         data: 'status',
