@@ -72,6 +72,11 @@ class CertificateController
                 ->addColumn('satker', fn($row) => get_user_meta($row->participant_id, 'nama_jabatan') ?: '-')
                 ->addColumn('course', fn($row) => $row->course?->title ?? '-')
                 ->editColumn('finished_at', fn($row) => $row->finished_at ? $row->finished_at->format('d/m/Y') : '-')
+                ->addColumn('progress', function ($row) {
+                    $val = trim(str_replace('%', '', $row->progress));
+                    $color = $val >= 100 ? 'success' : 'warning';
+                    return '<span class="badge bg-label-' . $color . '">' . $row->progress . '</span>';
+                })
                 ->addColumn('status', function ($row) {
                     if ($row->url_certificate && $row->url_certificate !== '-' && $row->url_certificate !== '') {
                         return '<span class="badge bg-success">Sertifikat Tersedia</span>';
@@ -100,7 +105,7 @@ class CertificateController
                         $q->where('title', 'like', "%{$keyword}%");
                     });
                 })
-                ->rawColumns(['status', 'url_certificate'])
+                ->rawColumns(['status', 'url_certificate', 'progress'])
                 ->make(true);
         }
 
