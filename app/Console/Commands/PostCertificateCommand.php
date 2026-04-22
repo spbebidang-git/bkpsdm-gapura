@@ -33,7 +33,6 @@ class PostCertificateCommand extends Command
             // Ambil semua Learn yang belum di-push, lalu group berdasarkan course_id
             // agar setiap course hanya dikirim SATU KALI ke SSO
             $query = Learn::with('course.category')
-                ->whereDate('finished_at', '>=', '2025-08-01')
                 ->where('is_post_certificate', 0);
 
             $courseId = $this->option('course');
@@ -42,7 +41,6 @@ class PostCertificateCommand extends Command
             if ($learnId) {
                 // If filtering by learnId, ignore the is_post_certificate check to allow forced re-push
                 $query = Learn::with('course.category')
-                    ->whereDate('finished_at', '>=', '2025-08-01')
                     ->where('id', $learnId);
                 $this->info('[PostCertificate] Filter aktif: learn_id = ' . $learnId);
             } elseif ($courseId) {
@@ -122,7 +120,6 @@ class PostCertificateCommand extends Command
 
                     // Update semua Learn record untuk course ini
                     Learn::where('course_id', $courseId)
-                        ->whereDate('finished_at', '>=', '2025-08-01')
                         ->where('is_post_certificate', 0)
                         ->update(['is_post_certificate' => 1]);
 
