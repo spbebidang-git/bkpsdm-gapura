@@ -35,6 +35,11 @@ Route::prefix('/admin')
         Route::get('course-performance', [\App\Http\Controllers\Admin\CoursePerformanceController::class, 'index'])
             ->name('course-performance.index');
 
+        # Import Learn
+        Route::get('import-learn', [\App\Http\Controllers\Admin\ImportLearnController::class, 'index'])->name('import-learn.index');
+        Route::post('import-learn', [\App\Http\Controllers\Admin\ImportLearnController::class, 'store'])->name('import-learn.store');
+        Route::get('import-learn/template', [\App\Http\Controllers\Admin\ImportLearnController::class, 'downloadTemplate'])->name('import-learn.template');
+
         # Management 
         Route::prefix('management')
             ->name('management.')

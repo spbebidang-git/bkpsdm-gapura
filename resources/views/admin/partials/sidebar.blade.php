@@ -98,6 +98,14 @@
             </a>
         </li>
 
+        <!-- Import Learn -->
+        <li class="menu-item {{ request()->routeIs('admin.import-learn.*') ? 'active' : '' }}">
+            <a href="{{ route('admin.import-learn.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-import"></i>
+                <div>Import Learn</div>
+            </a>
+        </li>
+
         <!-- Others -->
         <li class="menu-header small text-uppercase">
             <span class="menu-header-text">Lainnya</span>

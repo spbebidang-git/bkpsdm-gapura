@@ -28,7 +28,7 @@ class InstructorController
                     $btn  = '<div class="d-flex justify-content-center gap-2">';
                     $btn .= '<a class="btn btn-sm btn-warning" href="' . route('admin.instructor.edit', $row->id) . '">';
                     $btn .= '<i class="bx bx-edit"></i></a>';
-                    $btn .= '<form action="' . route('admin.instructor.destroy', $row->id) . '" method="POST" onsubmit="return confirmDelete(event)">';
+                    $btn .= '<form action="' . route('admin.instructor.destroy', $row->id) . '" method="POST" class="form-delete">';
                     $btn .= csrf_field();
                     $btn .= method_field('DELETE');
                     $btn .= '<button class="btn btn-sm btn-danger"><i class="bx bx-trash"></i></button>';

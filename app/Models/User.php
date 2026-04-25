@@ -27,6 +27,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'sso_access_token',
+        'sso_refresh_token',
+        'sso_expires_at',
     ];
 
     /**
@@ -37,6 +40,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'sso_access_token',
+        'sso_refresh_token',
     ];
 
     /**

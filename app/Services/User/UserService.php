@@ -45,6 +45,26 @@ class UserService
         if (array_key_exists('status_pegawai', $data) && filled($data['status_pegawai'])) {
             update_user_meta($participantId, 'status_pegawai', $data['status_pegawai']);
         }
+
+        // Bersihkan data meta lama yang sudah tidak dibutuhkan
+        // Hanya pertahankan nip, status_pegawai, nip_hash, dan key numerik (variant)
+        $protectedKeys = ['nip', 'status_pegawai', 'nip_hash'];
+
+        $existingMetas = \App\Models\Management\UserMeta::where('user_id', $participantId)->get();
+
+        foreach ($existingMetas as $meta) {
+            $key = $meta->key;
+
+            // Jangan hapus jika key berupa angka (untuk id variant soal)
+            if (is_numeric($key)) {
+                continue;
+            }
+
+            // Hapus jika bukan key terlindungi
+            if (!in_array($key, $protectedKeys)) {
+                $meta->delete();
+            }
+        }
     }
 
     private function resolveParticipantNip($participantId, array $data, ?string $loginNip = null): ?string

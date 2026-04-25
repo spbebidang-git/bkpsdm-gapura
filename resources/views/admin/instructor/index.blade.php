@@ -88,9 +88,9 @@
 
 
         // Swal Delete Bahasa Indonesia
-        const confirmDelete = (event) => {
+        $(document).on('submit', '.form-delete', function(event) {
             event.preventDefault();
-
+            const form = this;
             Swal.fire({
                 title: 'Apakah Anda yakin ingin menghapus data ini?',
                 text: "Data yang sudah dihapus tidak dapat dikembalikan!",
@@ -102,9 +102,9 @@
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    event.target.submit();
+                    form.submit();
                 }
             });
-        };
+        });
     </script>
 @endpush
