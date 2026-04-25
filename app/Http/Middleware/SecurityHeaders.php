@@ -27,14 +27,15 @@ class SecurityHeaders
         $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=()');
 
         // Content Security Policy – nonce-based untuk mencegah XSS
+        // Catatan: 'unsafe-eval' diperlukan oleh pdfjs-dist dan video.js (WebAssembly/eval)
         $response->headers->set(
             'Content-Security-Policy',
             "default-src 'self'; " .
-                "script-src 'self' 'nonce-{$nonce}' https://cdn.datatables.net https://code.jquery.com https://cdn.jsdelivr.net 'unsafe-eval'; " .
+                "script-src 'self' 'nonce-{$nonce}' https://cdn.datatables.net https://code.jquery.com https://cdn.jsdelivr.net 'unsafe-eval' 'wasm-unsafe-eval'; " .
                 "style-src 'self' https://cdn.datatables.net https://fonts.bunny.net https://fonts.googleapis.com 'unsafe-inline'; " .
-                "font-src 'self' https://fonts.bunny.net https://fonts.gstatic.com https:; " .
+                "font-src 'self' https://fonts.bunny.net https://fonts.gstatic.com; " .
                 "img-src 'self' data: blob:; " .
-                "connect-src 'self' https: http: ws:; " .
+                "connect-src 'self' https: ws: wss:; " .
                 "frame-src 'self' https://www.youtube.com https://pdf-hosting.com; " .
                 "frame-ancestors 'none'; " .
                 "base-uri 'self'; " .
