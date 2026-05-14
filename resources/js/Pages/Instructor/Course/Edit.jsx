@@ -3,6 +3,7 @@ import FormInput from "@/Components/FormInput";
 import FormLabel from "@/Components/FormLabel";
 import FormSelect from "@/Components/FormSelect";
 import FormTextArea from "@/Components/FormTextArea";
+import QuillEditor from "@/Components/QuillEditor";
 import App from "@/Layouts/Instructor/App";
 import { Link, router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
@@ -213,11 +214,16 @@ const Edit = ({ course, categories, employee_status, selected_employee_status })
                             error={errors.short_description}
                         />
 
-                        <FormTextArea
+                        <QuillEditor
                             title="description"
-                            label="Deskripsi Lengpat"
+                            label="Deskripsi Lengkap"
                             value={values.description}
-                            onChange={handleChange}
+                            onChange={(content) => {
+                                setValues((prev) => ({
+                                    ...prev,
+                                    description: content,
+                                }));
+                            }}
                             isRequired={true}
                             error={errors.description}
                         />
@@ -389,7 +395,7 @@ const Edit = ({ course, categories, employee_status, selected_employee_status })
                 ) : null}
 
                 <div className="max-w-4xl mx-auto flex flex-col sm:flex-row justify-end gap-4 mt-8 pb-12">
-                    <Link href={`/dashboard`} className="w-full sm:w-auto">
+                    <Link href={`/instructor`} className="w-full sm:w-auto">
                         <button type="button" className="w-full sm:w-auto px-6 py-3 rounded-xl border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 hover:text-gray-900 font-bold transition-all shadow-sm">
                             Kembali
                         </button>

@@ -3,6 +3,7 @@ import FormInput from "@/Components/FormInput";
 import FormLabel from "@/Components/FormLabel";
 import FormSelect from "@/Components/FormSelect";
 import FormTextArea from "@/Components/FormTextArea";
+import QuillEditor from "@/Components/QuillEditor";
 import App from "@/Layouts/Instructor/App";
 import { Link, router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
@@ -82,7 +83,9 @@ const Create = ({ categories, employee_status }) => {
         formData.append("title", values.title);
         formData.append("short_description", values.short_description);
         formData.append("description", values.description);
-        formData.append("thumbnail", values.thumbnail);
+        if (values.thumbnail) {
+            formData.append("thumbnail", values.thumbnail);
+        }
         formData.append("teaser_video", values.teaser_video);
         formData.append("expired", values.expired);
         formData.append("jam_pelajaran", values.jam_pelajaran);
@@ -216,11 +219,16 @@ const Create = ({ categories, employee_status }) => {
                                 error={errors.short_description}
                             />
 
-                            <FormTextArea
+                            <QuillEditor
                                 title={"description"}
                                 label={"Deskripsi Lengkap"}
                                 value={values.description}
-                                onChange={handleChange}
+                                onChange={(content) => {
+                                    setValues((prev) => ({
+                                        ...prev,
+                                        description: content,
+                                    }));
+                                }}
                                 isRequired={true}
                                 error={errors.description}
                             />

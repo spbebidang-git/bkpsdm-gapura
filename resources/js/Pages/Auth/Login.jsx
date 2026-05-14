@@ -1,4 +1,3 @@
-import FlashMessageToast from "@/Components/FlashMessageToast";
 import { Link, useForm, usePage } from "@inertiajs/react";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -15,6 +14,7 @@ const Login = () => {
         username: "",
         password: "",
         captcha: "",
+        captcha_key: "",
     });
 
     useEffect(() => {
@@ -24,9 +24,10 @@ const Login = () => {
     const fetchCaptcha = async () => {
         try {
             const res = await axios.get("/captcha-url");
-            setCaptchaUrl(res.data.captcha);
+            setCaptchaUrl(res.data.img);
             setCaptchaInput("");
             setData("captcha", "");
+            setData("captcha_key", res.data.key);
         } catch (err) {
             console.error("Error fetching captcha:", err);
         }
@@ -117,7 +118,6 @@ const Login = () => {
 
     return (
         <section className="min-h-screen flex text-gray-900 bg-white">
-            <FlashMessageToast />
 
             {/* Left Column - Image/Branding (Hidden on mobile) */}
             <div className="hidden lg:flex lg:w-1/2 bg-primary items-center justify-center relative overflow-hidden">
@@ -136,6 +136,9 @@ const Login = () => {
                         <p className="text-base font-medium text-blue-200/80 uppercase tracking-widest mb-2">
                             Selamat Datang di
                         </p>
+                        <div className="text-4xl md:text-5xl font-black tracking-[0.1em] text-white mb-3">
+                            GAPURA
+                        </div>
                         <h1 className="text-2xl md:text-3xl font-extrabold leading-snug tracking-tight text-white">
                             Gerbang Pengembangan Kompetensi Menuju SMART ASN
                         </h1>
@@ -160,6 +163,13 @@ const Login = () => {
                             <h2 className="text-3xl font-extrabold text-gray-800 mb-2 tracking-tight">Masuk</h2>
                             <p className="text-gray-500 font-medium">Silakan login untuk melanjutkan</p>
                         </div>
+
+                        {errors.email_or_username && (
+                            <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-700 text-sm font-semibold animate-pulse">
+                                <box-icon name='error-circle' color='#ef4444' size='24px'></box-icon>
+                                <p>{errors.email_or_username}</p>
+                            </div>
+                        )}
 
                         <form onSubmit={handleSubmit} className="space-y-6">
 

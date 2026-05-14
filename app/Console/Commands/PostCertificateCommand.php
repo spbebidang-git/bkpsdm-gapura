@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Http;
 
 class PostCertificateCommand extends Command
 {
-    protected $signature = 'app:post-certificate-command';
+    protected $signature = 'app:post-certificate-command {--course= : Filter by specific course ID} {--learn= : Filter by specific learn ID}';
 
     protected $description = 'Mengirim data sertifikat peserta dari pelatihan yang selesai hari ini.';
 
@@ -32,10 +32,23 @@ class PostCertificateCommand extends Command
 
             // Ambil semua Learn yang belum di-push, lalu group berdasarkan course_id
             // agar setiap course hanya dikirim SATU KALI ke SSO
-            $allLearns = Learn::with('course.category')
-                ->whereDate('finished_at', '>=', '2025-08-01')
-                ->where('is_post_certificate', 0)
-                ->get();
+            $query = Learn::with('course.category')
+                ->where('is_post_certificate', 0);
+
+            $courseId = $this->option('course');
+            $learnId  = $this->option('learn');
+
+            if ($learnId) {
+                // If filtering by learnId, ignore the is_post_certificate check to allow forced re-push
+                $query = Learn::with('course.category')
+                    ->where('id', $learnId);
+                $this->info('[PostCertificate] Filter aktif: learn_id = ' . $learnId);
+            } elseif ($courseId) {
+                $query->where('course_id', $courseId);
+                $this->info('[PostCertificate] Filter aktif: course_id = ' . $courseId);
+            }
+
+            $allLearns = $query->get();
 
             $this->info('[PostCertificate] Data learns ditemukan: ' . $allLearns->count() . ' record yang belum dikirim.');
             Log::info('[PostCertificate] Data learns ditemukan: ' . $allLearns->count() . ' record yang belum dikirim.');
@@ -107,7 +120,6 @@ class PostCertificateCommand extends Command
 
                     // Update semua Learn record untuk course ini
                     Learn::where('course_id', $courseId)
-                        ->whereDate('finished_at', '>=', '2025-08-01')
                         ->where('is_post_certificate', 0)
                         ->update(['is_post_certificate' => 1]);
 
@@ -134,7 +146,6 @@ class PostCertificateCommand extends Command
 
             $this->info("Push selesai. Berhasil: {$successCount}, Gagal: {$failCount}");
             return $failCount > 0 ? Command::FAILURE : Command::SUCCESS;
-
         } catch (\Throwable $th) {
             Log::error('Exception utama PostCertificate:', ['message' => $th->getMessage()]);
             $this->error('Gagal mengambil token atau koneksi SSO: ' . $th->getMessage());
@@ -163,14 +174,28 @@ class PostCertificateCommand extends Command
             'peserta' => implode(',', $listNip),
         ];
 
+        // Jika testing di local, catat di log saja dan buat simulasi sukses
+        if (app()->environment('local')) {
+            Log::info('--- SIMULASI PUSH LOKAL (Tidak dkirim ke SSO pihak ke 3) ---', [
+                'nama_kegiatan' => $courseItem->course->title,
+                'peserta' => implode(',', $listNip),
+                'payload' => $payload
+            ]);
+
+            // Fake request seolah-olah sukses 200 OK
+            Http::fake([
+                config('services.sso.base_url') . '/api/post_sertifikat' => Http::response(['message' => 'Simulasi sukses di local'], 200)
+            ]);
+        }
+
         // Request pertama TANPA retry — supaya response 401 bisa ditangani manual
         $response = Http::withHeaders([
-            'apikey' => env('API_KEY'),
+            'apikey' => config('services.sso.api_key'),
             'Authorization' => $token,
         ])
             ->acceptJson()
             ->asForm()
-            ->post(env('SSO_BASE_URL') . '/api/post_sertifikat', $payload);
+            ->post(config('services.sso.base_url') . '/api/post_sertifikat', $payload);
 
         Log::info('[PostCertificate] SSO request detail.', [
             'course' => $courseItem->course->title,

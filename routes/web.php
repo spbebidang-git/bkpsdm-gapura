@@ -5,8 +5,6 @@ use App\Http\Controllers\Web\AuthController;
 use App\Http\Middleware\BlockInstructorFromPublicRoutes;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\IsParticipantMiddleware;
-use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -16,7 +14,7 @@ Route::middleware(HandleInertiaRequests::class)->group(function () {
     # Sign In / Sign Out
     Route::middleware('guest')->group(function () {
         Route::get('/sign-in', [AuthController::class, 'index'])->name('sign-in.index');
-        Route::post('/sign-in', [AuthController::class, 'store'])->name('sign-in.store')->middleware('throttle:5,1');
+        Route::post('/sign-in', [AuthController::class, 'store'])->name('sign-in.store')->middleware('throttle:sign-in');
     });
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 

@@ -29,7 +29,7 @@
 @endsection
 
 @push('scripts')
-    <script>
+    <script nonce="{{ Vite::cspNonce() }}">
         $(document).ready(function() {
             $('#table').DataTable({
                 processing: true,
@@ -87,8 +87,9 @@
         });
 
         // Swal delete
-        const confirmDelete = (event) => {
+        $(document).on('submit', '.form-delete', function(event) {
             event.preventDefault();
+            const form = this;
             Swal.fire({
                 title: 'Yakin ingin menghapus ulasan ini?',
                 text: "Data yang sudah dihapus tidak dapat dikembalikan!",
@@ -100,9 +101,9 @@
                 cancelButtonText: 'Batal',
             }).then((result) => {
                 if (result.isConfirmed) {
-                    event.target.submit();
+                    form.submit();
                 }
             });
-        };
+        });
     </script>
 @endpush

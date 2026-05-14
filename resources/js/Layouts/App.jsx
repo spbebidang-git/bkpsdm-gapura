@@ -1,8 +1,6 @@
 import Copyright from "@/Components/Copyright";
 import { Link, usePage } from "@inertiajs/react";
 import { useState } from "react";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
 export default function App({ children }) {
     const { auth, site } = usePage().props;
@@ -13,16 +11,7 @@ export default function App({ children }) {
 
     return (
         <div className="flex flex-col justify-between min-h-screen">
-            {/* Toast — z-index lebih tinggi dari header fixed (z-50) */}
-            <ToastContainer
-                position="top-right"
-                autoClose={4000}
-                hideProgressBar={false}
-                newestOnTop
-                closeOnClick
-                pauseOnHover
-                style={{ zIndex: 9999 }}
-            />
+
             {/* Header */}
             <header className="fixed w-full top-0 z-50 bg-white/90 backdrop-blur-md shadow-sm border-b dark:bg-gray-900/90 transition-all duration-300">
                 <div className="bg-primary h-2 w-full"></div>

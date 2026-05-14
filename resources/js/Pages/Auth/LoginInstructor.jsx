@@ -1,4 +1,3 @@
-import FlashMessageToast from "@/Components/FlashMessageToast";
 import FormInput from "@/Components/FormInput";
 import { Link, useForm, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
@@ -66,7 +65,6 @@ const LoginParticipant = () => {
 
     return (
         <section className="min-h-screen flex flex-col bg-gray-100">
-            <FlashMessageToast />
 
             <div className="bg-primary h-2"></div>
 

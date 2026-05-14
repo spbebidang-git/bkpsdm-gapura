@@ -26,7 +26,17 @@ class SecureFileUploadMiddleware
 
             # 2. Cek MIME asli
             $realMime = File::mimeType($file);
-            $allowedMimes = ['image/jpeg', 'image/png', 'application/pdf'];
+            $allowedMimes = [
+                'image/jpeg', 
+                'image/png', 
+                'application/pdf',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+                'application/vnd.ms-excel', // .xls
+                'text/csv', // .csv
+                'application/csv',
+                'text/plain', // some csv detected as plain text
+                'application/zip' // sometimes xlsx is detected as zip
+            ];
             if (!in_array($realMime, $allowedMimes)) {
                 return response()->json([
                     'error' => 'Tipe file tidak valid: ' . $realMime

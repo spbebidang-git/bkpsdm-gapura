@@ -1,7 +1,5 @@
-import FlashMessageToast from '@/Components/FlashMessageToast';
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { ToastContainer } from 'react-toastify';
 
 export default function App({ children }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -12,7 +10,7 @@ export default function App({ children }) {
 
     return (
         <div className="flex flex-col justify-between min-h-screen">
-            <FlashMessageToast />
+
 
             {/* Header */}
             <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md shadow-sm border-b dark:bg-gray-900/90 transition-all duration-300">
@@ -112,7 +110,7 @@ export default function App({ children }) {
 
             {/* Main Content */}
             <main className="flex-1 bg-gray-50 p-4 md:p-8">
-                <ToastContainer />
+
                 {children}
             </main>
 

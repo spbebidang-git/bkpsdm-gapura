@@ -3,6 +3,7 @@
 namespace App\Services\Course;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class CoursePerformanceService
 {
@@ -22,8 +23,9 @@ class CoursePerformanceService
 
     public function getPerformance()
     {
-        $learnData = DB::table('learns')
-            ->join('learn_items', 'learn_items.learn_id', '=', 'learns.id')
+        return Cache::remember('admin.course_performance', 3600, function () {
+            $learnData = DB::table('learns')
+                ->join('learn_items', 'learn_items.learn_id', '=', 'learns.id')
             ->join('courses', 'courses.id', '=', 'learns.course_id')
             ->select(
                 'learns.id as learn_id',
@@ -85,5 +87,6 @@ class CoursePerformanceService
                 'peserta_selesai' => $pesertaSelesai,
             ];
         })->values();
+        });
     }
 }

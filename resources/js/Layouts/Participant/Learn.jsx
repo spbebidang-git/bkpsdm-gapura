@@ -3,6 +3,7 @@ import CountdownTimer from "@/Components/CountDownTimer";
 import ListActivity from "@/Components/ListActivity";
 import { Link, router, usePage } from "@inertiajs/react";
 import React, { useState } from "react";
+import { toast } from "react-toastify";
 
 const Learn = ({
     type,
@@ -12,6 +13,7 @@ const Learn = ({
     children,
     activities,
     timer,
+    displayTimerSeconds,
     activity_id,
     formattedAnswers,
     schedule
@@ -118,16 +120,19 @@ const Learn = ({
                             <div className="text-center sm:text-left text-lg xl:text-xl font-bold text-gray-800 capitalize w-full sm:w-auto">
                                 {activity.title}
                             </div>
-                            {(activity.type === "pre-test" || activity.type === "post-test") &&
-                                type === "material" ? (
+                            {type === "material" && (activity.type === "pre-test" || activity.type === "post-test") ? (
                                 <CountdownTimer
-                                    id={activity_id} // WAJIB TAMBAHKAN INI
+                                    id={activity_id}
                                     initialSeconds={timer}
                                     onTimeout={handleTimeout}
                                 />
-                            ) : (
-                                ""
-                            )}
+                            ) : null}
+                            {type === "material" && (activity.type === "video" || activity.type === "literature") ? (
+                                <CountdownTimer
+                                    currentSeconds={displayTimerSeconds}
+                                    variant="muted"
+                                />
+                            ) : null}
                         </div>
 
                         <div className="p-4 lg:p-6 flex-1 flex flex-col border-b min-h-0">

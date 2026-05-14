@@ -72,8 +72,8 @@ class TokenService
     {
         if (app()->isLocal()) {
             Log::debug('[TokenService] Melakukan refresh token dari SSO.', [
-                'username' => env('SSO_ADMIN_USERNAME'),
-                'url' => env('SSO_BASE_URL') . '/oauth/token',
+                'username' => config('services.sso.admin_username'),
+                'url' => config('services.sso.base_url') . '/oauth/token',
             ]);
         }
 
@@ -81,13 +81,13 @@ class TokenService
             return $exception instanceof \Illuminate\Http\Client\ConnectionException
                 || ($exception instanceof \Illuminate\Http\Client\RequestException && $exception->response->serverError());
         }, throw: false)->withHeaders([
-                    'apikey' => env('API_KEY')
-                ])->post(env('SSO_BASE_URL') . '/oauth/token', [
-                    'username' => env('SSO_ADMIN_USERNAME'),
-                    'password' => env('SSO_ADMIN_PASS'),
+                    'apikey' => config('services.sso.api_key')
+                ])->post(config('services.sso.base_url') . '/oauth/token', [
+                    'username' => config('services.sso.admin_username'),
+                    'password' => config('services.sso.admin_pass'),
                     'grant_type' => 'password',
-                    'client_id' => env('SSO_CLIENT_ID'),
-                    'client_secret' => env('SSO_CLIENT_SECRET'),
+                    'client_id' => config('services.sso.client_id'),
+                    'client_secret' => config('services.sso.client_secret'),
                 ]);
 
         if (app()->isLocal()) {

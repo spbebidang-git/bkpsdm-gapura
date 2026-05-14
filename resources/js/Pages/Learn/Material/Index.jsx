@@ -4,45 +4,100 @@ import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { toast } from "react-toastify";
 
+const buildTimedActivityStorageKey = (scheduleId, activityId) => `materialCountdown_${scheduleId}_${activityId}`;
+
 
 const Index = ({ course, progress, activities, activity, activity_id, question_result, schedule }) => {
     const [answers, setAnswers] = useState({});
     const [file, setFile] = useState(null);
-    const [activeButton, setActiveButton] = useState(false)
-    const [duration, setDuration] = useState(activity.data.duration)
-    const [timer, setTimer] = useState(activity.timer)
+    const [duration, setDuration] = useState(activity.data?.duration ?? 0);
+    const isTimedActivity = activity.type == 'video' || activity.type == 'literature';
+    const isSubmitEnabled = !isTimedActivity || duration === 0;
+    const timedActivityStorageKey = buildTimedActivityStorageKey(schedule.id, activity_id);
 
     const formattedAnswers = Object.values(answers).map(answer => ({ ...answer }));
 
-
     useEffect(() => {
+        const initialDuration = activity.data?.duration ?? 0;
 
-        if (activity.type == 'video' || activity.type == 'literature') {
-            // setDuration(data.duration)
-            if (duration === 0) {
-                setActiveButton(true)
-                return;
-            }
-            // Atur interval untuk menghitung mundur
-            const interval = setInterval(() => {
-                setDuration(prevDuration => {
-                    if (prevDuration > 1) {
-                        return prevDuration - 1;
-                    } else {
-                        clearInterval(interval); // Hentikan interval saat durasi mencapai 0
-                        setActiveButton(true); // Aktifkan tombol
-                        return 0;
-                    }
-                });
-            }, 1000);
-
-            // Bersihkan interval ketika komponen unmount
-            return () => clearInterval(interval);
-        } else {
-            setActiveButton(true)
+        if (!isTimedActivity) {
+            setDuration(initialDuration);
+            return;
         }
 
-    }, [duration]);
+        const now = Math.floor(Date.now() / 1000);
+        const storedCountdown = localStorage.getItem(timedActivityStorageKey);
+
+        if (!storedCountdown) {
+            if (initialDuration > 0) {
+                localStorage.setItem(timedActivityStorageKey, JSON.stringify({
+                    startedAt: now,
+                    initialDuration,
+                }));
+            }
+
+            setDuration(initialDuration);
+            return;
+        }
+
+        try {
+            const parsedCountdown = JSON.parse(storedCountdown);
+            const hasChangedDuration = parsedCountdown.initialDuration !== initialDuration;
+
+            if (hasChangedDuration) {
+                if (initialDuration > 0) {
+                    localStorage.setItem(timedActivityStorageKey, JSON.stringify({
+                        startedAt: now,
+                        initialDuration,
+                    }));
+                } else {
+                    localStorage.removeItem(timedActivityStorageKey);
+                }
+
+                setDuration(initialDuration);
+                return;
+            }
+
+            const elapsed = now - parsedCountdown.startedAt;
+            const remainingDuration = Math.max(initialDuration - elapsed, 0);
+
+            setDuration(remainingDuration);
+        } catch {
+            localStorage.removeItem(timedActivityStorageKey);
+
+            if (initialDuration > 0) {
+                localStorage.setItem(timedActivityStorageKey, JSON.stringify({
+                    startedAt: now,
+                    initialDuration,
+                }));
+            }
+
+            setDuration(initialDuration);
+        }
+    }, [activity.data?.duration, activity.type, activity_id, isTimedActivity, timedActivityStorageKey]);
+
+    useEffect(() => {
+        if (!isTimedActivity) {
+            return;
+        }
+
+        if (duration === 0) {
+            return;
+        }
+
+        const interval = setInterval(() => {
+            setDuration(prevDuration => {
+                if (prevDuration > 1) {
+                    return prevDuration - 1;
+                }
+
+                clearInterval(interval);
+                return 0;
+            });
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [duration, isTimedActivity, timedActivityStorageKey]);
 
     const handleSubmit = (e, slug) => {
         e.preventDefault();
@@ -149,12 +204,14 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
 
         // store video
         if (activity.type == 'video') {
+            localStorage.removeItem(timedActivityStorageKey);
             const formattedAnswers = Object.values(answers).map(answer => ({ ...answer }));
             router.post(route('participant.learn.store', { course: slug, schedule: schedule.id, activity: activity_id }), formattedAnswers);
         }
 
         // store literature
         if (activity.type == 'literature') {
+            localStorage.removeItem(timedActivityStorageKey);
             const formattedAnswers = Object.values(answers).map(answer => ({ ...answer }));
             router.post(route('participant.learn.store', { course: slug, schedule: schedule.id, activity: activity_id }), formattedAnswers);
         }
@@ -170,7 +227,7 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
         // });
     };
 
-    return <Learn type="material" course={course} progress={progress} activities={activities} activity={activity} timer={timer} formattedAnswers={formattedAnswers} activity_id={activity_id} schedule={schedule}>
+    return <Learn type="material" course={course} progress={progress} activities={activities} activity={activity} timer={activity.timer} displayTimerSeconds={duration} formattedAnswers={formattedAnswers} activity_id={activity_id} schedule={schedule}>
         <div className="flex flex-col h-full bg-white">
             <div className="flex-1 rounded-xl bg-gray-50 p-3 lg:p-4 mb-4 shadow-inner border border-gray-100 flex flex-col min-h-0">
                 <div className="flex-1 overflow-y-auto pr-2 flex flex-col">
@@ -179,7 +236,7 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
                 </div>
             </div>
             <div className="w-full sm:w-64 mx-auto shrink-0 pb-1">
-                {activeButton ? <button onClick={(e) => handleSubmit(e, course.slug)} className="w-full px-6 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5 flex justify-center items-center gap-2">
+                {isSubmitEnabled ? <button onClick={(e) => handleSubmit(e, course.slug)} className="w-full px-6 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5 flex justify-center items-center gap-2">
                     Kirim Jawaban
                     <box-icon name="send" color="white" size="20px"></box-icon>
                 </button>

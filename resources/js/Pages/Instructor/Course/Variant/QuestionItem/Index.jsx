@@ -156,8 +156,9 @@ const Index = ({ slug, activityId, questionId, questionItems, activity }) => {
                                             <td className="px-6 py-4 font-medium text-gray-800">
                                                 <div
                                                     className="line-clamp-3 leading-relaxed text-sm prose prose-sm prose-p:my-0 prose-img:rounded-md max-w-none"
-                                                    dangerouslySetInnerHTML={{ __html: item.question }}
-                                                />
+                                                >
+                                                    {item.question}
+                                                </div>
                                             </td>
 
                                             {/* Highlight jawaban benar */}

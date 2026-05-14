@@ -206,7 +206,7 @@
 @endsection
 
 @push('scripts')
-    <script>
+    <script nonce="{{ Vite::cspNonce() }}">
         $(document).ready(function() {
             $('#table-popular-courses').DataTable({
                 pageLength: 5,

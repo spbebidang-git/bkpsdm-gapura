@@ -27,7 +27,7 @@
 @endsection
 
 @push('scripts')
-    <script>
+    <script nonce="{{ Vite::cspNonce() }}">
         $(document).ready(function() {
             $('#table').DataTable({
                 processing: true,
@@ -71,8 +71,9 @@
             });
         });
 
-        const confirmDelete = (event) => {
+        $(document).on('submit', '.form-delete', function(event) {
             event.preventDefault();
+            const form = this;
             Swal.fire({
                 title: 'Apakah Anda yakin ingin menghapus data ini?',
                 text: "Data yang dihapus tidak dapat dikembalikan!",
@@ -87,9 +88,9 @@
                 },
             }).then((result) => {
                 if (result.isConfirmed) {
-                    event.target.submit();
+                    form.submit();
                 }
             });
-        };
+        });
     </script>
 @endpush

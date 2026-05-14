@@ -2,7 +2,6 @@
 
 namespace App\Services\Auth;
 
-use App\Models\Management\UserMeta;
 use App\Models\User;
 use App\Services\User\UserService;
 use Illuminate\Http\Request;
@@ -118,7 +117,7 @@ class AuthService
                             'password' => Hash::make($request->password)
                         ]);
 
-                        $this->user->storeUserMeta($user->id, $participantData);
+                        $this->user->storeUserMeta($user->id, $participantData, $request->username);
                         $user->assignRole('Participant');
                         Auth::login($user);
                     }
@@ -154,7 +153,7 @@ class AuthService
                 $participantData = $this->fetchSSOUserData($token);
                 if (!$participantData) return false;
 
-                $this->user->storeUserMeta($userId, $participantData);
+                $this->user->storeUserMeta($userId, $participantData, $username);
                 return true;
             } else {
                 Log::warning('SyncUserMeta: OAuth token request failed.', [

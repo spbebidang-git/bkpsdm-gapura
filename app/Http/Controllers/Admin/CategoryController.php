@@ -18,7 +18,7 @@ class CategoryController
                     $btn = '<div class="d-flex justify-content-center gap-2">';
                     $btn .= '<a class="btn btn-sm btn-warning" href=' . route('admin.category.edit', $row->id) . '>';
                     $btn .= '<i class="bx bx-edit"></i></a>';
-                    $btn .= '<form action="' . route('admin.category.destroy', $row->id) . '" method="POST" onsubmit="return confirmDelete(event)">';
+                    $btn .= '<form action="' . route('admin.category.destroy', $row->id) . '" method="POST" class="form-delete">';
                     $btn .= '<input type="hidden" name="_token" value="' . csrf_token() . '">';
                     $btn .= '<input type="hidden" name="_method" value="DELETE">';
                     $btn .= '<button class="btn btn-sm btn-danger">';

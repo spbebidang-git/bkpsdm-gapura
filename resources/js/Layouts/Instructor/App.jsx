@@ -1,5 +1,4 @@
 import Dropdown from "@/Components/Dropdown";
-import FlashMessageToast from "@/Components/FlashMessageToast";
 import { Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -10,7 +9,7 @@ export default function App({ children }) {
 
     return (
         <div className="flex flex-col justify-between min-h-screen">
-            <FlashMessageToast />
+
             <header className="sticky top-0 z-50 bg-gray-50 shadow border-b">
                 <div class="bg-primary h-2"></div>
                 <nav class="bg-white border-gray-200 ">

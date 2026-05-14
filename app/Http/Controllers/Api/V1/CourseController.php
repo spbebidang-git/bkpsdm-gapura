@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\CourseResource;
 use App\Models\Course\Course;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class CourseController extends Controller
 {
@@ -93,6 +94,8 @@ class CourseController extends Controller
             $nip = get_user_meta($participant->id, 'nip');
 
             return [
+                'custom_unique_id' => Str::random(4),
+                'data_date' => now()->format('Y-m-d H:i:s'),
                 'id' => $participant->id,
                 'name' => $participant->name,
                 'nip' => $nip ? $this->maskNip($nip) : null,
@@ -130,6 +133,8 @@ class CourseController extends Controller
             'success' => true,
             'message' => 'Statistik pelatihan berhasil diambil.',
             'data' => [
+                'custom_unique_id' => Str::random(4),
+                'data_date' => now()->format('Y-m-d H:i:s'),
                 'course_title' => $course->title,
                 'total_participant' => $course->total_participant,
                 'total_passed' => $course->total_passed,
@@ -188,6 +193,8 @@ class CourseController extends Controller
             }
 
             return [
+                'custom_unique_id' => Str::random(4),
+                'data_date' => now()->format('Y-m-d H:i:s'),
                 'participant' => [
                     'id' => $participant->id,
                     'name' => $participant->name,

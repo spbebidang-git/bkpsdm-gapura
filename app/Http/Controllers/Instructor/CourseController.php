@@ -9,6 +9,7 @@ use App\Services\Course\Activity\ActivityService;
 use App\Services\Course\CourseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -43,11 +44,11 @@ class CourseController
             'type' => 'required|string',
             'category' => 'required|numeric',
             'employee_status'   => 'required|min:1',
-            'employee_status.*' => 'in:1,2,3',
+            'employee_status.*' => 'exists:employee_status,id',
             'title' => 'required|string',
             'short_description' => 'required|string',
             'description' => 'required|string',
-            'thumbnail' => 'required|image|max:1024|mimes:png,jpg',
+            'thumbnail' => 'required|image|max:10240|mimes:png,jpg',
             'teaser_video' => 'nullable|string',
             'expired' => 'required_if:type,unschedule',
             'status' => 'required|string',
@@ -58,9 +59,13 @@ class CourseController
         try {
             DB::beginTransaction();
 
+            $data = $request->only('type', 'category', 'employee_status', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status', 'jam_pelajaran');
+            $data['description'] = sanitize_html($data['description']);
+            $data['short_description'] = sanitize_plain_text($data['short_description']);
+
             $this->course->createCourse(
                 $this->instructorId,
-                $request->only('type', 'category', 'employee_status', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status', 'jam_pelajaran'),
+                $data,
                 $request->schedules
             );
 
@@ -69,7 +74,10 @@ class CourseController
             return to_route('instructor.dashboard')->with('success', 'Course saved successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            return to_route('instructor.dashboard')->with('danger', 'Something went wrong.');
+            Log::error('Course store failed: ' . $th->getMessage(), [
+                'trace' => $th->getTraceAsString(),
+            ]);
+            return redirect()->back()->withInput()->with('danger', 'Something went wrong: ' . $th->getMessage());
         }
     }
 
@@ -129,7 +137,7 @@ class CourseController
             'type' => 'required|string',
             'category' => 'required|numeric',
             'employee_status'   => 'required|min:1',
-            'employee_status.*' => 'in:1,2,3',
+            'employee_status.*' => 'exists:employee_status,id',
             'title' => 'required|string',
             'short_description' => 'required|string',
             'description' => 'required|string',
@@ -144,10 +152,14 @@ class CourseController
         try {
             DB::beginTransaction();
 
+            $data = $request->only('type', 'category', 'employee_status', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status', 'jam_pelajaran');
+            $data['description'] = sanitize_html($data['description']);
+            $data['short_description'] = sanitize_plain_text($data['short_description']);
+
             $this->course->updateCourse(
                 $course,
                 $this->instructorId,
-                $request->only('type', 'category', 'employee_status', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status', 'jam_pelajaran'),
+                $data,
                 $request->schedules
             );
 
@@ -156,7 +168,10 @@ class CourseController
             return to_route('instructor.dashboard')->with('success', 'Course updated successfully.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            return to_route('instructor.dashboard')->with('danger', 'Something went wrong.');
+            Log::error('Course update failed: ' . $th->getMessage(), [
+                'trace' => $th->getTraceAsString(),
+            ]);
+            return redirect()->back()->withInput()->with('danger', 'Something went wrong: ' . $th->getMessage());
         }
     }
 

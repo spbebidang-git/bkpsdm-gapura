@@ -1,5 +1,6 @@
 import BreadcrumbLearn from "@/Components/BreadcrumbLearn";
 import StarRating from "@/Components/StarRating";
+import { getBrowserSupportStatus, getUnsupportedBrowserMessage } from "@/Utils/browserSupport";
 import { Link, router, usePage } from "@inertiajs/react";
 import axios from "axios";
 import { useState } from "react";
@@ -30,6 +31,14 @@ const Show = ({ course, schedules, reviews = [], rating }) => {
     // Aktivasi kelas — cek can_enter dari server sebelum POST
     const handleActivation = (e, item) => {
         e.preventDefault();
+
+        const browserSupport = getBrowserSupportStatus();
+        if (!browserSupport.supported) {
+            toast.error(getUnsupportedBrowserMessage(browserSupport.reason), {
+                toastId: 'unsupported-browser-activation',
+            });
+            return;
+        }
 
         if (!auth.user) {
             window.location.href = route('login');

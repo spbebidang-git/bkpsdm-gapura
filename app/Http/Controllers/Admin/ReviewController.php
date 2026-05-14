@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Services\Course\Review\ReviewService;
+use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
 
 class ReviewController
@@ -33,7 +34,7 @@ class ReviewController
                 })
                 ->addColumn('action', function ($row) {
                     $btn  = '<div class="d-flex justify-content-center gap-2">';
-                    $btn .= '<form action="' . route('admin.review.destroy', $row['id']) . '" method="POST" onsubmit="confirmDelete(event)">';
+                    $btn .= '<form action="' . route('admin.review.destroy', $row['id']) . '" method="POST" class="form-delete">';
                     $btn .= csrf_field() . method_field('DELETE');
                     $btn .= '<button type="submit" class="btn btn-sm btn-danger">';
                     $btn .= '<i class="bx bx-trash"></i></button>';

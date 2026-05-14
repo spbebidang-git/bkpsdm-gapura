@@ -10,6 +10,7 @@ use App\Models\Learn\Learn;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class StatisticController extends Controller
 {
@@ -31,6 +32,8 @@ class StatisticController extends Controller
             'success' => true,
             'message' => 'Statistik keseluruhan berhasil diambil.',
             'data' => [
+                'custom_unique_id' => Str::random(4),
+                'data_date' => now()->format('Y-m-d H:i:s'),
                 'total_courses' => $totalCourses,
                 'total_participants' => $totalParticipants,
                 'total_instructors' => $totalInstructors,
@@ -83,6 +86,8 @@ class StatisticController extends Controller
             'success' => true,
             'message' => "Statistik tahun {$year} berhasil diambil.",
             'data' => [
+                'custom_unique_id' => Str::random(4),
+                'data_date' => now()->format('Y-m-d H:i:s'),
                 'year' => (int) $year,
                 'total_courses' => $coursesCount,
                 'total_enrollments' => $enrollments,
@@ -108,6 +113,8 @@ class StatisticController extends Controller
             })->distinct('participant_id')->count('participant_id');
 
             return [
+                'custom_unique_id' => Str::random(4),
+                'data_date' => now()->format('Y-m-d H:i:s'),
                 'status' => $status->title,
                 'total_courses' => $status->courses_count,
                 'total_participants' => $participantCount,

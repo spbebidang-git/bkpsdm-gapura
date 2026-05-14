@@ -20,9 +20,8 @@ class CourseService
         $currentTime = $now->format('H:i:s');
 
         return Course::query()
-            ->inRandomOrder()
+            ->orderByDesc('id')
             ->where('status', 'publish')
-            ->where('is_locked', true)
             ->where(function ($q) use ($today, $currentTime) {
                 $q->where('type', '!=', 'schedule')
                     ->orWhereHas('schedules', function ($query) use ($today, $currentTime) {
@@ -97,22 +96,21 @@ class CourseService
         return Course::query()
             ->orderBy('id')
             ->where('status', 'publish')
-            ->where('is_locked', true)
             ->where(function ($q) use ($today, $currentTime) {
                 // Tampilkan yang tipenya bukan schedule (Video/Modul)
                 $q->where('type', '!=', 'schedule')
                     // ATAU yang punya jadwal aktif/mendatang
                     ->orWhereHas('schedules', function ($query) use ($today, $currentTime) {
-                        $query->where(function ($sub) use ($today, $currentTime) {
-                            // Kondisi 1: Jadwal di hari-hari mendatang (Besok dan seterusnya)
-                            $sub->where('date', '>', $today)
-                                // Kondisi 2: Jadwal hari ini, tapi waktunya belum berakhir (masih berlangsung atau akan datang)
-                                ->orWhere(function ($dayQuery) use ($today, $currentTime) {
-                                    $dayQuery->whereDate('date', $today)
-                                        ->whereTime('time_to', '>=', $currentTime);
-                                });
+                    $query->where(function ($sub) use ($today, $currentTime) {
+                        // Kondisi 1: Jadwal di hari-hari mendatang (Besok dan seterusnya)
+                        $sub->where('date', '>', $today)
+                            // Kondisi 2: Jadwal hari ini, tapi waktunya belum berakhir (masih berlangsung atau akan datang)
+                            ->orWhere(function ($dayQuery) use ($today, $currentTime) {
+                            $dayQuery->whereDate('date', $today)
+                                ->whereTime('time_to', '>=', $currentTime);
                         });
                     });
+                });
             })
             ->get()
             ->map(function ($row) {
@@ -156,15 +154,17 @@ class CourseService
 
     public function getByParticipant($participantId)
     {
-        // dd($participantId);
         return Schedule::whereRelation('participants', 'participant_id', '=', $participantId)
-            ->with(['course', 'course.learns' => function ($query) use ($participantId) {
-                $query->where('participant_id', $participantId);
-            }, 'course.activities'])
+            ->with([
+                'course',
+                'course.learns' => function ($query) use ($participantId) {
+                    $query->where('participant_id', $participantId);
+                },
+                'course.activities'
+            ])
             ->get()
+            ->filter(fn($row) => $row->course !== null)
             ->map(function ($row) {
-                // dd($row->course->id);
-                // dd($row->course->activities->first()->id);
                 return [
                     'id' => $row->course->id,
                     'type' => $row->course->type,
@@ -174,15 +174,16 @@ class CourseService
                     'thumbnail' => $row->course->thumbnail_src,
                     'short_description' => $row->course->short_description,
                     'description' => $row->course->description,
-                    'category' => $row->course->category->title,
-                    'instructor' => $row->course->instructor->name,
+                    'category' => optional($row->course->category)->title,
+                    'instructor' => optional($row->course->instructor)->name,
                     'total_participant' => $row->course->total_participant,
                     'status' => $row->course->status,
                     'schedule_id' => $row->id,
                     'initial_activity' => $row->course->activities->first() ? $row->course->activities->first()->id : 0,
                     'finished_at' => $row->course->learns->first()->finished_at ?? null
                 ];
-            });
+            })
+            ->values();
     }
 
     public function getByAdmin()
@@ -221,8 +222,8 @@ class CourseService
             'type' => $data['type'],
             'title' => $data['title'],
             'slug' => str()->slug($data['title']),
-            'short_description' => $data['short_description'],
-            'description' => $data['description'],
+            'short_description' => sanitize_plain_text($data['short_description']),
+            'description' => sanitize_html($data['description']),
             'thumbnail' => UploadMedia::file($data['thumbnail'], Course::$directoryImage),
             'teaser_video' => $data['teaser_video'],
             'expired' => $data['expired'],
@@ -261,11 +262,11 @@ class CourseService
             // 'employee_status' => $data['employee_status'],
             'type' => $data['type'],
             'title' => $data['title'],
-            'slug' => str()->slug($data['title']),
-            'short_description' => $data['short_description'],
-            'description' => $data['description'],
+            // 'slug' => str()->slug($data['title']),
+            'short_description' => sanitize_plain_text($data['short_description']),
+            'description' => sanitize_html($data['description']),
             'teaser_video' => $data['teaser_video'],
-            'expired' => $data['expired'] == 'undefined' ? null :  $data['expired'],
+            'expired' => $data['expired'] == 'undefined' ? null : $data['expired'],
             'jam_pelajaran' => $data['jam_pelajaran'],
             'status' => $data['status'],
         ]);
@@ -281,26 +282,25 @@ class CourseService
             $course->save();
         }
         // dd($schedules);
-        # Update Schedule
         if ($schedules) {
-            # Remove all schedules by course
-            // dd($course->load('schedules'));
-            // Memuat relasi schedules
-            $course->load('schedules');
-
-            // Menghapus setiap schedule terkait
-            $course->schedules->each(function ($schedule) {
-                $schedule->delete();  // Menghapus setiap schedule
-            });
+            $keepIds = [];
             foreach ($schedules as $item) {
-                Schedule::create([
-                    'course_id' => $course->id,
-                    'date' => $item['date'],
-                    'time_from' => $item['time_from'],
-                    'time_to' => $item['time_to'],
-                    'quota' => $item['quota'],
-                ]);
+                // Pastikan ID ada dan valid, jika tidak maka buat baru
+                $schedule = Schedule::updateOrCreate(
+                    ['id' => isset($item['id']) && is_numeric($item['id']) ? $item['id'] : null],
+                    [
+                        'course_id' => $course->id,
+                        'date' => $item['date'],
+                        'time_from' => $item['time_from'],
+                        'time_to' => $item['time_to'],
+                        'quota' => $item['quota'],
+                    ]
+                );
+                $keepIds[] = $schedule->id;
             }
+
+            // Hapus jadwal yang tidak ada dalam daftar kiriman terbaru
+            $course->schedules()->whereNotIn('id', $keepIds)->delete();
 
             return true;
         }
@@ -315,7 +315,8 @@ class CourseService
 
         foreach ($activities as $activity) {
             $question = Question::where('activity_id', $activity->id)->first();
-            if (!$question) continue;
+            if (!$question)
+                continue;
 
             // Ambil semua variant beserta jumlah soalnya, hanya yang punya soal
             $variants = QuestionVariant::withCount('questionItems')
@@ -323,7 +324,8 @@ class CourseService
                 ->get()
                 ->filter(fn($v) => $v->question_items_count > 0);
 
-            if ($variants->isEmpty()) continue;
+            if ($variants->isEmpty())
+                continue;
 
             // Cari jumlah soal terbanyak
             $maxCount = $variants->max('question_items_count');

@@ -28,9 +28,18 @@ class CourseController
 
     public function index()
     {
-        return Inertia::render('Participant/Course/Index', [
-            'courses' => $this->course->getByParticipant($this->participantId)
-        ]);
+        try {
+            return Inertia::render('Participant/Course/Index', [
+                'courses' => $this->course->getByParticipant($this->participantId)
+            ]);
+        } catch (\Throwable $e) {
+            \Log::channel('app_errors')->error('Participant CourseController@index error: ' . $e->getMessage(), [
+                'user'  => $this->participantId,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return redirect()->route('home')
+                ->with('danger', 'Terjadi kesalahan saat memuat daftar kursus. Silakan coba lagi.');
+        }
     }
 
     public function show(Course $course)

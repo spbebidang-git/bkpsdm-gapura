@@ -39,7 +39,7 @@ class Learn extends Model
     public function progress(): Attribute
     {
         $doneActivity = $this->learnItems()->where('status', 'done')->count();
-        $totalActivity = $this->course->activities->count();
+        $totalActivity = $this->course ? $this->course->activities->count() : 0;
 
         if ($totalActivity == 0) {
             return Attribute::get(fn() => 0 . '%');

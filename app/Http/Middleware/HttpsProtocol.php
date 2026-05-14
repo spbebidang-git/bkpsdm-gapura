@@ -3,33 +3,19 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class HttpsProtocol
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
-     */
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
         if (app()->environment('production')) {
             $host = $request->header('host');
+            $canonicalHost = str_starts_with($host, 'www.') ? substr($host, 4) : $host;
 
-            // Jika request pakai www, redirect ke tanpa www
-            if (str_starts_with($host, 'www.')) {
-                $nonWwwHost = substr($host, 4);
-                $scheme = $request->secure() ? 'https://' : 'http://';
-                $url = $scheme . $nonWwwHost . $request->getRequestUri();
-                return redirect()->to($url, 301);
-            }
-
-            // Jika request belum pakai https, redirect ke https
-            if (!$request->secure()) {
-                $url = 'https://' . $host . $request->getRequestUri();
-                return redirect()->to($url, 301);
+            if (!$request->secure() || $host !== $canonicalHost) {
+                return redirect()->to('https://' . $canonicalHost . $request->getRequestUri(), 301);
             }
         }
 
