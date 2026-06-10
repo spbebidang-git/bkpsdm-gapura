@@ -86,7 +86,18 @@ class AuthController
 
     private function loginParticipant(Request $request, $nip)
     {
+        $debug = [];
+        $debug['time'] = now()->toDateTimeString();
+        $debug['nip'] = $nip;
+        $debug['sso_config'] = [
+            'base_url' => config('services.sso.base_url'),
+            'api_key' => config('services.sso.api_key') ? 'SET' : 'EMPTY',
+            'client_id' => config('services.sso.client_id') ? 'SET' : 'EMPTY',
+            'client_secret' => config('services.sso.client_secret') ? 'SET' : 'EMPTY',
+        ];
+
         $userMeta = find_user_by_nip($nip);
+        $debug['user_found'] = $userMeta ? "YES (user_id: {$userMeta->user_id})" : "NO";
 
         if ($userMeta && $userMeta->user) {
             $user = $userMeta->user;
@@ -116,6 +127,9 @@ class AuthController
         if ($this->handleSSOFirstLogin($request, $nip)) {
             return to_route('home');
         }
+
+        $debug['final'] = 'ALL FAILED - handleSSOFirstLogin returned false';
+        file_put_contents(storage_path('logs/debug_login.json'), json_encode($debug, JSON_PRETTY_PRINT) . "\n", FILE_APPEND);
 
         return to_route('sign-in.index')->withErrors(['email_or_username' => 'Gagal autentikasi SSO atau data NIP tidak ditemukan.']);
     }
@@ -240,9 +254,15 @@ class AuthController
 
     private function handleSSOFirstLogin(Request $request, $nip)
     {
+        $debug = ['method' => 'handleSSOFirstLogin', 'nip' => $nip, 'time' => now()->toDateTimeString()];
         try {
             $response = $this->callSSOApi($nip, $request->password);
-            if (!$response->successful()) return false;
+            $debug['sso_token_status'] = $response->status();
+            $debug['sso_token_body'] = $response->json() ?? $response->body();
+            if (!$response->successful()) {
+                file_put_contents(storage_path('logs/debug_login.json'), json_encode($debug, JSON_PRETTY_PRINT) . "\n", FILE_APPEND);
+                return false;
+            }
 
             $dataApi = Http::timeout(5)->withHeaders([
                 'apikey' => config('services.sso.api_key'),
@@ -250,7 +270,13 @@ class AuthController
                 'Accept' => 'application/json'
             ])->post(config('services.sso.base_url') . '/api/get_nip_data');
 
-            if (!$dataApi->successful()) return false;
+            $debug['nip_data_status'] = $dataApi->status();
+            $debug['nip_data_body'] = $dataApi->json() ?? $dataApi->body();
+
+            if (!$dataApi->successful()) {
+                file_put_contents(storage_path('logs/debug_login.json'), json_encode($debug, JSON_PRETTY_PRINT) . "\n", FILE_APPEND);
+                return false;
+            }
 
             $data = $dataApi->json();
 
@@ -307,6 +333,11 @@ class AuthController
             });
         } catch (\Exception $e) {
             Log::error("Provisioning Error NIP {$nip}: " . $e->getMessage());
+            file_put_contents(storage_path('logs/debug_login.json'), json_encode([
+                'method' => 'handleSSOFirstLogin',
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ], JSON_PRETTY_PRINT) . "\n", FILE_APPEND);
             return false;
         }
     }
