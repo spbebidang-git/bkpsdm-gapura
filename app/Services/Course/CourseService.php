@@ -359,18 +359,20 @@ class CourseService
     {
         $employeeStatus = get_user_meta($userId, 'status_pegawai');
 
+        // ponytail: if user has no status_pegawai meta (SSO sync missed),
+        // allow activation. Course restriction is defense-in-depth, not auth.
         if (!$employeeStatus) {
-            return false;
+            return true;
         }
 
         $allowedStatuses = $course->employeeStatus->pluck('title')->toArray();
 
-        // ponytail: fallback — if no statuses configured, allow all.
-        // Old employee_status column was dropped without data migration to pivot table.
+        // No restrictions configured — allow all.
         if (empty($allowedStatuses)) {
             return true;
         }
 
-        return in_array($employeeStatus, $allowedStatuses);
+        // Case-insensitive — SSO returns "Pns", DB stores "PNS"
+        return in_array(strtoupper(trim($employeeStatus)), array_map('strtoupper', $allowedStatuses));
     }
 }
