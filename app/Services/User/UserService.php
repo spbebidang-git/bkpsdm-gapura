@@ -9,8 +9,8 @@ class UserService
 {
     public function getParticipant()
     {
-        return User::with("roles")->whereHas("roles", function ($q) {
-            $q->whereIn("name", ["Participant"]);
+        return User::with(['roles', 'metas'])->whereHas('roles', function ($q) {
+            $q->whereIn('name', ['Participant']);
         })->orderBy('id')->get();
     }
 

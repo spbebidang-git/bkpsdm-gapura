@@ -14,6 +14,7 @@
                     <thead>
                         <tr class="text-nowrap">
                             <th>#</th>
+                            <th class="text-center">NIP</th>
                             <th class="text-center">Nama</th>
                             <th class="text-center">Email</th>
                         </tr>
@@ -43,6 +44,12 @@
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
                         width: '10px',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'nip',
+                        name: 'nip',
                         orderable: false,
                         searchable: false
                     },

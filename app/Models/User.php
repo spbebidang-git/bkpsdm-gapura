@@ -57,6 +57,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function metas()
+    {
+        return $this->hasMany(\App\Models\Management\UserMeta::class);
+    }
+
     public function schedules()
     {
         return $this->belongsToMany(Schedule::class, 'schedule_user', 'participant_id')
@@ -66,6 +71,11 @@ class User extends Authenticatable
     public function voteRecords()
     {
         return $this->hasMany(VoteRecord::class);
+    }
+
+    public function nip(): Attribute
+    {
+        return Attribute::get(fn() => get_user_meta($this->id, 'nip') ?: '-');
     }
 
     public function isAdmin(): Attribute
