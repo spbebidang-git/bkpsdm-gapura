@@ -75,7 +75,17 @@ class User extends Authenticatable
 
     public function nip(): Attribute
     {
-        return Attribute::get(fn() => get_user_meta($this->id, 'nip') ?: '-');
+        return Attribute::get(function () {
+            $meta = $this->metas->firstWhere('key', 'nip');
+            if ($meta) {
+                try {
+                    return \Illuminate\Support\Facades\Crypt::decryptString($meta->value);
+                } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+                    return $meta->value;
+                }
+            }
+            return '-';
+        });
     }
 
     public function isAdmin(): Attribute
