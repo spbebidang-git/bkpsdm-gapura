@@ -94,6 +94,7 @@ class CourseService
         $currentTime = $now->format('H:i:s');
 
         return Course::query()
+            ->with('employeeStatus')
             ->orderBy('id')
             ->where('status', 'publish')
             ->where(function ($q) use ($today, $currentTime) {
@@ -118,7 +119,7 @@ class CourseService
                     'id' => $row->id,
                     'type' => $row->type,
                     'title' => $row->title,
-                    'employee_status' => $row->employee_status,
+                    'employee_status' => $row->employeeStatus->pluck('title')->join(', '),
                     'slug' => $row->slug,
                     'quota' => $row->quota,
                     'thumbnail' => $row->thumbnail_src,
@@ -356,18 +357,20 @@ class CourseService
 
     public function checkEmployeeStatusCourse($userId, $course)
     {
-        // Ambil status pegawai user (misalnya: CPNS, PNS, THL, PPPK)
         $employeeStatus = get_user_meta($userId, 'status_pegawai');
 
         if (!$employeeStatus) {
             return false;
         }
 
-        // Ambil semua status pegawai yang diizinkan untuk course ini
-        // Misalnya: ['PNS', 'PPPK']
         $allowedStatuses = $course->employeeStatus->pluck('title')->toArray();
 
-        // Cek apakah status user termasuk dalam daftar
+        // ponytail: fallback — if no statuses configured, allow all.
+        // Old employee_status column was dropped without data migration to pivot table.
+        if (empty($allowedStatuses)) {
+            return true;
+        }
+
         return in_array($employeeStatus, $allowedStatuses);
     }
 }

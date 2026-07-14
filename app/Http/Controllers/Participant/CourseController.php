@@ -67,7 +67,7 @@ class CourseController
                     'id'               => $course->id,
                     'type'             => $course->type,
                     'title'            => $course->title,
-                    'employee_status'  => $course->employee_status,
+                    'employee_status'  => $course->employeeStatus->pluck('title')->join(', '),
                     'short_description'=> $course->short_description,
                     'description'      => $course->description,
                     'teaser_video'     => $course->teaser_video,
