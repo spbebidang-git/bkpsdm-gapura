@@ -21,6 +21,7 @@ class ParticipantController
         if (request()->ajax()) {
             return DataTables::of($this->user->getParticipant())
                 ->addIndexColumn()
+                ->addColumn('nip', fn($user) => $user->nip)
                 ->rawColumns(['action'])
                 ->make();
         }
