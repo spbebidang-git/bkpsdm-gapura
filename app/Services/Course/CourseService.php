@@ -102,16 +102,16 @@ class CourseService
                 $q->where('type', '!=', 'schedule')
                     // ATAU yang punya jadwal aktif/mendatang
                     ->orWhereHas('schedules', function ($query) use ($today, $currentTime) {
-                    $query->where(function ($sub) use ($today, $currentTime) {
-                        // Kondisi 1: Jadwal di hari-hari mendatang (Besok dan seterusnya)
-                        $sub->where('date', '>', $today)
-                            // Kondisi 2: Jadwal hari ini, tapi waktunya belum berakhir (masih berlangsung atau akan datang)
-                            ->orWhere(function ($dayQuery) use ($today, $currentTime) {
-                            $dayQuery->whereDate('date', $today)
-                                ->whereTime('time_to', '>=', $currentTime);
+                        $query->where(function ($sub) use ($today, $currentTime) {
+                            // Kondisi 1: Jadwal di hari-hari mendatang (Besok dan seterusnya)
+                            $sub->where('date', '>', $today)
+                                // Kondisi 2: Jadwal hari ini, tapi waktunya belum berakhir (masih berlangsung atau akan datang)
+                                ->orWhere(function ($dayQuery) use ($today, $currentTime) {
+                                    $dayQuery->whereDate('date', $today)
+                                        ->whereTime('time_to', '>=', $currentTime);
+                                });
                         });
                     });
-                });
             })
             ->get()
             ->map(function ($row) {
@@ -119,7 +119,7 @@ class CourseService
                     'id' => $row->id,
                     'type' => $row->type,
                     'title' => $row->title,
-                    'employee_status' => $row->employeeStatus->pluck('title')->join(', '),
+                    'employee_status' => $row->employeeStatus->pluck('title')->map(fn($t) => trim($t))->join(', '),
                     'slug' => $row->slug,
                     'quota' => $row->quota,
                     'thumbnail' => $row->thumbnail_src,
@@ -285,10 +285,13 @@ class CourseService
         // dd($schedules);
         if ($schedules) {
             $keepIds = [];
+            $existingIds = $course->schedules()->pluck('id')->toArray();
             foreach ($schedules as $item) {
-                // Pastikan ID ada dan valid, jika tidak maka buat baru
+                // Only use id from frontend if it matches existing DB record.
+                // Frontend generates temp ids (Date.now()) for new schedules — those must not leak into DB.
+                $dbId = (isset($item['id']) && in_array($item['id'], $existingIds)) ? $item['id'] : null;
                 $schedule = Schedule::updateOrCreate(
-                    ['id' => isset($item['id']) && is_numeric($item['id']) ? $item['id'] : null],
+                    ['id' => $dbId],
                     [
                         'course_id' => $course->id,
                         'date' => $item['date'],
@@ -358,7 +361,6 @@ class CourseService
     public function checkEmployeeStatusCourse($userId, $course)
     {
         $employeeStatus = get_user_meta($userId, 'status_pegawai');
-
         // ponytail: if user has no status_pegawai meta (SSO sync missed),
         // allow activation. Course restriction is defense-in-depth, not auth.
         if (!$employeeStatus) {
@@ -366,13 +368,13 @@ class CourseService
         }
 
         $allowedStatuses = $course->employeeStatus->pluck('title')->toArray();
-
+        // dd($employeeStatus, $allowedStatuses);
         // No restrictions configured — allow all.
         if (empty($allowedStatuses)) {
             return true;
         }
 
-        // Case-insensitive — SSO returns "Pns", DB stores "PNS"
-        return in_array(strtoupper(trim($employeeStatus)), array_map('strtoupper', $allowedStatuses));
+        // Case-insensitive + trim — SSO returns " Pns ", DB stores "PNS"
+        return in_array(strtoupper(trim($employeeStatus)), array_map(fn($s) => strtoupper(trim($s)), $allowedStatuses));
     }
 }

@@ -43,11 +43,11 @@ class UserService
         }
 
         if (array_key_exists('status_pegawai', $data) && filled($data['status_pegawai'])) {
-            update_user_meta($participantId, 'status_pegawai', $data['status_pegawai']);
+            update_user_meta($participantId, 'status_pegawai', strtoupper(trim($data['status_pegawai'])));
         } elseif (array_key_exists('fv_status_pegawai', $data) && filled($data['fv_status_pegawai'])) {
-            update_user_meta($participantId, 'status_pegawai', $data['fv_status_pegawai']);
+            update_user_meta($participantId, 'status_pegawai', strtoupper(trim($data['fv_status_pegawai'])));
         } elseif (array_key_exists('fc_status_pegawai', $data) && filled($data['fc_status_pegawai'])) {
-            update_user_meta($participantId, 'status_pegawai', $data['fc_status_pegawai']);
+            update_user_meta($participantId, 'status_pegawai', strtoupper(trim($data['fc_status_pegawai'])));
         }
 
         // Bersihkan data meta lama yang sudah tidak dibutuhkan

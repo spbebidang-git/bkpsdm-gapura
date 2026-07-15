@@ -36,7 +36,7 @@ class CourseResource extends JsonResource
                 'name' => $this->instructor->name,
             ]),
             'employee_status' => $this->whenLoaded('employeeStatus', fn() =>
-                $this->employeeStatus->pluck('title')
+                $this->employeeStatus->pluck('title')->map(fn($t) => trim($t))
             ),
             'schedules' => $this->whenLoaded('schedules', fn() =>
                 $this->schedules->map(fn($s) => [
