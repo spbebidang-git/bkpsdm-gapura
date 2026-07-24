@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Imports\LearnBulkImport;
+use App\Jobs\ImportLearnJob;
 use App\Models\Course\Course;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Cache;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ImportLearnController
@@ -16,6 +16,12 @@ class ImportLearnController
             ->where('status', 'publish')
             ->orderBy('title')
             ->get(['id', 'title']);
+
+        // Hasil job async (jika sudah selesai)
+        if ($cached = Cache::pull('import_learn:' . auth()->id())) {
+            session()->flash('import_results', $cached['results']);
+            session()->flash('import_course', $cached['course']);
+        }
 
         return view('admin.import-learn.index', compact('courses'));
     }
@@ -36,21 +42,16 @@ class ImportLearnController
         ]);
 
         try {
-            $import = new LearnBulkImport(
+            $path = $request->file('file')->store('imports');
+
+            ImportLearnJob::dispatch(
+                $path,
                 $request->course_id,
-                $request->finished_at
+                $request->finished_at,
+                auth()->id()
             );
 
-            Excel::import($import, $request->file('file'));
-
-            $results = $import->getResults();
-
-            $course = Course::find($request->course_id);
-
-            return back()->with([
-                'import_results' => $results,
-                'import_course' => $course->title,
-            ]);
+            return back()->with('success', 'Import masuk antrian. Refresh halaman ini beberapa saat untuk melihat hasil.');
         } catch (\Throwable $th) {
             return back()->with('danger', 'Terjadi kesalahan: ' . $th->getMessage());
         }
@@ -58,7 +59,6 @@ class ImportLearnController
 
     public function downloadTemplate()
     {
-        // Generate a simple XLSX template using PhpSpreadsheet (via maatwebsite/excel)
         return Excel::download(new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
             public function array(): array
             {

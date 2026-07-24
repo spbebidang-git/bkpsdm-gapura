@@ -162,7 +162,7 @@
                     <div class="alert alert-warning small mb-0">
                         <i class="bx bx-error-circle me-1"></i>
                         <strong>Perhatian:</strong> Pastikan data NIP sudah benar sebelum import.
-                        Download template untuk melihat format yang benar.
+                        Import diproses di background — refresh halaman untuk melihat hasil.
                     </div>
                 </div>
             </div>

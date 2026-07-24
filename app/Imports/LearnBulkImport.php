@@ -3,9 +3,9 @@
 namespace App\Imports;
 
 use App\Models\Course\Activity;
+use App\Models\Course\Schedule;
 use App\Models\Learn\Learn;
 use App\Models\Learn\LearnItem;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -40,25 +40,49 @@ class LearnBulkImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
             return;
         }
 
+        $finishedAt = Carbon::parse($this->finishedAt);
+        $firstSchedule = Schedule::where('course_id', $this->courseId)->first();
+
+        // Batch lookup NIP → user_id
+        $nips = $rows->map(fn ($row) => trim((string) ($row['nip'] ?? '')))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $nipToUserId = $nips->isEmpty()
+            ? collect()
+            : DB::table('user_meta')
+                ->where('key', 'nip')
+                ->whereIn('value', $nips->all())
+                ->pluck('user_id', 'value');
+
+        $userIds = $nipToUserId->values()->unique()->filter()->all();
+
+        $existingLearns = empty($userIds)
+            ? collect()
+            : Learn::where('course_id', $this->courseId)
+                ->whereIn('participant_id', $userIds)
+                ->get()
+                ->keyBy('participant_id');
+
+        $users = empty($userIds)
+            ? collect()
+            : DB::table('users')->whereIn('id', $userIds)->get(['id', 'email'])->keyBy('id');
+
         foreach ($rows as $index => $row) {
-            $rowNumber = $index + 2; // +2 karena heading row + 0-indexed
+            $rowNumber = $index + 2;
 
             try {
-                // Cari user berdasarkan NIP
-                $nip = trim($row['nip'] ?? '');
+                $nip = trim((string) ($row['nip'] ?? ''));
 
-                if (empty($nip)) {
+                if ($nip === '') {
                     $this->results['failed']++;
                     $this->results['errors'][] = "Baris {$rowNumber}: NIP kosong.";
                     continue;
                 }
 
-                $userId = DB::table('user_meta')
-                    ->where('key', 'nip')
-                    ->where('value', $nip)
-                    ->value('user_id');
-
-                $user = $userId ? User::find($userId) : null;
+                $userId = $nipToUserId[$nip] ?? null;
+                $user = $userId ? $users->get($userId) : null;
 
                 if (!$user) {
                     $this->results['failed']++;
@@ -66,10 +90,7 @@ class LearnBulkImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                     continue;
                 }
 
-                // Cek apakah sudah ada learn yang sudah finished
-                $existingLearn = Learn::where('participant_id', $user->id)
-                    ->where('course_id', $this->courseId)
-                    ->first();
+                $existingLearn = $existingLearns->get($user->id);
 
                 if ($existingLearn && $existingLearn->finished_at) {
                     $this->results['skipped']++;
@@ -79,24 +100,20 @@ class LearnBulkImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
 
                 DB::beginTransaction();
 
-                // Buat atau gunakan learn yang sudah ada
                 $learn = $existingLearn ?? Learn::create([
                     'participant_id' => $user->id,
                     'course_id' => $this->courseId,
                 ]);
 
-                // Set finished_at
-                $learn->finished_at = Carbon::parse($this->finishedAt);
+                $learn->finished_at = $finishedAt;
                 $learn->save();
 
-                // Aktivasi kelas: masukkan ke schedule_user (ambil jadwal pertama dari course ini)
-                $firstSchedule = \App\Models\Course\Schedule::where('course_id', $this->courseId)->first();
+                $existingLearns->put($user->id, $learn);
+
                 if ($firstSchedule) {
-                    // Gunakan attach/syncWithoutDetaching agar tidak error kalau sudah ada
                     $firstSchedule->participants()->syncWithoutDetaching([$user->id]);
                 }
 
-                // Buat learn_items untuk setiap activity
                 foreach ($activities as $activity) {
                     LearnItem::updateOrCreate(
                         [
