@@ -134,28 +134,47 @@ class CertificateController
                 $params['--course'] = $courseId;
             }
 
+            // Push 1000+ peserta bisa lama (fallback per-NIP)
+            set_time_limit(0);
+
             $exitCode = Artisan::call('app:post-certificate-command', $params);
             $output   = trim(Artisan::output());
 
+            // Blok debug ringkas (copy-paste)
+            $debug = null;
+            if (preg_match('/=== POST_CERT_DEBUG_START ===.*=== POST_CERT_DEBUG_END ===/s', $output, $m)) {
+                $debug = trim($m[0]);
+            }
+
             $finalMessage = 'Periksa log server untuk detail.';
-            if (preg_match('/(Berhasil:\s*\d+,\s*Gagal:\s*\d+)/', $output, $matches)) {
-                $finalMessage = $matches[1];
+            if (preg_match('/Push selesai\.\s*(Berhasil:\s*\d+,\s*Gagal:\s*\d+.*)$/m', $output, $matches)) {
+                $finalMessage = trim($matches[1]);
+            } elseif (preg_match('/(Berhasil:\s*\d+,\s*Gagal:\s*\d+.*)/', $output, $matches)) {
+                $finalMessage = trim($matches[1]);
             } elseif (str_contains($output, 'Tidak ada data yang perlu di-push')) {
                 $finalMessage = 'Tidak ada data yang perlu di-push.';
-            } else if ($output) {
-                // If it's short enough we can just show it, otherwise fallback
-                $finalMessage = strlen($output) < 100 ? $output : $finalMessage;
+            } elseif (str_contains($output, 'Gagal mengambil token')) {
+                foreach (explode("\n", $output) as $line) {
+                    if (str_contains($line, 'Gagal mengambil token')) {
+                        $finalMessage = trim($line);
+                        break;
+                    }
+                }
+            } elseif ($output && strlen($output) < 300) {
+                $finalMessage = $output;
             }
 
-            if ($exitCode !== 0) {
-                return response()->json([
-                    'message' => 'Sync Push selesai dengan error. ' . $finalMessage,
-                ], 422);
+            // Kalau ada error sample di debug, tempel singkat ke message
+            if ($debug && preg_match('/error\[0\]:\s*(.+)$/m', $debug, $em)) {
+                $finalMessage .= ' | ' . trim($em[1]);
             }
 
-            return response()->json([
-                'message' => 'Sync Push berhasil. ' . $finalMessage,
-            ], 200);
+            $payload = [
+                'message' => ($exitCode !== 0 ? 'Sync Push selesai dengan error. ' : 'Sync Push berhasil. ') . $finalMessage,
+                'debug' => $debug,
+            ];
+
+            return response()->json($payload, $exitCode !== 0 ? 422 : 200);
         } catch (\Throwable $e) {
             return response()->json(['message' => 'Sync Push gagal: ' . $e->getMessage()], 500);
         }

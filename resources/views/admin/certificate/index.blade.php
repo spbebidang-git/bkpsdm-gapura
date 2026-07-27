@@ -211,26 +211,30 @@
 
                     const data = await response.json();
 
+                    const swalOpts = (icon, title, msg) => {
+                        const opts = {
+                            icon,
+                            title,
+                            confirmButtonText: 'Tutup',
+                            customClass: { confirmButton: 'btn btn-primary' },
+                            width: data.debug ? '640px' : undefined,
+                        };
+                        if (data.debug) {
+                            opts.html = '<p class="text-start mb-2">' + (msg || '') + '</p>'
+                                + '<p class="text-start small text-muted mb-1">Copy blok di bawah, kirim ke dev:</p>'
+                                + '<textarea readonly rows="14" class="form-control form-control-sm font-monospace" '
+                                + 'style="font-size:11px" onclick="this.select()">'
+                                + data.debug.replace(/</g, '&lt;') + '</textarea>';
+                        } else {
+                            opts.text = msg;
+                        }
+                        return opts;
+                    };
+
                     if (response.ok) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil',
-                            text: data.message || label + ' berhasil.',
-                            confirmButtonText: 'Tutup',
-                            customClass: {
-                                confirmButton: 'btn btn-primary'
-                            }
-                        });
+                        Swal.fire(swalOpts('success', 'Berhasil', data.message || label + ' berhasil.'));
                     } else {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Peringatan',
-                            text: data.message || label + ' selesai dengan error.',
-                            confirmButtonText: 'Tutup',
-                            customClass: {
-                                confirmButton: 'btn btn-primary'
-                            }
-                        });
+                        Swal.fire(swalOpts('warning', 'Peringatan', data.message || label + ' selesai dengan error.'));
                     }
 
                     table.ajax.reload(null, false);

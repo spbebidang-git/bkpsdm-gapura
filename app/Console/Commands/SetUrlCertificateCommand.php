@@ -72,7 +72,11 @@ class SetUrlCertificateCommand extends Command
             # Filter dan kelompokkan data
             $groupedData = [];
             foreach ($dataKelas as $kelas) {
-                $key = $kelas['nama_kegiatan'] . '|' . $kelas['tgl_mulai'] . '|' . $kelas['tgl_selesai'];
+                if (!is_array($kelas) || empty($kelas['nama_kegiatan'])) {
+                    continue;
+                }
+
+                $key = $kelas['nama_kegiatan'] . '|' . ($kelas['tgl_mulai'] ?? '') . '|' . ($kelas['tgl_selesai'] ?? '');
 
                 if (!isset($groupedData[$key])) {
                     $groupedData[$key] = [
@@ -81,12 +85,16 @@ class SetUrlCertificateCommand extends Command
                     ];
                 }
 
+                if (empty($kelas['peserta']) || !is_array($kelas['peserta'])) {
+                    continue;
+                }
+
                 foreach ($kelas['peserta'] as $peserta) {
-                    $sertifikat = $peserta['sertifikat'];
+                    $sertifikat = $peserta['sertifikat'] ?? '';
                     if (strpos($sertifikat, 'http') !== false && $sertifikat !== '-') {
                         $groupedData[$key]['peserta'][] = [
-                            'nip'         => $peserta['nip'],
-                            'sertifikat'  => $sertifikat,
+                            'nip'        => $peserta['nip'] ?? '',
+                            'sertifikat' => $sertifikat,
                         ];
                     }
                 }
@@ -113,24 +121,36 @@ class SetUrlCertificateCommand extends Command
             $dispatched = 0;
             foreach ($filteredData as $kelas) {
                 foreach ($kelas['peserta'] as $peserta) {
-                    $learns->each(function ($learn) use ($kelas, $peserta, &$dispatched) {
+                    $ssoNip = normalize_nip($peserta['nip'] ?? null);
+                    if (!$ssoNip) {
+                        continue;
+                    }
+
+                    $learns->each(function ($learn) use ($kelas, $peserta, $ssoNip, &$dispatched) {
+                        // learn orphan / course terhapus → course null
+                        if (!$learn->course) {
+                            return;
+                        }
+
+                        $localNip = normalize_nip(get_user_meta($learn->participant_id, 'nip'));
                         if (
                             $kelas['nama_kegiatan'] === $learn->course->title &&
-                            get_user_meta($learn->participant_id, 'nip') === $peserta['nip']
+                            $localNip &&
+                            $localNip === $ssoNip
                         ) {
                             if (app()->isLocal()) {
-                                Log::debug('[SetUrlCertificate] Match ditemukan, dispatch job.', [
-                                    'course'     => $learn->course->title,
+                                Log::debug('[SetUrlCertificate] Match ditemukan, update URL.', [
+                                    'course'      => $learn->course->title,
                                     'participant' => $learn->participant_id,
-                                    'nip'        => $peserta['nip'],
-                                    'url'        => $peserta['sertifikat'],
+                                    'nip'         => $ssoNip,
+                                    'url'         => $peserta['sertifikat'],
                                 ]);
                             }
 
                             Learn::where('course_id', $learn->course->id)
                                 ->where('participant_id', $learn->participant_id)
                                 ->update([
-                                    'url_certificate'    => $peserta['sertifikat'],
+                                    'url_certificate'     => $peserta['sertifikat'],
                                     'is_post_certificate' => 1,
                                 ]);
 

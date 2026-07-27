@@ -33,6 +33,30 @@ if (!function_exists('get_user_meta')) {
     }
 }
 
+/**
+ * Bersihkan NIP untuk payload SSO: digit only, unicode lookalike → ASCII.
+ * Panjang bebas (min 1) — format NIP bervariasi, jangan hardcode 9/16/18.
+ */
+if (!function_exists('normalize_nip')) {
+    function normalize_nip($nip): ?string
+    {
+        if ($nip === false || $nip === null || $nip === '') {
+            return null;
+        }
+
+        $s = trim((string) $nip);
+        $s = strtr($s, [
+            '⁰' => '0', '¹' => '1', '²' => '2', '³' => '3', '⁴' => '4',
+            '⁵' => '5', '⁶' => '6', '⁷' => '7', '⁸' => '8', '⁹' => '9',
+            '₀' => '0', '₁' => '1', '₂' => '2', '₃' => '3', '₄' => '4',
+            '₅' => '5', '₆' => '6', '₇' => '7', '₈' => '8', '₉' => '9',
+        ]);
+        $s = preg_replace('/\D+/', '', $s) ?? '';
+
+        return $s !== '' ? $s : null;
+    }
+}
+
 if (!function_exists('find_user_by_nip')) {
     function find_user_by_nip($nip)
     {

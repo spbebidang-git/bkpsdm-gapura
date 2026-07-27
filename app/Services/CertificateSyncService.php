@@ -90,16 +90,18 @@ class CertificateSyncService
             return ['updated' => 0, 'message' => 'Tidak ada data sertifikat dari SSO.'];
         }
 
-        // OPTIMASI: Buat Map data dari SSO untuk lookup cepat O(1)
         // Key: "Nama Kegiatan|NIP" => Value: "URL Sertifikat"
         $ssoMap = [];
         foreach ($dataKelas as $kelas) {
-            $courseName = trim($kelas['nama_kegiatan']);
+            $courseName = trim($kelas['nama_kegiatan'] ?? '');
+            if ($courseName === '' || empty($kelas['peserta']) || !is_array($kelas['peserta'])) {
+                continue;
+            }
             foreach ($kelas['peserta'] as $peserta) {
-                $nip = trim($peserta['nip']);
-                $url = trim($peserta['sertifikat']);
+                $nip = normalize_nip($peserta['nip'] ?? null);
+                $url = trim($peserta['sertifikat'] ?? '');
 
-                if (strpos($url, 'http') !== false && $url !== '-') {
+                if ($nip && strpos($url, 'http') !== false && $url !== '-') {
                     $ssoMap[$courseName . '|' . $nip] = $url;
                 }
             }
@@ -124,12 +126,15 @@ class CertificateSyncService
 
         $updated = 0;
         foreach ($learns as $learn) {
-            $courseTitle = trim($learn->course?->title);
-            if (!$courseTitle) continue;
+            $courseTitle = trim($learn->course?->title ?? '');
+            if ($courseTitle === '') {
+                continue;
+            }
 
-            // Dapatkan NIP untuk pencocokan
-            $userNip = get_user_meta($learn->participant_id, 'nip');
-            if (!$userNip) continue;
+            $userNip = normalize_nip(get_user_meta($learn->participant_id, 'nip'));
+            if (!$userNip) {
+                continue;
+            }
 
             $lookupKey = $courseTitle . '|' . $userNip;
 
