@@ -22,15 +22,19 @@
                                 <i class="bx bx-check-circle me-1"></i>Hasil Import — {{ Session::get('import_course') }}
                             </h6>
                             <div class="row text-center">
-                                <div class="col-4">
+                                <div class="col-3">
                                     <span class="d-block fs-4 fw-bold text-success">{{ $results['success'] }}</span>
                                     <small class="text-muted">Berhasil</small>
                                 </div>
-                                <div class="col-4">
+                                <div class="col-3">
+                                    <span class="d-block fs-4 fw-bold text-primary">{{ $results['created_users'] ?? 0 }}</span>
+                                    <small class="text-muted">User baru</small>
+                                </div>
+                                <div class="col-3">
                                     <span class="d-block fs-4 fw-bold text-warning">{{ $results['skipped'] }}</span>
                                     <small class="text-muted">Dilewati</small>
                                 </div>
-                                <div class="col-4">
+                                <div class="col-3">
                                     <span class="d-block fs-4 fw-bold text-danger">{{ $results['failed'] }}</span>
                                     <small class="text-muted">Gagal</small>
                                 </div>
@@ -101,7 +105,21 @@
                             @error('file')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                            <div class="form-text">Format: .xlsx, .xls, .csv — Maksimal 5MB</div>
+                            <div class="form-text">Format: .xlsx, .xls, .csv — kolom <code>nip</code>, <code>nama</code> — Maksimal 5MB</div>
+                        </div>
+
+                        {{-- Auto-create stub users --}}
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" name="create_missing_users" id="create_missing_users"
+                                class="form-check-input" value="1"
+                                {{ old('create_missing_users') ? 'checked' : '' }}>
+                            <label class="form-check-label" for="create_missing_users">
+                                Buat user jika NIP belum ada
+                            </label>
+                            <div class="form-text text-warning">
+                                User stub (password random, email dari nama). Data lengkap update saat login SSO.
+                                NIP salah = user sampah di DB.
+                            </div>
                         </div>
 
                         <hr>
@@ -138,11 +156,13 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th>nip</th>
+                                        <th>nama</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
                                         <td>123456789012345678</td>
+                                        <td>Budi Santoso</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -152,10 +172,11 @@
                     <div class="mb-3">
                         <strong>Apa yang terjadi:</strong>
                         <ul class="small text-muted mb-0">
-                            <li>Sistem mencari peserta berdasarkan <strong>NIP</strong></li>
+                            <li>Sistem mencari peserta berdasarkan <strong>NIP</strong> (<code>nip_hash</code>)</li>
                             <li>Membuat record <code>learns</code> dan semua <code>learn_items</code> untuk kursus yang dipilih</li>
                             <li>Semua activity ditandai sebagai <strong>done</strong></li>
                             <li>Peserta yang sudah menyelesaikan kursus akan <strong>di-skip</strong></li>
+                            <li>Checkbox on: NIP belum ada → buat user stub Participant</li>
                         </ul>
                     </div>
 

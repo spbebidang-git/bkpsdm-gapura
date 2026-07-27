@@ -32,6 +32,7 @@ class ImportLearnController
             'course_id' => 'required|exists:courses,id',
             'finished_at' => 'required|date',
             'file' => 'required|file|max:5120',
+            'create_missing_users' => 'nullable|boolean',
         ], [
             'course_id.required' => 'Pilih kursus terlebih dahulu.',
             'course_id.exists' => 'Kursus tidak ditemukan.',
@@ -48,7 +49,8 @@ class ImportLearnController
                 $path,
                 $request->course_id,
                 $request->finished_at,
-                auth()->id()
+                auth()->id(),
+                $request->boolean('create_missing_users')
             );
 
             return back()->with('success', 'Import masuk antrian. Refresh halaman ini beberapa saat untuk melihat hasil.');
@@ -63,14 +65,14 @@ class ImportLearnController
             public function array(): array
             {
                 return [
-                    ['123456789012345678'],
-                    ['987654321098765432'],
+                    ['123456789012345678', 'Budi Santoso'],
+                    ['987654321098765432', 'Siti Aminah'],
                 ];
             }
 
             public function headings(): array
             {
-                return ['nip'];
+                return ['nip', 'nama'];
             }
         }, 'template_import_learn.xlsx');
     }

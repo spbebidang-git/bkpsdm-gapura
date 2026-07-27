@@ -27,11 +27,12 @@ class ImportLearnJob implements ShouldQueue
         protected int|string $courseId,
         protected string $finishedAt,
         protected int|string $adminId,
+        protected bool $createMissingUsers = false,
     ) {}
 
     public function handle(): void
     {
-        $import = new LearnBulkImport($this->courseId, $this->finishedAt);
+        $import = new LearnBulkImport($this->courseId, $this->finishedAt, $this->createMissingUsers);
 
         Excel::import($import, Storage::path($this->filePath));
 
@@ -65,6 +66,7 @@ class ImportLearnJob implements ShouldQueue
                 'success' => 0,
                 'skipped' => 0,
                 'failed' => 0,
+                'created_users' => 0,
                 'errors' => ['Import gagal: ' . ($e?->getMessage() ?? 'unknown')],
             ],
             'course' => (string) $this->courseId,
