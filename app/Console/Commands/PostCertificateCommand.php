@@ -6,7 +6,6 @@ use Carbon\Carbon;
 use App\Models\Learn\Learn;
 use App\Services\TokenService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 
@@ -14,7 +13,10 @@ class PostCertificateCommand extends Command
 {
     protected $signature = 'app:post-certificate-command {--course= : Filter by specific course ID} {--learn= : Filter by specific learn ID}';
 
-    protected $description = 'Mengirim data sertifikat peserta dari pelatihan yang selesai hari ini.';
+    protected $description = 'Mengirim data sertifikat peserta dari pelatihan yang selesai ke SSO (chunk per batch).';
+
+    /** Max NIP per request ke SSO — hindari 500 body/timeout. */
+    protected int $chunkSize = 50;
 
     protected TokenService $tokenService;
 
@@ -30,8 +32,6 @@ class PostCertificateCommand extends Command
             $this->info('[PostCertificate] Token berhasil diambil.');
             Log::info('[PostCertificate] Token berhasil diambil.');
 
-            // Ambil semua Learn yang belum di-push, lalu group berdasarkan course_id
-            // agar setiap course hanya dikirim SATU KALI ke SSO
             $query = Learn::with('course.category')
                 ->where('is_post_certificate', 0);
 
@@ -39,7 +39,7 @@ class PostCertificateCommand extends Command
             $learnId  = $this->option('learn');
 
             if ($learnId) {
-                // If filtering by learnId, ignore the is_post_certificate check to allow forced re-push
+                // Force re-push 1 learn: abaikan flag
                 $query = Learn::with('course.category')
                     ->where('id', $learnId);
                 $this->info('[PostCertificate] Filter aktif: learn_id = ' . $learnId);
@@ -59,92 +59,113 @@ class PostCertificateCommand extends Command
                 return Command::SUCCESS;
             }
 
-            // Group by course_id supaya 1 course = 1 request ke SSO
             $groupedByCourse = $allLearns->groupBy('course_id');
 
-            $this->info('[PostCertificate] Jumlah course unik: ' . $groupedByCourse->count());
-            Log::info('[PostCertificate] Jumlah course unik: ' . $groupedByCourse->count());
+            $this->info('[PostCertificate] Jumlah course unik: ' . $groupedByCourse->count() . ' | chunk size: ' . $this->chunkSize);
+            Log::info('[PostCertificate] Jumlah course unik: ' . $groupedByCourse->count(), [
+                'chunk_size' => $this->chunkSize,
+            ]);
 
             $successCount = 0;
             $failCount = 0;
+            $pushedParticipants = 0;
 
-            foreach ($groupedByCourse as $courseId => $learnRecords) {
-                // Ambil salah satu record sebagai representasi course (semua punya relasi course yang sama)
+            foreach ($groupedByCourse as $courseIdKey => $learnRecords) {
                 $courseItem = $learnRecords->first();
 
                 if (!$courseItem->course) {
                     $failCount++;
-                    $this->error("Course ID {$courseId} tidak ditemukan di tabel courses, skip.");
-                    Log::error("[PostCertificate] Course ID {$courseId} tidak ditemukan.");
+                    $this->error("Course ID {$courseIdKey} tidak ditemukan di tabel courses, skip.");
+                    Log::error("[PostCertificate] Course ID {$courseIdKey} tidak ditemukan.");
                     continue;
                 }
 
-                try {
-                    DB::beginTransaction();
+                // learn_id + nip; 1 peserta 1 baris (unique participant)
+                $entries = [];
+                $seenParticipants = [];
 
-                    // Kumpulkan NIP dari semua peserta unik di course ini
-                    $participantIds = $learnRecords->pluck('participant_id')->unique();
-                    $listNip = [];
-                    foreach ($participantIds as $participantId) {
-                        $nip = get_user_meta($participantId, 'nip');
-                        if ($nip) {
-                            $listNip[] = $nip;
-                        } else {
-                            $this->warn("Peserta ID {$participantId} tidak punya NIP, dilewati.");
-                            Log::warning("[PostCertificate] Peserta ID {$participantId} tidak punya NIP.");
-                        }
-                    }
-
-                    if (empty($listNip)) {
-                        DB::rollBack();
-                        $failCount++;
-                        $this->error('Course "' . $courseItem->course->title . '" tidak punya peserta dengan NIP valid.');
-                        Log::error('[PostCertificate] Course "' . $courseItem->course->title . '" tidak punya peserta dengan NIP.');
+                foreach ($learnRecords as $learn) {
+                    if (isset($seenParticipants[$learn->participant_id])) {
                         continue;
                     }
 
-                    $response = $this->ssoPostSertifikat($courseItem, $listNip, $token);
+                    $nip = get_user_meta($learn->participant_id, 'nip');
+                    if (!$nip) {
+                        $this->warn("Peserta ID {$learn->participant_id} tidak punya NIP, dilewati.");
+                        Log::warning("[PostCertificate] Peserta ID {$learn->participant_id} tidak punya NIP.");
+                        continue;
+                    }
 
-                    if (!$response->successful()) {
-                        DB::rollBack();
+                    $seenParticipants[$learn->participant_id] = true;
+                    $entries[] = [
+                        'learn_id' => $learn->id,
+                        'participant_id' => $learn->participant_id,
+                        'nip' => $nip,
+                    ];
+                }
+
+                if (empty($entries)) {
+                    $failCount++;
+                    $this->error('Course "' . $courseItem->course->title . '" tidak punya peserta dengan NIP valid.');
+                    Log::error('[PostCertificate] Course "' . $courseItem->course->title . '" tidak punya peserta dengan NIP.');
+                    continue;
+                }
+
+                $chunks = array_chunk($entries, $this->chunkSize);
+                $totalChunks = count($chunks);
+
+                $this->info('[PostCertificate] Course "' . $courseItem->course->title . '": ' . count($entries) . ' peserta → ' . $totalChunks . ' batch.');
+
+                foreach ($chunks as $batchIndex => $chunk) {
+                    $batchNo = $batchIndex + 1;
+                    $listNip = array_column($chunk, 'nip');
+                    $learnIds = array_column($chunk, 'learn_id');
+
+                    try {
+                        $response = $this->ssoPostSertifikat($courseItem, $listNip, $token);
+
+                        if (!$response->successful()) {
+                            $failCount++;
+                            $errorMsg = "Gagal push batch {$batchNo}/{$totalChunks} course \"{$courseItem->course->title}\" | HTTP {$response->status()} | Response: {$response->body()}";
+                            Log::error('[PostCertificate] ' . $errorMsg, [
+                                'course_id' => $courseIdKey,
+                                'batch' => $batchNo,
+                                'peserta' => $listNip,
+                            ]);
+                            $this->error($errorMsg);
+                            // batch gagal: flag tetap 0 → sync ulang ambil sisa
+                            sleep(2);
+                            continue;
+                        }
+
+                        // Hanya learn di batch ini
+                        Learn::whereIn('id', $learnIds)
+                            ->update(['is_post_certificate' => 1]);
+
+                        $successCount++;
+                        $pushedParticipants += count($listNip);
+
+                        $successMsg = "Berhasil push batch {$batchNo}/{$totalChunks} course \"{$courseItem->course->title}\" (" . count($listNip) . ' peserta) | HTTP ' . $response->status();
+                        Log::info('[PostCertificate] ' . $successMsg, [
+                            'course_id' => $courseIdKey,
+                            'learn_ids' => $learnIds,
+                        ]);
+                        $this->info($successMsg);
+
+                        sleep(2);
+                    } catch (\Throwable $th) {
                         $failCount++;
-
-                        $errorMsg = 'Gagal push course: "' . ($courseItem->course->title ?? $courseId) . '" | HTTP ' . $response->status() . ' | Response: ' . $response->body();
+                        $errorMsg = "Exception batch {$batchNo}/{$totalChunks} course {$courseIdKey} (\"{$courseItem->course->title}\"): " . $th->getMessage();
                         Log::error('[PostCertificate] ' . $errorMsg, [
-                            'course_id' => $courseId,
-                            'peserta' => $listNip
+                            'trace' => $th->getTraceAsString(),
                         ]);
                         $this->error($errorMsg);
-                        continue;
+                        sleep(2);
                     }
-
-                    // Update semua Learn record untuk course ini
-                    Learn::where('course_id', $courseId)
-                        ->where('is_post_certificate', 0)
-                        ->update(['is_post_certificate' => 1]);
-
-                    DB::commit();
-                    $successCount++;
-
-                    $successMsg = 'Berhasil push course: "' . ($courseItem->course->title ?? $courseId) . '" (' . count($listNip) . ' peserta) | HTTP ' . $response->status();
-                    Log::info('[PostCertificate] ' . $successMsg, ['course_id' => $courseId]);
-                    $this->info($successMsg);
-
-                    // Jeda antar request agar tidak membanjiri SSO server
-                    sleep(2);
-                } catch (\Throwable $th) {
-                    DB::rollBack();
-                    $failCount++;
-
-                    $errorMsg = 'Exception pada course ' . $courseId . ' ("' . ($courseItem->course->title ?? '') . '"): ' . $th->getMessage();
-                    Log::error('[PostCertificate] ' . $errorMsg, [
-                        'trace' => $th->getTraceAsString()
-                    ]);
-                    $this->error($errorMsg);
                 }
             }
 
-            $this->info("Push selesai. Berhasil: {$successCount}, Gagal: {$failCount}");
+            $this->info("Push selesai. Berhasil: {$successCount}, Gagal: {$failCount}, Peserta terkirim: {$pushedParticipants}");
             return $failCount > 0 ? Command::FAILURE : Command::SUCCESS;
         } catch (\Throwable $th) {
             Log::error('Exception utama PostCertificate:', ['message' => $th->getMessage()]);
@@ -179,16 +200,14 @@ class PostCertificateCommand extends Command
             Log::info('--- SIMULASI PUSH LOKAL (Tidak dkirim ke SSO pihak ke 3) ---', [
                 'nama_kegiatan' => $courseItem->course->title,
                 'peserta' => implode(',', $listNip),
-                'payload' => $payload
+                'payload' => $payload,
             ]);
 
-            // Fake request seolah-olah sukses 200 OK
             Http::fake([
-                config('services.sso.base_url') . '/api/post_sertifikat' => Http::response(['message' => 'Simulasi sukses di local'], 200)
+                config('services.sso.base_url') . '/api/post_sertifikat' => Http::response(['message' => 'Simulasi sukses di local'], 200),
             ]);
         }
 
-        // Request pertama TANPA retry — supaya response 401 bisa ditangani manual
         $response = Http::withHeaders([
             'apikey' => config('services.sso.api_key'),
             'Authorization' => $token,
@@ -205,7 +224,6 @@ class PostCertificateCommand extends Command
             'payload' => $payload,
         ]);
 
-        // Jika 401 (token stale di server), force refresh dan coba sekali lagi
         if ($response->status() === 401) {
             Log::warning('[PostCertificate] Token 401 — melakukan force refresh dan retry.', [
                 'course' => $courseItem->course->title,
@@ -213,15 +231,14 @@ class PostCertificateCommand extends Command
 
             $token = $this->tokenService->forceRefresh();
 
-            // Retry dengan token baru + retry untuk antisipasi 5xx
             $response = Http::retry(3, 2000, function ($exception) {
                 return $exception instanceof \Illuminate\Http\Client\ConnectionException
                     || ($exception instanceof \Illuminate\Http\Client\RequestException && $exception->response->serverError());
             }, throw: false)
                 ->withHeaders([
-                    'apikey' => env('API_KEY'),
+                    'apikey' => config('services.sso.api_key'),
                     'Authorization' => $token,
-                ])->acceptJson()->asForm()->post(env('SSO_BASE_URL') . '/api/post_sertifikat', $payload);
+                ])->acceptJson()->asForm()->post(config('services.sso.base_url') . '/api/post_sertifikat', $payload);
 
             Log::info('[PostCertificate] SSO retry setelah force refresh.', [
                 'http_status' => $response->status(),
