@@ -31,7 +31,8 @@ class StatisticController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Statistik keseluruhan berhasil diambil.',
-            'data' => [
+            // dibungkus array biar konsisten sama API categories (meski data tunggal)
+            'data' => [[
                 'custom_unique_id' => Str::random(4),
                 'data_date' => now()->format('Y-m-d H:i:s'),
                 'total_courses' => $totalCourses,
@@ -41,7 +42,7 @@ class StatisticController extends Controller
                 'total_completed' => $totalCompleted,
                 'completion_rate' => $completionRate . '%',
                 'average_rating' => round($avgRating, 2),
-            ],
+            ]],
         ]);
     }
 
