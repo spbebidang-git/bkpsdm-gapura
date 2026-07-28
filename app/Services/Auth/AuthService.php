@@ -109,6 +109,7 @@ class AuthService
 
                     if ($existingUser) {
                         $existingUser->update(['password' => Hash::make($request->password)]);
+                        $this->user->storeUserMeta($existingUser->id, $participantData, $request->username);
                         Auth::login($existingUser);
                     } else {
                         $user = User::create([
@@ -139,7 +140,8 @@ class AuthService
 
     protected function syncUserMeta($userId, $username, $password): bool
     {
-        if (get_user_meta($userId, 'status_pegawai')) {
+        // Skip SSO re-fetch only when both metas already present
+        if (get_user_meta($userId, 'status_pegawai') && get_user_meta($userId, 'nama_jabatan')) {
             return true;
         }
 

@@ -50,9 +50,13 @@ class UserService
             update_user_meta($participantId, 'status_pegawai', strtoupper(trim($data['fc_status_pegawai'])));
         }
 
-        // Bersihkan data meta lama yang sudah tidak dibutuhkan
-        // Hanya pertahankan nip, status_pegawai, nip_hash, dan key numerik (variant)
-        $protectedKeys = ['nip', 'status_pegawai', 'nip_hash'];
+        $jabatan = $data['nama_jabatan'] ?? $data['fv_nama_jabatan'] ?? $data['fc_nama_jabatan'] ?? null;
+        if (filled($jabatan)) {
+            update_user_meta($participantId, 'nama_jabatan', trim($jabatan));
+        }
+
+        // Bersihkan meta lama; pertahankan key penting + key numerik (variant soal)
+        $protectedKeys = ['nip', 'status_pegawai', 'nama_jabatan', 'nip_hash'];
 
         $existingMetas = \App\Models\Management\UserMeta::where('user_id', $participantId)->get();
 
