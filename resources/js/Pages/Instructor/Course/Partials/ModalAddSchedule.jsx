@@ -23,28 +23,18 @@ const ModalAddSchedule = ({ isOpen, onClose, onScheduleAdded }) => {
     }
 
     const handleSubmitModal = (e) => {
-        e.preventDefault(); // Mencegah reload halaman
+        e.preventDefault();
 
-        // Ambil data yang sudah ada dari localStorage
-        const existingData = JSON.parse(localStorage.getItem('scheduleData')) || [];
-
-        // Tambahkan data baru
-        const newSchedule = {
+        // id = temp key UI only; server ignores non-DB ids on save
+        onScheduleAdded({
             id: Date.now(),
             date: values.date,
             time_from: values.time_from,
             time_to: values.time_to,
             quota: values.quota,
-        };
+        });
 
-        // Simpan data baru ke array
-        existingData.push(newSchedule);
-
-        // Simpan kembali ke localStorage
-        localStorage.setItem('scheduleData', JSON.stringify(existingData));
-
-        onScheduleAdded(newSchedule);
-        // // Misalkan ingin menutup modal setelah submit
+        setValues({ date: "", time_from: "", time_to: "", quota: "" });
         onClose();
     };
 

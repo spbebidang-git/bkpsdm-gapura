@@ -285,25 +285,44 @@ class CourseService
         // dd($schedules);
         if ($schedules) {
             $keepIds = [];
-            $existingIds = $course->schedules()->pluck('id')->toArray();
+            $existingIds = $course->schedules()->pluck('id')->map(fn ($id) => (int) $id)->all();
+
             foreach ($schedules as $item) {
-                // Only use id from frontend if it matches existing DB record.
-                // Frontend generates temp ids (Date.now()) for new schedules — those must not leak into DB.
-                $dbId = (isset($item['id']) && in_array($item['id'], $existingIds)) ? $item['id'] : null;
-                $schedule = Schedule::updateOrCreate(
-                    ['id' => $dbId],
-                    [
-                        'course_id' => $course->id,
-                        'date' => $item['date'],
-                        'time_from' => $item['time_from'],
-                        'time_to' => $item['time_to'],
-                        'quota' => $item['quota'],
-                    ]
-                );
+                $normTime = function ($value) {
+                    if ($value === null || $value === '') {
+                        return null;
+                    }
+                    try {
+                        return \Carbon\Carbon::parse($value)->format('H:i');
+                    } catch (\Throwable $e) {
+                        return $value;
+                    }
+                };
+
+                $payload = [
+                    'course_id' => $course->id,
+                    'date' => !empty($item['date']) ? \Carbon\Carbon::parse($item['date'])->format('Y-m-d') : null,
+                    'time_from' => $normTime($item['time_from'] ?? null),
+                    'time_to' => $normTime($item['time_to'] ?? null),
+                    'quota' => $item['quota'] ?? null,
+                ];
+
+                // Only update real DB rows — never insert frontend Date.now() ids as PK
+                $dbId = isset($item['id']) && in_array((int) $item['id'], $existingIds, true)
+                    ? (int) $item['id']
+                    : null;
+
+                if ($dbId) {
+                    $schedule = Schedule::where('id', $dbId)->where('course_id', $course->id)->first();
+                    $schedule->update($payload);
+                } else {
+                    $schedule = Schedule::create($payload);
+                }
+
                 $keepIds[] = $schedule->id;
             }
 
-            // Hapus jadwal yang tidak ada dalam daftar kiriman terbaru
+            // Soft-delete jadwal yang tidak ada di kiriman terbaru
             $course->schedules()->whereNotIn('id', $keepIds)->delete();
 
             return true;

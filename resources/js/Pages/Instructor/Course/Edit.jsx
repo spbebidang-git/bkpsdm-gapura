@@ -10,9 +10,10 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import ModalAddSchedule from "./Partials/ModalAddSchedule";
 
-const Edit = ({ course, categories, employee_status, selected_employee_status }) => {
+const Edit = ({ course, categories, employee_status, selected_employee_status, schedules = [] }) => {
     const [type, setType] = useState(course.type === "schedule" ? 1 : 0);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [data, setData] = useState(schedules);
     const { errors } = usePage().props;
 
     const toggleModal = () => setIsModalOpen(!isModalOpen);
@@ -89,20 +90,13 @@ const Edit = ({ course, categories, employee_status, selected_employee_status })
         formData.append("jam_pelajaran", values.jam_pelajaran);
         formData.append("status", values.status);
 
-        // Selalu kirim jadwal dari state `data` (bukan hanya dari localStorage)
-        // Ini mencegah jadwal dianggap kosong saat user tidak mengubah jadwal
+        // Selalu kirim jadwal dari state — localStorage dulu bisa nempel jadwal course lain
         if (values.type === "schedule" && data.length > 0) {
             formData.append("schedules", JSON.stringify(data));
         }
 
-        router.post(`/instructor/course/${course.slug}`, formData, {
-            onSuccess: () => {
-                localStorage.removeItem("scheduleData");
-            },
-        });
+        router.post(`/instructor/course/${course.slug}`, formData);
     };
-
-    const [data, setData] = useState([]);
 
     useEffect(() => {
         if (errors.schedules) {
@@ -111,28 +105,14 @@ const Edit = ({ course, categories, employee_status, selected_employee_status })
                 autoClose: 3000,
             });
         }
-
-        const localData = localStorage.getItem("scheduleData");
-
-        if (localData) {
-            setData(JSON.parse(localData));
-        } else if (course.schedules) {
-            setData(course.schedules);
-        }
     }, [errors]);
 
     const handleScheduleAdded = (newSchedule) => {
-        setData((prev) => {
-            const updated = [...prev, newSchedule];
-            localStorage.setItem("scheduleData", JSON.stringify(updated));
-            return updated;
-        });
+        setData((prev) => [...prev, newSchedule]);
     };
 
     const handleDeleteSchedule = (id) => {
-        const updated = data.filter((item) => item.id !== id);
-        setData(updated);
-        localStorage.setItem("scheduleData", JSON.stringify(updated));
+        setData((prev) => prev.filter((item) => item.id !== id));
     };
 
     const isTypeLocked = Boolean(course.type);

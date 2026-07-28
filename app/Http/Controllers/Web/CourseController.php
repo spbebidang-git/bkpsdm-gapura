@@ -53,8 +53,13 @@ class CourseController extends Controller
             ],
             'schedules' => $course->schedules
                 ->filter(function ($row) {
-                    $now  = \Carbon\Carbon::now();
-                    $date = \Carbon\Carbon::parse($row->getRawOriginal('date'));
+                    $dateRaw = $row->getRawOriginal('date');
+                    if (!$dateRaw) {
+                        return true; // unschedule
+                    }
+
+                    $now  = now();
+                    $date = \Carbon\Carbon::parse($dateRaw)->startOfDay();
 
                     // Tanggal sudah lewat → sembunyikan
                     if ($date->isPast() && !$date->isToday()) {
@@ -62,32 +67,42 @@ class CourseController extends Controller
                     }
 
                     // Tanggal hari ini tapi jam selesai sudah lewat → sembunyikan
-                    if ($date->isToday() && $row->time_to) {
-                        // Gunakan parse() agar mendukung format H:i maupun H:i:s
-                        $timeTo = \Carbon\Carbon::parse($row->time_to);
+                    $timeToRaw = $row->getRawOriginal('time_to');
+                    if ($date->isToday() && $timeToRaw) {
+                        $timeTo = \Carbon\Carbon::parse($dateRaw . ' ' . $timeToRaw);
                         return $timeTo->greaterThan($now);
                     }
 
                     return true;
                 })
                 ->map(function ($row) {
-                    $now     = \Carbon\Carbon::now();
-                    $date    = \Carbon\Carbon::parse($row->getRawOriginal('date'))->startOfDay();
-                    $timeFrom = $row->time_from ? \Carbon\Carbon::parse($row->time_from) : null;
+                    $dateRaw     = $row->getRawOriginal('date');
+                    $timeFromRaw = $row->getRawOriginal('time_from');
+                    $timeToRaw   = $row->getRawOriginal('time_to');
+                    $now         = now();
 
-                    // Kelas bisa dimasuki jika: tanggal hari ini DAN jam sudah mulai (atau unschedule)
-                    $canEnter = !$date->isFuture() // bukan hari depan
-                        && (!$timeFrom || $timeFrom->lessThanOrEqualTo($now));
+                    $date  = $dateRaw ? \Carbon\Carbon::parse($dateRaw)->startOfDay() : null;
+                    // Combine date+time so can_enter does not inherit "today" from a time-only cast
+                    $start = ($dateRaw && $timeFromRaw)
+                        ? \Carbon\Carbon::parse($dateRaw . ' ' . $timeFromRaw)
+                        : null;
+
+                    $canEnter = $date
+                        && !$date->isFuture()
+                        && (!$start || $start->lessThanOrEqualTo($now));
+
+                    $timeFromLabel = $timeFromRaw ? \Carbon\Carbon::parse($timeFromRaw)->format('H:i') : null;
+                    $timeToLabel   = $timeToRaw ? \Carbon\Carbon::parse($timeToRaw)->format('H:i') : null;
 
                     return [
                         'id'          => $row->id,
-                        'date'        => $row->date,
-                        'date_raw'    => $row->getRawOriginal('date'),
-                        'time'        => $row->time,
-                        'time_from'   => $row->time_from,
+                        'date'        => $dateRaw ? \Carbon\Carbon::parse($dateRaw)->format('Y-m-d') : $row->date,
+                        'date_raw'    => $dateRaw,
+                        'time'        => ($timeFromLabel && $timeToLabel) ? "{$timeFromLabel}-{$timeToLabel}" : $row->time,
+                        'time_from'   => $timeFromLabel,
                         'quota'       => $row->quota,
-                        'can_enter'   => $canEnter,
-                        'start_label' => $timeFrom ? $timeFrom->format('H:i') : null,
+                        'can_enter'   => (bool) $canEnter,
+                        'start_label' => $timeFromLabel,
                         'is_active'   => $row->participants()->where('participant_id', $this->participantId)->count() == 1 ? 1 : 0,
                     ];
                 })

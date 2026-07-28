@@ -91,19 +91,11 @@ const Create = ({ categories, employee_status }) => {
         formData.append("jam_pelajaran", values.jam_pelajaran);
         formData.append("status", values.status);
 
-        const localData = localStorage.getItem("scheduleData");
-        if (values.type === "schedule" && localData) {
-            formData.append("schedules", localData);
+        if (values.type === "schedule" && data.length > 0) {
+            formData.append("schedules", JSON.stringify(data));
         }
 
-        router.post(`/instructor/course`, formData, {
-            onSuccess: () => {
-                const localData = localStorage.getItem("scheduleData");
-                if (localData) {
-                    localStorage.removeItem("scheduleData");
-                }
-            },
-        });
+        router.post(`/instructor/course`, formData);
     };
 
     const [data, setData] = useState([]);
@@ -120,25 +112,14 @@ const Create = ({ categories, employee_status }) => {
                 theme: "colored",
             });
         }
-
-        const localData = localStorage.getItem("scheduleData");
-        if (localData) {
-            setData(JSON.parse(localData));
-        }
     }, [errors]);
 
     const handleScheduleAdded = (newSchedule) => {
-        setData((prevData) => {
-            const updatedData = [...prevData, newSchedule];
-            localStorage.setItem("scheduleData", JSON.stringify(updatedData));
-            return updatedData;
-        });
+        setData((prev) => [...prev, newSchedule]);
     };
 
     const handleDeleteSchedule = (id) => {
-        const updatedData = data.filter((item) => item.id !== id);
-        setData(updatedData);
-        localStorage.setItem("scheduleData", JSON.stringify(updatedData));
+        setData((prev) => prev.filter((item) => item.id !== id));
     };
 
     return (

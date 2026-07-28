@@ -110,12 +110,15 @@ class CourseController
             'course' => $course,
             'employee_status' => Course::EMPLOYEE_STATUS,
             'schedules' => $course->load('schedules')->schedules->map(function ($row) {
+                $timeFrom = $row->getRawOriginal('time_from');
+                $timeTo = $row->getRawOriginal('time_to');
+
                 return [
                     'id' => $row->id,
-                    'date' => $row->date,
-                    'time_from' => $row->time_from,
-                    'time_to' => $row->time_to,
-                    'quota' => $row->quota,
+                    'date' => $row->getRawOriginal('date'),
+                    'time_from' => $timeFrom ? \Carbon\Carbon::parse($timeFrom)->format('H:i') : null,
+                    'time_to' => $timeTo ? \Carbon\Carbon::parse($timeTo)->format('H:i') : null,
+                    'quota' => $row->getRawOriginal('quota'),
                 ];
             }),
             'categories' => Category::all(),

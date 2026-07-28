@@ -3,6 +3,7 @@ import StarRating from "@/Components/StarRating";
 import { getBrowserSupportStatus, getUnsupportedBrowserMessage } from "@/Utils/browserSupport";
 import { Link, router, usePage } from "@inertiajs/react";
 import axios from "axios";
+import DOMPurify from "dompurify";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import App from "../../Layouts/App";
@@ -301,9 +302,10 @@ const Show = ({ course, schedules, reviews = [], rating }) => {
                         </div>
                         <h2 className="text-2xl font-bold text-gray-900">Tentang Kelas Ini</h2>
                     </div>
-                    <div className="text-gray-700 leading-relaxed text-lg bg-gray-50/50 p-6 rounded-2xl border border-gray-100 prose prose-teal max-w-none">
-                        {course.description}
-                    </div>
+                    <div
+                        className="text-gray-700 leading-relaxed text-lg bg-gray-50/50 p-6 rounded-2xl border border-gray-100 prose prose-teal max-w-none"
+                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(course.description || '') }}
+                    />
                 </div>
 
                 {/* 🔹 Section Ulasan Peserta */}
