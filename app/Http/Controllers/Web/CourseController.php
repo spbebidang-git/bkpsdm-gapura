@@ -87,9 +87,11 @@ class CourseController extends Controller
                         ? \Carbon\Carbon::parse($dateRaw . ' ' . $timeFromRaw)
                         : null;
 
-                    $canEnter = $date
-                        && !$date->isFuture()
-                        && (!$start || $start->lessThanOrEqualTo($now));
+                    $canEnter = !$date
+                        || (
+                            !$date->isFuture()
+                            && (!$start || $start->lessThanOrEqualTo($now))
+                        );
 
                     $timeFromLabel = $timeFromRaw ? \Carbon\Carbon::parse($timeFromRaw)->format('H:i') : null;
                     $timeToLabel   = $timeToRaw ? \Carbon\Carbon::parse($timeToRaw)->format('H:i') : null;
