@@ -22,6 +22,8 @@ class ParticipantController
             return DataTables::of($this->user->getParticipant())
                 ->addIndexColumn()
                 ->addColumn('nip', fn($user) => $user->nip)
+                ->addColumn('status_pegawai', fn($user) => $user->metas->firstWhere('key', 'status_pegawai')?->value ?? '-')
+                ->addColumn('jabatan', fn($user) => $user->metas->firstWhere('key', 'nama_jabatan')?->value ?? '-')
                 ->rawColumns(['action'])
                 ->make();
         }

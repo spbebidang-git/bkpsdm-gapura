@@ -17,6 +17,8 @@
                             <th class="text-center">NIP</th>
                             <th class="text-center">Nama</th>
                             <th class="text-center">Email</th>
+                            <th class="text-center">Status Pegawai</th>
+                            <th class="text-center">Jabatan</th>
                         </tr>
                     </thead>
                     <tbody class="table-border-bottom-0"></tbody>
@@ -60,6 +62,18 @@
                     {
                         data: 'email',
                         name: 'email'
+                    },
+                    {
+                        data: 'status_pegawai',
+                        name: 'status_pegawai',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'jabatan',
+                        name: 'jabatan',
+                        orderable: false,
+                        searchable: false
                     },
                 ],
                 language: {
