@@ -187,7 +187,6 @@ class CertificateController
 
             $payload = [
                 'message' => ($exitCode !== 0 ? 'Sync Push selesai dengan error. ' : 'Sync Push berhasil. ') . $finalMessage,
-                'debug' => $debug,
             ];
 
             return response()->json($payload, $exitCode !== 0 ? 422 : 200);

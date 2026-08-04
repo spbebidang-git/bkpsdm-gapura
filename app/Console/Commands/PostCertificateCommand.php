@@ -455,7 +455,7 @@ class PostCertificateCommand extends Command
         }
 
         $url = rtrim((string) config('services.sso.base_url'), '/') . '/api/post_sertifikat';
-        $profile = $this->workingProfile ?? 'legacy_auth';
+        $profile = $this->workingProfile ?? 'authorization_only';
         $payload = $this->buildPayload($courseItem, $listNip, $dates, $profile);
 
         $response = $this->httpPost($url, $payload, $token, $profile);
@@ -617,7 +617,7 @@ Throwable $th) {
         return ['fc_kduker' => 0, 'fc_kdsatker' => 0, 'fc_kdsubsatker' => 0];
     }
 
-    private function httpPost(string $url, array $payload, string $token, string $profile = 'legacy_auth')
+    private function httpPost(string $url, array $payload, string $token, string $profile = 'authorization_only')
     {
         $headers = [
             'apikey' => config('services.sso.api_key'),
@@ -667,6 +667,12 @@ Throwable $th) {
         }
 
         $text = strtolower(trim((string) ($json ?? $response->body())));
+
+        // Response HTML (bukan JSON API) → gagal
+        if (str_contains($text, '<!doctype') || str_contains($text, '<html')) {
+            return false;
+        }
+
         return !$this->looksLikeFailure($text);
     }
 

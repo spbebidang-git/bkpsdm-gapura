@@ -10,9 +10,6 @@
                 <button class="btn btn-warning btn-sm" id="btnSyncPush" title="Kirim data peserta ke SSO">
                     <i class="ti ti-upload me-1"></i>Sync Push
                 </button>
-                <button class="btn btn-danger btn-sm" id="btnRollback" title="Rollback (hapus push sertifikat)">
-                    <i class="ti ti-undo me-1"></i>Rollback
-                </button>
                 <button class="btn btn-info btn-sm text-white" id="btnSyncPull" title="Tarik/Cek semua URL sertifikat">
                     <i class="ti ti-download me-1"></i>Sync Pull
                 </button>
@@ -313,6 +310,7 @@
                     }
                 });
             });
+
 
             $('#btnSyncPull').on('click', function() {
                 const courseName = $('#filterCourse option:selected').text().trim();
