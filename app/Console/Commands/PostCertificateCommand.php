@@ -186,12 +186,15 @@ class PostCertificateCommand extends Command
                     try {
                         $response = $this->ssoPostSertifikat($courseItem, $listNip, $token, $dates);
 
-                        if ($response->successful()) {
+                        if ($this->isSsoSuccess($response)) {
                             Learn::whereIn('id', $learnIds)->update(['is_post_certificate' => 1]);
                             $pushedParticipants += count($listNip);
                             $this->info("Berhasil push batch {$batchNo}/{$totalChunks} (" . count($listNip) . ' peserta) | HTTP ' . $response->status());
                             usleep(300000);
                             continue;
+                        } else {
+                            $bodyMsg = $response->json() ?: $response->body();
+                            $this->warn("Batch HTTP {$response->status()} tapi body tidak confirm sukses: " . json_encode($bodyMsg));
                         }
 
                         // Batch gagal — isolasi: kirim 1 NIP per request biar 1 busuk tidak gagalkan 49 lainnya
@@ -221,7 +224,7 @@ class PostCertificateCommand extends Command
 
                             try {
                                 $solo = $this->ssoPostSertifikat($courseItem, [$entry['nip']], $token, $dates);
-                                if ($solo->successful()) {
+                                if ($this->isSsoSuccess($solo)) {
                                     Learn::where('id', $entry['learn_id'])->update(['is_post_certificate' => 1]);
                                     $pushedParticipants++;
                                     continue;
@@ -474,7 +477,7 @@ class PostCertificateCommand extends Command
         }
 
         // Auto-probe 1x per run: cari format yang SSO terima
-        if (!$response->successful() && !$this->probed && count($listNip) >= 1) {
+        if (!$this->isSsoSuccess($response) && !$this->probed && count($listNip) >= 1) {
             $this->probed = true;
             $won = $this->probeProfiles($courseItem, $listNip[0], $token, $dates, $url);
             if ($won !== null) {
@@ -529,7 +532,7 @@ class PostCertificateCommand extends Command
                 $results[] = $row;
                 Log::warning('[PostCertificate] PROBE', $row);
 
-                if ($res->successful()) {
+                if ($this->isSsoSuccess($res)) {
                     $this->debug['probe'] = $results;
                     $this->line('[PROBE] MENANG: ' . $profile . ' HTTP ' . $res->status());
                     return $profile;
@@ -566,10 +569,13 @@ class PostCertificateCommand extends Command
             $title = 'Gapura Pelatihan ' . ($courseItem->course->id ?? '');
         }
 
+        // Ambil data unit dari SSO (seperti kode lama)
+        $nipData = $this->getNipData($listNip[0] ?? '');
+
         return [
-            'fc_kduker' => 0,
-            'fc_kdsatker' => 0,
-            'fc_kdsubsatker' => 0,
+            'fc_kduker' => $nipData['fc_kduker'] ?? 0,
+            'fc_kdsatker' => $nipData['fc_kdsatker'] ?? 0,
+            'fc_kdsubsatker' => $nipData['fc_kdsubsatker'] ?? 0,
             'lama_diklat' => $courseItem->course->jam_pelajaran ?? 0,
             'jenis_waktu' => 'J',
             'kode_kegiatan' => $kode,
@@ -581,6 +587,34 @@ class PostCertificateCommand extends Command
             'tgl_selesai' => $dates['tgl_selesai'],
             'peserta' => implode(',', $listNip),
         ];
+    }
+
+    private function getNipData(string $nip): array
+    {
+        if (!$nip) return ['fc_kduker' => 0, 'fc_kdsatker' => 0, 'fc_kdsubsatker' => 0];
+
+        try {
+            $token = $this->tokenService->getToken();
+            $response = Http::withHeaders([
+                'apikey' => config('services.sso.api_key'),
+                'Authorization' => $token,
+            ])->acceptJson()->asForm()->post(rtrim((string) config('services.sso.base_url'), '/') . '/api/get_nip_data', [
+                'nip' => $nip,
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json() ?: [];
+                return [
+                    'fc_kduker' => $data['fc_kduker'] ?? 0,
+                    'fc_kdsatker' => $data['fc_kdsatker'] ?? 0,
+                    'fc_kdsubsatker' => $data['fc_kdsubsatker'] ?? 0,
+                ];
+            }
+        } catch (
+Throwable $th) {
+            Log::warning('[PostCertificate] Gagal ambil get_nip_data', ['nip' => $nip, 'error' => $th->getMessage()]);
+        }
+        return ['fc_kduker' => 0, 'fc_kdsatker' => 0, 'fc_kdsubsatker' => 0];
     }
 
     private function httpPost(string $url, array $payload, string $token, string $profile = 'legacy_auth')
@@ -606,5 +640,43 @@ class PostCertificateCommand extends Command
         }
 
         return $req->post($url, $payload);
+    }
+
+    /**
+     * Cek apakah SSO benar-benar terima data.
+     * HTTP 2xx = default sukses; gagal hanya kalau body eksplisit bilang error.
+     * (SSO lama sering 200 padahal tolak — tangkap keyword gagal.)
+     */
+    private function isSsoSuccess($response): bool
+    {
+        if (!$response->successful()) return false;
+
+        $json = $response->json();
+        if (is_array($json)) {
+            if (isset($json['success']) && !filter_var($json['success'], FILTER_VALIDATE_BOOLEAN)) return false;
+            if (isset($json['error']) && $this->looksLikeFailure($json['error'])) return false;
+            if (isset($json['status'])) {
+                $s = $json['status'];
+                if (is_numeric($s) && (int) $s >= 400) return false;
+                if ($this->looksLikeFailure($s)) return false;
+            }
+            foreach (['message', 'msg', 'pesan'] as $k) {
+                if (isset($json[$k]) && $this->looksLikeFailure($json[$k])) return false;
+            }
+            return true;
+        }
+
+        $text = strtolower(trim((string) ($json ?? $response->body())));
+        return !$this->looksLikeFailure($text);
+    }
+
+    private function looksLikeFailure($value): bool
+    {
+        $s = strtolower(trim((string) $value));
+        if ($s === '' || $s === '0' || $s === 'false' || $s === 'null') return false;
+        foreach (['gagal', 'failed', 'error', 'tidak', 'invalid', 'denied', 'reject', 'not found', 'exception'] as $word) {
+            if (str_contains($s, $word)) return true;
+        }
+        return false;
     }
 }

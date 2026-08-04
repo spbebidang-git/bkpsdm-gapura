@@ -93,7 +93,7 @@ class CertificateSyncService
         // Key: "Nama Kegiatan|NIP" => Value: "URL Sertifikat"
         $ssoMap = [];
         foreach ($dataKelas as $kelas) {
-            $courseName = trim($kelas['nama_kegiatan'] ?? '');
+            $courseName = $this->normalizeTitleForMatch($kelas['nama_kegiatan'] ?? '');
             if ($courseName === '' || empty($kelas['peserta']) || !is_array($kelas['peserta'])) {
                 continue;
             }
@@ -126,7 +126,7 @@ class CertificateSyncService
 
         $updated = 0;
         foreach ($learns as $learn) {
-            $courseTitle = trim($learn->course?->title ?? '');
+            $courseTitle = $this->normalizeTitleForMatch($learn->course?->title ?? '');
             if ($courseTitle === '') {
                 continue;
             }
@@ -158,5 +158,24 @@ class CertificateSyncService
             'updated' => $updated,
             'message' => "Pull selesai. {$updated} sertifikat berhasil disinkronisasi ulang.",
         ];
+    }
+
+    /**
+     * Samakan format judul dengan sisi push (PostCertificateCommand::sanitizeTitle)
+     * supaya key match pull == push. Case & spasi berlebih diabaikan.
+     */
+    private function normalizeTitleForMatch(?string $title): string
+    {
+        $s = trim((string) $title);
+        $s = strtr($s, [
+            "\u{201C}" => '"',
+            "\u{201D}" => '"',
+            "\u{2018}" => "'",
+            "\u{2019}" => "'",
+            "\u{2013}" => '-',
+            "\u{2014}" => '-',
+        ]);
+        $s = mb_strtolower($s);
+        return trim(preg_replace('/\s+/u', ' ', $s) ?? '');
     }
 }

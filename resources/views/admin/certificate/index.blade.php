@@ -10,6 +10,9 @@
                 <button class="btn btn-warning btn-sm" id="btnSyncPush" title="Kirim data peserta ke SSO">
                     <i class="ti ti-upload me-1"></i>Sync Push
                 </button>
+                <button class="btn btn-danger btn-sm" id="btnRollback" title="Rollback (hapus push sertifikat)">
+                    <i class="ti ti-undo me-1"></i>Rollback
+                </button>
                 <button class="btn btn-info btn-sm text-white" id="btnSyncPull" title="Tarik/Cek semua URL sertifikat">
                     <i class="ti ti-download me-1"></i>Sync Pull
                 </button>
@@ -279,6 +282,34 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         syncAction('{{ route('admin.certificate.sync-push') }}', '#btnSyncPush', 'Sync Push');
+                    }
+                });
+            });
+
+            // Rollback button
+            $('#btnRollback').on('click', function() {
+                const courseName = $('#filterCourse option:selected').text().trim();
+                const courseId = $('#filterCourse').val();
+
+                let confirmText = 'Rollback data sesuai filter yang aktif (semua sertifikat yang sudah dikirim ke SSO)?';
+                if (courseId) {
+                    confirmText = 'Rollback sertifikat untuk kelas "' + courseName + '" sesuai filter (semua yang sudah dikirim)?';
+                }
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Konfirmasi Rollback',
+                    text: confirmText,
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Rollback',
+                    cancelButtonText: 'Batal',
+                    customClass: {
+                        confirmButton: 'btn btn-danger me-2',
+                        cancelButton: 'btn btn-secondary'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        syncAction('{{ route('admin.certificate.sync-push') }}', '#btnRollback', 'Rollback', { rollback: 1 });
                     }
                 });
             });
