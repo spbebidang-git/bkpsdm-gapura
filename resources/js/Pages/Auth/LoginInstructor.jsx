@@ -23,7 +23,7 @@ const LoginParticipant = () => {
             const data = response.data;
             setCaptchaInput("");
             setData("captcha", "");
-            setCaptchaUrl(data.captcha);
+            setCaptchaUrl(data.img);
             console.log('oke')
         } catch (error) {
             console.error("Error fetching captcha:", error);

@@ -27,9 +27,6 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'sso_access_token',
-        'sso_refresh_token',
-        'sso_expires_at',
     ];
 
     /**
@@ -40,8 +37,6 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
-        'sso_access_token',
-        'sso_refresh_token',
     ];
 
     /**
@@ -91,11 +86,6 @@ class User extends Authenticatable
     public function isAdmin(): Attribute
     {
         return Attribute::get(fn() => $this->getRoleNames()->first() == 'Admin'  ? true : false);
-    }
-
-    public function isInstructor(): Attribute
-    {
-        return Attribute::get(fn() => $this->getRoleNames()->first() == 'Instructor' ? true : false);
     }
 
     public function isParticipant(): Attribute

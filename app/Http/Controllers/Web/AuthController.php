@@ -2,26 +2,21 @@
 
 namespace App\Http\Controllers\Web;
 
-use App\Models\Management\UserMeta;
 use App\Models\User;
 use App\Services\User\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
-use Mews\Captcha\Facades\Captcha;
 
 class AuthController
 {
-    protected $userService;
-
-    public function __construct(UserService $userService)
+    public function __construct(private readonly UserService $userService)
     {
-        $this->userService = $userService;
     }
 
     public function index()
@@ -29,27 +24,25 @@ class AuthController
         return Inertia::render('Auth/Login');
     }
 
-    public function captcha()
-    {
-        return response()->json(Captcha::create('default', true));
-    }
-
+    /**
+     * Admins authenticate with a locally managed account. Participants are
+     * authenticated by Prestige on every sign-in and can never log in locally.
+     */
     public function store(Request $request)
     {
         $rules = [
-            'username' => 'required|string',
-            'password' => 'required|string',
+            'username' => ['required', 'string', 'max:255'],
+            'password' => ['required', 'string', 'max:4096'],
             'captcha' => config('captcha.disable')
-                ? 'required|string'
-                : 'required|string|captcha_api:' . $request->input('captcha_key') . ',default',
+                ? ['required', 'string']
+                : ['required', 'string', 'captcha_api:' . $request->input('captcha_key') . ',default'],
         ];
 
-        if (!config('captcha.disable')) {
-            $rules['captcha_key'] = 'required|string';
+        if (! config('captcha.disable')) {
+            $rules['captcha_key'] = ['required', 'string'];
         }
 
         $validator = Validator::make($request->all(), $rules, [
-            'captcha.captcha' => 'The CAPTCHA is incorrect. Please try again.',
             'captcha.captcha_api' => 'The CAPTCHA is incorrect. Please try again.',
         ]);
 
@@ -57,316 +50,146 @@ class AuthController
             return to_route('sign-in.index')->withErrors($validator)->withInput();
         }
 
-        $input = trim($request->username);
+        $identity = trim((string) $request->input('username'));
 
-        // RULE 1 — Admin & Instructor (Login via Email)
-        if (filter_var($input, FILTER_VALIDATE_EMAIL)) {
-            return $this->loginAdminInstructor($request, $input);
+        if (filter_var($identity, FILTER_VALIDATE_EMAIL)) {
+            return $this->loginAdmin($request, Str::lower($identity));
         }
 
-        // RULE 2 — Participant (Login via NIP)
-        return $this->loginParticipant($request, $input);
+        return $this->loginParticipantWithPrestige($request, $identity);
     }
 
-    private function loginAdminInstructor(Request $request, $email)
+    private function loginAdmin(Request $request, string $email)
     {
         $user = User::where('email', $email)->first();
 
-        if (!$user || $user->hasRole('Participant')) {
-            return to_route('sign-in.index')->withErrors(['email_or_username' => 'Email atau password salah.']);
-        }
-
-        if (!Auth::attempt(['email' => $email, 'password' => $request->password])) {
-            return to_route('sign-in.index')->withErrors(['email_or_username' => 'Email atau password salah.']);
+        if (! $user || ! $user->hasRole('Admin') || $user->hasRole('Participant') || ! Auth::attempt([
+            'email' => $email,
+            'password' => $request->input('password'),
+        ])) {
+            return $this->invalidCredentialsResponse();
         }
 
         $request->session()->regenerate();
-        return $this->redirectByRole($user);
+
+        return Inertia::location(route('admin.dashboard'));
     }
 
-    private function loginParticipant(Request $request, $nip)
+    private function loginParticipantWithPrestige(Request $request, string $nip)
     {
-        $debug = [];
-        $debug['time'] = now()->toDateTimeString();
-        $debug['nip'] = $nip;
-        $debug['sso_config'] = [
-            'base_url' => config('services.sso.base_url'),
-            'api_key' => config('services.sso.api_key') ? 'SET' : 'EMPTY',
-            'client_id' => config('services.sso.client_id') ? 'SET' : 'EMPTY',
-            'client_secret' => config('services.sso.client_secret') ? 'SET' : 'EMPTY',
-        ];
-
-        $userMeta = find_user_by_nip($nip);
-        $debug['user_found'] = $userMeta ? "YES (user_id: {$userMeta->user_id})" : "NO";
-
-        if ($userMeta && $userMeta->user) {
-            $user = $userMeta->user;
-
-            if (!$user->hasRole('Participant')) {
-                return to_route('sign-in.index')->withErrors(['email_or_username' => 'NIP terdaftar dengan hak akses berbeda.']);
-            }
-
-            // 1. Coba login lokal Laravel
-            if (Auth::attempt(['email' => $user->email, 'password' => $request->password])) {
-
-                // SELALU SINKRONKAN DATA: Gunakan token SSO jika ada, atau password jika token gagal
-                $this->syncAndRefreshToken($nip, $request->password, $user);
-
-                $request->session()->regenerate();
-                return $this->redirectByRole($user);
-            }
-
-            // 2. Fallback SSO (Jika password lokal belum sinkron)
-            if ($this->attemptSSOAndSync($request, $nip, $user)) {
-                return $this->redirectByRole($user);
-            }
-
-            return to_route('sign-in.index')->withErrors(['email_or_username' => 'Kredensial salah atau SSO tidak merespon.']);
+        if (! preg_match('/^\d{3,32}$/', $nip)) {
+            return $this->invalidCredentialsResponse();
         }
-        // CASE 2 — User Baru (First-time provisioning)
-        if ($this->handleSSOFirstLogin($request, $nip)) {
+
+        try {
+            $tokenResponse = $this->requestPrestigeToken($nip, $request->input('password'));
+
+            if (! $tokenResponse->successful() || ! filled($tokenResponse->json('access_token'))) {
+                return $this->invalidCredentialsResponse();
+            }
+
+            $participantResponse = Http::timeout(5)
+                ->acceptJson()
+                ->withHeaders([
+                    'apikey' => config('services.sso.api_key'),
+                    'Authorization' => 'Bearer ' . $tokenResponse->json('access_token'),
+                ])
+                ->post(config('services.sso.base_url') . '/api/get_nip_data');
+
+            if (! $participantResponse->successful() || ! is_array($participantResponse->json())) {
+                return $this->invalidCredentialsResponse();
+            }
+
+            $participant = $this->provisionOrSyncParticipant($nip, $participantResponse->json());
+
+            if (! $participant) {
+                return $this->invalidCredentialsResponse();
+            }
+
+            Auth::login($participant);
+            $request->session()->regenerate();
+
             return to_route('home');
+        } catch (\Throwable $exception) {
+            // Never write passwords, OAuth responses, tokens, NIP, or PII to logs.
+            Log::warning('Prestige participant authentication failed.', [
+                'exception' => $exception::class,
+            ]);
+
+            return $this->invalidCredentialsResponse();
         }
+    }
 
-        $debug['final'] = 'ALL FAILED - handleSSOFirstLogin returned false';
-        file_put_contents(storage_path('logs/debug_login.json'), json_encode($debug, JSON_PRETTY_PRINT) . "\n", FILE_APPEND);
-
-        return to_route('sign-in.index')->withErrors(['email_or_username' => 'Gagal autentikasi SSO atau data NIP tidak ditemukan.']);
+    private function requestPrestigeToken(string $nip, string $password)
+    {
+        return Http::timeout(5)
+            ->acceptJson()
+            ->retry(2, 100)
+            ->withHeaders(['apikey' => config('services.sso.api_key')])
+            ->post(config('services.sso.base_url') . '/oauth/token', [
+                'username' => $nip,
+                'password' => $password,
+                'grant_type' => 'password',
+                'client_id' => config('services.sso.client_id'),
+                'client_secret' => config('services.sso.client_secret'),
+            ]);
     }
 
     /**
-     * Memperbarui data Meta dengan mengecek lifecycle Token SSO
+     * NIP is the immutable SSO identity. Email may change and must never be
+     * used to attach an SSO identity to an existing account.
      */
-    private function syncAndRefreshToken($nip, $password, User $user)
+    private function provisionOrSyncParticipant(string $nip, array $data): ?User
     {
-        try {
-            $accessToken = $user->sso_access_token;
-            $refreshToken = $user->sso_refresh_token;
-            $expiresAt = $user->sso_expires_at;
+        $userMeta = find_user_by_nip($nip);
 
-            // Jika token tidak ada atau sudah expired, coba refresh
-            if (!$accessToken || !$expiresAt || now()->greaterThanOrEqualTo($expiresAt)) {
-                if ($refreshToken) {
-                    $refreshed = $this->callSSORefreshToken($refreshToken);
-                    if ($refreshed->successful() && isset($refreshed['access_token'])) {
-                        Log::info("Refreshed token successfully for NIP {$nip}");
-                        $this->saveSSOTokens($user, $refreshed);
-                        $accessToken = $refreshed['access_token'];
-                    } else {
-                        Log::warning("Gagal refresh token untuk NIP {$nip}. Response: " . $refreshed->body());
-                        $accessToken = null; // Gagal refresh
-                    }
-                }
+        if ($userMeta?->user) {
+            $user = $userMeta->user;
 
-                // Jika refresh gagal (atau tidak ada refresh token), gunakan password grant
-                if (!$accessToken) {
-                    $response = $this->callSSOApi($nip, $password);
-                    if ($response->successful() && isset($response['access_token'])) {
-                        Log::info("Berhasil fetch token SSO baru dengan password untuk NIP {$nip}");
-                        $this->saveSSOTokens($user, $response);
-                        $accessToken = $response['access_token'];
-                    } else {
-                        Log::warning("Gagal fetch token baru untuk NIP {$nip}. Response: " . $response->body());
-                    }
-                }
+            if (! $user->hasRole('Participant') || $user->hasRole('Admin')) {
+                return null;
             }
 
-            // Jika berhasil mendapat access_token yang valid, ambil data NIP
-            if ($accessToken) {
-                $this->fetchAndSaveNipData($nip, $accessToken, $user);
-            }
-        } catch (\Exception $e) {
-            Log::error("Sync & Refresh Token Error NIP {$nip}: " . $e->getMessage());
-        }
-    }
-
-    private function fetchAndSaveNipData($nip, $accessToken, User $user)
-    {
-        $dataApi = Http::timeout(5)->withHeaders([
-            'apikey' => config('services.sso.api_key'),
-            'Authorization' => 'Bearer ' . $accessToken,
-            'Accept' => 'application/json'
-        ])->post(config('services.sso.base_url') . '/api/get_nip_data');
-
-        if ($dataApi->successful()) {
-            $data = $dataApi->json();
-
-            if (is_array($data)) {
-                $this->userService->storeUserMeta($user->id, $data, $nip);
-
-                // Update nama jika ada perubahan di data pusat
+            return DB::transaction(function () use ($user, $data, $nip) {
                 $user->update(['name' => $data['fv_nama'] ?? $user->name]);
-            } else {
-                Log::error("Fetch NIP Data Error NIP {$nip}: Response JSON is null or not an array.");
-            }
-        }
-    }
-
-    private function saveSSOTokens(User $user, $response)
-    {
-        try {
-            $user->update([
-                'sso_access_token' => $response['access_token'] ?? null,
-                'sso_refresh_token' => $response['refresh_token'] ?? null,
-                'sso_expires_at' => isset($response['expires_in']) ? now()->addSeconds($response['expires_in']) : null,
-            ]);
-            Log::info("Token tersimpan di database untuk user ID: {$user->id}");
-        } catch (\Exception $e) {
-            Log::error("Gagal save token ke database user ID {$user->id}: " . $e->getMessage());
-        }
-    }
-
-    private function callSSORefreshToken($refreshToken)
-    {
-        return Http::timeout(5)->retry(2, 100)->withHeaders([
-            'apikey' => config('services.sso.api_key')
-        ])->post(config('services.sso.base_url') . '/oauth/token', [
-            'grant_type'    => 'refresh_token',
-            'refresh_token' => $refreshToken,
-            'client_id'     => config('services.sso.client_id'),
-            'client_secret' => config('services.sso.client_secret'),
-        ]);
-    }
-
-    private function attemptSSOAndSync(Request $request, $nip, User $user)
-    {
-        try {
-            $response = $this->callSSOApi($nip, $request->password);
-            if ($response->successful() && isset($response['access_token'])) {
-                // Sinkron password lokal
-                $user->update(['password' => Hash::make($request->password)]);
-
-                // Simpan token baru
-                $this->saveSSOTokens($user, $response);
-
-                // Ambil & Update meta data terbaru
-                $this->fetchAndSaveNipData($nip, $response['access_token'], $user);
-
-                Auth::login($user);
-                $request->session()->regenerate();
-                return true;
-            }
-        } catch (\Exception $e) {
-            Log::error("SSO Login Error NIP {$nip}: " . $e->getMessage());
-        }
-        return false;
-    }
-
-    private function handleSSOFirstLogin(Request $request, $nip)
-    {
-        $debug = ['method' => 'handleSSOFirstLogin', 'nip' => $nip, 'time' => now()->toDateTimeString()];
-        try {
-            $response = $this->callSSOApi($nip, $request->password);
-            $debug['sso_token_status'] = $response->status();
-            $debug['sso_token_body'] = $response->json() ?? $response->body();
-            if (!$response->successful()) {
-                file_put_contents(storage_path('logs/debug_login.json'), json_encode($debug, JSON_PRETTY_PRINT) . "\n", FILE_APPEND);
-                return false;
-            }
-
-            $dataApi = Http::timeout(5)->withHeaders([
-                'apikey' => config('services.sso.api_key'),
-                'Authorization' => 'Bearer ' . $response['access_token'],
-                'Accept' => 'application/json'
-            ])->post(config('services.sso.base_url') . '/api/get_nip_data');
-
-            $debug['nip_data_status'] = $dataApi->status();
-            $debug['nip_data_body'] = $dataApi->json() ?? $dataApi->body();
-
-            if (!$dataApi->successful()) {
-                file_put_contents(storage_path('logs/debug_login.json'), json_encode($debug, JSON_PRETTY_PRINT) . "\n", FILE_APPEND);
-                return false;
-            }
-
-            $data = $dataApi->json();
-
-            if (!is_array($data)) {
-                Log::error("Provisioning gagal NIP {$nip}: Data dari SSO kosong atau bukan array.");
-                return false;
-            }
-
-            // Jika SSO tidak mengembalikan email, buat email dari NIP
-            $email = empty($data['fv_email']) ? "{$nip}@gresikkab.go.id" : $data['fv_email'];
-
-            // Cek jika email ternyata sudah ada di database (Skenario Recovery Meta Hilang/Corrupted)
-            $existingUser = User::where('email', $email)->first();
-            
-            if ($existingUser) {
-                Log::info("Provisioning Recovery: NIP {$nip} menghubungkan ulang ke email {$email} yang sudah ada.");
-                
-                return DB::transaction(function () use ($data, $request, $existingUser, $nip, $response) {
-                    $existingUser->update([
-                        'password' => Hash::make($request->password),
-                        'sso_access_token' => $response['access_token'] ?? null,
-                        'sso_refresh_token' => $response['refresh_token'] ?? null,
-                        'sso_expires_at' => isset($response['expires_in']) ? now()->addSeconds($response['expires_in']) : null,
-                    ]);
-                    
-                    $this->userService->storeUserMeta($existingUser->id, $data, $nip);
-                    
-                    if (!$existingUser->hasRole('Participant')) {
-                        $existingUser->assignRole('Participant');
-                    }
-
-                    Auth::login($existingUser);
-                    $request->session()->regenerate();
-                    return true;
-                });
-            }
-
-            return DB::transaction(function () use ($data, $request, $email, $nip, $response) {
-                $user = User::create([
-                    'name'     => $data['fv_nama'] ?? "User $email",
-                    'email'    => $email,
-                    'password' => Hash::make($request->password),
-                    'sso_access_token' => $response['access_token'] ?? null,
-                    'sso_refresh_token' => $response['refresh_token'] ?? null,
-                    'sso_expires_at' => isset($response['expires_in']) ? now()->addSeconds($response['expires_in']) : null,
-                ]);
-
                 $this->userService->storeUserMeta($user->id, $data, $nip);
-                $user->assignRole('Participant');
 
-                Auth::login($user);
-                $request->session()->regenerate();
-                return true;
+                return $user->fresh();
             });
-        } catch (\Exception $e) {
-            Log::error("Provisioning Error NIP {$nip}: " . $e->getMessage());
-            file_put_contents(storage_path('logs/debug_login.json'), json_encode([
-                'method' => 'handleSSOFirstLogin',
-                'exception' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ], JSON_PRETTY_PRINT) . "\n", FILE_APPEND);
-            return false;
         }
+
+        $email = trim((string) ($data['fv_email'] ?? ''));
+        if ($email === '') {
+            $email = $nip . '@prestige.invalid';
+        }
+
+        // Do not recover an account from an email match. Doing so could turn a
+        // Prestige participant into an Admin if two systems share an email.
+        if (User::where('email', $email)->exists()) {
+            return null;
+        }
+
+        return DB::transaction(function () use ($data, $nip, $email) {
+            $user = User::create([
+                'name' => $data['fv_nama'] ?? 'Peserta Prestige',
+                'email' => $email,
+                // Participants cannot authenticate locally. This random value
+                // only satisfies the local user schema.
+                'password' => Str::password(64),
+            ]);
+
+            $user->assignRole('Participant');
+            $this->userService->storeUserMeta($user->id, $data, $nip);
+
+            return $user;
+        });
     }
 
-    private function callSSOApi($nip, $password)
+    private function invalidCredentialsResponse()
     {
-        return Http::timeout(5)->retry(2, 100)->withHeaders([
-            'apikey' => config('services.sso.api_key')
-        ])->post(config('services.sso.base_url') . '/oauth/token', [
-            'username'      => $nip,
-            'password'      => $password,
-            'grant_type'    => 'password',
-            'client_id'     => config('services.sso.client_id'),
-            'client_secret' => config('services.sso.client_secret'),
+        return to_route('sign-in.index')->withErrors([
+            'email_or_username' => 'Kredensial tidak valid atau layanan Prestige sedang tidak tersedia.',
         ]);
-    }
-
-    private function redirectByRole($user)
-    {
-        if ($user->hasRole('Admin')) {
-            // Hard reload untuk Admin (Blade)
-            return Inertia::location(route('admin.dashboard'));
-        }
-
-        if ($user->hasRole('Instructor')) {
-            return to_route('instructor.dashboard');
-        }
-
-        return to_route('home');
     }
 
     public function logout(Request $request)
@@ -374,6 +197,7 @@ class AuthController
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return to_route('sign-in.index');
     }
 }

@@ -24,10 +24,6 @@ class IsAdminMiddleware
             return $next($request);
         }
 
-        if ($user && $user->hasRole('Instructor')) {
-            return to_route('instructor.dashboard');
-        }
-
         if ($user && $user->hasRole('Participant')) {
             return to_route('home');
         }

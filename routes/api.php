@@ -25,7 +25,7 @@ Route::prefix('v1')->name('api.v1.')->middleware([DisableApiCookies::class, 'thr
 
 Route::prefix('v1')
     ->name('api.v1.')
-    ->middleware([DisableApiCookies::class, 'auth:sanctum', 'throttle:60,1'])
+    ->middleware([DisableApiCookies::class, 'auth:sanctum', 'abilities:api:read', 'throttle:60,1'])
     ->group(function () {
 
         // Auth (perlu token)

@@ -18,25 +18,22 @@ class AuthController
     {
         $request->validate([
             'email' => 'required|string|email',
-            'password' => 'required|string',
-            'device_name' => 'nullable|string|max:255',
+            'password' => 'required|string|max:4096',
+            'device_name' => 'nullable|string|max:100',
         ]);
 
         $user = User::where('email', $request->email)->first();
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user || !$user->hasRole('Admin') || $user->hasRole('Participant') || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['Kredensial yang diberikan tidak valid.'],
             ]);
         }
 
-        if (!$user->hasRole('Admin')) {
-            throw ValidationException::withMessages([
-                'email' => ['Hanya akun dengan role Admin yang dapat mengakses API.'],
-            ]);
-        }
-
         $deviceName = $request->device_name ?? 'iop-client';
-        $token = $user->createToken($deviceName);
+        $expirationMinutes = max(1, (int) config('sanctum.expiration'));
+        $user->tokens()->where('name', $deviceName)->delete();
+        $expiresAt = now()->addMinutes($expirationMinutes);
+        $token = $user->createToken($deviceName, ['api:read'], $expiresAt);
 
         return response()->json([
             'message' => 'Login berhasil.',

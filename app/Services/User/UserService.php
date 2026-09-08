@@ -17,7 +17,7 @@ class UserService
     public function getInstructor()
     {
         return User::with("roles")->whereHas("roles", function ($q) {
-            $q->whereIn("name", ["Instructor"]);
+            $q->whereIn("name", ["Admin"]);
         })->orderBy('id')->get();
     }
 

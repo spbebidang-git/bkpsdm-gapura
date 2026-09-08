@@ -17,7 +17,7 @@ class DashboardController
         $totalCourses = Course::count();
         $totalParticipants = User::role('participant')->count();
         $totalFinished = Learn::whereNotNull('finished_at')->count();
-        $totalInstructors = User::role('instructor')->count();
+        $totalInstructors = User::role('admin')->count();
 
         // Cache popular courses selama 1 jam (3600 detik) untuk menghemat join ratusan ribu data
         $popularCourses = Cache::remember('admin.dashboard.popularCourses', 3600, function () {

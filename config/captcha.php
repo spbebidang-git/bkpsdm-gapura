@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'disable' => env('CAPTCHA_DISABLE', false),
+
     'characters' => [
         '2',
         '3',

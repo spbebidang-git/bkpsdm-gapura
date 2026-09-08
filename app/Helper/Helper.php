@@ -240,7 +240,7 @@ if (!function_exists('sanitize_html')) {
         if (empty($html)) {
             return $html;
         }
-        return \Mews\Purifier\Facades\Purifier::clean($html);
+        return (new \voku\helper\AntiXSS())->xss_clean($html);
     }
 }
 

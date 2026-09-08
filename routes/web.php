@@ -18,7 +18,7 @@ Route::middleware(HandleInertiaRequests::class)->group(function () {
     });
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // Mencegah instruktur & admin mengakses halaman publik lainnya
+    // Mencegah admin mengakses halaman publik lainnya.
     Route::middleware(BlockInstructorFromPublicRoutes::class)->group(function () {
         # Home Page (Tidak bisa diakses Admin dan Instructor)
         Route::get('/', \App\Http\Controllers\Web\HomeController::class)->name('home');
@@ -35,20 +35,17 @@ Route::middleware(HandleInertiaRequests::class)->group(function () {
         Route::get('/category', [\App\Http\Controllers\Web\CategoryController::class, 'index'])->name('category.index');
         Route::get('/category/{category}', [\App\Http\Controllers\Web\CategoryController::class, 'show'])->name('category.show');
         
-        Route::get('/dashboard', function () {
-            return Inertia::render('Dashboard');
-        })->middleware(['auth', 'verified'])->name('dashboard');
-        
         # Help Page
         Route::get('/help', [\App\Http\Controllers\Web\HelpController::class, 'index'])
             ->name('help.index');
     });
 
     # Captcha
-    Route::get('captcha-url', [\App\Http\Controllers\Web\CapthaController::class, 'captcha'])->name('captcha');
+    Route::get('captcha-url', [\App\Http\Controllers\Web\CapthaController::class, 'captcha'])
+        ->middleware('throttle:60,1')
+        ->name('captcha');
 
     Route::middleware('auth')->group(function () {
-        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     });
@@ -56,7 +53,6 @@ Route::middleware(HandleInertiaRequests::class)->group(function () {
     require __DIR__ . '/auth.php';
 
     require __DIR__ . '/participant.php';
-    require __DIR__ . '/instructor.php';
 });
 
 require __DIR__ . '/admin.php';

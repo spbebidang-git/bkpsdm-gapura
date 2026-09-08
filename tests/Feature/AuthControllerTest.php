@@ -3,12 +3,10 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
-use App\Models\Management\UserMeta;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\Request as ClientRequest;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Http;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -20,134 +18,136 @@ class AuthControllerTest extends TestCase
     {
         parent::setUp();
 
-        // 1. Setup Roles
         Role::create(['name' => 'Admin']);
-        Role::create(['name' => 'Instructor']);
         Role::create(['name' => 'Participant']);
 
-        // 2. Definisikan Route Dummy agar route() tidak error
-        Route::get('/', function () {
-            return 'home';
-        })->name('home');
-        Route::get('/admin/dashboard', function () {
-            return 'admin';
-        })->name('admin.dashboard');
-        Route::get('/instructor/dashboard', function () {
-            return 'instructor';
-        })->name('instructor.dashboard');
-        Route::get('/login', function () {
-            return 'login';
-        })->name('sign-in.index');
-
-        // Tambahkan ini untuk mencegah error "dashboard not defined" dari middleware Laravel
-        Route::get('/dashboard', function () {
-            return 'dashboard';
-        })->name('dashboard');
-
-        config(['services.sso.base_url' => 'https://sso.test']);
-        config(['captcha.disable' => true]);
-    }
-
-    private function postInertia($url, $data = [])
-    {
-        return $this->post($url, $data, [
-            'X-Inertia' => 'true',
-            'X-Requested-With' => 'XMLHttpRequest'
+        config([
+            'services.sso.base_url' => 'https://prestige.test',
+            'captcha.disable' => true,
         ]);
     }
 
-    public function test_admin_can_login_via_email_and_redirects_via_inertia_location()
+    public function test_admin_can_login_with_a_local_email_account(): void
     {
         $admin = User::factory()->create([
             'email' => 'admin@test.com',
-            'password' => Hash::make('password123')
+            'password' => Hash::make('password123'),
         ]);
         $admin->assignRole('Admin');
 
-        // Pastikan endpoint '/login' ini memanggil AuthController@store milik Anda
-        $response = $this->postInertia(route('sign-in.store'), [
+        $response = $this->post('/sign-in', [
             'username' => 'admin@test.com',
             'password' => 'password123',
             'captcha' => 'test-captcha',
+        ], [
+            'X-Inertia' => 'true',
+            'X-Requested-With' => 'XMLHttpRequest',
         ]);
 
         $response->assertStatus(409);
         $response->assertHeader('X-Inertia-Location', route('admin.dashboard'));
+        $this->assertAuthenticatedAs($admin);
     }
 
-    public function test_participant_can_login_locally_using_nip()
+    public function test_participant_must_authenticate_with_prestige_even_when_a_local_password_matches(): void
     {
-        $user = User::factory()->create(['email' => 'peserta@test.com']);
-        $user->assignRole('Participant');
+        $participant = User::factory()->create([
+            'email' => 'peserta@test.com',
+            'password' => Hash::make('password'),
+        ]);
+        $participant->assignRole('Participant');
+        update_user_meta($participant->id, 'nip', '12345');
 
-        update_user_meta($user->id, 'nip', '12345');
-        UserMeta::create(['user_id' => $user->id, 'key' => 'status_pegawai', 'value' => 'PNS']);
+        Http::fake([
+            '*/oauth/token' => Http::response([], 401),
+        ]);
 
-        $response = $this->post(route('sign-in.store'), [
+        $response = $this->post('/sign-in', [
             'username' => '12345',
             'password' => 'password',
             'captcha' => 'test-captcha',
         ]);
 
-        $response->assertRedirect(route('home'));
-        $this->assertAuthenticatedAs($user);
+        $response->assertRedirect(route('sign-in.index'));
+        $response->assertSessionHasErrors('email_or_username');
+        $this->assertGuest();
     }
 
-    public function test_participant_triggers_sso_sync_if_status_pegawai_is_missing()
+    public function test_participant_can_login_when_prestige_verifies_the_nip(): void
     {
-        $user = User::factory()->create(['email' => 'peserta@test.com']);
-        $user->assignRole('Participant');
-        update_user_meta($user->id, 'nip', '12345');
+        $participant = User::factory()->create(['email' => 'peserta@test.com']);
+        $participant->assignRole('Participant');
+        update_user_meta($participant->id, 'nip', '12345');
 
         Http::fake([
-            '*/oauth/token' => Http::response(['access_token' => 'fake-token'], 200),
+            '*/oauth/token' => Http::response(['access_token' => 'prestige-token'], 200),
             '*/api/get_nip_data' => Http::response([
-                'fv_nama' => 'Nama Baru',
+                'fv_nama' => 'Peserta Prestige',
                 'fv_email' => 'peserta@test.com',
-                'status_pegawai' => 'PPPK',
+                'status_pegawai' => 'PNS',
             ], 200),
         ]);
 
-        $this->post(route('sign-in.store'), [
+        $response = $this->post('/sign-in', [
             'username' => '12345',
-            'password' => 'password',
-            'captcha' => 'test-captcha',
-        ]);
-
-        $this->assertDatabaseHas('user_meta', [
-            'user_id' => $user->id,
-            'key' => 'status_pegawai',
-            'value' => 'PPPK'
-        ]);
-
-        $storedNip = UserMeta::where('user_id', $user->id)->where('key', 'nip')->firstOrFail();
-
-        $this->assertSame('12345', Crypt::decryptString($storedNip->value));
-    }
-
-    public function test_new_user_provisioning_via_sso()
-    {
-        Http::fake([
-            '*/oauth/token' => Http::response(['access_token' => 'token'], 200),
-            '*/api/get_nip_data' => Http::response([
-                'fv_nama' => 'User Baru',
-                'fv_email' => 'baru@test.com',
-                'status_pegawai' => 'Tetap',
-            ], 200),
-        ]);
-
-        $response = $this->post(route('sign-in.store'), [
-            'username' => '999',
-            'password' => 'password',
+            'password' => 'password-dari-prestige',
             'captcha' => 'test-captcha',
         ]);
 
         $response->assertRedirect(route('home'));
-        $this->assertDatabaseHas('users', ['email' => 'baru@test.com']);
-        $user = User::where('email', 'baru@test.com')->firstOrFail();
-        $storedNip = UserMeta::where('user_id', $user->id)->where('key', 'nip')->firstOrFail();
+        $this->assertAuthenticatedAs($participant);
+        $this->assertSame('Peserta Prestige', $participant->fresh()->name);
+        Http::assertSent(fn (ClientRequest $request) => str_ends_with($request->url(), '/oauth/token'));
+    }
 
-        $this->assertSame('999', Crypt::decryptString($storedNip->value));
-        $this->assertAuthenticated();
+    public function test_prestige_email_collision_cannot_modify_or_login_an_admin(): void
+    {
+        $admin = User::factory()->create([
+            'email' => 'shared@test.com',
+            'password' => Hash::make('admin-password'),
+        ]);
+        $admin->assignRole('Admin');
+
+        Http::fake([
+            '*/oauth/token' => Http::response(['access_token' => 'prestige-token'], 200),
+            '*/api/get_nip_data' => Http::response([
+                'fv_nama' => 'Peserta Prestige',
+                'fv_email' => 'shared@test.com',
+            ], 200),
+        ]);
+
+        $response = $this->post('/sign-in', [
+            'username' => '99999',
+            'password' => 'password-dari-prestige',
+            'captcha' => 'test-captcha',
+        ]);
+
+        $response->assertRedirect(route('sign-in.index'));
+        $this->assertGuest();
+        $this->assertTrue(Hash::check('admin-password', $admin->fresh()->password));
+        $this->assertFalse($admin->fresh()->hasRole('Participant'));
+    }
+
+    public function test_new_participant_is_provisioned_without_reusing_the_prestige_password(): void
+    {
+        Http::fake([
+            '*/oauth/token' => Http::response(['access_token' => 'prestige-token'], 200),
+            '*/api/get_nip_data' => Http::response([
+                'fv_nama' => 'Peserta Baru',
+                'fv_email' => 'baru@test.com',
+                'status_pegawai' => 'PNS',
+            ], 200),
+        ]);
+
+        $response = $this->post('/sign-in', [
+            'username' => '99999',
+            'password' => 'password-dari-prestige',
+            'captcha' => 'test-captcha',
+        ]);
+
+        $response->assertRedirect(route('home'));
+        $participant = User::where('email', 'baru@test.com')->firstOrFail();
+        $this->assertTrue($participant->hasRole('Participant'));
+        $this->assertFalse(Hash::check('password-dari-prestige', $participant->password));
     }
 }

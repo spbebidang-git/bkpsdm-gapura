@@ -10,6 +10,11 @@ createServer((page) =>
     createInertiaApp({
         page,
         render: ReactDOMServer.renderToString,
+        defaults: {
+            future: {
+                useScriptElementForInitialPage: true,
+            },
+        },
         title: (title) => `${title} - ${appName}`,
         resolve: (name) => resolvePageComponent(`./Pages/${name}.jsx`, import.meta.glob('./Pages/**/*.jsx')),
         setup: ({ App, props }) => {

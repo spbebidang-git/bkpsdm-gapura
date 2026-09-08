@@ -18,23 +18,6 @@ class BlockInstructorFromPublicRoutes
         $user = $request->user();
 
         if ($user) {
-            // Evaluasi Instructor
-            if ($user->hasRole('Instructor')) {
-                $allowedRoutesForInstructor = [
-                    'dashboard',
-                    'profile.edit',
-                    'profile.update',
-                    'profile.destroy',
-                    'logout',
-                ];
-
-                if ($request->route() && !in_array($request->route()->getName(), $allowedRoutesForInstructor)) {
-                    if (strpos($request->route()->getName(), 'instructor.') !== 0) {
-                        return redirect()->route('instructor.dashboard')->with('danger', 'Anda tidak memiliki akses ke halaman tersebut.');
-                    }
-                }
-            }
-
             // Evaluasi Admin
             if ($user->hasRole('Admin')) {
                 $allowedRoutesForAdmin = [

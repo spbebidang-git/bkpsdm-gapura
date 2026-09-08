@@ -161,7 +161,7 @@ const Login = () => {
                     <div className="p-8 sm:p-10">
                         <div className="hidden lg:block text-center mb-8">
                             <h2 className="text-3xl font-extrabold text-gray-800 mb-2 tracking-tight">Masuk</h2>
-                            <p className="text-gray-500 font-medium">Silakan login untuk melanjutkan</p>
+                            <p className="text-gray-500 font-medium">Admin menggunakan email, peserta menggunakan NIP Prestige.</p>
                         </div>
 
                         {errors.email_or_username && (
@@ -188,6 +188,7 @@ const Login = () => {
                                         value={data.username}
                                         onChange={handleChange}
                                         placeholder="user@example.com / NIP"
+                                        autoComplete="username"
                                         className={`block w-full pl-11 pr-4 py-3.5 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-xl focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${errors.username ? "border-red-500 bg-red-50 ring-red-100" : "hover:border-gray-300"}`}
                                         required
                                     />
@@ -215,6 +216,7 @@ const Login = () => {
                                         value={data.password}
                                         onChange={handleChange}
                                         placeholder="••••••••"
+                                        autoComplete="current-password"
                                         className={`block w-full pl-11 pr-12 py-3.5 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-xl focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${errors.password ? "border-red-500 bg-red-50 ring-red-100" : "hover:border-gray-300"}`}
                                         required
                                     />

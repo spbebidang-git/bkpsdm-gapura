@@ -14,6 +14,11 @@ import FlashMessageToast from './Components/FlashMessageToast';
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
+    defaults: {
+        future: {
+            useScriptElementForInitialPage: true,
+        },
+    },
     title: (title) => (title ? `${title} - ${appName}` : appName),
     resolve: (name) =>
         resolvePageComponent(`./Pages/${name}.jsx`, import.meta.glob('./Pages/**/*.jsx')),

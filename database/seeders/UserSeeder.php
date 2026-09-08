@@ -28,7 +28,7 @@ class UserSeeder extends Seeder
         ]);
 
         $admin->assignRole('Admin');
-        $instructor->assignRole('Instructor');
+        $instructor->assignRole('Admin');
         $participant->assignRole('Participant');
     }
 }

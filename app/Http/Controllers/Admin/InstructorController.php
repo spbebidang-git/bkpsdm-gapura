@@ -81,7 +81,7 @@ class InstructorController
                 $user->save();
             }
 
-            $user->assignRole('Instructor');
+            $user->assignRole('Admin');
 
             DB::commit();
 

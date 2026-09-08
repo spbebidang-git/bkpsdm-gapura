@@ -21,10 +21,6 @@ class IsParticipantMiddleware
             return $this->redirectResponse($request, route('admin.dashboard'));
         }
 
-        if ($request->user() && $request->user()->hasRole('Instructor')) {
-            return $this->redirectResponse($request, route('instructor.dashboard'));
-        }
-
         return $this->redirectResponse($request, route('sign-in.index'));
     }
 
