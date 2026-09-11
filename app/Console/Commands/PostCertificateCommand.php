@@ -26,12 +26,6 @@ class PostCertificateCommand extends Command
     /** @var array<string, mixed> ringkasan debug 1 blok (copy-paste) */
     protected array $debug = [];
 
-    /** Profile request yang ketemu jalan (null = belum / semua gagal). */
-    protected ?string $workingProfile = null;
-
-    /** Sudah pernah auto-probe di run ini? */
-    protected bool $probed = false;
-
     public function handle(TokenService $tokenService): int
     {
         $this->tokenService = $tokenService;
@@ -212,16 +206,6 @@ class PostCertificateCommand extends Command
                         $this->rememberError("HTTP {$status}: {$body}");
 
                         foreach ($chunk as $i => $entry) {
-                            // Probe global gagal → stop, jangan 1000x request sia-sia
-                            if ($this->probed && $this->workingProfile === null && $pushedParticipants === 0) {
-                                $left = count($chunk) - $i;
-                                $failedParticipants += $left;
-                                $msg = 'SSO tolak semua format request — stop. NIP sisa dihitung gagal (bukan skip).';
-                                $this->error($msg);
-                                $this->rememberError($msg);
-                                break 2;
-                            }
-
                             try {
                                 $solo = $this->ssoPostSertifikat($courseItem, [$entry['nip']], $token, $dates);
                                 if ($this->isSsoSuccess($solo)) {
@@ -411,9 +395,21 @@ class PostCertificateCommand extends Command
     private function resolveDates($courseItem, $learnRecords): array
     {
         $schedule = $courseItem->course->schedules->first();
-        if ($schedule && $schedule->date) {
-            $d = Carbon::parse($schedule->date)->format('Y-m-d');
-            return ['tgl_mulai' => $d, 'tgl_selesai' => $d];
+        // Jangan gunakan accessor $schedule->date di sini. Untuk course
+        // nonjadwal accessor tersebut mengembalikan label UI "Tidak Terjadwal",
+        // yang bukan nilai tanggal dan akan gagal di-parse oleh Carbon.
+        $scheduleDate = $schedule?->getRawOriginal('date');
+        if ($scheduleDate) {
+            try {
+                $d = Carbon::parse($scheduleDate)->format('Y-m-d');
+                return ['tgl_mulai' => $d, 'tgl_selesai' => $d];
+            } catch (\Throwable $e) {
+                Log::warning('[PostCertificate] Tanggal jadwal tidak valid; memakai finished_at peserta.', [
+                    'course_id' => $courseItem->course->id ?? null,
+                    'schedule_id' => $schedule->id,
+                    'date' => $scheduleDate,
+                ]);
+            }
         }
 
         $min = $learnRecords->min('finished_at');
@@ -438,7 +434,7 @@ class PostCertificateCommand extends Command
     }
 
     /**
-     * Kirim ke SSO. Kalau gagal & belum punya working profile → auto-probe format.
+     * Kirim ke SSO sesuai kontrak Postman: Bearer token dan form-urlencoded.
      */
     private function ssoPostSertifikat($courseItem, array $listNip, string &$token, array $dates)
     {
@@ -455,13 +451,11 @@ class PostCertificateCommand extends Command
         }
 
         $url = rtrim((string) config('services.sso.base_url'), '/') . '/api/post_sertifikat';
-        $profile = $this->workingProfile ?? 'authorization_only';
-        $payload = $this->buildPayload($courseItem, $listNip, $dates, $profile);
+        $payload = $this->buildPayload($courseItem, $listNip, $dates);
 
-        $response = $this->httpPost($url, $payload, $token, $profile);
+        $response = $this->httpPost($url, $payload, $token);
 
         Log::info('[PostCertificate] SSO request detail.', [
-            'profile' => $profile,
             'course' => $payload['nama_kegiatan'] ?? '',
             'kode_kegiatan' => $payload['kode_kegiatan'] ?? null,
             'jml_peserta' => count($listNip),
@@ -473,112 +467,25 @@ class PostCertificateCommand extends Command
         if ($response->status() === 401) {
             Log::warning('[PostCertificate] Token 401 — force refresh dan retry.');
             $token = $this->tokenService->forceRefresh();
-            $response = $this->httpPost($url, $payload, $token, $profile);
-        }
-
-        // Auto-probe 1x per run: cari format yang SSO terima
-        if (!$this->isSsoSuccess($response) && !$this->probed && count($listNip) >= 1) {
-            $this->probed = true;
-            $won = $this->probeProfiles($courseItem, $listNip[0], $token, $dates, $url);
-            if ($won !== null) {
-                $this->workingProfile = $won;
-                $this->debug['working_profile'] = $won;
-                $payload = $this->buildPayload($courseItem, $listNip, $dates, $won);
-                $response = $this->httpPost($url, $payload, $token, $won);
-                Log::info('[PostCertificate] Retry pakai profile menang.', [
-                    'profile' => $won,
-                    'http_status' => $response->status(),
-                    'body' => mb_substr($response->body(), 0, 300),
-                ]);
-            } else {
-                $this->debug['working_profile'] = 'NONE';
-            }
+            $response = $this->httpPost($url, $payload, $token);
         }
 
         return $response;
     }
 
-    /**
-     * Coba beberapa format request (header/kode/title) — 1 NIP saja.
-     * @return string|null nama profile yang HTTP 2xx
-     */
-    private function probeProfiles($courseItem, string $nip, string &$token, array $dates, string $url): ?string
-    {
-        $profiles = [
-            'legacy_auth',           // auth only, code, no Accept JSON (asli RatingController-ish)
-            'legacy_auth_cat_id',    // auth only, category_id (RatingController paling lama)
-            'auth_bearer_both',      // auth + Authorization + code
-            'auth_short_title',      // auth only, title pendek
-            'auth_kode3',            // auth only, kode=3 (BulkCertificateJob)
-            'authorization_only',    // Authorization only + acceptJson (versi baru)
-        ];
-
-        $results = [];
-        foreach ($profiles as $profile) {
-            $payload = $this->buildPayload($courseItem, [$nip], $dates, $profile);
-            try {
-                $res = $this->httpPost($url, $payload, $token, $profile);
-                if ($res->status() === 401) {
-                    $token = $this->tokenService->forceRefresh();
-                    $res = $this->httpPost($url, $payload, $token, $profile);
-                }
-                $row = [
-                    'profile' => $profile,
-                    'http' => $res->status(),
-                    'body' => mb_substr(str_replace(["\n", "\r"], ' ', $res->body()), 0, 180),
-                    'kode' => $payload['kode_kegiatan'] ?? null,
-                    'title' => mb_substr($payload['nama_kegiatan'] ?? '', 0, 60),
-                ];
-                $results[] = $row;
-                Log::warning('[PostCertificate] PROBE', $row);
-
-                if ($this->isSsoSuccess($res)) {
-                    $this->debug['probe'] = $results;
-                    $this->line('[PROBE] MENANG: ' . $profile . ' HTTP ' . $res->status());
-                    return $profile;
-                }
-            } catch (\Throwable $e) {
-                $results[] = [
-                    'profile' => $profile,
-                    'http' => 'EX',
-                    'body' => $e->getMessage(),
-                ];
-            }
-            usleep(200000);
-        }
-
-        $this->debug['probe'] = $results;
-        $this->line('[PROBE] semua gagal. Lihat debug probe.');
-        return null;
-    }
-
-    private function buildPayload($courseItem, array $listNip, array $dates, string $profile): array
+    private function buildPayload($courseItem, array $listNip, array $dates): array
     {
         $title = $this->sanitizeTitle($courseItem->course->title ?? '');
         $code = $courseItem->course->category->code ?? 0;
-        $catId = $courseItem->course->category_id ?? $courseItem->course->category->id ?? 0;
-
-        $kode = $code;
-        if (str_contains($profile, 'cat_id')) {
-            $kode = $catId;
-        } elseif (str_contains($profile, 'kode3')) {
-            $kode = 3;
-        }
-
-        if (str_contains($profile, 'short_title')) {
-            $title = 'Gapura Pelatihan ' . ($courseItem->course->id ?? '');
-        }
-
-        // Ambil data unit dari SSO (seperti kode lama)
-        $nipData = $this->getNipData($listNip[0] ?? '');
 
         return [
-            'fc_kduker' => $nipData['fc_kduker'] ?? 0,
-            'fc_kdsatker' => $nipData['fc_kdsatker'] ?? 0,
-            'fc_kdsubsatker' => $nipData['fc_kdsubsatker'] ?? 0,
+            // Nilai default sesuai koleksi Postman terbaru.
+            'fc_kduker' => 0,
+            'fc_kdsatker' => 0,
+            'fc_kdsubsatker' => 0,
             'lama_diklat' => $courseItem->course->jam_pelajaran ?? 0,
             'jenis_waktu' => 'J',
-            'kode_kegiatan' => $kode,
+            'kode_kegiatan' => $code,
             'nama_kegiatan' => $title,
             'tempat_kegiatan' => 'Dinas Komunikasi & Informatika',
             'penyelenggara' => 'BKPSDM Gresik',
@@ -589,57 +496,13 @@ class PostCertificateCommand extends Command
         ];
     }
 
-    private function getNipData(string $nip): array
+    private function httpPost(string $url, array $payload, string $token)
     {
-        if (!$nip) return ['fc_kduker' => 0, 'fc_kdsatker' => 0, 'fc_kdsubsatker' => 0];
-
-        try {
-            $token = $this->tokenService->getToken();
-            $response = Http::withHeaders([
-                'apikey' => config('services.sso.api_key'),
-                'Authorization' => $token,
-            ])->acceptJson()->asForm()->post(rtrim((string) config('services.sso.base_url'), '/') . '/api/get_nip_data', [
-                'nip' => $nip,
-            ]);
-
-            if ($response->successful()) {
-                $data = $response->json() ?: [];
-                return [
-                    'fc_kduker' => $data['fc_kduker'] ?? 0,
-                    'fc_kdsatker' => $data['fc_kdsatker'] ?? 0,
-                    'fc_kdsubsatker' => $data['fc_kdsubsatker'] ?? 0,
-                ];
-            }
-        } catch (
-Throwable $th) {
-            Log::warning('[PostCertificate] Gagal ambil get_nip_data', ['nip' => $nip, 'error' => $th->getMessage()]);
-        }
-        return ['fc_kduker' => 0, 'fc_kdsatker' => 0, 'fc_kdsubsatker' => 0];
-    }
-
-    private function httpPost(string $url, array $payload, string $token, string $profile = 'authorization_only')
-    {
-        $headers = [
-            'apikey' => config('services.sso.api_key'),
-        ];
-
-        // Prestige SSO historis: header `auth` (bukan Authorization)
-        if ($profile === 'authorization_only') {
-            $headers['Authorization'] = $token;
-        } elseif ($profile === 'auth_bearer_both') {
-            $headers['Authorization'] = $token;
-            $headers['auth'] = $token;
-        } else {
-            $headers['auth'] = $token;
-        }
-
-        $req = Http::withHeaders($headers)->asForm()->timeout(60);
-
-        if ($profile === 'authorization_only' || $profile === 'auth_bearer_both') {
-            $req = $req->acceptJson();
-        }
-
-        return $req->post($url, $payload);
+        return Http::withToken(str_replace('Bearer ', '', $token))
+            ->acceptJson()
+            ->asForm()
+            ->timeout(60)
+            ->post($url, $payload);
     }
 
     /**
