@@ -15,8 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('code')->nullable();
             $table->string('title');
-            $table->string('slug')->unique();
-            $table->tinyInteger('is_primary');
             $table->timestamps();
         });
     }

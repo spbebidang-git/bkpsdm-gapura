@@ -2,19 +2,18 @@
 
 namespace App\Services\Course;
 
+use App\Repositories\Reporting\Contracts\LearningReportRepositoryInterface;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class ScheduleUserService
 {
+    public function __construct(private readonly LearningReportRepositoryInterface $reports) {}
+
     public function getActivationDate($scheduleId, $participantId)
     {
-        $query = DB::table('schedule_user')
-            ->where('schedule_id', $scheduleId)
-            ->where('participant_id', $participantId)
-            ->first();
+        $query = $this->reports->findScheduleActivationDate($scheduleId, $participantId);
 
-        if (!$query) {
+        if (! $query) {
             return null;
         }
 

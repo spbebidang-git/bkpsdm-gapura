@@ -2,16 +2,18 @@
 
 namespace App\Models\Course;
 
-use App\Models\User;
+use App\Models\Learning\Enrollment;
+use App\Models\Identity\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Schedule extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasUlids, SoftDeletes;
 
     // ponytail: no datetime cast on time_* — it stamped today's date onto time-only columns
     protected $casts = [
@@ -27,13 +29,18 @@ class Schedule extends Model
 
     public function participants()
     {
-        return $this->belongsToMany(User::class, null, 'schedule_id', 'participant_id');
+        return $this->belongsToMany(User::class, 'schedule_user', 'schedule_id', 'participant_id');
+    }
+
+    public function enrollments()
+    {
+        return $this->hasMany(Enrollment::class);
     }
 
     public function date(): Attribute
     {
         return Attribute::get(function () {
-            if ($this->course?->type === 'unschedule') {
+            if (($this->course?->getAttributes()['access_mode'] ?? null) === 'open') {
                 return 'Tidak Terjadwal';
             }
 
@@ -46,7 +53,7 @@ class Schedule extends Model
     public function time(): Attribute
     {
         return Attribute::get(function () {
-            if ($this->course?->type === 'unschedule') {
+            if ($this->course?->access_mode === 'open') {
                 return 'Tidak Terjadwal';
             }
 
@@ -66,7 +73,7 @@ class Schedule extends Model
     public function quota(): Attribute
     {
         return Attribute::get(function ($value) {
-            if ($this->course?->type === 'unschedule') {
+            if ($this->course?->access_mode === 'open') {
                 return 'Tidak Terbatas';
             }
 

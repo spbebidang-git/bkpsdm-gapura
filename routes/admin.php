@@ -3,10 +3,11 @@
 use App\Http\Middleware\CheckRoleAuthMiddleware;
 use App\Http\Middleware\IsAdminMiddleware;
 use App\Jobs\BulkCertificateJob;
-use App\Models\Learn\Learn;
+use App\Models\Learning\Learn;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
+use Inertia\Inertia;
 
 Route::prefix('/admin')
     ->name('admin.')
@@ -14,19 +15,64 @@ Route::prefix('/admin')
     ->group(function () {
         # Dashboard
         Route::get('/', \App\Http\Controllers\Admin\DashboardController::class)->name('dashboard');
-        # Participant 
-        Route::resource('participant', \App\Http\Controllers\Admin\ParticipantController::class);
-        # Instructor 
+        # Participant
+        Route::resource('participant', \App\Http\Controllers\Admin\ParticipantController::class)->only('index');
+        # Instructor — deferred (nav hidden); keep routes for now
         Route::resource('instructor', \App\Http\Controllers\Admin\InstructorController::class)->except('show');
-        # Category 
-        Route::resource('category', \App\Http\Controllers\Admin\CategoryController::class);
-        # Course 
-        Route::resource('course', \App\Http\Controllers\Admin\CourseController::class)->only('index', 'show');
+
+        Route::resource('trainer', \App\Http\Controllers\Admin\TrainerController::class)->except('show');
+        # Category — SSO mirror read-only + sync
+        Route::get('category', [\App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('category.index');
+        Route::post('category/sync', [\App\Http\Controllers\Admin\CategoryController::class, 'sync'])->name('category.sync');
+        # Course — full management (ex-instructor) inside admin panel
+        Route::get('course', [\App\Http\Controllers\Admin\CourseController::class, 'index'])->name('course.index');
+        Route::prefix('course')
+            ->name('course.')
+            ->group(function () {
+                Route::get('/create', [\App\Http\Controllers\Admin\CourseController::class, 'create'])->name('create');
+                Route::post('/', [\App\Http\Controllers\Admin\CourseController::class, 'store'])->name('store');
+                Route::get('/{course:slug}/overview', [\App\Http\Controllers\Admin\CourseController::class, 'overview'])->name('overview');
+                Route::get('/{course:slug}', [\App\Http\Controllers\Admin\CourseController::class, 'show'])->name('show');
+                Route::get('/{course:slug}/edit', [\App\Http\Controllers\Admin\CourseController::class, 'edit'])->name('edit');
+                Route::put('/{course:slug}', [\App\Http\Controllers\Admin\CourseController::class, 'update'])->name('update');
+                Route::delete('/{course:slug}', [\App\Http\Controllers\Admin\CourseController::class, 'destroy'])->name('destroy');
+                Route::post('/{course:slug}/lock', [\App\Http\Controllers\Admin\CourseController::class, 'lock'])->name('lock');
+
+                Route::prefix('/{course:slug}/activity')
+                    ->name('activity.')
+                    ->middleware('course.lock')
+                    ->group(function () {
+                        Route::get('/', [\App\Http\Controllers\Admin\Course\ActivityController::class, 'index'])->name('activity');
+                        Route::delete('/{activityId}', [\App\Http\Controllers\Admin\Course\ActivityController::class, 'destroy'])->name('destroy');
+                        Route::resource('pre-test', \App\Http\Controllers\Admin\Course\Question\PreTestController::class);
+                        Route::resource('post-test', \App\Http\Controllers\Admin\Course\Question\PostTestController::class);
+                        Route::get('{activity}/import-question', [\App\Http\Controllers\Admin\Course\Question\ImportQuestionController::class, 'index'])->name('import-question.index');
+                        Route::get('{activity}/import-question/download', [\App\Http\Controllers\Admin\Course\Question\ImportQuestionController::class, 'download'])->name('import-question.download');
+                        Route::post('{activity}/import-question', [\App\Http\Controllers\Admin\Course\Question\ImportQuestionController::class, 'store'])->name('import-question.store');
+                        Route::prefix('variant/{activityId}')
+                            ->name('variant.')
+                            ->group(function () {
+                                Route::get('/', [\App\Http\Controllers\Admin\Course\Question\VariantController::class, 'index'])->name('index');
+                                Route::get('/create', [\App\Http\Controllers\Admin\Course\Question\VariantController::class, 'create'])->name('create');
+                                Route::post('/', [\App\Http\Controllers\Admin\Course\Question\VariantController::class, 'store'])->name('store');
+                                Route::get('/{variant}/edit', [\App\Http\Controllers\Admin\Course\Question\VariantController::class, 'edit'])->name('edit');
+                                Route::put('/{variant}', [\App\Http\Controllers\Admin\Course\Question\VariantController::class, 'update'])->name('update');
+                                Route::delete('/{variant}', [\App\Http\Controllers\Admin\Course\Question\VariantController::class, 'destroy'])->name('destroy');
+                                Route::resource('/{variant}/question-item', \App\Http\Controllers\Admin\Course\Question\QuestionItemController::class);
+                            });
+                        Route::get('task/{activityId}/result', [\App\Http\Controllers\Admin\Course\Task\TaskController::class, 'result'])->name('result');
+                        Route::resource('task', \App\Http\Controllers\Admin\Course\Task\TaskController::class);
+                        Route::post('/{activityId}/meeting/end-meeting/', [\App\Http\Controllers\Admin\Course\Interactive\OnlineMeetingController::class, 'endMeeting'])->name('meeting.end-meeting');
+                        Route::resource('meeting', \App\Http\Controllers\Admin\Course\Interactive\OnlineMeetingController::class);
+                        Route::resource('video', \App\Http\Controllers\Admin\Course\Interactive\PresentationVideoController::class);
+                        Route::resource('literature', \App\Http\Controllers\Admin\Course\Literature\LiteratureController::class);
+                    });
+            });
         # Review
         Route::resource('review', \App\Http\Controllers\Admin\ReviewController::class)
             ->only(['index', 'destroy']);
         # Help
-        Route::resource('help', \App\Http\Controllers\Admin\HelpController::class)->names('help');
+        Route::resource('help', \App\Http\Controllers\Admin\HelpController::class)->except('show')->names('help');
         # Result
         Route::get('/result', [\App\Http\Controllers\Admin\ResultController::class, 'index'])->name('result.index');
         Route::get('/result/post-test/{course:slug}', [\App\Http\Controllers\Admin\ResultController::class, 'postTest'])->name('result.post-test');
@@ -52,75 +98,60 @@ Route::prefix('/admin')
                 Route::resource('setting', \App\Http\Controllers\Admin\Management\SettingController::class)->only('index', 'store');
                 # User
                 Route::resource('user', \App\Http\Controllers\Admin\Management\UserController::class)->except('show');
+                # Log & backup
+                Route::get('log', [\App\Http\Controllers\Admin\Management\LogController::class, 'index'])->name('log.index');
+                Route::get('log/download', [\App\Http\Controllers\Admin\Management\LogController::class, 'download'])->name('log.download');
             });
 
         Route::get('report', function () {
-            $query = Learn::with('participant', 'learnItems')->get();
-
-            $a = $query->map(function ($row) {
-                // dd(unserialize($row->learnItems->where('type', 'pre-test')->first()->response));
+            $query = \App\Models\Learning\Learn::with('participant', 'learnItems')->get();
+            $data = $query->map(function ($row) {
                 $pre = 0;
+                $preCorrect = 0;
+                $preWrong = 0;
+                $preScore = 0;
                 if ($row->learnItems->where('type', 'pre-test')->first()) {
                     $responsePre = unserialize($row->learnItems->where('type', 'pre-test')->first()->response);
-                    // dd($responsePre[0]['score']);
                     foreach ($responsePre as $item) {
-                        $pre = $pre + $item['score'];
+                        $pre += $item['score'];
                     }
-
-                    $preCorrect = count(search($responsePre, 'is_correct', true));
-
-                    $preWrong = count(search($responsePre, 'is_correct', false));
-
-                    $preScore = $responsePre[0]['score'];
+                    $preCorrect = count(array_filter($responsePre, fn($item) => $item['is_correct'] === true));
+                    $preWrong = count(array_filter($responsePre, fn($item) => $item['is_correct'] === false));
+                    $preScore = $responsePre[0]['score'] ?? 0;
                 }
 
                 $post = 0;
+                $postCorrect = 0;
+                $postWrong = 0;
+                $postScore = 0;
                 if ($row->learnItems->where('type', 'post-test')->first()) {
                     $responsePost = unserialize($row->learnItems->where('type', 'post-test')->first()->response);
                     foreach ($responsePost as $item) {
-                        $post = $pre + $item['score'];
+                        $post += $item['score'];
                     }
-
-                    $postCorrect = count(search($responsePost, 'is_correct', true));
-
-                    $postWrong = count(search($responsePost, 'is_correct', false));
-
-                    $postScore = $responsePost[0]['score'];
+                    $postCorrect = count(array_filter($responsePost, fn($item) => $item['is_correct'] === true));
+                    $postWrong = count(array_filter($responsePost, fn($item) => $item['is_correct'] === false));
+                    $postScore = $responsePost[0]['score'] ?? 0;
                 }
 
                 return [
                     'name' => $row->participant->name,
-                    'pre_score_total' => $pre ?? 'kosong',
-                    'pre_correct' => $preCorrect ?? 'kosong',
-                    'pre_wrong' => $preWrong ?? 'kosong',
-                    'pre_score' => $preScore ?? 'kosong',
-                    'post_score_total' => $post ?? 'kosong',
-                    'post_correct' => $postCorrect ?? 'kosong',
-                    'post_wrong' => $postWrong ?? 'kosong',
-                    'post_score' => $postScore ?? 'kosong',
+                    'pre_score_total' => $pre,
+                    'pre_correct' => $preCorrect,
+                    'pre_wrong' => $preWrong,
+                    'pre_score' => $preScore,
+                    'post_score_total' => $post,
+                    'post_correct' => $postCorrect,
+                    'post_wrong' => $postWrong,
+                    'post_score' => $postScore,
                     'finished_at' => $row->finished_at,
                 ];
             });
 
-            foreach ($a as $item) {
-                echo '<table>
-                    <tr>
-                        <td>' . $item['name'] . '</td>
-                        <td>' . $item['pre_score_total'] . '</td>
-                        <td>' . $item['pre_correct'] . '</td>
-                        <td>' . $item['pre_wrong'] . '</td>
-                        <td>' . $item['pre_score'] . '</td>
-
-                        <td>' . $item['post_score_total'] . '</td>
-                        <td>' . $item['post_correct'] . '</td>
-                        <td>' . $item['post_wrong'] . '</td>
-                        <td>' . $item['post_score'] . '</td>
-
-                        <td>' . $item['finished_at'] . '</td>
-                    </tr>
-                </table>';
-            }
-        });
+            return Inertia::render('Report', [
+                'data' => $data,
+            ]);
+        })->name('report');
 
         Route::get('/certificate', [App\Http\Controllers\Admin\CertificateController::class, 'index'])->name('certificate.index');
         Route::post('/certificate/sync-push', [App\Http\Controllers\Admin\CertificateController::class, 'syncPush'])->name('certificate.sync-push');

@@ -7,24 +7,61 @@ export default {
         './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
         './storage/framework/views/*.php',
         './resources/views/**/*.blade.php',
-        './resources/js/**/*.jsx',
-        "./node_modules/flowbite/**/*.js",
-        // flowbite.content(),
+        './resources/js/**/*.{js,jsx}',
+        './node_modules/flowbite/**/*.js',
     ],
 
     theme: {
-        extend: {
-            fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
-            },
-        },
         container: {
             center: true,
         },
-        colors: {
-            primary: '#018083',
-            secondary: '#F68104'
-        }
+        extend: {
+            fontFamily: {
+                sans: ['Inter', ...defaultTheme.fontFamily.sans],
+            },
+            colors: {
+                primary: {
+                    DEFAULT: '#018083',
+                    pressed: '#016668',
+                    mist: '#e6f3f3',
+                },
+                secondary: {
+                    DEFAULT: '#F68104',
+                    soft: '#fff0e0',
+                },
+                canvas: '#ffffff',
+                surface: {
+                    DEFAULT: '#f6f5f4',
+                    soft: '#fafaf9',
+                },
+                hairline: {
+                    DEFAULT: '#e5e3df',
+                    soft: '#ede9e4',
+                    strong: '#c8c4be',
+                },
+                ink: {
+                    DEFAULT: '#1a1a1a',
+                    deep: '#000000',
+                },
+                charcoal: '#37352f',
+                steel: '#787671',
+                stone: '#a4a097',
+                muted: '#bbb8b1',
+                tint: {
+                    mint: '#d9f3e1',
+                    sky: '#dcecfa',
+                    lavender: '#e6e0f5',
+                    peach: '#ffe8d4',
+                    rose: '#fde0ec',
+                    yellow: '#fef7d6',
+                    cream: '#f8f5e8',
+                    gray: '#f0eeec',
+                },
+            },
+            boxShadow: {
+                panel: 'rgba(15, 15, 15, 0.04) 0px 1px 2px 0px',
+            },
+        },
     },
 
     plugins: [forms, require('flowbite/plugin'), require('@tailwindcss/typography')],

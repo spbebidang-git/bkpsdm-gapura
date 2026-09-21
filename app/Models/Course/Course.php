@@ -2,17 +2,19 @@
 
 namespace App\Models\Course;
 
-use App\Models\EmployeeStatus;
-use App\Models\Learn\Learn;
-use App\Models\User;
+use App\Models\Course\Activity\Activity;
+use App\Models\Identity\EmployeeStatus;
+use App\Models\Learning\Enrollment;
+use App\Models\Learning\Learn;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Course extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasUlids, SoftDeletes;
 
     const EMPLOYEE_STATUS = [
         'PNS',
@@ -25,11 +27,6 @@ class Course extends Model
 
     protected $guarded = [];
 
-    public function instructor()
-    {
-        return $this->belongsTo(User::class, 'instructor_id');
-    }
-
     public function category()
     {
         return $this->belongsTo(Category::class);
@@ -38,11 +35,6 @@ class Course extends Model
     public function reviews()
     {
         return $this->hasMany(Review::class);
-    }
-
-    public function vouchers()
-    {
-        return $this->hasMany(Voucher::class);
     }
 
     public function schedules()
@@ -60,9 +52,19 @@ class Course extends Model
         return $this->hasMany(Learn::class, 'course_id');
     }
 
+    public function enrollments()
+    {
+        return $this->hasMany(Enrollment::class);
+    }
+
     public function employeeStatus()
     {
-        return $this->belongsToMany(EmployeeStatus::class);
+        return $this->belongsToMany(EmployeeStatus::class, 'course_employee_status');
+    }
+
+    public function trainers()
+    {
+        return $this->belongsToMany(Trainer::class, 'course_trainer');
     }
 
     public function thumbnailSrc(): Attribute
@@ -71,16 +73,39 @@ class Course extends Model
             return Attribute::get(fn() => asset('assets/media/images/static/default-class.jpg'));
         }
 
+        if ($this->thumbnail === 'default-class.jpg') {
+            return Attribute::get(fn() => asset('assets/media/images/static/default-class.jpg'));
+        }
+
         return Attribute::get(fn() => asset(self::$directoryImage . $this->thumbnail));
+    }
+
+    /** BC frontend/API: schedule|unschedule dari access_mode. */
+    protected function type(): Attribute
+    {
+        return Attribute::get(fn () => ($this->attributes['access_mode'] ?? null) === 'scheduled'
+            ? 'schedule'
+            : 'unschedule');
+    }
+
+    /** BC: expired = default_access_hours. */
+    protected function expired(): Attribute
+    {
+        return Attribute::get(fn () => $this->attributes['default_access_hours'] ?? null);
+    }
+
+    public static function mapTypeToAccessMode(?string $type): string
+    {
+        return $type === 'schedule' ? 'scheduled' : 'open';
     }
 
     public function quota(): Attribute
     {
-        if ($this->type == 'schedule') {
-            return Attribute::get(fn() => 'Terbatas');
+        if (($this->attributes['access_mode'] ?? null) === 'scheduled') {
+            return Attribute::get(fn () => 'Terbatas');
         }
 
-        return Attribute::get(fn() => 'Tidak Terbatas');
+        return Attribute::get(fn () => 'Tidak Terbatas');
     }
 
     public function totalParticipant(): Attribute

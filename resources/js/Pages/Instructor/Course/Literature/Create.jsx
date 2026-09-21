@@ -1,11 +1,12 @@
 import ActivityFormLayout from "@/Components/ActivityFormLayout";
 import FormInput from "@/Components/FormInput";
 import FormLabel from "@/Components/FormLabel";
+import { btnPrimary, btnSecondary, card, sectionDescription, sectionTitle } from "@/Components/Admin/ui";
 import App from "@/Layouts/Instructor/App";
 import { Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -47,23 +48,26 @@ const Create = ({ slug }) => {
         formData.append("instruction", values.instruction);
         formData.append("content", values.content);
 
-        router.post(`/instructor/course/${slug}/activity/literature`, formData);
+        router.post(`/admin/course/${slug}/activity/literature`, formData);
     }
 
     return (
-        <App>
+        <App fullWidth>
             <ActivityFormLayout
                 slug={slug}
                 type="literature"
                 title="Literatur"
                 description="Upload file PDF literatur yang dapat diakses dan dibaca oleh peserta."
+                fullWidth
             />
 
-            <form onSubmit={handleSubmit} encType="multipart/form-data">
-                <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="p-8">
-
-                        {/* JUDUL */}
+            <form onSubmit={handleSubmit} encType="multipart/form-data" className="w-full space-y-5">
+                <section className={`${card} overflow-hidden`} aria-labelledby="info-literatur">
+                    <div className="border-b border-hairline px-5 py-4 sm:px-7">
+                        <h2 id="info-literatur" className={sectionTitle}>Informasi literatur</h2>
+                        <p className={sectionDescription}>Tambahkan judul dan subjudul agar materi mudah dikenali.</p>
+                    </div>
+                    <div className="grid gap-x-5 p-5 sm:grid-cols-2 sm:p-7">
                         <FormInput
                             title="title"
                             label="Judul"
@@ -86,8 +90,15 @@ const Create = ({ slug }) => {
                             value={values.sub_title}
                             error={errors.sub_title}
                         />
+                    </div>
+                </section>
 
-                        {/* NILAI */}
+                <section className={`${card} overflow-hidden`} aria-labelledby="pengaturan-literatur">
+                    <div className="border-b border-hairline px-5 py-4 sm:px-7">
+                        <h2 id="pengaturan-literatur" className={sectionTitle}>Pengaturan belajar</h2>
+                        <p className={sectionDescription}>Tentukan bobot nilai dan estimasi durasi membaca.</p>
+                    </div>
+                    <div className="grid gap-x-5 p-5 sm:grid-cols-2 sm:p-7">
                         <FormInput
                             title="value"
                             label="Bobot Nilai"
@@ -98,27 +109,6 @@ const Create = ({ slug }) => {
                             value={values.value}
                             error={errors.value}
                         />
-
-                        {/* INSTRUKSI */}
-                        <div className="h-auto mb-3">
-                            <FormLabel title="Instruksi Tambahan" />
-                            <p className="text-xs text-gray-500 mb-1">
-                                Berikan penjelasan tambahan, catatan penting, atau instruksi terkait literatur ini.
-                            </p>
-
-                            <ReactQuill
-                                value={values.instruction}
-                                onChange={(value) =>
-                                    setValues((prev) => ({ ...prev, instruction: value }))
-                                }
-                            />
-
-                            {errors.instruction && (
-                                <small className="text-red-500">{errors.instruction}</small>
-                            )}
-                        </div>
-
-                        {/* DURASI */}
                         <FormInput
                             title="duration"
                             label="Durasi Membaca (Detik)"
@@ -129,9 +119,30 @@ const Create = ({ slug }) => {
                             value={values.duration}
                             error={errors.duration}
                         />
+                    </div>
+                </section>
 
-                        {/* FILE PDF */}
-                        <div className="mb-3">
+                <section className={`${card} overflow-hidden`} aria-labelledby="instruksi-literatur">
+                    <div className="border-b border-hairline px-5 py-4 sm:px-7">
+                        <h2 id="instruksi-literatur" className={sectionTitle}>Instruksi tambahan</h2>
+                        <p className={sectionDescription}>Berikan catatan penting atau arahan sebelum peserta membaca materi.</p>
+                    </div>
+                    <div className="p-5 sm:p-7">
+                        <div className="[&_.ql-container]:min-h-36 [&_.ql-container]:rounded-b-lg [&_.ql-container]:border-hairline [&_.ql-editor]:min-h-36 [&_.ql-toolbar]:rounded-t-lg [&_.ql-toolbar]:border-hairline [&_.ql-toolbar]:bg-surface-soft">
+                            <FormLabel title="Instruksi Tambahan" />
+                            <ReactQuill value={values.instruction} onChange={(value) => setValues((prev) => ({ ...prev, instruction: value }))} />
+                        </div>
+                        {errors.instruction && <small className="mt-1 block text-red-500">{errors.instruction}</small>}
+                    </div>
+                </section>
+
+                <section className={`${card} overflow-hidden`} aria-labelledby="berkas-literatur">
+                    <div className="border-b border-hairline px-5 py-4 sm:px-7">
+                        <h2 id="berkas-literatur" className={sectionTitle}>Berkas literatur</h2>
+                        <p className={sectionDescription}>Unggah materi PDF yang akan dapat diakses oleh peserta.</p>
+                    </div>
+                    <div className="p-5 sm:p-7">
+                        <div>
                             <FormLabel title="File PDF" />
                             <p className="text-xs text-gray-500 mb-2">
                                 Unggah file materi dalam format PDF (maksimal 5MB).
@@ -139,29 +150,16 @@ const Create = ({ slug }) => {
 
                             <label
                                 htmlFor="content"
-                                className={`flex flex-col items-center justify-center w-full h-64 border-2 ${errors.content ? "border-red-500" : "border-gray-300"
-                                    } border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100`}
+                                className={`flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed ${errors.content ? "border-red-500" : "border-hairline-strong"
+                                    } bg-surface-soft transition-colors hover:border-primary/50 hover:bg-primary-mist/40`}
                             >
                                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                    <svg
-                                        className="w-8 h-8 mb-4 text-gray-500"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 20 16"
-                                    >
-                                        <path
-                                            stroke="currentColor"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
-                                        />
-                                    </svg>
+                                    <i className="bx bx-cloud-upload mb-3 text-4xl text-primary" aria-hidden />
 
-                                    <p className="text-sm text-gray-700 font-semibold">
+                                    <p className="text-sm font-semibold text-charcoal">
                                         Klik untuk unggah
                                     </p>
-                                    <p className="text-xs text-gray-600">
+                                    <p className="text-xs text-steel">
                                         Format PDF • Maksimal 5MB
                                     </p>
                                 </div>
@@ -175,7 +173,7 @@ const Create = ({ slug }) => {
                             </label>
 
                             {values.content && (
-                                <p className="mt-2 text-sm text-green-600">
+                                <p className="mt-2 text-sm font-medium text-[#246A3C]">
                                     File terpilih: {values.content.name}
                                 </p>
                             )}
@@ -184,18 +182,18 @@ const Create = ({ slug }) => {
                                 <small className="text-red-500">{errors.content}</small>
                             )}
                         </div>
-
                     </div>
-                </div>
+                </section>
 
                 {/* BUTTON */}
-                <div className="max-w-3xl mx-auto flex flex-col sm:flex-row justify-end gap-3 mt-8">
-                    <Link href={`/instructor/course/${slug}/activity`} className="w-full sm:w-auto">
-                        <button type="button" className="w-full sm:w-auto px-6 py-2.5 rounded-xl border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 font-semibold transition-colors">
+                <div className="flex flex-col-reverse gap-3 border-t border-hairline pt-5 sm:flex-row sm:justify-end">
+                    <Link href={`/admin/course/${slug}/activity`} className="w-full sm:w-auto">
+                        <button type="button" className={`${btnSecondary} w-full sm:w-auto`}>
                             Kembali
                         </button>
                     </Link>
-                    <button type="submit" className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 font-semibold shadow-sm transition-colors">
+                    <button type="submit" className={`${btnPrimary} w-full sm:w-auto`}>
+                        <i className="bx bx-save text-lg" aria-hidden />
                         Simpan
                     </button>
                 </div>

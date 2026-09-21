@@ -1,83 +1,67 @@
-import App from "@/Layouts/Instructor/App";
-import { Link } from "@inertiajs/react";
+import {
+    btnLink,
+    btnSecondarySm,
+    pageDescription,
+    pageEyebrow,
+    pageHeader,
+    pageTitle,
+    tableClass,
+    tableFrame,
+    tableScroller,
+} from '@/Components/Admin/ui';
+import App from '@/Layouts/Instructor/App';
+import { Link } from '@inertiajs/react';
 
-const Index = ({ slug, activity, tasks }) => {
+export default function Result({ slug, activity, tasks = [] }) {
     return (
-        <App>
-            <div className="text-center text-2xl font-bold text-gray-700 mb-5">
-                Result Task Activity
-            </div>
-            <div className="max-w-7xl mx-auto bg-gray-100 border overflow-hidden rounded-xl shadow mb-8">
-                <div className="p-5 text-lg font-bold flex justify-between items-center">
-                    Result Task Activity
-                    <Link href={route('instructor.course.show', { course: slug })} className="">
-                        <button className="button-secondary">Back</button>
-                    </Link>
+        <App title="Hasil Tugas">
+            <div className="space-y-5">
+                <div className={pageHeader}>
+                    <div className="min-w-0">
+                        <p className={pageEyebrow}>Kelas · Tugas</p>
+                        <h1 className={pageTitle}>Hasil tugas</h1>
+                        <p className={pageDescription}>
+                            Berkas yang dikumpulkan peserta{activity?.title ? ` untuk ${activity.title}` : ''}.
+                        </p>
+                    </div>
+                    <Link href={route('admin.course.show', { course: slug })} className={btnSecondarySm}>Kembali</Link>
                 </div>
-                <div className="relative overflow-x-auto max-h-[512px] overflow-auto">
-                    <table className="w-full text-sm text-left rtl:text-right text-gray-500 ">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 ">
-                            <tr className="sticky top-0 z-10">
-                                <th
-                                    scope="col"
-                                    className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap"
-                                >
-                                    Name
-                                </th>
-                                <th
-                                    scope="col"
-                                    className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap"
-                                >
-                                    Nip
-                                </th>
-                                <th
-                                    scope="col"
-                                    className="px-6 py-3 text-center bg-gray-50 whitespace-nowrap"
-                                >
-                                    File
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tasks.length ? (
-                                tasks.map((item, index) => (
-                                    <tr
-                                        className="bg-white border-b"
-                                        key={index}
-                                    >
-                                        <td className="px-6 py-4 text-center">
-                                            {item.name}
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            {item.nip}
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <a
-                                                href={item.file}
-                                                download
-                                                className="text-blue-600 hover:underline"
-                                            >
-                                                Download
-                                            </a>
+
+                <div className={tableFrame}>
+                    <div className={tableScroller}>
+                        <table className={`${tableClass} min-w-[620px]`}>
+                            <thead>
+                                <tr>
+                                    <th className="admin-sticky-cell text-left">Nama peserta</th>
+                                    <th className="text-left">NIP</th>
+                                    <th className="text-left">Berkas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {tasks.length > 0 ? tasks.map((item, index) => (
+                                    <tr key={item.id ?? `${item.nip}-${index}`}>
+                                        <td className="admin-sticky-cell font-semibold text-ink">{item.name || '—'}</td>
+                                        <td className="tabular-nums">{item.nip || '—'}</td>
+                                        <td>
+                                            {item.file ? (
+                                                <a href={item.file} download className={btnLink}>Unduh berkas</a>
+                                            ) : <span className="text-stone">Belum ada</span>}
                                         </td>
                                     </tr>
-                                ))
-                            ) : (
-                                <tr className="bg-white border-b">
-                                    <td
-                                        className="p-3 text-center"
-                                        colspan="100%"
-                                    >
-                                        Result not available.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                )) : (
+                                    <tr>
+                                        <td colSpan={3} className="admin-table-state">
+                                            <i className="bx bx-file-blank text-2xl text-stone" aria-hidden />
+                                            <p className="font-semibold text-ink">Belum ada hasil tugas</p>
+                                            <p className="text-sm text-steel">Berkas peserta akan tampil setelah dikumpulkan.</p>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </App>
     );
-};
-
-export default Index;
+}

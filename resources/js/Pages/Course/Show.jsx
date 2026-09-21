@@ -128,11 +128,6 @@ const Show = ({ course, schedules, reviews = [], rating }) => {
                             <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3 leading-tight capitalize">
                                 {course.title}
                             </h1>
-                            <div className="text-base text-gray-500 mb-4 flex items-center gap-1.5">
-                                <span className="italic">Oleh</span>
-                                <span className="font-semibold text-gray-800">{course.instructor}</span>
-                            </div>
-
                             <div className="flex items-center gap-3 mb-6 bg-amber-50/50 w-max px-4 py-2 rounded-xl border border-amber-100/50">
                                 <StarRating value={rating.star} />
                                 <div className="flex items-center gap-1.5">
@@ -236,16 +231,6 @@ const Show = ({ course, schedules, reviews = [], rating }) => {
                                         <div className="flex flex-col">
                                             <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">Waktu</span>
                                             <span className="font-semibold text-gray-700">{item.time}</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-3 bg-gray-50/50 p-3 rounded-xl border border-gray-100/50">
-                                        <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-500 flex items-center justify-center shrink-0">
-                                            <box-icon name='user' size="18px" color="currentColor"></box-icon>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">Instruktur</span>
-                                            <span className="font-semibold text-gray-700">{course.instructor}</span>
                                         </div>
                                     </div>
 
@@ -388,7 +373,7 @@ const Show = ({ course, schedules, reviews = [], rating }) => {
                         <div className="flex flex-col justify-center items-center py-12 bg-gray-50 rounded-2xl border border-gray-100 text-center px-4">
                             <box-icon name='message-square-x' size="48px" color="#cbd5e1" className="mb-3"></box-icon>
                             <h3 className="text-lg font-bold text-gray-700 mb-1">Belum Ada Ulasan</h3>
-                            <p className="text-gray-500 text-sm">Jadilah yang pertama menyelesaikan kursus ini dan memberikan ulasan!</p>
+                            <p className="text-gray-500 text-sm">Jadilah yang pertama menyelesaikan kelas ini dan memberikan ulasan!</p>
                         </div>
                     )}
                 </div>

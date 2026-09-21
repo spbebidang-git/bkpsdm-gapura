@@ -15,7 +15,7 @@ class CourseController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Course::with(['category', 'instructor', 'employeeStatus'])
+        $query = Course::with(['category', 'employeeStatus'])
             ->where('status', 'publish');
 
         // Filter by category
@@ -23,9 +23,11 @@ class CourseController extends Controller
             $query->where('category_id', $request->category_id);
         }
 
-        // Filter by type (schedule/unschedule)
+        // Filter by type (schedule/unschedule) → access_mode
         if ($request->has('type')) {
-            $query->where('type', $request->type);
+            $mode = $request->type === 'schedule' ? 'scheduled'
+                : ($request->type === 'unschedule' ? 'open' : $request->type);
+            $query->where('access_mode', $mode);
         }
 
         // Filter by year
@@ -52,7 +54,7 @@ class CourseController extends Controller
      */
     public function show(string $slug)
     {
-        $course = Course::with(['category', 'instructor', 'schedules', 'activities', 'employeeStatus'])
+        $course = Course::with(['category', 'schedules', 'activities', 'employeeStatus'])
             ->where('slug', $slug)
             ->where('status', 'publish')
             ->first();

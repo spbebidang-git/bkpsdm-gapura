@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
+use App\Models\Identity\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -15,8 +15,8 @@ class ProfileTest extends TestCase
     {
         parent::setUp();
 
-        Role::create(['name' => 'Admin']);
-        Role::create(['name' => 'Participant']);
+        Role::findOrCreate('Admin');
+        Role::findOrCreate('Participant');
     }
 
     public function test_admin_can_update_the_local_admin_profile(): void

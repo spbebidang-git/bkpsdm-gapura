@@ -39,3 +39,10 @@ public/assets/media/images/courses
 
 # Ignore all Markdown files
 *.md
+
+/public/vendor/boxicons
+
+/storage/app/backups
+/storage/logs/*.log
+/storage/logs/*.zip
+

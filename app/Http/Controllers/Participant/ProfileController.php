@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Participant;
 
-use App\Services\User\UserService;
+use App\Services\Identity\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;

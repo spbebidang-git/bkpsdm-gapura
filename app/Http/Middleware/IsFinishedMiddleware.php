@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Learn\Learn;
+use App\Models\Learning\Learn;
 use Closure;
 use Illuminate\Http\Request;
 

@@ -1,398 +1,427 @@
-import FormCheckbox from "@/Components/FormCheckbox";
-import FormInput from "@/Components/FormInput";
-import FormLabel from "@/Components/FormLabel";
-import FormSelect from "@/Components/FormSelect";
-import FormTextArea from "@/Components/FormTextArea";
-import QuillEditor from "@/Components/QuillEditor";
-import App from "@/Layouts/Instructor/App";
-import { Link, router, usePage } from "@inertiajs/react";
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
-import ModalAddSchedule from "./Partials/ModalAddSchedule";
+import {
+    btnDanger,
+    btnPrimary,
+    btnPrimarySm,
+    btnSecondary,
+    card,
+    fieldError,
+    pageDescription,
+    pageEyebrow,
+    pageHeader,
+    pageTitle,
+    tableClass,
+    tableScroller,
+} from '@/Components/Admin/ui';
+import AdminLayout from '@/Layouts/AdminLayout';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
+import Swal from 'sweetalert2';
+import ModalAddSchedule from './Partials/ModalAddSchedule';
 
-const Edit = ({ course, categories, employee_status, selected_employee_status, schedules = [] }) => {
-    const [type, setType] = useState(course.type === "schedule" ? 1 : 0);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [data, setData] = useState(schedules);
-    const { errors } = usePage().props;
+function ErrorMessage({ message }) {
+    return message ? <p className={fieldError}>{message}</p> : null;
+}
 
-    const toggleModal = () => setIsModalOpen(!isModalOpen);
-
-    const typeOptions = [
-        { value: "unschedule", label: "Tidak Terjadwal" },
-        { value: "schedule", label: "Terjadwal" },
-    ];
-
-    const statusOptions = [
-        { value: "publish", label: "Publikasi" },
-        { value: "draft", label: "Draft" },
-    ];
-
-    const typeCategories = categories.map((item) => ({
-        value: item.id,
-        label: item.title,
-    }));
-
+export default function Edit({
+    course,
+    categories = [],
+    employee_status: employeeStatuses = [],
+    selected_employee_status: selectedEmployeeStatuses = [],
+    trainers = [],
+    selected_trainers: selectedTrainers = [],
+    schedules = [],
+}) {
+    const { errors = {} } = usePage().props;
+    const currentType = course.type || (course.access_mode === 'scheduled' ? 'schedule' : 'unschedule');
+    const currentThumbnail = course.thumbnail_url || course.thumbnail_src || (
+        course.thumbnail === 'default-class.jpg'
+            ? '/assets/media/images/static/default-class.jpg'
+            : course.thumbnail
+                ? `/assets/media/images/courses/${course.thumbnail}`
+                : null
+    );
+    const [scheduleOpen, setScheduleOpen] = useState(false);
+    const [courseSchedules, setCourseSchedules] = useState(schedules);
+    const [thumbnailPreview, setThumbnailPreview] = useState(currentThumbnail);
     const [values, setValues] = useState({
-        type: course.type || "",
-        category: course.category_id || "",
-        title: course.title || "",
-        short_description: course.short_description || "",
-        description: course.description || "",
+        type: currentType,
+        category: course.category_id || '',
+        title: course.title || '',
+        short_description: course.short_description || '',
+        description: course.description || '',
         thumbnail: null,
-        teaser_video: course.teaser_video || "",
-        expired: course.expired || "",
-        jam_pelajaran: course.jam_pelajaran || "",
-        status: course.status || "",
-        employee_status: selected_employee_status || [],
+        teaser_video: course.teaser_video || '',
+        expired: course.expired ?? course.default_access_hours ?? '',
+        jam_pelajaran: course.jam_pelajaran || '',
+        status: course.status || '',
+        employee_status: selectedEmployeeStatuses,
+        trainers: selectedTrainers,
     });
 
     const handleChange = (e) => {
-        const { id, type, value, checked, files } = e.target;
-
-        setValues((prev) => ({
-            ...prev,
-            [id]:
-                type === "checkbox"
-                    ? checked
-                    : type === "file"
-                        ? files[0]
-                        : value,
+        const { id, value, checked, files, type: inputType } = e.target;
+        if (inputType === 'checkbox' && id.startsWith('employee_status_')) {
+            setValues((current) => ({
+                ...current,
+                employee_status: checked
+                    ? [...current.employee_status, value]
+                    : current.employee_status.filter((status) => String(status) !== String(value)),
+            }));
+            return;
+        }
+        if (inputType === 'checkbox' && id.startsWith('trainer_')) {
+            setValues((current) => ({
+                ...current,
+                trainers: checked
+                    ? [...current.trainers, value]
+                    : current.trainers.filter((trainer) => String(trainer) !== String(value)),
+            }));
+            return;
+        }
+        setValues((v) => ({
+            ...v,
+            [id]: inputType === 'file' ? files?.[0] ?? null : value,
         }));
-
-        if (id === "type") {
-            setType(value === "schedule" ? 1 : 0);
-        }
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-
-        const formData = new FormData();
-        formData.append("_method", "put");
-        formData.append("type", values.type);
-        formData.append("category", values.category);
-
-        values.employee_status.forEach((id) => {
-            formData.append("employee_status[]", id);
-        });
-
-        formData.append("title", values.title);
-        formData.append("short_description", values.short_description);
-        formData.append("description", values.description);
-
-        if (values.thumbnail) {
-            formData.append("thumbnail", values.thumbnail);
-        }
-
-        formData.append("teaser_video", values.teaser_video);
-        formData.append("expired", values.expired);
-        formData.append("jam_pelajaran", values.jam_pelajaran);
-        formData.append("status", values.status);
-
-        // Selalu kirim jadwal dari state — localStorage dulu bisa nempel jadwal course lain
-        if (values.type === "schedule" && data.length > 0) {
-            formData.append("schedules", JSON.stringify(data));
-        }
-
-        router.post(`/instructor/course/${course.slug}`, formData);
     };
 
     useEffect(() => {
-        if (errors.schedules) {
-            toast.error("Jadwal tidak boleh kosong.", {
-                position: "top-right",
-                autoClose: 3000,
-            });
+        if (!values.thumbnail) {
+            setThumbnailPreview(currentThumbnail);
+            return undefined;
         }
-    }, [errors]);
 
-    const handleScheduleAdded = (newSchedule) => {
-        setData((prev) => [...prev, newSchedule]);
+        const previewUrl = URL.createObjectURL(values.thumbnail);
+        setThumbnailPreview(previewUrl);
+        return () => URL.revokeObjectURL(previewUrl);
+    }, [currentThumbnail, values.thumbnail]);
+
+    const submit = (event) => {
+        event.preventDefault();
+        const formData = new FormData();
+        formData.append('_method', 'PUT');
+        formData.append('type', values.type);
+        formData.append('category', values.category);
+        values.employee_status.forEach((id) => formData.append('employee_status[]', id));
+        values.trainers.forEach((id) => formData.append('trainers[]', id));
+        formData.append('title', values.title);
+        formData.append('short_description', values.short_description);
+        formData.append('description', values.description);
+        if (values.thumbnail) formData.append('thumbnail', values.thumbnail);
+        formData.append('teaser_video', values.teaser_video);
+        formData.append('expired', values.expired);
+        formData.append('jam_pelajaran', values.jam_pelajaran);
+        formData.append('status', values.status);
+        if (values.type === 'schedule') formData.append('schedules', JSON.stringify(courseSchedules));
+
+        router.post(`/admin/course/${course.slug}`, formData, {
+            onSuccess: () => Swal.fire('Tersimpan', 'Perubahan kelas sudah disimpan.', 'success'),
+        });
     };
-
-    const handleDeleteSchedule = (id) => {
-        setData((prev) => prev.filter((item) => item.id !== id));
-    };
-
-    const isTypeLocked = Boolean(course.type);
 
     return (
-        <App>
-            <form onSubmit={handleSubmit}>
-                <div className="max-w-4xl mx-auto bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden mb-8">
-                    <h4 className="p-6 sm:p-8 bg-gray-50/50 border-b border-gray-100 text-center text-xl font-extrabold text-gray-800">
-                        Edit Kursus
-                    </h4>
-
-                    <div className="p-6 sm:p-10">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-                            <FormSelect
-                                title="type"
-                                label="Tipe Kursus"
-                                value={values.type}
-                                onChange={handleChange}
-                                options={typeOptions}
-                                isRequired={true}
-                                error={errors.type}
-                                disabled={isTypeLocked}
-                            />
-
-
-                            <FormSelect
-                                title="category"
-                                label="Kategori"
-                                value={values.category}
-                                onChange={handleChange}
-                                options={typeCategories}
-                                isRequired={true}
-                                error={errors.category}
-                            />
-                        </div>
-
-                        <div className="mb-4">
-                            <p className="mb-3 text-sm font-bold text-gray-700">
-                                Status Pegawai <span className="text-red-500">*</span>
-                            </p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                                {employee_status.map((item) => (
-                                    <FormCheckbox
-                                        key={item.id}
-                                        id={`employee-${item.id}`}
-                                        title={item.title}
-                                        checked={values.employee_status.includes(item.id)}
-                                        onChange={(e) => {
-                                            const checked = e.target.checked;
-                                            setValues((prev) => ({
-                                                ...prev,
-                                                employee_status: checked
-                                                    ? [...prev.employee_status, item.id]
-                                                    : prev.employee_status.filter((id) => id !== item.id),
-                                            }));
-                                        }}
-                                        error={errors.employee_status}
-                                    />
-                                ))}
-                            </div>
-                        </div>
-
-                        <FormInput
-                            title="title"
-                            label="Judul"
-                            value={values.title}
-                            onChange={handleChange}
-                            isRequired={true}
-                            error={errors.title}
-                        />
-
-                        <FormTextArea
-                            title="short_description"
-                            label="Deskripsi Singkat"
-                            value={values.short_description}
-                            onChange={handleChange}
-                            isRequired={true}
-                            error={errors.short_description}
-                        />
-
-                        <QuillEditor
-                            title="description"
-                            label="Deskripsi Lengkap"
-                            value={values.description}
-                            onChange={(content) => {
-                                setValues((prev) => ({
-                                    ...prev,
-                                    description: content,
-                                }));
-                            }}
-                            isRequired={true}
-                            error={errors.description}
-                        />
-
-                        <FormInput
-                            title="teaser_video"
-                            label="Video Teaser"
-                            value={values.teaser_video}
-                            onChange={handleChange}
-                            placeholder="Contoh: https://www.youtube.com/embed/a3ICNMQW7Ok"
-                            error={errors.teaser_video}
-                        />
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-                            {!type ? (
-                                <FormInput
-                                    title="expired"
-                                    label="Kedaluwarsa (Jam)"
-                                    value={values.expired}
-                                    onChange={handleChange}
-                                    placeholder="Atur kedaluwarsa dalam jam"
-                                    isRequired={true}
-                                    error={errors.expired}
-                                />
-                            ) : null}
-
-                            <FormInput
-                                title="jam_pelajaran"
-                                label="Jam Pelajaran"
-                                value={values.jam_pelajaran}
-                                onChange={handleChange}
-                                placeholder="Atur jam pelajaran dalam jam"
-                                isRequired={true}
-                                error={errors.jam_pelajaran}
-                            />
-                        </div>
-
-                        <div className="mb-3 mt-2">
-                            <FormLabel title="Thumbnail" isRequired={false} />
-
-                            {course.thumbnail_url && (
-                                <div className="mb-2">
-                                    <img
-                                        src={course.thumbnail_url}
-                                        className="h-32 rounded"
-                                    />
-                                </div>
-                            )}
-
-                            <div className="flex items-center justify-center w-full">
-                                <label
-                                    htmlFor="thumbnail"
-                                    className={`flex flex-col items-center justify-center w-full h-64 border-2 ${errors.thumbnail ? "border-red-500" : "border-gray-300"
-                                        } border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100`}
-                                >
-                                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                        <svg
-                                            className="w-8 h-8 mb-4 text-gray-500"
-                                            fill="none"
-                                            viewBox="0 0 20 16"
-                                        >
-                                            <path
-                                                stroke="currentColor"
-                                                strokeWidth="2"
-                                                d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
-                                            />
-                                        </svg>
-                                        <p className="mb-2 text-sm text-gray-500">
-                                            <span className="font-semibold">Klik untuk unggah</span>{" "}
-                                            atau seret dan lepaskan
-                                        </p>
-                                        <p className="text-xs text-gray-500">
-                                            PNG atau JPG (MAKS. 1MB)
-                                        </p>
-                                    </div>
-                                    <input
-                                        id="thumbnail"
-                                        type="file"
-                                        onChange={handleChange}
-                                        className="hidden"
-                                    />
-                                </label>
-                            </div>
-
-                            {values.thumbnail && (
-                                <p className="mt-2 text-sm text-green-500">
-                                    File dipilih: {values.thumbnail.name}
-                                </p>
-                            )}
-
-                            {errors.thumbnail && (
-                                <small className="text-red-500 text-sm mt-1">
-                                    {errors.thumbnail}
-                                </small>
-                            )}
-                        </div>
-
-                        <FormSelect
-                            title="status"
-                            label="Status"
-                            value={values.status}
-                            onChange={handleChange}
-                            options={statusOptions}
-                            isRequired={true}
-                            error={errors.status}
-                        />
+        <AdminLayout title="Edit Kelas" hideTitle>
+            <Head title={`Edit ${course.title}`} />
+            <div className="max-w-none">
+                <div className={pageHeader}>
+                    <div className="min-w-0">
+                        <p className={pageEyebrow}>Kelas</p>
+                        <h1 className={pageTitle}>Edit kelas</h1>
+                        <p className={pageDescription}>Perbarui identitas, cakupan peserta, dan status {course.title}.</p>
                     </div>
+                    <Link href={route('admin.course.index')} className={btnSecondary}>
+                        <i className="bx bx-left-arrow-alt text-lg" aria-hidden />
+                        Kembali
+                    </Link>
                 </div>
 
-                {type ? (
-                    <div className="max-w-4xl mx-auto bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden mb-8">
-                        <div className="flex flex-col sm:flex-row justify-between border-b border-gray-100 bg-gray-50/50 p-6 sm:p-8 items-center gap-4">
-                            <h4 className="text-lg font-extrabold text-gray-800 w-full sm:w-auto text-center sm:text-left">Atur Jadwal Kegiatan</h4>
+                <form id="edit-course-form" onSubmit={submit} className={`${card} mt-6 max-w-none space-y-6 p-5 sm:p-7`}>
+                    <div className="space-y-6">
+                        <div className="space-y-6">
 
-                            <button
-                                type="button"
-                                className="button-primary w-full sm:w-auto"
-                                onClick={toggleModal}
-                            >
-                                Tambah Jadwal
+                            <div>
+                                <label htmlFor="title" className="form-label">Judul kelas <span className="text-[#A43B2F]">*</span></label>
+                                <input
+                                    id="title"
+                                    type="text"
+                                    value={values.title}
+                                    onChange={handleChange}
+                                    className="form-control"
+                                    placeholder="Contoh: Dasar Manajemen Risiko"
+                                    required
+                                />
+                                <p className="mt-1.5 text-xs text-steel">Gunakan judul yang jelas dan mudah dicari peserta.</p>
+                                <ErrorMessage message={errors.title} />
+                            </div>
+
+                            <div>
+                                <label htmlFor="short_description" className="form-label">Deskripsi singkat <span className="text-[#A43B2F]">*</span></label>
+                                <textarea
+                                    id="short_description"
+                                    value={values.short_description}
+                                    onChange={handleChange}
+                                    rows={3}
+                                    className="form-control resize-y"
+                                    placeholder="Ringkas manfaat dan materi utama kelas dalam beberapa kalimat."
+                                    required
+                                />
+                                <ErrorMessage message={errors.short_description} />
+                            </div>
+
+                            <div>
+                                <div className="space-y-6">
+                                    <div>
+                                        <label htmlFor="thumbnail" className="form-label">Gambar sampul</label>
+                                        <div className="overflow-hidden rounded-xl border border-hairline bg-surface-soft p-3 sm:p-4">
+                                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                                                <div className="relative aspect-video w-full shrink-0 overflow-hidden rounded-lg border border-hairline bg-canvas sm:w-56">
+                                                    {thumbnailPreview ? (
+                                                        <img src={thumbnailPreview} alt="Pratinjau gambar sampul" className="h-full w-full object-cover" />
+                                                    ) : (
+                                                        <span className="flex h-full w-full flex-col items-center justify-center gap-1 text-steel">
+                                                            <i className="bx bx-image-alt text-3xl" aria-hidden />
+                                                            <span className="text-xs">Belum ada gambar</span>
+                                                        </span>
+                                                    )}
+                                                    <span className="absolute bottom-2 left-2 rounded bg-black/60 px-2 py-1 text-[11px] font-medium text-white">
+                                                        {values.thumbnail ? 'Pratinjau baru' : 'Sampul saat ini'}
+                                                    </span>
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-sm font-semibold text-ink">{values.thumbnail ? 'Gambar baru siap digunakan' : 'Perbarui gambar sampul'}</p>
+                                                    <p className="mt-1 text-xs leading-5 text-steel">Gunakan gambar PNG atau JPG dengan ukuran maksimal 10 MB. Rasio lanskap 16:9 direkomendasikan.</p>
+                                                    <label htmlFor="thumbnail" className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-primary/25 bg-canvas px-3 py-2 text-xs font-semibold text-primary-pressed transition-colors hover:border-primary/50 hover:bg-primary-mist">
+                                                        <i className="bx bx-image-add text-base" aria-hidden />
+                                                        {values.thumbnail?.name || 'Pilih gambar baru'}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <input id="thumbnail" type="file" onChange={handleChange} className="sr-only" accept="image/png,image/jpeg" />
+                                        <ErrorMessage message={errors.thumbnail} />
+                                    </div>
+
+                                    <div>
+                                        <p className="form-label">Deskripsi lengkap <span className="text-[#A43B2F]">*</span></p>
+                                        <div className="[&_.ql-container]:min-h-48 [&_.ql-container]:rounded-b-lg [&_.ql-container]:border-hairline [&_.ql-editor]:min-h-48 [&_.ql-toolbar]:rounded-t-lg [&_.ql-toolbar]:border-hairline [&_.ql-toolbar]:bg-surface-soft">
+                                            <ReactQuill
+                                            theme="snow"
+                                            value={values.description}
+                                            onChange={(value) => setValues((current) => ({ ...current, description: value }))}
+                                            placeholder="Jelaskan tujuan, materi, metode pembelajaran, dan hasil yang diharapkan."
+                                            />
+                                        </div>
+                                        <ErrorMessage message={errors.description} />
+                                    </div>
+
+                                    <div>
+                                        <label htmlFor="teaser_video" className="form-label">Tautan video teaser <span className="font-normal text-stone">(opsional)</span></label>
+                                        <input
+                                            id="teaser_video"
+                                            type="url"
+                                            value={values.teaser_video}
+                                            onChange={handleChange}
+                                            className="form-control"
+                                            placeholder="https://youtube.com/watch?v=..."
+                                        />
+                                        <ErrorMessage message={errors.teaser_video} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6 border-t border-hairline pt-6">
+
+                            <div className="space-y-5">
+                                <div>
+                                    <label htmlFor="type" className="form-label">Jenis kelas <span className="text-[#A43B2F]">*</span></label>
+                                    <select
+                                        id="type"
+                                        value={values.type}
+                                        onChange={handleChange}
+                                        className="form-control"
+                                        disabled={Boolean(course.type || course.access_mode)}
+                                        required
+                                    >
+                                        <option value="">Pilih jenis</option>
+                                        <option value="unschedule">Tidak Terjadwal</option>
+                                        <option value="schedule">Terjadwal</option>
+                                    </select>
+                                    <ErrorMessage message={errors.type} />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="category" className="form-label">Kategori <span className="text-[#A43B2F]">*</span></label>
+                                    <select
+                                        id="category"
+                                        value={values.category}
+                                        onChange={handleChange}
+                                        className="form-control"
+                                        required
+                                    >
+                                        <option value="">Pilih kategori</option>
+                                        {categories.map((category) => (
+                                            <option key={category.id} value={category.id}>{category.title}</option>
+                                        ))}
+                                    </select>
+                                    <ErrorMessage message={errors.category} />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label htmlFor="status" className="form-label">Status <span className="text-[#A43B2F]">*</span></label>
+                                        <select
+                                            id="status"
+                                            value={values.status}
+                                            onChange={handleChange}
+                                            className="form-control"
+                                            required
+                                        >
+                                            <option value="">Pilih</option>
+                                            <option value="publish">Publikasi</option>
+                                            <option value="draft">Draft</option>
+                                        </select>
+                                        <ErrorMessage message={errors.status} />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="jam_pelajaran" className="form-label">Jam pelajaran <span className="text-[#A43B2F]">*</span></label>
+                                        <input
+                                            id="jam_pelajaran"
+                                            type="text"
+                                            value={values.jam_pelajaran}
+                                            onChange={handleChange}
+                                            className="form-control"
+                                            placeholder="Contoh: 8 JP"
+                                            required
+                                        />
+                                        <ErrorMessage message={errors.jam_pelajaran} />
+                                    </div>
+                                </div>
+
+                                {values.type !== 'schedule' && <div>
+                                    <label htmlFor="expired" className="form-label">Kedaluwarsa (jam) <span className="text-[#A43B2F]">*</span></label>
+                                    <input
+                                        id="expired"
+                                        type="number"
+                                        min="0"
+                                        value={values.expired}
+                                        onChange={handleChange}
+                                        className="form-control"
+                                        placeholder="Contoh: 72"
+                                        required
+                                    />
+                                    <p className="mt-1.5 text-xs text-steel">Waktu akses setelah peserta memulai kelas.</p>
+                                    <ErrorMessage message={errors.expired} />
+                                </div>}
+                            </div>
+
+                            <div className="border-t border-hairline pt-5">
+                                <label className="form-label">Status peserta</label>
+                                <p className="mb-3 text-xs leading-5 text-steel">Pilih kelompok pegawai yang dapat mengikuti kelas ini.</p>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {employeeStatuses.map((status) => {
+                                        const statusId = status?.id ?? status;
+                                        const statusLabel = status?.title ?? String(status);
+                                        const isChecked = values.employee_status.some((value) => String(value) === String(statusId));
+                                        return (
+                                            <label key={statusId} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${isChecked ? 'border-primary/45 bg-primary-mist text-primary-pressed' : 'border-hairline bg-canvas text-charcoal hover:border-primary/30'}`}>
+                                                <input
+                                                    type="checkbox"
+                                                    id={`employee_status_${statusId}`}
+                                                    value={statusId}
+                                                    checked={isChecked}
+                                                    onChange={handleChange}
+                                                    className="h-4 w-4 rounded border-hairline text-primary focus:ring-primary"
+                                                />
+                                                <span className="truncate">{statusLabel}</span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                                <ErrorMessage message={errors.employee_status} />
+                            </div>
+
+                            <div className="border-t border-hairline pt-5">
+                                <label className="form-label">Trainer</label>
+                                <p className="mb-3 text-xs leading-5 text-steel">Pilih trainer yang mengampu kelas ini.</p>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {trainers.map((trainer) => {
+                                        const trainerId = trainer?.id ?? trainer;
+                                        const trainerLabel = trainer?.name ?? String(trainer);
+                                        const isChecked = values.trainers.some((value) => String(value) === String(trainerId));
+                                        return (
+                                            <label key={trainerId} className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${isChecked ? 'border-primary/45 bg-primary-mist text-primary-pressed' : 'border-hairline bg-canvas text-charcoal hover:border-primary/30'}`}>
+                                                <input
+                                                    type="checkbox"
+                                                    id={`trainer_${trainerId}`}
+                                                    value={trainerId}
+                                                    checked={isChecked}
+                                                    onChange={handleChange}
+                                                    className="h-4 w-4 rounded border-hairline text-primary focus:ring-primary"
+                                                />
+                                                <span className="truncate">{trainerLabel}</span>
+                                            </label>
+                                        );
+                                    })}
+                                    {!trainers.length && (
+                                        <p className="text-sm text-steel">Belum ada data trainer.</p>
+                                    )}
+                                </div>
+                                <ErrorMessage message={errors.trainers} />
+                            </div>
+                        </div>
+                    </div>
+
+                    {values.type === 'schedule' && (
+                        <section className={`${card} overflow-hidden`} aria-labelledby="schedule-title">
+                            <header className="flex flex-col gap-3 border-b border-hairline px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <h2 id="schedule-title" className="font-semibold text-ink">Jadwal kegiatan</h2>
+                                    <p className="mt-1 text-sm text-steel">Tanggal, waktu, dan kuota setiap sesi.</p>
+                                </div>
+                                <button type="button" onClick={() => setScheduleOpen(true)} className={btnPrimarySm}>Tambah jadwal</button>
+                            </header>
+                            <div className={tableScroller}>
+                                <table className={`${tableClass} min-w-[640px]`}>
+                                    <thead><tr><th>No.</th><th>Tanggal</th><th>Waktu</th><th className="text-right">Kuota</th><th className="text-right">Aksi</th></tr></thead>
+                                    <tbody>
+                                        {courseSchedules.length > 0 ? courseSchedules.map((schedule, index) => (
+                                            <tr key={schedule.id ?? `${schedule.date}-${index}`}>
+                                                <td>{index + 1}</td>
+                                                <td>{schedule.date}</td>
+                                                <td>{schedule.time_from}–{schedule.time_to}</td>
+                                                <td className="text-right tabular-nums">{schedule.quota}</td>
+                                                <td className="text-right"><button type="button" className={btnDanger} onClick={() => setCourseSchedules((current) => current.filter((_, rowIndex) => rowIndex !== index))}>Hapus</button></td>
+                                            </tr>
+                                        )) : (
+                                            <tr><td colSpan={5} className="admin-table-state"><p className="font-semibold text-ink">Belum ada jadwal</p><p className="text-sm text-steel">Tambahkan minimal satu jadwal.</p></td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <ErrorMessage message={errors.schedules} />
+                        </section>
+                    )}
+
+                    <div className="flex flex-col-reverse gap-3 border-t border-hairline pt-5 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-xs text-steel"><span className="text-[#A43B2F]">*</span> Wajib diisi sebelum menyimpan kelas.</p>
+                        <div className="flex flex-col-reverse gap-3 sm:flex-row">
+                            <Link href={route('admin.course.index')} className={btnSecondary}>Batal</Link>
+                            <button type="submit" className={btnPrimary}>
+                                <i className="bx bx-save text-lg" aria-hidden />
+                                Simpan perubahan
                             </button>
                         </div>
-
-                        <div className="p-0 overflow-x-auto">
-                            <table className="w-full text-sm text-center">
-                                <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-100">
-                                    <tr>
-                                        <th className="px-6 py-3 text-center">#</th>
-                                        <th className="px-6 py-3 text-center">Tanggal</th>
-                                        <th className="px-6 py-3 text-center">Rentang Waktu</th>
-                                        <th className="px-6 py-3 text-center">Kuota</th>
-                                        <th className="px-6 py-3 text-center">Aksi</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {data.length > 0 ? (
-                                        data.map((item, index) => (
-                                            <tr key={index} className="border-b">
-                                                <td className="px-6 py-4 text-center">{index + 1}</td>
-                                                <td className="px-6 py-4 text-center">{item.date}</td>
-                                                <td className="px-6 py-4 text-center">
-                                                    {item.time_from} - {item.time_to}
-                                                </td>
-                                                <td className="px-6 py-4 text-center">{item.quota}</td>
-
-                                                <td className="px-6 py-4 text-center">
-                                                    <button
-                                                        type="button"
-                                                        className="text-red-600 hover:text-red-900"
-                                                        onClick={() => handleDeleteSchedule(item.id)}
-                                                    >
-                                                        Hapus
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan="100%" className="text-center py-4">
-                                                Tidak ada data
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
                     </div>
-                ) : null}
-
-                <div className="max-w-4xl mx-auto flex flex-col sm:flex-row justify-end gap-4 mt-8 pb-12">
-                    <Link href={`/instructor`} className="w-full sm:w-auto">
-                        <button type="button" className="w-full sm:w-auto px-6 py-3 rounded-xl border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 hover:text-gray-900 font-bold transition-all shadow-sm">
-                            Kembali
-                        </button>
-                    </Link>
-                    <button type="submit" className="w-full sm:w-auto px-8 py-3 rounded-xl bg-primary text-white hover:bg-primary/90 font-bold shadow-sm hover:shadow transition-all hover:-translate-y-0.5">
-                        Simpan
-                    </button>
-                </div>
-            </form>
+                </form>
+            </div>
 
             <ModalAddSchedule
-                isOpen={isModalOpen}
-                onClose={toggleModal}
-                onScheduleAdded={handleScheduleAdded}
+                isOpen={scheduleOpen}
+                onClose={() => setScheduleOpen(false)}
+                onScheduleAdded={(schedule) => setCourseSchedules((current) => [...current, schedule])}
             />
-        </App>
+        </AdminLayout>
     );
-};
-
-export default Edit;
+}

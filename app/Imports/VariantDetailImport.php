@@ -2,9 +2,9 @@
 
 namespace App\Imports;
 
-use App\Models\Course\Question\QuestionItem;
-use App\Models\Course\Question\QuestionOption;
-use App\Models\Course\Question\QuestionVariant;
+use App\Models\Course\Activity\Assessment\QuestionItem;
+use App\Models\Course\Activity\Assessment\QuestionOption;
+use App\Models\Course\Activity\Assessment\QuestionVariant;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;

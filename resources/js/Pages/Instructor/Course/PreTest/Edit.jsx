@@ -3,11 +3,12 @@ import FormCheckbox from "@/Components/FormCheckbox";
 import FormInput from "@/Components/FormInput";
 import FormLabel from "@/Components/FormLabel";
 import FormTextArea from "@/Components/FormTextArea";
+import { btnPrimary, btnSecondary, card, sectionDescription, sectionTitle } from "@/Components/Admin/ui";
 import App from "@/Layouts/Instructor/App";
 import { Link, router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 
 const Edit = ({ slug, activity }) => {
     const { errors } = usePage().props;
@@ -46,24 +47,42 @@ const Edit = ({ slug, activity }) => {
 
     function handleSubmit(e) {
         e.preventDefault();
-        router.put(`/instructor/course/${slug}/activity/pre-test/${activity.id}`, values);
+        router.put(`/admin/course/${slug}/activity/pre-test/${activity.id}`, values);
     }
 
     return (
-        <App>
+        <App
+            title="Edit Pre-test"
+            breadcrumbs={[
+                { label: 'Kelas', href: `/admin/course/${slug}` },
+                { label: 'Aktivitas', href: `/admin/course/${slug}/activity` },
+                { label: 'Edit Pre-test' },
+            ]}
+            fullWidth
+        >
             <ActivityFormLayout
                 slug={slug}
                 type="pre-test"
                 title="Edit Pre-Test / Kuis"
                 description="Perbarui pengaturan soal pilihan ganda untuk Pre-Test ini."
                 isEdit={true}
+                fullWidth
             />
 
-            <form onSubmit={handleSubmit}>
-                <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="p-8">
-
-                        {/* JUDUL */}
+            <form onSubmit={handleSubmit} className="w-full space-y-5">
+                <section className={`${card} overflow-hidden`} aria-labelledby="detail-pretest">
+                    <div className="border-b border-hairline px-5 py-4 sm:px-7">
+                        <div className="flex items-start gap-3">
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-mist text-primary">
+                                <i className="bx bx-detail text-xl" aria-hidden />
+                            </span>
+                            <div>
+                                <h2 id="detail-pretest" className={sectionTitle}>Informasi pre-test</h2>
+                                <p className={sectionDescription}>Berikan nama dan ringkasan agar peserta memahami tujuan evaluasi ini.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="space-y-1 px-5 py-5 sm:px-7 sm:py-6">
                         <FormInput
                             title={"title"}
                             label={"Judul Pre-Test / Kuis"}
@@ -71,10 +90,8 @@ const Edit = ({ slug, activity }) => {
                             onChange={handleChange}
                             value={values.title}
                             error={errors.title}
-                            small={"Judul harus singkat dan jelas. Contoh: 'Tes Bab 1' atau 'Kuis Pengantar'."}
+                            small={"Gunakan judul singkat dan spesifik, misalnya “Tes Bab 1” atau “Kuis Pengantar”."}
                         />
-
-                        {/* DESKRIPSI */}
                         <FormTextArea
                             title={"description"}
                             label={"Deskripsi"}
@@ -82,10 +99,24 @@ const Edit = ({ slug, activity }) => {
                             onChange={handleChange}
                             value={values.description}
                             error={errors.description}
-                            small={"Berikan gambaran singkat mengenai tujuan atau isi pre-test."}
                         />
+                        <p className="-mt-1 text-xs leading-5 text-steel">Berikan gambaran singkat mengenai tujuan atau isi pre-test.</p>
+                    </div>
+                </section>
 
-                        {/* NILAI */}
+                <section className={`${card} overflow-hidden`} aria-labelledby="pengaturan-penilaian">
+                    <div className="border-b border-hairline px-5 py-4 sm:px-7">
+                        <div className="flex items-start gap-3">
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-mist text-primary">
+                                <i className="bx bx-slider-alt text-xl" aria-hidden />
+                            </span>
+                            <div>
+                                <h2 id="pengaturan-penilaian" className={sectionTitle}>Pengaturan penilaian</h2>
+                                <p className={sectionDescription}>Tentukan bobot, batas kelulusan, dan waktu pengerjaan peserta.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="grid gap-x-5 sm:grid-cols-2 px-5 py-5 sm:px-7 sm:py-6">
                         <FormInput
                             title={"value"}
                             label={"Bobot Nilai"}
@@ -94,43 +125,8 @@ const Edit = ({ slug, activity }) => {
                             onChange={handleChange}
                             value={values.value}
                             error={errors.value}
-                            small={"Isi bobot nilai untuk aktivitas ini (contoh: 10, 20, 100). Hanya angka diperbolehkan."}
+                            small={"Contoh: 10, 20, atau 100."}
                         />
-
-                        {/* TIMER */}
-                        <FormInput
-                            title={"timer"}
-                            label={"Durasi Waktu (Detik)"}
-                            isRequired={true}
-                            type="number"
-                            onChange={handleChange}
-                            value={values.timer}
-                            error={errors.timer}
-                            placeholder={"Waktu dalam detik"}
-                            small={"Masukkan durasi pengerjaan dalam detik. Contoh: 60 = 1 menit."}
-                        />
-
-                        {/* INSTRUKSI */}
-                        <div className="h-auto mb-3">
-                            <FormLabel title={"Instruksi Soal"} />
-
-                            <ReactQuill
-                                value={values.instruction}
-                                onChange={(value) =>
-                                    setValues((prev) => ({
-                                        ...prev,
-                                        instruction: value,
-                                    }))
-                                }
-                            />
-
-                            <small className="text-gray-500 text-xs mt-1 block">
-                                Cantumkan instruksi pengerjaan secara jelas, seperti aturan menjawab,
-                                larangan, atau petunjuk teknis lainnya.
-                            </small>
-                        </div>
-
-                        {/* NILAI MINIMUM */}
                         <FormInput
                             title={"min_score"}
                             label={"Nilai Minimum Kelulusan"}
@@ -139,27 +135,62 @@ const Edit = ({ slug, activity }) => {
                             onChange={handleChange}
                             value={values.min_score}
                             error={errors.min_score}
-                            small={"Nilai minimal agar peserta dinyatakan lulus. Contoh: 70."}
+                            small={"Nilai minimal agar peserta dinyatakan lulus."}
                         />
+                        <div className="sm:col-span-2">
+                            <FormInput
+                                title={"timer"}
+                                label={"Durasi Waktu (Detik)"}
+                                isRequired={true}
+                                type="number"
+                                onChange={handleChange}
+                                value={values.timer}
+                                error={errors.timer}
+                                placeholder={"Contoh: 1800"}
+                                small={"Gunakan 60 untuk 1 menit atau 1800 untuk 30 menit."}
+                            />
+                        </div>
+                    </div>
+                </section>
 
-                        {/* REPEATABLE */}
+                <section className={`${card} overflow-hidden`} aria-labelledby="instruksi-peserta">
+                    <div className="border-b border-hairline px-5 py-4 sm:px-7">
+                        <h2 id="instruksi-peserta" className={sectionTitle}>Instruksi untuk peserta</h2>
+                        <p className={sectionDescription}>Tambahkan aturan menjawab atau petunjuk teknis sebelum peserta memulai.</p>
+                    </div>
+                    <div className="px-5 py-5 sm:px-7 sm:py-6">
+                        <div className="[&_.ql-container]:min-h-36 [&_.ql-container]:rounded-b-lg [&_.ql-container]:border-hairline [&_.ql-editor]:min-h-36 [&_.ql-toolbar]:rounded-t-lg [&_.ql-toolbar]:border-hairline [&_.ql-toolbar]:bg-surface-soft">
+                            <FormLabel title={"Instruksi Soal"} />
+                            <ReactQuill
+                                value={values.instruction}
+                                onChange={(value) => setValues((prevValues) => ({ ...prevValues, instruction: value }))}
+                            />
+                        </div>
+                        <p className="mt-2 text-xs leading-5 text-steel">Cantumkan instruksi secara jelas, seperti aturan menjawab, larangan, atau petunjuk teknis lainnya.</p>
+                    </div>
+                </section>
+
+                <section className={`${card} p-5 sm:p-6`} aria-labelledby="opsi-pengerjaan">
+                    <h2 id="opsi-pengerjaan" className={sectionTitle}>Opsi pengerjaan</h2>
+                    <div className="mt-4 rounded-lg border border-hairline bg-surface-soft px-4 py-3.5">
                         <FormCheckbox
                             id="repeatable"
-                            title={"Boleh Diulang?"}
+                            title={"Izinkan peserta mengulang pre-test"}
                             onChange={handleChange}
                             checked={values.repeatable}
-                            small={"Aktifkan jika peserta diperbolehkan mengulang pengerjaan pre-test."}
                         />
+                        <p className="ml-6 text-xs leading-5 text-steel">Aktifkan bila peserta dapat mencoba kembali setelah menyelesaikan pre-test.</p>
                     </div>
-                </div>
+                </section>
 
-                <div className="max-w-3xl mx-auto flex flex-col sm:flex-row justify-end gap-3 mt-8">
-                    <Link href={`/instructor/course/${slug}/activity`} className="w-full sm:w-auto">
-                        <button type="button" className="w-full sm:w-auto px-6 py-2.5 rounded-xl border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 font-semibold transition-colors">
+                <div className="flex flex-col-reverse gap-3 border-t border-hairline pt-5 sm:flex-row sm:justify-end">
+                    <Link href={`/admin/course/${slug}/activity`} className="w-full sm:w-auto">
+                        <button type="button" className={`${btnSecondary} w-full sm:w-auto`}>
                             Kembali
                         </button>
                     </Link>
-                    <button type="submit" className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 font-semibold shadow-sm transition-colors">
+                    <button type="submit" className={`${btnPrimary} w-full sm:w-auto`}>
+                        <i className="bx bx-save text-lg" aria-hidden />
                         Simpan
                     </button>
                 </div>

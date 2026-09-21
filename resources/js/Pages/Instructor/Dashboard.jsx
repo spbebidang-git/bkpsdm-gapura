@@ -6,7 +6,7 @@ const Dashboard = ({ courses }) => {
 
     const handleSubmitDelete = (e, slug) => {
         e.preventDefault();
-        if (confirm("Apakah anda yakin ingin menghapus kursus ini?")) {
+        if (confirm("Apakah anda yakin ingin menghapus kelas ini?")) {
             router.delete(`/instructor/course/${slug}`);
         }
     };
@@ -22,13 +22,13 @@ const Dashboard = ({ courses }) => {
 
             <div className="max-w-7xl mx-auto bg-white border border-gray-100 overflow-hidden rounded-2xl shadow-sm">
                 <div className="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/50">
-                    <h2 className="text-xl font-bold text-gray-800">Daftar Kursus</h2>
+                    <h2 className="text-xl font-bold text-gray-800">Daftar Kelas</h2>
                     <Link
                         href="/instructor/course/create"
                         className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-sm hover:shadow text-sm font-semibold transition-all whitespace-nowrap"
                     >
                         <box-icon name='plus' color='#ffffff' size='18px'></box-icon>
-                        Tambah Kursus
+                        Tambah Kelas
                     </Link>
                 </div>
 
@@ -106,7 +106,7 @@ const Dashboard = ({ courses }) => {
                                     <td className="p-8 text-center text-gray-500" colSpan="100%">
                                         <div className="flex flex-col items-center justify-center">
                                             <box-icon name='folder-open' color='#cbd5e1' size='48px'></box-icon>
-                                            <p className="mt-3 text-sm font-medium">Belum ada kursus yang ditambahkan.</p>
+                                            <p className="mt-3 text-sm font-medium">Belum ada kelas yang ditambahkan.</p>
                                         </div>
                                     </td>
                                 </tr>

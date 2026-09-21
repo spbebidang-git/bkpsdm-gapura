@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Participant;
 
 use App\Models\Course\Course;
-use App\Models\Learn\Learn;
-use App\Services\User\UserService;
+use App\Models\Learning\Learn;
+use App\Services\Identity\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;

@@ -27,10 +27,9 @@ class BulkCertificateJob implements ShouldQueue
     public function handle(): void
     {
         $response = Http::withHeaders([
-            'apikey' => env('API_KEY'),
-            'Authorization' => $this->token
+            'Authorization' => $this->token,
         ])->acceptJson()->asForm()
-            ->post(env('SSO_BASE_URL') . '/api/post_sertifikat', [
+            ->post(rtrim((string) config('services.sso.base_url'), '/').'/api/post_sertifikat', [
                 'fc_kduker' => $this->item->fc_kduker_meta ?? 0,
                 'fc_kdsatker' => $this->item->fc_kdsatker_meta ?? 0,
                 'fc_kdsubsatker' => $this->item->fc_kdsubsatker_meta ?? 0,

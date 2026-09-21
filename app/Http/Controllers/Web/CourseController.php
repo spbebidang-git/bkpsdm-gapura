@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Course\Course;
 use App\Models\Course\Schedule;
-use App\Models\Learn\Learn;
+use App\Models\Learning\Learn;
 use App\Services\Course\CourseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -47,7 +47,6 @@ class CourseController extends Controller
                 'quota' => $course->quota,
                 'thumbnail' => $course->thumbnail_src,
                 'category' => $course->category->title,
-                'instructor' => $course->instructor->name,
                 'total_participant' => $course->total_participant,
                 'status' => $course->status,
             ],

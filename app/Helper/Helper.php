@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Level;
 use Illuminate\Support\Str;
 
 
@@ -8,8 +7,29 @@ use Illuminate\Support\Str;
 if (!function_exists('get_setting_meta')) {
     function get_setting_meta($key)
     {
-        $setting = \App\Models\Management\Setting::where('key', $key)->first();
+        $setting = \App\Models\System\Setting::where('key', $key)->first();
         return $setting ? $setting->value : false;
+    }
+}
+
+if (!function_exists('update_setting_meta')) {
+    function update_setting_meta($key, $value)
+    {
+        $setting = \App\Models\System\Setting::withTrashed()->where('key', $key)->first();
+        if ($setting) {
+            if (method_exists($setting, 'trashed') && $setting->trashed()) {
+                $setting->restore();
+            }
+            $setting->value = $value;
+            $setting->save();
+
+            return $setting;
+        }
+
+        return \App\Models\System\Setting::create([
+            'key' => $key,
+            'value' => $value,
+        ]);
     }
 }
 
@@ -18,7 +38,7 @@ if (!function_exists('get_setting_meta')) {
 if (!function_exists('get_user_meta')) {
     function get_user_meta($user_id, $key)
     {
-        $setting = \App\Models\Management\UserMeta::where('user_id', $user_id)->where('key', $key)->first();
+        $setting = \App\Models\Identity\UserMeta::where('user_id', $user_id)->where('key', $key)->first();
         if ($setting) {
             if ($key === 'nip') {
                 try {
@@ -61,11 +81,11 @@ if (!function_exists('find_user_by_nip')) {
     function find_user_by_nip($nip)
     {
         $nipHash = hash_hmac('sha256', $nip, config('app.key'));
-        $metaHash = \App\Models\Management\UserMeta::with('user')->where('key', 'nip_hash')->where('value', $nipHash)->first();
+        $metaHash = \App\Models\Identity\UserMeta::with('user')->where('key', 'nip_hash')->where('value', $nipHash)->first();
 
         // Jika hash ditemukan di database, tarik item orisinil (yang key-nya nip) sebagai return
         if ($metaHash) {
-            $metaNip = \App\Models\Management\UserMeta::with('user')
+            $metaNip = \App\Models\Identity\UserMeta::with('user')
                 ->where('user_id', $metaHash->user_id)
                 ->where('key', 'nip')
                 ->first();
@@ -73,7 +93,7 @@ if (!function_exists('find_user_by_nip')) {
         }
 
         // --- FALLBACK UNTUK NIP YANG BELUM TER-MIGRATE ---
-        $metas = \App\Models\Management\UserMeta::with('user')->where('key', 'nip')->get();
+        $metas = \App\Models\Identity\UserMeta::with('user')->where('key', 'nip')->get();
         foreach ($metas as $meta) {
             try {
                 if (\Illuminate\Support\Facades\Crypt::decryptString($meta->value) === $nip) {
@@ -95,12 +115,12 @@ if (!function_exists('update_user_meta')) {
         if ($key === 'nip') {
             // Save the hash implementation 
             $hashValue = hash_hmac('sha256', $value, config('app.key'));
-            $metaHash = \App\Models\Management\UserMeta::where('user_id', $user_id)->where('key', 'nip_hash')->first();
+            $metaHash = \App\Models\Identity\UserMeta::where('user_id', $user_id)->where('key', 'nip_hash')->first();
             if ($metaHash) {
                 $metaHash->value = $hashValue;
                 $metaHash->save();
             } else {
-                $newMetaHash = new \App\Models\Management\UserMeta();
+                $newMetaHash = new \App\Models\Identity\UserMeta();
                 $newMetaHash->user_id = $user_id;
                 $newMetaHash->key = 'nip_hash';
                 $newMetaHash->value = $hashValue;
@@ -110,12 +130,12 @@ if (!function_exists('update_user_meta')) {
             $value = \Illuminate\Support\Facades\Crypt::encryptString($value);
         }
 
-        $meta = \App\Models\Management\UserMeta::where('user_id', $user_id)->where('key', $key)->first();
+        $meta = \App\Models\Identity\UserMeta::where('user_id', $user_id)->where('key', $key)->first();
         if ($meta) {
             $meta->value = $value;
             $meta->save();
         } else {
-            $meta = new \App\Models\Management\UserMeta();
+            $meta = new \App\Models\Identity\UserMeta();
             $meta->user_id  = $user_id;
             $meta->key      = $key;
             $meta->value    = $value;

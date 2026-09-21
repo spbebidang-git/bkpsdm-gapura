@@ -31,10 +31,6 @@ class CourseResource extends JsonResource
                 'title' => $this->category->title,
                 'code' => $this->category->code,
             ]),
-            'instructor' => $this->whenLoaded('instructor', fn() => [
-                'id' => $this->instructor->id,
-                'name' => $this->instructor->name,
-            ]),
             'employee_status' => $this->whenLoaded('employeeStatus', fn() =>
                 $this->employeeStatus->pluck('title')->map(fn($t) => trim($t))
             ),

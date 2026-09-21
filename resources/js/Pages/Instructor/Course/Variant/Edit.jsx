@@ -25,7 +25,7 @@ const Edit = ({ slug, activityId, variant }) => {
     function handleSubmit(e) {
         e.preventDefault();
         router.put(
-            `/instructor/course/${slug}/activity/variant/${activityId}/${variant.id}`,
+            `/admin/course/${slug}/activity/variant/${activityId}/${variant.id}`,
             values
         );
     }
@@ -89,7 +89,7 @@ const Edit = ({ slug, activityId, variant }) => {
                 </div>
 
                 <div className="max-w-3xl mx-auto flex flex-col sm:flex-row justify-end gap-3 mt-8">
-                    <Link href={`/instructor/course/${slug}/activity`} className="w-full sm:w-auto">
+                    <Link href={`/admin/course/${slug}/activity`} className="w-full sm:w-auto">
                         <button type="button" className="w-full sm:w-auto px-6 py-2.5 rounded-xl border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 font-semibold transition-colors">
                             Kembali
                         </button>

@@ -7,13 +7,11 @@ use Illuminate\Http\Request;
 
 class IsParticipantMiddleware
 {
-    protected $participant;
-
     public function handle(Request $request, Closure $next)
     {
         if ($request->user() && $request->user()->hasRole('Participant')) {
-            $this->participant = $request->user();
-            view()->share('participant', $this->participant);
+            view()->share('participant', $request->user());
+
             return $next($request);
         }
 
@@ -27,9 +25,8 @@ class IsParticipantMiddleware
     protected function redirectResponse(Request $request, $route)
     {
         if ($request->expectsJson() || $request->isMethod('POST')) {
-            // Untuk AJAX/Inertia/Axios, kirim response custom
             return response()->json([
-                'redirect' => $route
+                'redirect' => $route,
             ], 409);
         }
 

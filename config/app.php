@@ -43,6 +43,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Local development access
+    |--------------------------------------------------------------------------
+    |
+    | Allows the admin area to be explored while the external sign-in flow is
+    | still being finalized. The middleware additionally restricts this flag to
+    | local and testing environments, so enabling it cannot bypass production
+    | authentication.
+    |
+    */
+
+    'dev_admin_bypass' => (bool) env('DEV_ADMIN_BYPASS', false),
+
+    'dev_admin_user_id' => env('DEV_ADMIN_USER_ID'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application URL
     |--------------------------------------------------------------------------
     |

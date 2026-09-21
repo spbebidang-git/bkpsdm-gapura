@@ -36,12 +36,24 @@ return [
     ],
 
     'sso' => [
-        'base_url'       => env('SSO_BASE_URL'),
-        'api_key'        => env('API_KEY'),
-        'client_id'      => env('SSO_CLIENT_ID'),
-        'client_secret'  => env('SSO_CLIENT_SECRET'),
+        'base_url' => env('SSO_BASE_URL'),
+        'api_key' => env('API_KEY'),
+        'client_id' => env('SSO_CLIENT_ID'),
+        'client_secret' => env('SSO_CLIENT_SECRET'),
         'admin_username' => env('SSO_ADMIN_USERNAME'),
-        'admin_pass'     => env('SSO_ADMIN_PASS'),
+        'admin_pass' => env('SSO_ADMIN_PASS'),
+        'categories_path' => env('SSO_CATEGORIES_PATH', '/api/get_kode_kegiatan'),
+        'admin_nip' => env('SSO_ADMIN_NIP', 'elearning'),
+    ],
+
+    'kedaton' => [
+        'base_url' => env('KEDATON_BASE_URL', 'https://kedaton.gresikkab.go.id'),
+        'client_id' => env('KEDATON_CLIENT_ID'),
+        'client_secret' => env('KEDATON_CLIENT_SECRET'),
+        'redirect_uri' => env('KEDATON_REDIRECT_URI', rtrim((string) env('APP_URL', ''), '/') . '/auth/kedaton/callback'),
+        'scope' => env('KEDATON_SCOPE'),
+        'data_key' => env('KEDATON_DATA_KEY'),
+        'data_type' => env('KEDATON_DATA_TYPE', 'pns'),
     ],
 
     // Removed kominfo static api_key

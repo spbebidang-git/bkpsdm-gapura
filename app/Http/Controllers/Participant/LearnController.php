@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\Participant;
 
 use App\Http\Controllers\Controller;
-use App\Models\Course\Activity;
+use App\Models\Course\Activity\Activity;
 use App\Models\Course\Course;
 use App\Models\Course\Schedule;
-use App\Models\Learn\Learn;
+use App\Models\Learning\Learn;
 use App\Services\Course\Activity\ActivityService;
 use App\Services\Course\Activity\QuestionService;
 use App\Services\Course\CourseService;
-use App\Services\Learn\LearnService;
+use App\Services\Learning\LearnService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -153,7 +153,7 @@ class LearnController extends Controller
 
     public function instruction(Course $course, Schedule $schedule, Activity $activity)
     {
-        if ($course->type === 'schedule') {
+        if ($course->access_mode === 'scheduled') {
             $now          = Carbon::now();
             $scheduleDate = Carbon::parse($schedule->getRawOriginal('date') ?? $schedule->date)->startOfDay();
 

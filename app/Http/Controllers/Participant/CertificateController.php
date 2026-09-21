@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Participant;
 
 use App\Models\Course\Course;
-use App\Models\Learn\Learn;
+use App\Models\Learning\Learn;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -16,7 +16,7 @@ class CertificateController
             $course = Course::where('slug', $request->course)->first();
 
             if (!$course) {
-                return redirect()->back()->with('danger', 'Kursus tidak ditemukan.');
+                return redirect()->back()->with('danger', 'Kelas tidak ditemukan.');
             }
 
             $learns = Learn::where('course_id', $course->id)
@@ -24,7 +24,7 @@ class CertificateController
                 ->first();
 
             if (!$learns) {
-                return redirect()->back()->with('danger', 'Data pembelajaran tidak ditemukan. Pastikan kamu sudah mengikuti kursus ini.');
+                return redirect()->back()->with('danger', 'Data pembelajaran tidak ditemukan. Pastikan kamu sudah mengikuti kelas ini.');
             }
 
             if (!$learns->url_certificate || $learns->url_certificate === '-') {

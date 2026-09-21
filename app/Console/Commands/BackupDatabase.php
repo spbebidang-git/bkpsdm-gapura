@@ -4,87 +4,111 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\Process;
-use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class BackupDatabase extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'db:backup {--weekly : Whether this is a weekly backup}';
+    protected $signature = 'db:backup {--weekly : Weekly retention set}';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Backup the database using mysqldump';
+    protected $description = 'Backup MySQL database with mysqldump (daily/weekly retention)';
 
-    /**
-     * Execute the console command.
-     */
-    public function handle()
+    public function handle(): int
     {
-        $database = config('database.connections.mysql.database');
-        $username = config('database.connections.mysql.username');
-        $password = config('database.connections.mysql.password');
-        $host = config('database.connections.mysql.host');
-        $port = config('database.connections.mysql.port');
+        $connection = config('database.default');
+        if ($connection !== 'mysql') {
+            $this->error("db:backup only supports mysql (current: {$connection}).");
+            Log::channel('backup')->error('db:backup skipped: not mysql', ['connection' => $connection]);
 
-        $isWeekly = $this->option('weekly');
-        $backupPath = storage_path('app/backups' . ($isWeekly ? '/weekly' : '/daily'));
-
-        if (!File::exists($backupPath)) {
-            File::makeDirectory($backupPath, 0755, true);
+            return self::FAILURE;
         }
 
-        $fileName = 'backup-' . date('Y-m-d_H-i-s') . '.sql';
-        $filePath = $backupPath . '/' . $fileName;
+        $cfg = config('database.connections.mysql');
+        $database = $cfg['database'] ?? null;
+        $username = $cfg['username'] ?? null;
+        $password = $cfg['password'] ?? '';
+        $host = $cfg['host'] ?? '127.0.0.1';
+        $port = (string) ($cfg['port'] ?? 3306);
 
-        $passwordArg = empty($password) ? '' : "--password={$password}";
-        
-        $command = "mysqldump --user={$username} {$passwordArg} --host={$host} --port={$port} {$database} > {$filePath}";
+        if (! $database || ! $username) {
+            $this->error('MySQL database/username not configured.');
 
-        $process = Process::fromShellCommandline($command);
-        $process->setTimeout(1800); 
+            return self::FAILURE;
+        }
+
+        $isWeekly = (bool) $this->option('weekly');
+        $backupPath = storage_path('app/backups/'.($isWeekly ? 'weekly' : 'daily'));
+        File::ensureDirectoryExists($backupPath, 0750);
+
+        $fileName = 'backup-'.now()->format('Y-m-d_H-i-s').'.sql.gz';
+        $filePath = $backupPath.'/'.$fileName;
+
+        // Args array — no shell interpolation of password
+        $process = new Process([
+            'mysqldump',
+            '--user='.$username,
+            '--host='.$host,
+            '--port='.$port,
+            '--single-transaction',
+            '--quick',
+            '--routines',
+            '--triggers',
+            $database,
+        ]);
+        $process->setTimeout(1800);
+        // Merge — setEnv replaces whole env (would drop PATH)
+        $env = array_merge($_ENV, $_SERVER);
+        if ($password !== '') {
+            $env['MYSQL_PWD'] = $password;
+        }
+        $process->setEnv($env);
 
         $this->info('Starting database backup...');
 
         try {
             $process->mustRun();
-            
-            $this->info('Database backup was successful. Saved to: ' . $filePath);
+            $sql = $process->getOutput();
+            if ($sql === '') {
+                throw new \RuntimeException('mysqldump produced empty output.');
+            }
 
-            // Keep 7 daily backups, and 4 weekly backups
+            $gz = gzencode($sql, 6);
+            if ($gz === false) {
+                throw new \RuntimeException('gzip failed.');
+            }
+            File::put($filePath, $gz);
+            @chmod($filePath, 0640);
+
             $keep = $isWeekly ? 4 : 7;
             $this->cleanupOldBackups($backupPath, $keep);
 
-        } catch (ProcessFailedException $exception) {
-            $this->error('The backup process failed.');
-            $this->error($exception->getMessage());
+            $bytes = File::size($filePath);
+            $this->info('Database backup OK: '.$filePath.' ('.number_format($bytes / 1024, 1).' KB)');
+            Log::channel('backup')->info('db:backup ok', [
+                'path' => $filePath,
+                'bytes' => $bytes,
+                'weekly' => $isWeekly,
+            ]);
+
+            return self::SUCCESS;
+        } catch (\Throwable $e) {
+            $this->error('Backup failed: '.$e->getMessage());
+            Log::channel('backup')->error('db:backup failed', ['message' => $e->getMessage()]);
+
+            return self::FAILURE;
         }
     }
 
-    protected function cleanupOldBackups($backupPath, $keep = 7)
+    protected function cleanupOldBackups(string $backupPath, int $keep = 7): void
     {
-        $files = File::files($backupPath);
+        $files = collect(File::files($backupPath))
+            ->filter(fn ($f) => str_contains($f->getFilename(), 'backup-'))
+            ->sortByDesc(fn ($f) => $f->getMTime())
+            ->values();
 
-        if (count($files) > $keep) {
-            // Sort files by modified time (oldest first)
-            usort($files, function ($a, $b) {
-                return $a->getMTime() - $b->getMTime();
-            });
-
-            // Keep the newest $keep files, delete the rest
-            $filesToDelete = array_slice($files, 0, count($files) - $keep);
-
-            foreach ($filesToDelete as $file) {
-                File::delete($file->getPathname());
-                $this->line("Deleted old backup: " . $file->getFilename());
-            }
+        foreach ($files->slice($keep) as $old) {
+            File::delete($old->getPathname());
+            $this->line('Deleted old backup: '.$old->getFilename());
         }
     }
 }

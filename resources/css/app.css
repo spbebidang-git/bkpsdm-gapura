@@ -34,6 +34,362 @@
     @apply w-20 h-7 text-sm font-medium bg-yellow-500 text-white rounded-full shadow
  }
 
- .title-card {
+.title-card {
     @apply font-bold text-xl text-gray-700
  }
+
+/* GAPURA admin system ----------------------------------------------------- */
+
+.admin-shell {
+    --admin-paper: #ffffff;
+    --admin-panel: #ffffff;
+    --admin-line: #dedbd2;
+    --admin-line-soft: #ebe8e0;
+    --admin-ink: #1d2927;
+    --admin-muted: #6f7772;
+    min-width: 0;
+    background-color: var(--admin-paper);
+    background-image: none;
+}
+
+.admin-shell ::selection {
+    color: #173b3a;
+    background: #cbe7e2;
+}
+
+.admin-nav {
+    scrollbar-width: thin;
+    scrollbar-color: #c9c7bf transparent;
+}
+
+.admin-panel,
+.admin-table-frame {
+    border: 1px solid var(--admin-line);
+    border-radius: 10px;
+    background: var(--admin-panel);
+    box-shadow: 0 1px 1px rgba(29, 41, 39, 0.03);
+}
+
+.admin-page-header {
+    margin-bottom: 1.25rem;
+    border-left: 2px solid #018083;
+    padding-left: 1rem;
+}
+
+.admin-table-frame {
+    overflow: hidden;
+    border-radius: 8px;
+    isolation: isolate;
+    clip-path: inset(0 round 8px);
+}
+
+.admin-table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border-bottom: 1px solid var(--admin-line);
+    padding: 0.875rem 1rem;
+    background: var(--admin-panel);
+}
+
+.admin-search-input {
+    display: block;
+    width: 100%;
+    height: 2.5rem;
+    border: 1px solid #d4d2ca;
+    border-radius: 8px;
+    background: #fff;
+    padding: 0 2.5rem 0 2.5rem;
+    color: var(--admin-ink);
+    font-size: 0.875rem;
+    transition: border-color 150ms, box-shadow 150ms;
+}
+
+.admin-search-input::placeholder {
+    color: #989d98;
+}
+
+.admin-search-input:focus {
+    border-color: #018083;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(1, 128, 131, 0.12);
+}
+
+.admin-table-count {
+    display: inline-flex;
+    min-height: 2rem;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.45rem;
+    border-left: 1px solid var(--admin-line);
+    padding-left: 0.875rem;
+    color: var(--admin-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.admin-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    scrollbar-width: thin;
+    scrollbar-color: #c9c7bf #f6f4ee;
+}
+
+.admin-table {
+    min-width: 720px;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.admin-table thead th,
+.admin-shell table:not([data-unstyled]) thead th {
+    border-bottom: 1px solid var(--admin-line);
+    background: #efeee8;
+    padding: 0.75rem 1rem;
+    color: #66716c;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    line-height: 1rem;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.admin-table tbody td,
+.admin-shell table:not([data-unstyled]) tbody td {
+    border-bottom: 1px solid var(--admin-line-soft);
+    padding: 0.875rem 1rem;
+    color: #34413e;
+    vertical-align: middle;
+}
+
+.admin-table tbody tr:last-child td,
+.admin-shell table:not([data-unstyled]) tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.admin-table tbody tr,
+.admin-shell table:not([data-unstyled]) tbody tr {
+    background: var(--admin-panel);
+    transition: background-color 120ms;
+}
+
+.admin-table tbody tr:hover,
+.admin-shell table:not([data-unstyled]) tbody tr:hover {
+    background: #f2f6f2;
+}
+
+.admin-table-state {
+    height: 13rem;
+    text-align: center !important;
+}
+
+.admin-table-state > * {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.admin-table-state p + p {
+    margin-top: 0.25rem;
+}
+
+.admin-table-state i + p,
+.admin-table-state span + p {
+    margin-top: 0.75rem;
+}
+
+.admin-table-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    border-top: 1px solid var(--admin-line);
+    padding: 0.875rem 1rem;
+    background: #f8f7f2;
+}
+
+.admin-shell .form-label {
+    display: block;
+    margin-bottom: 0.45rem;
+    color: #33413e;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+    text-transform: none;
+}
+
+.admin-shell .form-control {
+    display: block;
+    width: 100%;
+    min-height: 2.75rem;
+    border: 1px solid #d4d2ca;
+    border-radius: 8px;
+    background: #fff;
+    padding: 0.625rem 0.75rem;
+    color: var(--admin-ink);
+    font-size: 0.875rem;
+    line-height: 1.35rem;
+    transition: border-color 150ms, box-shadow 150ms;
+}
+
+.admin-shell .form-control:focus {
+    border-color: #018083;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(1, 128, 131, 0.12);
+}
+
+.admin-shell .form-control:disabled {
+    cursor: not-allowed;
+    background: #efeee8;
+    color: #777d79;
+}
+
+.admin-shell .form-control.error,
+.admin-shell .form-control[aria-invalid='true'] {
+    border-color: #b75346 !important;
+    box-shadow: 0 0 0 3px rgba(183, 83, 70, 0.1);
+}
+
+.admin-shell .button-primary {
+    width: auto;
+    border-radius: 8px;
+    background: #018083;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+}
+
+.admin-shell .button-primary:hover {
+    background: #016668;
+}
+
+.admin-shell .button-secondary {
+    width: auto;
+    border-radius: 8px;
+    box-shadow: none;
+}
+
+/* Normalize legacy course-workspace surfaces without changing their forms. */
+.admin-shell .rounded-2xl.border,
+.admin-shell .rounded-\[2rem\].border {
+    border-color: var(--admin-line) !important;
+    border-radius: 12px !important;
+    background-color: var(--admin-panel) !important;
+    box-shadow: 0 1px 1px rgba(29, 41, 39, 0.03) !important;
+}
+
+.admin-shell .rounded-xl.border {
+    border-color: var(--admin-line) !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+}
+
+.admin-shell .bg-gray-50\/50,
+.admin-shell .bg-gray-50\/80 {
+    background-color: #f5f6f4 !important;
+}
+
+.admin-shell form input[type='text'],
+.admin-shell form input[type='email'],
+.admin-shell form input[type='number'],
+.admin-shell form input[type='date'],
+.admin-shell form input[type='time'],
+.admin-shell form input[type='url'],
+.admin-shell form input[type='file'],
+.admin-shell form select,
+.admin-shell form textarea {
+    border-color: #d4d9d6 !important;
+    border-radius: 8px !important;
+    background-color: #fff !important;
+    color: var(--admin-ink) !important;
+    box-shadow: none !important;
+}
+
+.admin-shell form input:focus,
+.admin-shell form select:focus,
+.admin-shell form textarea:focus {
+    border-color: #018083 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(1, 128, 131, 0.12) !important;
+}
+
+.admin-shell form button[type='submit'],
+.admin-shell form button[type='button'] {
+    border-radius: 8px !important;
+    box-shadow: none !important;
+}
+
+.admin-shell .ql-toolbar.ql-snow {
+    border-color: var(--admin-line) !important;
+    border-radius: 8px 8px 0 0;
+    background: #f5f6f4;
+}
+
+.admin-shell .ql-container.ql-snow {
+    border-color: var(--admin-line) !important;
+    border-radius: 0 0 8px 8px;
+    background: #fff;
+}
+
+/* DataTables fallback used by a few older admin pages. */
+.admin-shell .dt-container {
+    color: #34413e;
+    font-size: 0.8125rem;
+}
+
+.admin-shell .dt-container .dt-layout-row {
+    margin: 0;
+    padding: 0.875rem 1rem;
+}
+
+.admin-shell .dt-container .dt-layout-row:first-child {
+    border-bottom: 1px solid var(--admin-line);
+}
+
+.admin-shell .dt-container .dt-layout-row:last-child {
+    border-top: 1px solid var(--admin-line);
+    background: #f8f7f2;
+}
+
+.admin-shell .dt-container .dt-input {
+    border: 1px solid #d4d2ca;
+    border-radius: 8px;
+    background: #fff;
+    color: var(--admin-ink);
+}
+
+.admin-shell .dt-container .dt-paging-button {
+    border-radius: 6px !important;
+}
+
+.admin-shell .dt-container .dt-paging-button.current {
+    border-color: #018083 !important;
+    background: #018083 !important;
+    color: #fff !important;
+}
+
+@media (min-width: 640px) {
+    .admin-table-footer {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
+@media (max-width: 639px) {
+    .admin-table-toolbar {
+        align-items: stretch;
+    }
+
+    .admin-table-count {
+        border-left: 0;
+        padding-left: 0;
+    }
+
+    .admin-shell input,
+    .admin-shell select,
+    .admin-shell textarea {
+        font-size: 1rem;
+    }
+}

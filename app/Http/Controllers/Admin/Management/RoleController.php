@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Management;
 
+use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -9,12 +10,12 @@ class RoleController
 {
     public function index()
     {
-        if (request()->ajax()) {
+        if (request()->ajax() && ! request()->header('X-Inertia')) {
             return DataTables::of(Role::all())
                 ->addIndexColumn()
                 ->make();
         }
 
-        return view('admin.management.role.index');
+        return Inertia::render('Admin/Management/Role/Index');
     }
 }

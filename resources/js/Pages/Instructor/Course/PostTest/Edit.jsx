@@ -6,8 +6,8 @@ import FormTextArea from "@/Components/FormTextArea";
 import App from "@/Layouts/Instructor/App";
 import { Link, router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 
 const Edit = ({ slug, activity }) => {
     const { errors } = usePage().props;
@@ -46,7 +46,7 @@ const Edit = ({ slug, activity }) => {
 
     function handleSubmit(e) {
         e.preventDefault();
-        router.put(`/instructor/course/${slug}/activity/post-test/${activity.id}`, values);
+        router.put(`/admin/course/${slug}/activity/post-test/${activity.id}`, values);
     }
 
     return (
@@ -154,7 +154,7 @@ const Edit = ({ slug, activity }) => {
                 </div>
 
                 <div className="max-w-3xl mx-auto flex flex-col sm:flex-row justify-end gap-3 mt-8">
-                    <Link href={`/instructor/course/${slug}/activity`} className="w-full sm:w-auto">
+                    <Link href={`/admin/course/${slug}/activity`} className="w-full sm:w-auto">
                         <button type="button" className="w-full sm:w-auto px-6 py-2.5 rounded-xl border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 font-semibold transition-colors">
                             Kembali
                         </button>

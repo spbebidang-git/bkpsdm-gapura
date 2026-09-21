@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 |
 | Semua endpoint di bawah ini memerlukan Bearer token via Sanctum.
-| Gunakan POST /api/v1/login untuk mendapatkan token.
+| POST /api/v1/login {username=NIP, password} → SSO → Admin → Sanctum token.
 |
 */
 

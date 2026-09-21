@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Learn\Learn;
-use App\Services\TokenService;
+use App\Models\Learning\Learn;
+use App\Services\Auth\TokenService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -30,23 +30,20 @@ class SetUrlCertificateCommand extends Command
                 Log::debug('[SetUrlCertificate] Token berhasil diambil.');
             }
 
-            # Ambil data sertifikat dari API
-            $response = Http::withHeaders([
-                'apikey' => env('API_KEY'),
-                'Authorization' => $token,
-            ])
+            $url = rtrim((string) config('services.sso.base_url'), '/').'/api/get_data_sertifikat';
+
+            $response = Http::withHeaders(['Authorization' => $token])
                 ->acceptJson()
                 ->asForm()
-                ->post(env('SSO_BASE_URL') . '/api/get_data_sertifikat');
+                ->post($url);
 
-            // Jika 401 (token stale), force refresh dan retry
             if ($response->status() === 401) {
                 Log::warning('[SetUrlCertificate] Token 401 — force refresh dan retry.');
                 $token = $this->tokenService->forceRefresh();
-                $response = Http::withHeaders([
-                    'apikey' => env('API_KEY'),
-                    'Authorization' => $token,
-                ])->acceptJson()->asForm()->post(env('SSO_BASE_URL') . '/api/get_data_sertifikat');
+                $response = Http::withHeaders(['Authorization' => $token])
+                    ->acceptJson()
+                    ->asForm()
+                    ->post($url);
             }
 
             if (app()->isLocal()) {

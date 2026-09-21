@@ -1,198 +1,129 @@
-import App from "@/Layouts/Instructor/App";
-import { Link, router } from "@inertiajs/react";
+import { confirmDelete } from '@/Components/Admin/ConfirmDelete';
+import {
+    badgeInfo,
+    badgeOk,
+    badgePending,
+    btnDanger,
+    btnEdit,
+    btnPrimarySm,
+    btnSecondarySm,
+    btnXs,
+    card,
+    pageDescription,
+    pageEyebrow,
+    pageHeader,
+    pageTitle,
+    tableClass,
+    tableScroller,
+} from '@/Components/Admin/ui';
+import App from '@/Layouts/Instructor/App';
+import { Link } from '@inertiajs/react';
 
-const Index = ({ slug, activity, variants, variantWarning }) => {
-    function handleSubmitDelete(e, variantId) {
-        e.preventDefault();
-        router.delete(
-            `/instructor/course/${slug}/activity/variant/${activity.activity_id}/${variantId}`
-        );
-    }
-
+export default function Index({ slug, activity, variants = [], variantWarning }) {
     return (
-        <App>
-            <div className="max-w-7xl mx-auto mb-8">
-                <div className="text-center mb-8">
-                    <h1 className="text-2xl md:text-3xl font-extrabold text-gray-800 mb-2">
-                        Daftar Variasi Soal
-                    </h1>
-                    <p className="text-sm font-normal max-w-2xl mx-auto text-gray-500 leading-relaxed">
-                        Fitur ini digunakan untuk membuat paket-paket variasi pertanyaan. Antar varian pertanyaan diharapkan memiliki jumlah soal yang sama.
-                    </p>
+        <App title="Variasi Soal">
+            <div className="space-y-5">
+                <div className={pageHeader}>
+                    <div className="min-w-0">
+                        <p className={pageEyebrow}>Kelas · Pertanyaan</p>
+                        <h1 className={pageTitle}>Variasi soal</h1>
+                        <p className={pageDescription}>Susun beberapa paket soal dengan jumlah pertanyaan yang seimbang.</p>
+                    </div>
+                    <Link href={`/admin/course/${slug}`} className={btnSecondarySm}>Kembali</Link>
                 </div>
 
-                {/* INFORMASI ACTIVITY */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
-                    <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/50">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
-                                <box-icon name='info-circle' color='var(--color-primary)' size='20px'></box-icon>
-                            </div>
-                            <h2 className="text-lg font-bold text-gray-800">Detail Kegiatan</h2>
+                <section className={`${card} overflow-hidden`} aria-labelledby="activity-detail-title">
+                    <header className="border-b border-hairline px-5 py-4">
+                        <h2 id="activity-detail-title" className="font-semibold text-ink">Kegiatan</h2>
+                    </header>
+                    <dl className="grid gap-4 px-5 py-4 md:grid-cols-[minmax(180px,0.7fr)_minmax(0,1.3fr)]">
+                        <div>
+                            <dt className="text-xs font-semibold uppercase tracking-[0.08em] text-stone">Judul</dt>
+                            <dd className="mt-1 text-sm font-semibold text-ink">{activity.title || '—'}</dd>
                         </div>
-                        <Link href={`/instructor/course/${slug}`} className="w-full sm:w-auto">
-                            <button className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-gray-200 text-gray-700 bg-white hover:bg-gray-50 font-semibold shadow-sm transition-all text-sm">
-                                Kembali
-                            </button>
-                        </Link>
-                    </div>
+                        <div>
+                            <dt className="text-xs font-semibold uppercase tracking-[0.08em] text-stone">Deskripsi</dt>
+                            <dd className="mt-1 text-sm leading-6 text-charcoal">{activity.description || '—'}</dd>
+                        </div>
+                    </dl>
+                </section>
 
-                    <div className="relative overflow-x-auto w-full">
-                        <table className="w-full text-sm text-left text-gray-600">
-                            <thead className="text-xs text-gray-500 uppercase bg-gray-50/80">
-                                <tr>
-                                    <th className="px-6 py-4 font-semibold whitespace-nowrap min-w-[200px]">Judul</th>
-                                    <th className="px-6 py-4 font-semibold whitespace-nowrap min-w-[300px]">Deskripsi</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                <tr className="bg-white hover:bg-gray-50/50 transition-colors">
-                                    <td className="px-6 py-4 font-medium text-gray-800 align-top">
-                                        {activity.title}
-                                    </td>
-                                    <td className="px-6 py-4 text-gray-600 leading-relaxed">
-                                        {activity.description}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                {variantWarning?.hasEmpty && (
+                    <div className="flex items-start gap-3 rounded-lg border border-[#E9BEB8] bg-[#FFF4F1] p-4 text-sm text-[#8E342A]" role="alert">
+                        <i className="bx bx-error-circle mt-0.5 text-lg" aria-hidden />
+                        <div>
+                            <p className="font-semibold">Ada variasi tanpa soal</p>
+                            <p className="mt-1 leading-5">{variantWarning.emptyVariants.join(', ')} akan dilewati saat tes.</p>
+                        </div>
                     </div>
-                </div>
-
-                {/* WARNING BANNER */}
-                {variantWarning && (
-                    <div className="mb-8 space-y-3">
-                        {variantWarning.hasEmpty && (
-                            <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 border border-red-200">
-                                <div className="flex-shrink-0 mt-0.5">
-                                    <box-icon name='error-circle' color='#dc2626' size='20px'></box-icon>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-red-800">
-                                        Terdapat varian tanpa soal!
-                                    </p>
-                                    <p className="text-sm text-red-700 mt-0.5">
-                                        Varian <strong>{variantWarning.emptyVariants.join(', ')}</strong> belum memiliki pertanyaan. Varian tanpa soal akan dilewati saat peserta mengerjakan tes.
-                                    </p>
-                                </div>
-                            </div>
-                        )}
-                        {variantWarning.hasMismatch && (
-                            <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200">
-                                <div className="flex-shrink-0 mt-0.5">
-                                    <box-icon name='error' color='#d97706' size='20px'></box-icon>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-amber-800">
-                                        Jumlah soal antar varian tidak sama!
-                                    </p>
-                                    <p className="text-sm text-amber-700 mt-0.5">
-                                        Pastikan semua varian memiliki jumlah pertanyaan yang sama agar penilaian peserta adil dan konsisten.
-                                    </p>
-                                </div>
-                            </div>
-                        )}
+                )}
+                {variantWarning?.hasMismatch && (
+                    <div className="flex items-start gap-3 rounded-lg border border-[#F0CAA1] bg-[#FFF4E8] p-4 text-sm text-[#7A3C05]" role="alert">
+                        <i className="bx bx-error mt-0.5 text-lg" aria-hidden />
+                        <div>
+                            <p className="font-semibold">Jumlah soal belum sama</p>
+                            <p className="mt-1 leading-5">Samakan jumlah pertanyaan pada setiap variasi.</p>
+                        </div>
                     </div>
                 )}
 
-                {/* LIST VARIANT */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/50">
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <box-icon name='layer' color='var(--color-primary)' size='20px'></box-icon>
-                            </div>
-                            <h2 className="text-lg font-bold text-gray-800">Daftar Variasi</h2>
+                <section className={`${card} overflow-hidden`} aria-labelledby="variant-list-title">
+                    <header className="flex flex-col gap-3 border-b border-hairline px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h2 id="variant-list-title" className="font-semibold text-ink">Daftar variasi</h2>
+                            <p className="mt-1 text-sm text-steel">{variants.length.toLocaleString('id-ID')} variasi tersimpan.</p>
                         </div>
-                        <Link
-                            href={`/instructor/course/${slug}/activity/variant/${activity.activity_id}/create`}
-                            className="inline-flex items-center justify-center w-full sm:w-auto px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-sm hover:shadow font-semibold transition-all text-sm gap-2 whitespace-nowrap"
-                        >
-                            <box-icon name='plus' color='#ffffff' size='18px'></box-icon>
-                            Tambah Varian Baru
+                        <Link href={`/admin/course/${slug}/activity/variant/${activity.activity_id}/create`} className={btnPrimarySm}>
+                            <i className="bx bx-plus text-base" aria-hidden />
+                            Variasi baru
                         </Link>
-                    </div>
-
-                    <div className="relative overflow-x-auto w-full">
-                        <table className="w-full text-sm text-left text-gray-600">
-                            <thead className="text-xs text-gray-500 uppercase bg-gray-50/80">
+                    </header>
+                    <div className={tableScroller}>
+                        <table className={`${tableClass} min-w-[780px]`}>
+                            <thead>
                                 <tr>
-                                    <th className="px-6 py-4 font-semibold whitespace-nowrap text-center">Judul Variasi</th>
-                                    <th className="px-6 py-4 font-semibold whitespace-nowrap text-center">Kode</th>
-                                    <th className="px-6 py-4 font-semibold whitespace-nowrap text-center">Jml Soal</th>
-                                    <th className="px-6 py-4 font-semibold whitespace-nowrap text-center">Acak Soal</th>
-                                    <th className="px-6 py-4 font-semibold whitespace-nowrap text-center min-w-[250px]">Aksi</th>
+                                    <th className="admin-sticky-cell text-left">Variasi</th>
+                                    <th className="text-left">Kode</th>
+                                    <th className="text-right">Jumlah soal</th>
+                                    <th className="text-left">Acak soal</th>
+                                    <th className="text-right">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {variants.length ? (
-                                    variants.map((item, index) => (
-                                        <tr key={index} className="bg-white hover:bg-gray-50/50 transition-colors group">
-                                            <td className="px-6 py-4 text-center font-medium text-gray-800">
-                                                {item.variant}
-                                            </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <span className="inline-block px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold font-mono">
-                                                    {item.code}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-center font-medium">
-                                                {item.question_count}
-                                            </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold
-                                                    ${item.mix ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : 'bg-gray-100 text-gray-600 border border-gray-200'}`}
+                            <tbody>
+                                {variants.length > 0 ? variants.map((item, index) => (
+                                    <tr key={item.id ?? index}>
+                                        <td className="admin-sticky-cell font-semibold text-ink">{item.variant || '—'}</td>
+                                        <td><span className={badgeInfo}>{item.code || '—'}</span></td>
+                                        <td className="text-right tabular-nums">{item.question_count ?? 0}</td>
+                                        <td><span className={item.mix ? badgeOk : badgePending}>{item.mix ? 'Ya' : 'Tidak'}</span></td>
+                                        <td>
+                                            <div className="flex flex-wrap justify-end gap-2">
+                                                <Link href={`/admin/course/${slug}/activity/variant/${activity.activity_id}/${item.id}/question-item`} className={btnXs}>Atur soal</Link>
+                                                <Link href={`/admin/course/${slug}/activity/variant/${activity.activity_id}/${item.id}/edit`} className={btnEdit}>Edit</Link>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => confirmDelete(`/admin/course/${slug}/activity/variant/${activity.activity_id}/${item.id}`)}
+                                                    className={btnDanger}
                                                 >
-                                                    {item.mix ? "Ya" : "Tidak"}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex justify-center items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                                                    <Link
-                                                        href={`/instructor/course/${slug}/activity/variant/${activity.activity_id}/${item.id}/question-item`}
-                                                    >
-                                                        <button className="inline-flex items-center justify-center px-4 py-1.5 text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition-colors border border-indigo-200/50">
-                                                            Atur Soal
-                                                        </button>
-                                                    </Link>
-
-                                                    <Link
-                                                        href={`/instructor/course/${slug}/activity/variant/${activity.activity_id}/${item.id}/edit`}
-                                                    >
-                                                        <button className="inline-flex items-center justify-center px-4 py-1.5 text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg transition-colors border border-amber-200/50">
-                                                            Edit
-                                                        </button>
-                                                    </Link>
-
-                                                    <button
-                                                        onClick={(e) =>
-                                                            handleSubmitDelete(e, item.id)
-                                                        }
-                                                        className="inline-flex items-center justify-center px-4 py-1.5 text-xs font-semibold bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition-colors border border-red-200/50"
-                                                    >
-                                                        Hapus
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="100%" className="p-8 text-center text-gray-500">
-                                            <div className="flex flex-col items-center justify-center">
-                                                <box-icon name='folder-open' color='#cbd5e1' size='48px'></box-icon>
-                                                <p className="mt-3 text-sm font-medium">Belum ada varian yang ditambahkan.</p>
+                                                    Hapus
+                                                </button>
                                             </div>
+                                        </td>
+                                    </tr>
+                                )) : (
+                                    <tr>
+                                        <td colSpan={5} className="admin-table-state">
+                                            <i className="bx bx-layer text-2xl text-stone" aria-hidden />
+                                            <p className="font-semibold text-ink">Belum ada variasi</p>
+                                            <p className="text-sm text-steel">Tambahkan paket soal pertama untuk kegiatan ini.</p>
                                         </td>
                                     </tr>
                                 )}
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </section>
             </div>
         </App>
     );
-};
-
-export default Index;
+}

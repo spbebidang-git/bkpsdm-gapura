@@ -14,9 +14,8 @@ class CategoryFactory extends Factory
         $title = $this->faker->unique()->word();
 
         return [
+            'code' => (string) $this->faker->unique()->numberBetween(1, 99),
             'title' => $title,
-            'slug' => str()->slug($title),
-            'is_primary' => $this->faker->boolean
         ];
     }
 }

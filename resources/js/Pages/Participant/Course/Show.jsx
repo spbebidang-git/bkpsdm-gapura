@@ -68,11 +68,6 @@ const Show = ({ course, learn }) => {
                                     </Link>
                                 </div>
 
-                                <p className="text-sm md:text-base text-gray-500 mb-4 flex items-center gap-1.5">
-                                    <span className="italic">Oleh</span>
-                                    <span className="font-semibold text-gray-800">{course.instructor}</span>
-                                </p>
-
                                 <p className="text-sm md:text-base text-gray-600 mb-8 leading-relaxed">
                                     {course.short_description}
                                 </p>

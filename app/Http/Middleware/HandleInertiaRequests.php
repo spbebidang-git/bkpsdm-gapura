@@ -33,11 +33,14 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => [
-                    'name' => $request->user() ? $request->user()->name : null,
-                    'email' => $request->user() ? $request->user()->email : null,
-                    'profile_picture' => $request->user() ? $request->user()->profile_picture : null,
-                ],
+                'user' => $request->user() ? [
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'email' => $request->user()->email,
+                    'profile_picture' => $request->user()->profile_picture,
+                    'roles' => $request->user()->getRoleNames()->values(),
+                    'is_admin' => $request->user()->hasRole('Admin'),
+                ] : null,
             ],
             'site' => [
                 'logo' => get_setting_meta('site_logo') ? asset('assets/media/images/managements/settings/' . get_setting_meta('site_logo')) : asset('assets/media/images/static/site_logo.png')

@@ -2,38 +2,46 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Models\User;
+use App\Services\Auth\SsoAuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 class AuthController
 {
+    public function __construct(protected SsoAuthService $sso) {}
+
     /**
-     * Login via API dan dapatkan bearer token.
-     * Hanya akun dengan role Admin yang diizinkan.
+     * SSO login → Admin only → Sanctum token.
      */
     public function login(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => 'required|string|email',
-            'password' => 'required|string|max:4096',
-            'device_name' => 'nullable|string|max:100',
+            'username' => 'required|string',
+            'password' => 'required|string',
+            'device_name' => 'nullable|string|max:255',
         ]);
 
-        $user = User::where('email', $request->email)->first();
-        if (!$user || !$user->hasRole('Admin') || $user->hasRole('Participant') || !Hash::check($request->password, $user->password)) {
+        try {
+            $user = $this->sso->loginOrProvision(
+                trim($request->username),
+                $request->password
+            );
+        } catch (RuntimeException) {
             throw ValidationException::withMessages([
-                'email' => ['Kredensial yang diberikan tidak valid.'],
+                'username' => ['Kredensial SSO tidak valid.'],
+            ]);
+        }
+
+        if (! $user->hasRole('Admin')) {
+            throw ValidationException::withMessages([
+                'username' => ['Hanya akun Admin yang dapat mengakses API.'],
             ]);
         }
 
         $deviceName = $request->device_name ?? 'iop-client';
-        $expirationMinutes = max(1, (int) config('sanctum.expiration'));
-        $user->tokens()->where('name', $deviceName)->delete();
-        $expiresAt = now()->addMinutes($expirationMinutes);
-        $token = $user->createToken($deviceName, ['api:read'], $expiresAt);
+        $token = $user->createToken($deviceName);
 
         return response()->json([
             'message' => 'Login berhasil.',
@@ -42,13 +50,11 @@ class AuthController
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'nip' => $user->nip,
             ],
         ]);
     }
 
-    /**
-     * Logout — revoke token yang sedang digunakan.
-     */
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();

@@ -34,7 +34,7 @@ class GenerateApiToken extends Command
             $email = $this->ask('Enter the user email to manage tokens for');
         }
 
-        $user = \App\Models\User::where('email', $email)->first();
+        $user = \App\Models\Identity\User::where('email', $email)->first();
 
         if (!$user) {
             $this->error("User with email {$email} not found!");

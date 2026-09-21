@@ -2,117 +2,93 @@
 
 namespace App\Http\Controllers\Web;
 
-use App\Models\User;
-use App\Services\User\UserService;
+use App\Models\Identity\User;
+use App\Services\Auth\KedatonOAuthService;
+use App\Services\Identity\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Inertia\Inertia;
 
 class AuthController
 {
-    public function __construct(private readonly UserService $userService)
+    public function __construct(
+        private readonly UserService $userService,
+        private readonly KedatonOAuthService $kedaton,
+    )
     {
     }
 
     public function index()
     {
-        return Inertia::render('Auth/Login');
+        return \Inertia\Inertia::render('Auth/Login');
     }
 
-    /**
-     * Admins authenticate with a locally managed account. Participants are
-     * authenticated by Prestige on every sign-in and can never log in locally.
-     */
-    public function store(Request $request)
+    public function redirectToKedaton(Request $request)
     {
-        $rules = [
-            'username' => ['required', 'string', 'max:255'],
-            'password' => ['required', 'string', 'max:4096'],
-            'captcha' => config('captcha.disable')
-                ? ['required', 'string']
-                : ['required', 'string', 'captcha_api:' . $request->input('captcha_key') . ',default'],
-        ];
-
-        if (! config('captcha.disable')) {
-            $rules['captcha_key'] = ['required', 'string'];
+        if (! $this->kedaton->isConfigured()) {
+            return to_route('sign-in.index')->withErrors([
+                'email_or_username' => 'Layanan login Kedaton belum dikonfigurasi.',
+            ]);
         }
 
-        $validator = Validator::make($request->all(), $rules, [
-            'captcha.captcha_api' => 'The CAPTCHA is incorrect. Please try again.',
-        ]);
+        $state = $this->kedaton->newState();
+        $request->session()->put('kedaton_oauth_state', $state);
 
-        if ($validator->fails()) {
-            return to_route('sign-in.index')->withErrors($validator)->withInput();
-        }
-
-        $identity = trim((string) $request->input('username'));
-
-        if (filter_var($identity, FILTER_VALIDATE_EMAIL)) {
-            return $this->loginAdmin($request, Str::lower($identity));
-        }
-
-        return $this->loginParticipantWithPrestige($request, $identity);
+        return redirect()->away($this->kedaton->authorizationUrl($state));
     }
 
-    private function loginAdmin(Request $request, string $email)
+    public function handleKedatonCallback(Request $request)
     {
-        $user = User::where('email', $email)->first();
+        $state = (string) $request->session()->pull('kedaton_oauth_state', '');
 
-        if (! $user || ! $user->hasRole('Admin') || $user->hasRole('Participant') || ! Auth::attempt([
-            'email' => $email,
-            'password' => $request->input('password'),
-        ])) {
+        if ($request->filled('error') || $state === '' || ! hash_equals($state, (string) $request->query('state'))) {
             return $this->invalidCredentialsResponse();
         }
 
-        $request->session()->regenerate();
-
-        return Inertia::location(route('admin.dashboard'));
-    }
-
-    private function loginParticipantWithPrestige(Request $request, string $nip)
-    {
-        if (! preg_match('/^\d{3,32}$/', $nip)) {
+        $code = $request->query('code');
+        if (! is_string($code) || $code === '') {
             return $this->invalidCredentialsResponse();
         }
 
         try {
-            $tokenResponse = $this->requestPrestigeToken($nip, $request->input('password'));
+            $tokenResponse = $this->kedaton->exchangeCode($code);
+            $accessToken = $tokenResponse->json('access_token');
 
-            if (! $tokenResponse->successful() || ! filled($tokenResponse->json('access_token'))) {
+            if (! $tokenResponse->successful() || ! is_string($accessToken) || $accessToken === '') {
                 return $this->invalidCredentialsResponse();
             }
 
-            $participantResponse = Http::timeout(5)
-                ->acceptJson()
-                ->withHeaders([
-                    'apikey' => config('services.sso.api_key'),
-                    'Authorization' => 'Bearer ' . $tokenResponse->json('access_token'),
-                ])
-                ->post(config('services.sso.base_url') . '/api/get_nip_data');
-
-            if (! $participantResponse->successful() || ! is_array($participantResponse->json())) {
+            $checkResponse = $this->kedaton->checkToken($accessToken);
+            $verifiedData = $checkResponse->json();
+            if (! $checkResponse->successful() || ! is_array($verifiedData)) {
                 return $this->invalidCredentialsResponse();
             }
 
-            $participant = $this->provisionOrSyncParticipant($nip, $participantResponse->json());
-
-            if (! $participant) {
+            $nip = $this->kedaton->verifiedNip($verifiedData);
+            if ($nip === null) {
+                Log::warning('Kedaton token check did not include a verified NIP.');
                 return $this->invalidCredentialsResponse();
             }
 
-            Auth::login($participant);
+            $employeeResponse = $this->kedaton->getEmployee($nip);
+            $employeeData = $employeeResponse->json();
+            if (! $employeeResponse->successful() || ! is_array($employeeData)) {
+                return $this->invalidCredentialsResponse();
+            }
+
+            $user = $this->provisionOrSyncKedatonUser($nip, $employeeData + $verifiedData);
+            if (! $user) {
+                return $this->invalidCredentialsResponse();
+            }
+
+            Auth::login($user);
             $request->session()->regenerate();
 
-            return to_route('home');
+            return to_route($user->hasRole('Admin') ? 'admin.dashboard' : 'home');
         } catch (\Throwable $exception) {
-            // Never write passwords, OAuth responses, tokens, NIP, or PII to logs.
-            Log::warning('Prestige participant authentication failed.', [
+            Log::warning('Kedaton OAuth authentication failed.', [
                 'exception' => $exception::class,
             ]);
 
@@ -120,35 +96,16 @@ class AuthController
         }
     }
 
-    private function requestPrestigeToken(string $nip, string $password)
-    {
-        return Http::timeout(5)
-            ->acceptJson()
-            ->retry(2, 100)
-            ->withHeaders(['apikey' => config('services.sso.api_key')])
-            ->post(config('services.sso.base_url') . '/oauth/token', [
-                'username' => $nip,
-                'password' => $password,
-                'grant_type' => 'password',
-                'client_id' => config('services.sso.client_id'),
-                'client_secret' => config('services.sso.client_secret'),
-            ]);
-    }
-
     /**
-     * NIP is the immutable SSO identity. Email may change and must never be
-     * used to attach an SSO identity to an existing account.
+     * NIP is the primary immutable SSO identity. A Kedaton-verified email can
+     * link a pre-existing local Admin during migration when its NIP is absent.
      */
-    private function provisionOrSyncParticipant(string $nip, array $data): ?User
+    private function provisionOrSyncKedatonUser(string $nip, array $data): ?User
     {
         $userMeta = find_user_by_nip($nip);
 
         if ($userMeta?->user) {
             $user = $userMeta->user;
-
-            if (! $user->hasRole('Participant') || $user->hasRole('Admin')) {
-                return null;
-            }
 
             return DB::transaction(function () use ($user, $data, $nip) {
                 $user->update(['name' => $data['fv_nama'] ?? $user->name]);
@@ -160,21 +117,25 @@ class AuthController
 
         $email = trim((string) ($data['fv_email'] ?? ''));
         if ($email === '') {
-            $email = $nip . '@prestige.invalid';
+            $email = $nip . '@kedaton.invalid';
         }
 
-        // Do not recover an account from an email match. Doing so could turn a
-        // Prestige participant into an Admin if two systems share an email.
-        if (User::where('email', $email)->exists()) {
-            return null;
+        $existingUser = User::where('email', $email)->first();
+        if ($existingUser) {
+            return DB::transaction(function () use ($existingUser, $data, $nip) {
+                $existingUser->update(['name' => $data['fv_nama'] ?? $existingUser->name]);
+                $this->userService->storeUserMeta($existingUser->id, $data, $nip);
+
+                return $existingUser->fresh();
+            });
         }
 
         return DB::transaction(function () use ($data, $nip, $email) {
             $user = User::create([
-                'name' => $data['fv_nama'] ?? 'Peserta Prestige',
+                'name' => $data['fv_nama'] ?? 'Peserta Kedaton',
                 'email' => $email,
-                // Participants cannot authenticate locally. This random value
-                // only satisfies the local user schema.
+                // Authentication is exclusively owned by Kedaton. This random
+                // value only satisfies the local user schema.
                 'password' => Str::password(64),
             ]);
 
@@ -188,12 +149,25 @@ class AuthController
     private function invalidCredentialsResponse()
     {
         return to_route('sign-in.index')->withErrors([
-            'email_or_username' => 'Kredensial tidak valid atau layanan Prestige sedang tidak tersedia.',
+            'email_or_username' => 'Kredensial tidak valid atau layanan autentikasi sedang tidak tersedia.',
         ]);
     }
 
     public function logout(Request $request)
     {
+        $user = Auth::user();
+
+        // Clear legacy SSO credentials when present. Kedaton's OAuth flow does
+        // not persist its token, but older local accounts may still have these
+        // encrypted fields from the previous integration.
+        if ($user instanceof User) {
+            $user->forceFill([
+                'access_token' => null,
+                'refresh_token' => null,
+                'token_expires_at' => null,
+            ])->save();
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

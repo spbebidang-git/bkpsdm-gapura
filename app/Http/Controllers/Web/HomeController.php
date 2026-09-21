@@ -12,12 +12,10 @@ class HomeController extends Controller
     /**
      * Handle the incoming request.
      */
-    public function __invoke(Request $request)
+    public function __invoke(Request $request, CourseService $course)
     {
-        $course = new CourseService();
-
         return Inertia::render('Home/Index', [
-            'courses' => $course->getRandomCourse()
+            'courses' => $course->getRandomCourse(),
         ]);
     }
 }

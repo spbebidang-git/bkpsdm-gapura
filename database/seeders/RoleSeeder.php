@@ -7,13 +7,12 @@ use Spatie\Permission\Models\Role;
 
 class RoleSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
-        foreach (['Admin', 'Participant'] as $name) {
-            Role::firstOrCreate([
-                'name' => $name,
-                'guard_name' => 'web',
-            ]);
+        foreach (['Admin', 'Instructor', 'Participant'] as $name) {
+            Role::firstOrCreate(
+                ['name' => $name, 'guard_name' => 'web']
+            );
         }
     }
 }

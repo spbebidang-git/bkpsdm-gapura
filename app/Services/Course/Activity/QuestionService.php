@@ -2,32 +2,30 @@
 
 namespace App\Services\Course\Activity;
 
-use App\Models\Course\Question;
-use App\Models\Course\Question\QuestionItem;
-use App\Models\Course\Question\QuestionVariant;
-use App\Models\Learn\Learn;
-use App\Models\User;
-use App\Services\Learn\LearnService;
+use App\Repositories\Course\Activity\Assessment\Contracts\QuestionItemRepositoryInterface;
+use App\Repositories\Course\Activity\Assessment\Contracts\QuestionRepositoryInterface;
+use App\Repositories\Course\Activity\Assessment\Contracts\QuestionVariantRepositoryInterface;
+use App\Repositories\Learning\Contracts\LearnRepositoryInterface;
+use App\Services\Learning\LearnService;
 
 class QuestionService
 {
-    protected $learn;
-
-    public function __construct(LearnService $learnService)
-    {
-        $this->learn = $learnService;
-    }
+    public function __construct(
+        private readonly LearnService $learn,
+        private readonly QuestionRepositoryInterface $questions,
+        private readonly QuestionItemRepositoryInterface $questionItems,
+        private readonly QuestionVariantRepositoryInterface $variants,
+        private readonly LearnRepositoryInterface $learns,
+    ) {}
 
     public function createQuestion($data)
     {
-        return Question::create($data);
+        return $this->questions->create($data);
     }
 
     public function getPreTest($activity)
     {
-        $question = Question::with('questionVariant.questionItems.questionOptions')
-            ->where('activity_id', $activity->id)
-            ->first();
+        $question = $this->questions->findByActivity($activity->id, ['questionVariant.questionItems.questionOptions']);
 
         // $questionVariants = $question->questionVariant->first()->questionItems;
 
@@ -56,12 +54,12 @@ class QuestionService
 
     public function getStatus($participantId, $activityId)
     {
-        $learn = Learn::with('learnItems')
-            ->whereRelation('learnItems', 'activity_id', '=', $activityId)
-            ->where('participant_id', $participantId)->first();
+        $learn = $this->learns->findByParticipant($participantId, [
+            'learnItems' => fn ($query) => $query->where('activity_id', $activityId),
+        ]);
 
         // dd($learn->learnItems);
-        if (!$learn) {
+        if (! $learn) {
             return 0;
         }
 
@@ -70,11 +68,7 @@ class QuestionService
 
     public function getPreTestParticipant($participantId, $activity)
     {
-        $question = Question::with('questionVariant.questionItems.questionOptions')
-            ->where('activity_id', $activity->id)
-            ->first();
-
-        $participant = User::where('id', $participantId)->first();
+        $question = $this->questions->findByActivity($activity->id, ['questionVariant.questionItems.questionOptions']);
 
         $preTestVariantId = get_user_meta($participantId, $activity->id);
 
@@ -91,7 +85,7 @@ class QuestionService
                     'b' => $row->questionOptions[1]->option,
                     'c' => $row->questionOptions[2]->option,
                     'd' => $row->questionOptions[3]->option,
-                ]
+                ],
             ];
         });
 
@@ -108,16 +102,14 @@ class QuestionService
                 'question_items' => $mappedQuestionItems,
                 'mix' => $questionVariant->mix,
                 'is_loop' => $question->is_loop,
-                'min_score' => $question->min_score
-            ]
+                'min_score' => $question->min_score,
+            ],
         ];
     }
 
     public function getPostTest($activity)
     {
-        $question = Question::with('questionVariant.questionItems.questionOptions')
-            ->where('activity_id', $activity->id)
-            ->first();
+        $question = $this->questions->findByActivity($activity->id, ['questionVariant.questionItems.questionOptions']);
 
         return [
             'activity_id' => $activity->id,
@@ -164,11 +156,7 @@ class QuestionService
         //     ]
         // ];
 
-        $question = Question::with('questionVariant.questionItems.questionOptions')
-            ->where('activity_id', $activity->id)
-            ->first();
-
-        $participant = User::where('id', $participantId)->first();
+        $question = $this->questions->findByActivity($activity->id, ['questionVariant.questionItems.questionOptions']);
 
         $preTestVariantId = get_user_meta($participantId, $activity->id);
 
@@ -185,7 +173,7 @@ class QuestionService
                     'b' => $row->questionOptions[1]->option,
                     'c' => $row->questionOptions[2]->option,
                     'd' => $row->questionOptions[3]->option,
-                ]
+                ],
             ];
         });
 
@@ -202,8 +190,8 @@ class QuestionService
                 'question_items' => $mappedQuestionItems,
                 'mix' => $questionVariant->mix,
                 'is_loop' => $question->is_loop,
-                'min_score' => $question->min_score
-            ]
+                'min_score' => $question->min_score,
+            ],
         ];
     }
 
@@ -212,10 +200,10 @@ class QuestionService
         $learnItem = [
             'type' => 'pre-test',
             'status' => 'done',
-            'response' =>  $this->getResultQuestion($request)
+            'response' => $this->getResultQuestion($request),
         ];
 
-        $this->learn->createLearn($participantId, $courseId, $activityId, null, $learnItem);
+        $this->learn->createLearn($participantId, $courseId, $activityId, $learnItem);
     }
 
     public function storePostTest($participantId, $courseId, $activityId, $request)
@@ -223,10 +211,10 @@ class QuestionService
         $learnItem = [
             'type' => 'post-test',
             'status' => 'done',
-            'response' =>  $this->getResultQuestion($request)
+            'response' => $this->getResultQuestion($request),
         ];
 
-        $this->learn->createLearn($participantId, $courseId, $activityId, null, $learnItem);
+        $this->learn->createLearn($participantId, $courseId, $activityId, $learnItem);
     }
 
     public function getResultQuestion($request)
@@ -246,7 +234,7 @@ class QuestionService
                 'question' => $question,
                 'option_select' => $option_select,
                 'score' => $score,
-                'is_correct' => $is_correct
+                'is_correct' => $is_correct,
             ];
         }
 
@@ -255,7 +243,7 @@ class QuestionService
 
     public function calculateScore($question_id, $answer)
     {
-        $questionItem = QuestionItem::with('questionOptions')->findOrFail($question_id);
+        $questionItem = $this->questionItems->findWithOptions($question_id);
 
         $correctAnswer = $questionItem->questionOptions->where('is_correct', 1)->pluck('option')->first();
 
@@ -268,10 +256,22 @@ class QuestionService
 
     public function updateQuestion($request)
     {
-        $question = Question::where('activity_id', $request['activity_id'])->first();
+        $question = $this->questions->findByActivity($request['activity_id']);
+
+        // Some legacy activities were created without their companion question
+        // record. Create it on first save so those activities remain editable.
+        if (! $question) {
+            return $this->questions->create([
+                'activity_id' => $request['activity_id'],
+                'description' => $request['description'],
+                'type' => $request['type'],
+                'min_score' => $request['min_score'],
+                'is_loop' => $request['is_loop'],
+            ]);
+        }
 
         if ($request['type'] == 'pre') {
-            $question->update([
+            $this->questions->update($question, [
                 'description' => $request['description'],
                 'is_loop' => $request['is_loop'],
                 'min_score' => $request['min_score'],
@@ -280,7 +280,7 @@ class QuestionService
             return true;
         }
 
-        $question->update([
+        $this->questions->update($question, [
             'description' => $request['description'],
             'min_score' => $request['min_score'],
             'is_loop' => $request['is_loop'],
@@ -291,25 +291,25 @@ class QuestionService
 
     public function getQuestion($activity)
     {
-        $question = Question::where('activity_id', $activity->id)->first();
+        $question = $this->questions->findByActivity($activity->id);
 
         return [
             'id' => $activity->id,
             'title' => $activity->title,
             'value' => $activity->value,
             'timer' => $activity->timer,
-            'description' => $question->description,
+            'description' => $question?->description ?? '',
             'instruction' => $activity->instruction,
-            'min_score' => $question->min_score,
-            'is_loop' => $question->is_loop,
-            'show_result' => $question->show_result,
+            'min_score' => $question?->min_score ?? 0,
+            'is_loop' => $question?->is_loop ?? false,
+            'show_result' => $question?->show_result ?? false,
         ];
     }
 
     public function validateQuestion($countResponse, $userId, $activityId)
     {
 
-        $questionVariant = QuestionVariant::with('questionItems')->where('id', get_user_meta($userId, $activityId))->first();
+        $questionVariant = $this->variants->findWithItems(get_user_meta($userId, $activityId));
 
         if ($countResponse < $questionVariant->questionItems->count()) {
             return false;

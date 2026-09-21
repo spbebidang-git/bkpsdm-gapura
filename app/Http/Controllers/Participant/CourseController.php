@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Participant;
 use App\Models\Course\Course;
 use App\Services\Course\CourseService;
 use App\Services\Course\ScheduleUserService;
-use App\Services\Learn\LearnService;
+use App\Services\Learning\LearnService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -38,7 +38,7 @@ class CourseController
                 'trace' => $e->getTraceAsString(),
             ]);
             return redirect()->route('home')
-                ->with('danger', 'Terjadi kesalahan saat memuat daftar kursus. Silakan coba lagi.');
+                ->with('danger', 'Terjadi kesalahan saat memuat daftar kelas. Silakan coba lagi.');
         }
     }
 
@@ -75,7 +75,7 @@ class CourseController
                     'quota'            => $course->quota,
                     'thumbnail'        => $course->thumbnail_src,
                     'category'         => $course->category->title,
-                    'instructor'       => $course->instructor->name,
+                    
                     'total_participant'=> $course->total_participant,
                     'status'           => $course->status,
                 ],
@@ -87,7 +87,7 @@ class CourseController
                 'user'   => $this->participantId,
             ]);
             return redirect()->route('participant.course.index')
-                ->with('danger', 'Terjadi kesalahan saat memuat halaman kursus. Silakan coba lagi.');
+                ->with('danger', 'Terjadi kesalahan saat memuat halaman kelas. Silakan coba lagi.');
         }
     }
 }

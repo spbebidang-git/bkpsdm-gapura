@@ -16,11 +16,15 @@ const Index = () => {
             <Head title="Bantuan" />
 
             <div className="max-w-4xl mx-auto py-12 px-6">
-                <div className="text-center mb-10">
-                    <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight mb-4">
-                        Pusat Bantuan (Q&A)
-                    </h1>
-                    <p className="text-lg text-gray-500">Temukan jawaban atas pertanyaan yang sering diajukan seputar layanan kami.</p>
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                        <h2 className="text-xl font-semibold text-[#003C52] tracking-tight sm:text-2xl">
+                            Bantuan
+                        </h2>
+                        <p className="mt-1 text-sm leading-relaxed text-[#64748B]">
+                            Temukan jawaban atas pertanyaan yang sering diajukan seputar layanan kami.
+                        </p>
+                    </div>
                 </div>
 
                 <div className="mb-10 relative max-w-2xl mx-auto">

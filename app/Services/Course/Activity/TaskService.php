@@ -3,26 +3,25 @@
 namespace App\Services\Course\Activity;
 
 use App\Helper\UploadMedia;
-use App\Models\Course\Task;
-use App\Services\Learn\LearnService;
+use App\Models\Course\Activity\Task;
+use App\Repositories\Course\Activity\Contracts\TaskRepositoryInterface;
+use App\Services\Learning\LearnService;
 
 class TaskService
 {
-    protected $learn;
-
-    public function __construct(LearnService $learnService)
-    {
-        $this->learn = $learnService;
-    }
+    public function __construct(
+        private readonly LearnService $learn,
+        private readonly TaskRepositoryInterface $tasks,
+    ) {}
 
     public function createTask($data)
     {
-        return Task::create($data);
+        return $this->tasks->create($data);
     }
 
     public function getTask($participantId, $activity)
     {
-        $task = Task::where('activity_id', $activity->id)->first();
+        $task = $this->tasks->findByActivity($activity->id);
 
         return [
             'activity_id' => $activity->id,
@@ -31,14 +30,14 @@ class TaskService
             // 'status' => 'done',
             'data' => [
                 'title' => $task->sub_title,
-                'description' => $task->description
-            ]
+                'description' => $task->description,
+            ],
         ];
     }
 
     public function updateTask($request)
     {
-        $task = Task::where('activity_id', $request['activity_id'])->first();
+        $task = $this->tasks->findByActivity($request['activity_id']);
 
         $task->update([
             'description' => $request['description'],
@@ -50,14 +49,14 @@ class TaskService
 
     public function getTaskForEdit($activity)
     {
-        $task = Task::where('activity_id', $activity->id)->first();
+        $task = $this->tasks->findByActivity($activity->id);
 
         return [
             'id' => $activity->id,
             'title' => $activity->title,
             'value' => $activity->value,
-            'description' => $task->description,
-            'is_calculated' => $task->is_calculated,
+            'description' => $task?->description ?? '',
+            'is_calculated' => $task?->is_calculated ?? false,
             'instruction' => $activity->instruction,
         ];
     }
@@ -67,9 +66,9 @@ class TaskService
         $learnItem = [
             'type' => 'task',
             'status' => 'done',
-            'response' =>  UploadMedia::file($request['file'], Task::$directoryTask)
+            'response' => UploadMedia::file($request['file'], Task::$directoryTask),
         ];
 
-        $this->learn->createLearn($participantId, $courseId, $activityId, null, $learnItem);
+        $this->learn->createLearn($participantId, $courseId, $activityId, $learnItem);
     }
 }

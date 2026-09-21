@@ -11,19 +11,17 @@ class IsInstructorMiddleware
 
     public function handle(Request $request, Closure $next)
     {
-        if ($request->user() && $request->user()->hasRole('Instructor')) {
-            $this->instructor = $request->user();
+        $user = $request->user();
 
+        // Admin absorbs instructor course management
+        if ($user && ($user->hasRole('Instructor') || $user->hasRole('Admin'))) {
+            $this->instructor = $user;
             view()->share('instructor', $this->instructor);
 
             return $next($request);
         }
 
-        if ($request->user() && $request->user()->hasRole('Admin')) {
-            return to_route('admin.dashboard');
-        }
-
-        if ($request->user() && $request->user()->hasRole('Participant')) {
+        if ($user && $user->hasRole('Participant')) {
             return to_route('home');
         }
 

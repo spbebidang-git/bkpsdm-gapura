@@ -1,0 +1,123 @@
+<?php
+
+namespace App\Services\Identity;
+
+use App\Repositories\Identity\Contracts\UserMetaRepositoryInterface;
+use App\Repositories\Identity\Contracts\UserRepositoryInterface;
+use Illuminate\Support\Facades\Log;
+
+class UserService
+{
+    public function __construct(
+        private readonly UserRepositoryInterface $users,
+        private readonly UserMetaRepositoryInterface $userMetas,
+    ) {}
+
+    public function getParticipant()
+    {
+        return $this->users->queryByRole('Participant', ['roles', 'metas'])->orderBy('id');
+    }
+
+    public function getInstructor()
+    {
+        return $this->users->getByRole('Admin', ['roles'])->sortBy('id')->values();
+    }
+
+    public function getNip($userId)
+    {
+        $user = $this->users->findOrFail($userId);
+
+        $nip = strtok($user->email, '@');
+
+        if ($nip == 'elearning') {
+            return 199210212019031005;
+        }
+
+        return $nip;
+    }
+
+    public function storeUserMeta($participantId, array $data, ?string $loginNip = null)
+    {
+        $nip = $this->resolveParticipantNip($participantId, $data, $loginNip);
+
+        if ($nip !== null) {
+            update_user_meta($participantId, 'nip', $nip);
+        }
+
+        if (array_key_exists('status_pegawai', $data) && filled($data['status_pegawai'])) {
+            update_user_meta($participantId, 'status_pegawai', strtoupper(trim($data['status_pegawai'])));
+        } elseif (array_key_exists('fv_status_pegawai', $data) && filled($data['fv_status_pegawai'])) {
+            update_user_meta($participantId, 'status_pegawai', strtoupper(trim($data['fv_status_pegawai'])));
+        } elseif (array_key_exists('fc_status_pegawai', $data) && filled($data['fc_status_pegawai'])) {
+            update_user_meta($participantId, 'status_pegawai', strtoupper(trim($data['fc_status_pegawai'])));
+        }
+
+        $jabatan = $data['nama_jabatan'] ?? $data['fv_nama_jabatan'] ?? $data['fc_nama_jabatan'] ?? null;
+        if (filled($jabatan)) {
+            update_user_meta($participantId, 'nama_jabatan', trim($jabatan));
+        }
+
+        // Bersihkan meta lama; pertahankan key penting + key numerik (variant soal)
+        $protectedKeys = ['nip', 'status_pegawai', 'nama_jabatan', 'nip_hash'];
+
+        $existingMetas = $this->userMetas->getByUser($participantId);
+
+        foreach ($existingMetas as $meta) {
+            $key = $meta->key;
+
+            // Jangan hapus jika key berupa angka (untuk id variant soal)
+            if (is_numeric($key)) {
+                continue;
+            }
+
+            // Hapus jika bukan key terlindungi
+            if (! in_array($key, $protectedKeys)) {
+                $this->userMetas->delete($meta);
+            }
+        }
+    }
+
+    private function resolveParticipantNip($participantId, array $data, ?string $loginNip = null): ?string
+    {
+        $candidates = [
+            $loginNip,
+            $data['fc_nipbr'] ?? null,
+            $data['nip'] ?? null,
+            $data['fv_nipbr'] ?? null,
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (! is_scalar($candidate)) {
+                continue;
+            }
+
+            $candidate = trim((string) $candidate);
+
+            if ($candidate === '' || $this->looksLikeAccessToken($candidate)) {
+                continue;
+            }
+
+            return $candidate;
+        }
+
+        Log::warning('User meta sync skipped NIP update because no valid NIP candidate was found.', [
+            'participant_id' => $participantId,
+            'keys' => array_keys($data),
+        ]);
+
+        return null;
+    }
+
+    private function looksLikeAccessToken(string $value): bool
+    {
+        if (str_starts_with(strtolower($value), 'bearer ')) {
+            return true;
+        }
+
+        if (preg_match('/^[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+$/', $value) === 1) {
+            return true;
+        }
+
+        return strlen($value) > 80 && preg_match('/^[A-Za-z0-9\-_.]+$/', $value) === 1;
+    }
+}

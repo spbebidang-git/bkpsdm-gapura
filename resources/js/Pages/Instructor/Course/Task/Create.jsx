@@ -3,11 +3,12 @@ import FormInput from "@/Components/FormInput";
 import FormLabel from "@/Components/FormLabel";
 import FormSelect from "@/Components/FormSelect";
 import FormTextArea from "@/Components/FormTextArea";
+import { btnPrimary, btnSecondary, card, sectionDescription, sectionTitle } from "@/Components/Admin/ui";
 import App from "@/Layouts/Instructor/App";
 import { Link, router, usePage } from "@inertiajs/react";
 import { useState } from "react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 
 const Create = ({ slug }) => {
     const { errors } = usePage().props;
@@ -35,23 +36,26 @@ const Create = ({ slug }) => {
 
     function handleSubmit(e) {
         e.preventDefault();
-        router.post(`/instructor/course/${slug}/activity/task`, values);
+        router.post(`/admin/course/${slug}/activity/task`, values);
     }
 
     return (
-        <App>
+        <App fullWidth>
             <ActivityFormLayout
                 slug={slug}
                 type="task"
                 title="Pengaturan Tugas"
                 description="Atur penugasan yang hasilnya akan dikirim ke email instruktur."
+                fullWidth
             />
 
-            <form onSubmit={handleSubmit}>
-                <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="p-8">
-
-                        {/* JUDUL */}
+            <form onSubmit={handleSubmit} className="w-full space-y-5">
+                <section className={`${card} overflow-hidden`} aria-labelledby="info-tugas">
+                    <div className="border-b border-hairline px-5 py-4 sm:px-7">
+                        <h2 id="info-tugas" className={sectionTitle}>Informasi tugas</h2>
+                        <p className={sectionDescription}>Gunakan judul yang memudahkan peserta mengenali penugasan.</p>
+                    </div>
+                    <div className="p-5 sm:p-7">
                         <FormInput
                             title={"title"}
                             label={"Judul Tugas"}
@@ -63,7 +67,15 @@ const Create = ({ slug }) => {
                             small={"Judul harus singkat dan jelas. Contoh: 'Tugas Bab 1' atau 'Analisis Studi Kasus'."}
                         />
 
-                        {/* NILAI */}
+                    </div>
+                </section>
+
+                <section className={`${card} overflow-hidden`} aria-labelledby="penilaian-tugas">
+                    <div className="border-b border-hairline px-5 py-4 sm:px-7">
+                        <h2 id="penilaian-tugas" className={sectionTitle}>Pengaturan penilaian</h2>
+                        <p className={sectionDescription}>Tentukan bobot tugas dan cara penilaiannya.</p>
+                    </div>
+                    <div className="grid gap-x-5 p-5 sm:grid-cols-2 sm:p-7">
                         <FormInput
                             title={"value"}
                             label={"Bobot Nilai"}
@@ -76,27 +88,6 @@ const Create = ({ slug }) => {
                             small={"Masukkan bobot nilai untuk tugas ini. Hanya angka diperbolehkan."}
                         />
 
-                        {/* INSTRUKSI */}
-                        <div className="h-auto mb-3">
-                            <FormLabel title={"Instruksi Tugas"} />
-
-                            <ReactQuill
-                                value={values.instruction}
-                                onChange={(value) =>
-                                    setValues((prevValues) => ({
-                                        ...prevValues,
-                                        instruction: value,
-                                    }))
-                                }
-                            />
-
-                            <small className="text-gray-500 text-xs mt-1 block">
-                                Jelaskan instruksi pengerjaan secara jelas, seperti aturan penulisan,
-                                format pengumpulan, atau panduan teknis lainnya.
-                            </small>
-                        </div>
-
-                        {/* PENILAIAN AUTOMATIS */}
                         <FormSelect
                             title={"is_calculated"}
                             label={"Nilai Otomatis?"}
@@ -106,9 +97,29 @@ const Create = ({ slug }) => {
                             options={typeOptions}
                             small={"Pilih 'Ya' jika tugas dinilai otomatis oleh sistem. Pilih 'Tidak' jika dinilai oleh instruktur."}
                         />
+                    </div>
+                </section>
 
-                        {/* DESKRIPSI */}
-                        <div className="-mb-3">
+                <section className={`${card} overflow-hidden`} aria-labelledby="instruksi-tugas">
+                    <div className="border-b border-hairline px-5 py-4 sm:px-7">
+                        <h2 id="instruksi-tugas" className={sectionTitle}>Instruksi tugas</h2>
+                        <p className={sectionDescription}>Berikan aturan penulisan, format pengumpulan, atau panduan teknis.</p>
+                    </div>
+                    <div className="p-5 sm:p-7">
+                        <div className="mb-5 [&_.ql-container]:min-h-36 [&_.ql-container]:rounded-b-lg [&_.ql-container]:border-hairline [&_.ql-editor]:min-h-36 [&_.ql-toolbar]:rounded-t-lg [&_.ql-toolbar]:border-hairline [&_.ql-toolbar]:bg-surface-soft">
+                            <FormLabel title={"Instruksi Tugas"} />
+                            <ReactQuill value={values.instruction} onChange={(value) => setValues((prevValues) => ({ ...prevValues, instruction: value }))} />
+                        </div>
+                    </div>
+                </section>
+
+                <section className={`${card} overflow-hidden`} aria-labelledby="deskripsi-tugas">
+                    <div className="border-b border-hairline px-5 py-4 sm:px-7">
+                        <h2 id="deskripsi-tugas" className={sectionTitle}>Soal atau deskripsi tugas</h2>
+                        <p className={sectionDescription}>Jelaskan keluaran yang harus dikumpulkan dan standar pengerjaannya.</p>
+                    </div>
+                    <div className="p-5 sm:p-7">
+                        <div>
                             <FormTextArea
                                 title={"description"}
                                 label={"Deskripsi Tugas"}
@@ -120,20 +131,17 @@ const Create = ({ slug }) => {
                             />
                         </div>
 
-                        <small className="italic text-gray-600">
-                            Isi dengan soal atau deskripsi tugas beserta standar pengumpulannya.
-                        </small>
-
                     </div>
-                </div>
+                </section>
 
-                <div className="max-w-3xl mx-auto flex flex-col sm:flex-row justify-end gap-3 mt-8">
-                    <Link href={`/instructor/course/${slug}/activity`} className="w-full sm:w-auto">
-                        <button type="button" className="w-full sm:w-auto px-6 py-2.5 rounded-xl border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 font-semibold transition-colors">
+                <div className="flex flex-col-reverse gap-3 border-t border-hairline pt-5 sm:flex-row sm:justify-end">
+                    <Link href={`/admin/course/${slug}/activity`} className="w-full sm:w-auto">
+                        <button type="button" className={`${btnSecondary} w-full sm:w-auto`}>
                             Kembali
                         </button>
                     </Link>
-                    <button type="submit" className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 font-semibold shadow-sm transition-colors">
+                    <button type="submit" className={`${btnPrimary} w-full sm:w-auto`}>
+                        <i className="bx bx-save text-lg" aria-hidden />
                         Simpan
                     </button>
                 </div>

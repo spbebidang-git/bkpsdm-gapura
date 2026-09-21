@@ -2,15 +2,14 @@
 
 namespace App\Imports;
 
-use App\Models\Course\Activity;
+use App\Models\Course\Activity\Activity;
 use App\Models\Course\Schedule;
-use App\Models\Learn\Learn;
-use App\Models\Learn\LearnItem;
-use App\Models\User;
+use App\Models\Learning\Learn;
+use App\Models\Learning\LearnItem;
+use App\Models\Identity\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
@@ -112,7 +111,7 @@ class LearnBulkImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
 
                 if ($existingLearn && $existingLearn->finished_at) {
                     $this->results['skipped']++;
-                    $this->results['errors'][] = "Baris {$rowNumber}: {$user->email} sudah menyelesaikan kursus ini.";
+                    $this->results['errors'][] = "Baris {$rowNumber}: {$user->email} sudah menyelesaikan kelas ini.";
                     continue;
                 }
 
@@ -198,7 +197,7 @@ class LearnBulkImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
         $user = User::create([
             'name' => $name,
             'email' => $email,
-            'password' => Hash::make(Str::random(32)),
+            'nip' => $nip,
         ]);
 
         $user->assignRole('Participant');

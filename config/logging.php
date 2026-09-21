@@ -54,7 +54,8 @@ return [
 
         'stack' => [
             'driver' => 'stack',
-            'channels' => explode(',', env('LOG_STACK', 'single')),
+            // Best practice: daily rotate (not single growing file)
+            'channels' => explode(',', env('LOG_STACK', 'daily')),
             'ignore_exceptions' => false,
         ],
 
@@ -70,6 +71,24 @@ return [
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
+        // Auth / SSO events (login, refresh, logout)
+        'auth' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/auth.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => env('LOG_AUTH_DAYS', 30),
+            'replace_placeholders' => true,
+        ],
+
+        // Backup jobs (db + logs)
+        'backup' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/backup.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => env('LOG_BACKUP_DAYS', 30),
             'replace_placeholders' => true,
         ],
 

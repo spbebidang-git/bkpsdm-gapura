@@ -2,16 +2,15 @@
 
 namespace App\Services\Course\Review;
 
-use App\Models\Course\Review;
+use App\Repositories\Course\Contracts\ReviewRepositoryInterface;
 
 class ReviewService
 {
+    public function __construct(private readonly ReviewRepositoryInterface $reviews) {}
+
     public function getByAdmin()
     {
-        return Review::query()
-            ->with(['course:id,title', 'user:id,name'])
-            ->latest()
-            ->get()
+        return $this->reviews->getForAdmin()
             ->map(function ($review) {
                 return [
                     'id' => $review->id,
@@ -19,14 +18,13 @@ class ReviewService
                     'user' => $review->user->name ?? '-',
                     'star' => $review->star,
                     'description' => $review->description,
+                    'updated_at' => $review->updated_at,
                 ];
             });
     }
 
     public function delete($id)
     {
-        $review = Review::findOrFail($id);
-        $review->delete();
-        return true;
+        return $this->reviews->delete($id);
     }
 }

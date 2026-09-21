@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Models\User;
+use App\Models\Identity\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
@@ -16,7 +16,7 @@ class PasswordUpdateTest extends TestCase
     {
         parent::setUp();
 
-        Role::create(['name' => 'Admin']);
+        Role::findOrCreate('Admin');
     }
 
     public function test_password_can_be_updated(): void

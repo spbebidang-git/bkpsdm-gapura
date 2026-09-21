@@ -1,12 +1,5 @@
 <?php
 
-// PHP 8.4+ deprecates PDO::MYSQL_ATTR_SSL_CA in favour of Pdo\Mysql::ATTR_SSL_CA.
-// Resolve the available constant once so PHP does not emit output before an
-// Inertia JSON response is sent.
-$mysqlSslCaOption = defined('Pdo\\Mysql::ATTR_SSL_CA')
-    ? \Pdo\Mysql::ATTR_SSL_CA
-    : \PDO::MYSQL_ATTR_SSL_CA;
-
 use Illuminate\Support\Str;
 
 return [
@@ -73,7 +66,7 @@ return [
             ],
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                $mysqlSslCaOption => env('MYSQL_ATTR_SSL_CA'),
+                \Pdo\Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 
@@ -93,7 +86,7 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                $mysqlSslCaOption => env('MYSQL_ATTR_SSL_CA'),
+                \Pdo\Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 

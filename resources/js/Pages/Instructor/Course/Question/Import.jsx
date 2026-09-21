@@ -26,7 +26,7 @@ export default function Import({ course, activity }) {
         formData.append("content", values.content);
 
         router.post(
-            route("instructor.course.activity.import-question.store", {
+            route("admin.course.activity.import-question.store", {
                 course: course.slug,
                 activity: activity.id,
             }),
@@ -36,7 +36,7 @@ export default function Import({ course, activity }) {
 
     const handleDownload = () => {
         window.location.href = route(
-            "instructor.course.activity.import-question.download",
+            "admin.course.activity.import-question.download",
             { course: course.slug, activity: activity.id }
         );
     };
@@ -118,7 +118,7 @@ export default function Import({ course, activity }) {
                     <div className="max-w-xs mx-auto flex gap-5">
                         <button className="button-primary">Simpan</button>
                         <Link
-                            href={route("instructor.course.show", {
+                            href={route("admin.course.show", {
                                 course: course.slug,
                             })}
                             className="w-full"

@@ -2,53 +2,26 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Course\Activity;
-use Illuminate\Http\Request;
+use App\Models\Course\Activity\Activity;
 use App\Models\Course\Course;
-use App\Models\User;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use App\Models\Identity\User;
+use App\Services\Reporting\ResultService;
+use Inertia\Inertia;
 use Yajra\DataTables\Facades\DataTables;
-use App\Services\ResultService;
-
 
 class ResultController
 {
-    protected $resultService;
-
-    public function __construct(ResultService $resultService)
-    {
-        $this->resultService = $resultService;
-    }
-
+    public function __construct(protected ResultService $resultService) {}
 
     public function index()
     {
-        $courses = Course::all();
-
-        if (request()->ajax()) {
-            return DataTables::of($courses)
+        if (request()->ajax() && ! request()->header('X-Inertia')) {
+            return DataTables::of(Course::query()->select('id', 'title', 'slug', 'updated_at'))
                 ->addIndexColumn()
-                ->addColumn('action', function ($row) {
-                    $btn = '<div class="d-flex justify-content-center gap-2">';
-
-                    // Tombol Detail
-                    $btn .= '<a class="btn btn-sm btn-warning" href="' . route('admin.result.show', $row['slug']) . '">';
-                    $btn .= 'Detail</a>';
-
-                    // Tombol Post Test
-                    $btn .= '<a class="btn btn-sm btn-primary" href="' . route('admin.result.post-test', $row['slug']) . '">';
-                    $btn .= 'Post Test</a>';
-
-                    $btn .= '</div>';
-                    return $btn;
-                })
-
-                ->rawColumns(['action'])
                 ->make();
         }
 
-        return view('admin.result.index', compact('courses'));
+        return Inertia::render('Admin/Result/Index');
     }
 
     public function show(Course $course)
@@ -56,13 +29,13 @@ class ResultController
         $filters = request()->only(['nama', 'kegiatan']);
         $data = $this->resultService->getRawResults($course->id, $filters);
 
-        if (request()->ajax()) {
+        if (request()->ajax() && ! request()->header('X-Inertia')) {
             return DataTables::of($data)
                 ->addIndexColumn()
-                ->addColumn('nip', fn($row) => $row->nip)
-                ->addColumn('nama', fn($row) => $row->name)
-                ->addColumn('jabatan', fn($row) => $row->jabatan)
-                ->addColumn('kegiatan', fn($row) => $row->kegiatan)
+                ->addColumn('nip', fn ($row) => $row->nip)
+                ->addColumn('nama', fn ($row) => $row->name)
+                ->addColumn('jabatan', fn ($row) => $row->jabatan)
+                ->addColumn('kegiatan', fn ($row) => $row->kegiatan)
                 ->addColumn('nilai', function ($row) {
                     if (in_array($row->activity_type, ['post-test', 'pre-test'])) {
                         try {
@@ -70,22 +43,26 @@ class ResultController
                             foreach (unserialize($row->response) as $item) {
                                 $total += $item['score'];
                             }
+
                             return $total;
-                        } catch (\Exception $e) {
+                        } catch (\Exception) {
                             return 'Format Error';
                         }
                     }
+
                     return '-';
                 })
+                ->addColumn('updated_at', fn ($row) => $row->updated_at)
                 ->make();
         }
 
-        $names = User::role('Participant')->select('id', 'name')->get();
-        $activities = Activity::where('course_id', $course->id)->get();
-
-        return view('admin.result.show', compact('names', 'activities'));
+        return Inertia::render('Admin/Result/Show', [
+            'course' => ['id' => $course->id, 'title' => $course->title, 'slug' => $course->slug],
+            'names' => User::role('Participant')->select('id', 'name')->get(),
+            'activities' => Activity::where('course_id', $course->id)->get(['id', 'title']),
+            'filters' => $filters,
+        ]);
     }
-
 
     public function postTest(Course $course)
     {
@@ -93,16 +70,19 @@ class ResultController
         $data = $this->resultService->getRawResults($course->id, $filters);
         $grouped = $this->resultService->groupAverageScores($data);
 
-        if (request()->ajax()) {
+        if (request()->ajax() && ! request()->header('X-Inertia')) {
             return DataTables::of($grouped)
                 ->addIndexColumn()
-                ->addColumn('nip', fn($row) => $row['nip'])
-                ->addColumn('nama', fn($row) => $row['name'])
-                ->addColumn('jabatan', fn($row) => $row['jabatan'])
-                ->addColumn('rata_rata_nilai', fn($row) => $row['avg_score'])
+                ->addColumn('nip', fn ($row) => $row['nip'])
+                ->addColumn('nama', fn ($row) => $row['name'])
+                ->addColumn('jabatan', fn ($row) => $row['jabatan'])
+                ->addColumn('rata_rata_nilai', fn ($row) => $row['avg_score'])
+                ->addColumn('updated_at', fn ($row) => $row['updated_at'])
                 ->make();
         }
 
-        return view('admin.result.post-test');
+        return Inertia::render('Admin/Result/PostTest', [
+            'course' => ['id' => $course->id, 'title' => $course->title, 'slug' => $course->slug],
+        ]);
     }
 }

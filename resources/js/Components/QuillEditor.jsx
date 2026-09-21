@@ -1,5 +1,5 @@
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 // Or if you only need the core build
 // import Quill from 'quill/core';
 const QuillEditor = ({ title, label = null, value, onChange, isRequired = false, error, type = null }) => {

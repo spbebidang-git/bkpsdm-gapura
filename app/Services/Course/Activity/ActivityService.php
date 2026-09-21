@@ -2,36 +2,33 @@
 
 namespace App\Services\Course\Activity;
 
-use App\Models\Course\Activity;
-use App\Models\Course\Interactive;
-use App\Models\Course\Question;
-use App\Models\Course\Question\QuestionVariant;
-use App\Models\Learn\Learn;
+use App\Repositories\Course\Activity\Assessment\Contracts\QuestionRepositoryInterface;
+use App\Repositories\Course\Activity\Assessment\Contracts\QuestionVariantRepositoryInterface;
+use App\Repositories\Course\Activity\Contracts\ActivityRepositoryInterface;
+use App\Repositories\Course\Activity\Contracts\InteractiveRepositoryInterface;
+use App\Repositories\Learning\Contracts\LearnRepositoryInterface;
 
 class ActivityService
 {
-    protected $question, $task, $interactive, $literature;
-
-    public function  __construct(
-        QuestionService $questionService,
-        TaskService $taskService,
-        InteractiveService $interactiveService,
-        LiteratureService $literatureService
-    ) {
-        $this->question = $questionService;
-        $this->task = $taskService;
-        $this->interactive = $interactiveService;
-        $this->literature = $literatureService;
-    }
+    public function __construct(
+        private readonly QuestionService $question,
+        private readonly TaskService $task,
+        private readonly InteractiveService $interactive,
+        private readonly LiteratureService $literature,
+        private readonly ActivityRepositoryInterface $activities,
+        private readonly InteractiveRepositoryInterface $interactives,
+        private readonly QuestionRepositoryInterface $questions,
+        private readonly QuestionVariantRepositoryInterface $variants,
+        private readonly LearnRepositoryInterface $learns,
+    ) {}
 
     public function getActivityByCourse($courseId)
     {
-        return Activity::where('course_id', $courseId)
-            ->get()
+        return $this->activities->getByCourse($courseId)
             ->map(function ($row) {
                 $endMeeting = null;
                 if ($row->type == 'meeting') {
-                    $endMeeting = Interactive::where('activity_id', $row->id)->first()->end_meeting;
+                    $endMeeting = $this->interactives->findByActivity($row->id)?->end_meeting ?? 0;
                 }
 
                 // $hasImported = null;
@@ -43,12 +40,12 @@ class ActivityService
 
                 if (in_array($row->type, ['pre-test', 'post-test'])) {
 
-                    $question = Question::where('activity_id', $row->id)->first();
+                    $question = $this->questions->findByActivity($row->id);
 
                     if ($question) {
                         $hasImported =
                             $question->has_imported == 1
-                            || QuestionVariant::where('question_id', $question->id)->exists();
+                            || $this->variants->getByQuestion($question->id)->isNotEmpty();
                     }
                 }
 
@@ -61,16 +58,14 @@ class ActivityService
                     'value' => $row->value,
                     'end_meeting' => $endMeeting,
                     'has_imported' => $hasImported,
-                    'status' => 0
+                    'status' => 0,
                 ];
             });
     }
 
     public function getActivityByParticipant($participantId, $courseId)
     {
-        return Activity::with(['learnItem'])
-            ->where('course_id', $courseId)
-            ->get()
+        return $this->activities->getByCourse($courseId, ['learnItem'])
             ->map(function ($row) use ($participantId) {
                 return [
                     'id' => $row->id,
@@ -80,22 +75,19 @@ class ActivityService
                     'value' => $row->value,
                     'timer' => $row->timer,
                     'value' => $row->value,
-                    'status' => $this->getStatus($participantId, $row->course_id, $row->id)
+                    'status' => $this->getStatus($participantId, $row->course_id, $row->id),
                 ];
             });
     }
 
     public function getStatus($participantId, $courseId, $activityId)
     {
-        $learn = Learn::with(['learnItems' => function ($query) use ($activityId) {
-            return $query->where('activity_id', $activityId);
-        }])
-            ->where('participant_id', $participantId)
-            ->where('course_id', $courseId)
-            ->first();
+        $learn = $this->learns->findByParticipantAndCourse($participantId, $courseId, [
+            'learnItems' => fn ($query) => $query->where('activity_id', $activityId),
+        ]);
 
         // dd($learn->learnItems);
-        if (!$learn || !$learn->learnItems->first()) {
+        if (! $learn || ! $learn->learnItems->first()) {
             return 0;
         }
 
@@ -107,12 +99,13 @@ class ActivityService
         if (isset($data['instruction'])) {
             $data['instruction'] = sanitize_html($data['instruction']);
         }
-        return Activity::create($data);
+
+        return $this->activities->create($data);
     }
 
     public function findById($activityId)
     {
-        return Activity::find($activityId);
+        return $this->activities->find($activityId);
     }
 
     public function getDetailActivity($activityId)
@@ -204,17 +197,16 @@ class ActivityService
 
     public function updateActivity($request)
     {
-        $activity = Activity::find($request['activity_id']);
+        $activity = $this->activities->findOrFail($request['activity_id']);
 
-        $activity->update([
+        $activity = $this->activities->update($activity, [
             'title' => $request['title'],
             'value' => $request['value'],
             'instruction' => isset($request['instruction']) ? sanitize_html($request['instruction']) : null,
         ]);
 
         if ($activity->type === 'pre-test' || $activity->type === 'post-test') {
-            $activity->timer = $request['timer'];
-            $activity->save();
+            $activity = $this->activities->update($activity, ['timer' => $request['timer']]);
         }
 
         return $activity;
@@ -222,11 +214,8 @@ class ActivityService
 
     public function nextActivity($courseId, $activityId)
     {
-        $activity = Activity::where('id', $activityId)->first();
-        $nextActivity = Activity::where('id', '>', $activity->id)
-            ->where('course_id', $courseId)
-            ->orderBy('id', 'asc')
-            ->first();
+        $activity = $this->activities->find($activityId);
+        $nextActivity = $activity ? $this->activities->getNext($courseId, $activity->id) : null;
         // dd($nextActivity);
         if ($nextActivity) {
             return $nextActivity->id;
@@ -238,7 +227,7 @@ class ActivityService
     // ActivityService.php
     public function getPreviousActivity($courseId, $currentActivityId)
     {
-        $activities = Activity::where('course_id', $courseId)->orderBy('id')->get();
+        $activities = $this->activities->getByCourse($courseId);
         $index = $activities->search(function ($activity) use ($currentActivityId) {
             return $activity->id == $currentActivityId;
         });

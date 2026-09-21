@@ -2,22 +2,25 @@
 
 namespace App\Services\Course\Activity\Question;
 
-use App\Models\Course\Question;
-use App\Models\Course\Question\QuestionItem;
-use App\Models\Course\Question\QuestionVariant;
+use App\Repositories\Course\Activity\Assessment\Contracts\QuestionRepositoryInterface;
+use App\Repositories\Course\Activity\Assessment\Contracts\QuestionVariantRepositoryInterface;
 
 class VariantService
 {
+    public function __construct(
+        private readonly QuestionRepositoryInterface $questions,
+        private readonly QuestionVariantRepositoryInterface $variants,
+    ) {}
+
     public function getVariant($activityId)
     {
-        $question = Question::where('activity_id', $activityId)->first();
+        $question = $this->questions->findByActivity($activityId);
 
-        if (!$question) {
+        if (! $question) {
             return false;
         }
 
-        return QuestionVariant::where('question_id', $question->id)
-            ->get()
+        return $this->variants->getByQuestion($question->id, ['questionItems'])
             ->map(function ($row) {
                 return [
                     'id' => $row->id,
@@ -25,26 +28,26 @@ class VariantService
                     'variant' => $row->variant,
                     'question_count' => $row->questionItems->count(),
                     'mix' => $row->mix ? 'Ya' : 'Tidak',
-                    'loop' => $row->loop ? 'Ya' : 'Tidak'
+                    'loop' => $row->loop ? 'Ya' : 'Tidak',
                 ];
             });
     }
 
     public function createVariant($activityId, $data)
     {
-        QuestionVariant::create([
-            'question_id' =>  $this->getQuestionId($activityId),
-            'code' =>  $data['code'],
-            'variant' =>  $data['variant'],
-            'mix' =>  $data['mix'],
+        $this->variants->create([
+            'question_id' => $this->getQuestionId($activityId),
+            'code' => $data['code'],
+            'variant' => $data['variant'],
+            'mix' => $data['mix'],
         ]);
     }
 
     public function genereateVariantNumber($questionId)
     {
-        $variant = QuestionVariant::where('question_id', $questionId)->first();
+        $variant = $this->variants->getByQuestion($questionId)->first();
 
-        if (!$variant) {
+        if (! $variant) {
             return 1;
         }
 
@@ -53,10 +56,8 @@ class VariantService
 
     public function generateVariantNumber($activityId)
     {
-        $variant = QuestionVariant::where('question_id',  $this->getQuestionId($activityId))
-            ->orderByDesc('id')
-            ->first();
-        if (!$variant) {
+        $variant = $this->variants->findLatestByQuestion($this->getQuestionId($activityId));
+        if (! $variant) {
             return 1;
         }
 
@@ -65,25 +66,29 @@ class VariantService
 
     public function getQuestionId($activityId)
     {
-        return Question::where('activity_id', $activityId)->first()->id;
+        return $this->questions->findByActivity($activityId)?->id;
     }
 
     public function getVariantWarning($activityId)
     {
-        $question = Question::where('activity_id', $activityId)->first();
-        if (!$question) return null;
+        $question = $this->questions->findByActivity($activityId);
+        if (! $question) {
+            return null;
+        }
 
-        $variants = QuestionVariant::withCount('questionItems')
-            ->where('question_id', $question->id)
-            ->get();
+        $variants = $this->variants->getByQuestionWithItemCount($question->id);
 
-        if ($variants->isEmpty()) return null;
+        if ($variants->isEmpty()) {
+            return null;
+        }
 
         $counts = $variants->pluck('question_items_count');
         $hasEmpty = $counts->contains(0);
         $hasMismatch = $counts->unique()->count() > 1;
 
-        if (!$hasEmpty && !$hasMismatch) return null;
+        if (! $hasEmpty && ! $hasMismatch) {
+            return null;
+        }
 
         return [
             'hasEmpty' => $hasEmpty,

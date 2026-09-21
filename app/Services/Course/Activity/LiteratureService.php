@@ -3,21 +3,20 @@
 namespace App\Services\Course\Activity;
 
 use App\Helper\UploadMedia;
-use App\Models\Course\Literature;
-use App\Services\Learn\LearnService;
+use App\Models\Course\Activity\Literature;
+use App\Repositories\Course\Activity\Contracts\LiteratureRepositoryInterface;
+use App\Services\Learning\LearnService;
 
 class LiteratureService
 {
-    protected $learn;
-
-    public function __construct(LearnService $learnService)
-    {
-        $this->learn = $learnService;
-    }
+    public function __construct(
+        private readonly LearnService $learn,
+        private readonly LiteratureRepositoryInterface $literatures,
+    ) {}
 
     public function createLiterature($data)
     {
-        return Literature::create([
+        return $this->literatures->create([
             'activity_id' => $data['activity_id'],
             'sub_title' => $data['sub_title'],
             'duration' => $data['duration'],
@@ -27,7 +26,7 @@ class LiteratureService
 
     public function getLiterature($activity)
     {
-        $literature = Literature::where('activity_id', $activity->id)->first();
+        $literature = $this->literatures->findByActivity($activity->id);
 
         return [
             'activity_id' => $activity->id,
@@ -35,8 +34,8 @@ class LiteratureService
             'type' => 'literature',
             'data' => [
                 'duration' => $literature->duration,
-                'src_pdf' => '/assets/media/documents/literatures/' . $literature->content
-            ]
+                'src_pdf' => '/assets/media/documents/literatures/'.$literature->content,
+            ],
         ];
     }
 
@@ -45,15 +44,15 @@ class LiteratureService
         $learnItem = [
             'type' => 'literature',
             'status' => 'done',
-            'response' => null
+            'response' => null,
         ];
 
-        $this->learn->createLearn($participantId, $courseId, $activityId, null, $learnItem);
+        $this->learn->createLearn($participantId, $courseId, $activityId, $learnItem);
     }
 
     public function updateLiterature($request)
     {
-        $literature = Literature::where('activity_id', $request['activity_id'])->first();
+        $literature = $this->literatures->findByActivity($request['activity_id']);
 
         $literature->sub_title = $request['sub_title'];
         $literature->duration = $request['duration'];
@@ -62,7 +61,7 @@ class LiteratureService
         if ($request['content']) {
 
             // Cek file lama ada atau tidak
-            $oldFilePath = Literature::$directoryDocument . $literature->content;
+            $oldFilePath = Literature::$directoryDocument.$literature->content;
 
             if ($literature->content && file_exists(public_path($oldFilePath))) {
                 @unlink(public_path($oldFilePath));
@@ -77,21 +76,20 @@ class LiteratureService
         return true;
     }
 
-
     public function getLiteratureForEdit($activity)
     {
-        $literature = Literature::where('activity_id', $activity->id)->first();
+        $literature = $this->literatures->findByActivity($activity->id);
 
         return [
-            'id'          => $activity->id,
-            'title'       => $activity->title,
-            'value'       => $activity->value,
+            'id' => $activity->id,
+            'title' => $activity->title,
+            'value' => $activity->value,
             'instruction' => $activity->instruction,
-            'sub_title'   => $literature->sub_title,
-            'duration'    => $literature->duration,
-            'content'     => $literature->content,
-            'content_url' => $literature->content
-                ? asset(Literature::$directoryDocument . $literature->content)
+            'sub_title' => $literature?->sub_title ?? '',
+            'duration' => $literature?->duration ?? 0,
+            'content' => $literature?->content,
+            'content_url' => $literature?->content
+                ? asset(Literature::$directoryDocument.$literature->content)
                 : null,
         ];
     }

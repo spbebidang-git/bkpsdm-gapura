@@ -1,14 +1,11 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
-
-// Artisan::command('inspire', function () {
-//     $this->comment(Inspiring::quote());
-// })->purpose('Display an inspiring quote')->hourly();
 
 Schedule::command('app:post-certificate-command')->hourly();
 Schedule::command('app:set-url-certificate-command')->hourlyAt(30);
-Schedule::command('db:backup')->daily();
-Schedule::command('db:backup --weekly')->weekly();
+
+// Backups — off-peak (Asia/Jakarta app timezone)
+Schedule::command('logs:backup')->dailyAt('01:30');
+Schedule::command('db:backup')->dailyAt('02:00');
+Schedule::command('db:backup --weekly')->weeklyOn(1, '03:00'); // Monday 03:00

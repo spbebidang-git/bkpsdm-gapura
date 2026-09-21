@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Services\Course\CoursePerformanceService;
+use Inertia\Inertia;
 
 class CoursePerformanceController extends Controller
 {
     public function index(CoursePerformanceService $service)
     {
-        $result = $service->getPerformance();
-        return view('admin.course-performance.index', compact('result'));
+        return Inertia::render('Admin/CoursePerformance/Index', [
+            'result' => $service->getPerformance(),
+        ]);
     }
 }

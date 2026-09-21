@@ -16,7 +16,6 @@ class SecurityHeaders
 
         $nonce = Vite::cspNonce();
 
-        // Header keamanan umum
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('X-Content-Type-Options', 'nosniff');
 
@@ -26,16 +25,26 @@ class SecurityHeaders
         $response->headers->set('Referrer-Policy', 'same-origin');
         $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=()');
 
-        // Content Security Policy – nonce-based untuk mencegah XSS
-        // Catatan: 'unsafe-eval' diperlukan oleh pdfjs-dist dan video.js (WebAssembly/eval)
+        // Vite HMR only on local (npm run dev → port dinamis dari hot file)
+        $vite = '';
+        if (app()->environment('local')) {
+            $hot = trim((string) @file_get_contents(public_path('hot')));
+            if ($hot) {
+                $host = str_replace(['http://', 'https://'], '', $hot);
+                $vite = " http://{$host} ws://{$host}";
+            } else {
+                $vite = ' http://127.0.0.1:5173 http://localhost:5173 ws://127.0.0.1:5173 ws://localhost:5173';
+            }
+        }
+
         $response->headers->set(
             'Content-Security-Policy',
             "default-src 'self'; " .
-                "script-src 'self' 'nonce-{$nonce}' https://cdn.datatables.net https://code.jquery.com https://cdn.jsdelivr.net 'unsafe-eval' 'wasm-unsafe-eval'; " .
-                "style-src 'self' https://cdn.datatables.net https://fonts.bunny.net https://fonts.googleapis.com 'unsafe-inline'; " .
-                "font-src 'self' https://fonts.bunny.net https://fonts.gstatic.com; " .
+                "script-src 'self' 'nonce-{$nonce}' https://cdn.datatables.net https://code.jquery.com https://cdn.jsdelivr.net 'unsafe-eval' 'wasm-unsafe-eval'{$vite}; " .
+                "style-src 'self' https://cdn.datatables.net https://fonts.bunny.net https://fonts.googleapis.com 'unsafe-inline'{$vite}; " .
+                "font-src 'self' https://fonts.bunny.net https://fonts.gstatic.com data:{$vite}; " .
                 "img-src 'self' data: blob:; " .
-                "connect-src 'self' https: ws: wss:; " .
+                "connect-src 'self' https: ws: wss:{$vite}; " .
                 "frame-src 'self' https://www.youtube.com https://pdf-hosting.com; " .
                 "frame-ancestors 'none'; " .
                 "base-uri 'self'; " .

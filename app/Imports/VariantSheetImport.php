@@ -2,7 +2,7 @@
 
 namespace App\Imports;
 
-use App\Models\Course\Question\QuestionVariant;
+use App\Models\Course\Activity\Assessment\QuestionVariant;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Illuminate\Support\Collection;

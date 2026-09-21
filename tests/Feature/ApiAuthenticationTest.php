@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
+use App\Models\Identity\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
@@ -16,8 +16,8 @@ class ApiAuthenticationTest extends TestCase
     {
         parent::setUp();
 
-        Role::create(['name' => 'Admin']);
-        Role::create(['name' => 'Participant']);
+        Role::findOrCreate('Admin');
+        Role::findOrCreate('Participant');
     }
 
     public function test_admin_api_token_has_an_expiry_and_minimal_ability(): void

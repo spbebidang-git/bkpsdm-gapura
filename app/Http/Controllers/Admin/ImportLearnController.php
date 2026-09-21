@@ -6,24 +6,30 @@ use App\Jobs\ImportLearnJob;
 use App\Models\Course\Course;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ImportLearnController
 {
     public function index()
     {
-        $courses = Course::where('type', 'schedule')
+        $courses = Course::where('access_mode', 'scheduled')
             ->where('status', 'publish')
             ->orderBy('title')
             ->get(['id', 'title']);
 
-        // Hasil job async (jika sudah selesai)
-        if ($cached = Cache::pull('import_learn:' . auth()->id())) {
-            session()->flash('import_results', $cached['results']);
-            session()->flash('import_course', $cached['course']);
+        $importResults = null;
+        $importCourse = null;
+        if ($cached = Cache::pull('import_learn:'.auth()->id())) {
+            $importResults = $cached['results'] ?? null;
+            $importCourse = $cached['course'] ?? null;
         }
 
-        return view('admin.import-learn.index', compact('courses'));
+        return Inertia::render('Admin/ImportLearn/Index', [
+            'courses' => $courses,
+            'importResults' => $importResults,
+            'importCourse' => $importCourse,
+        ]);
     }
 
     public function store(Request $request)
@@ -34,12 +40,8 @@ class ImportLearnController
             'file' => 'required|file|max:5120',
             'create_missing_users' => 'nullable|boolean',
         ], [
-            'course_id.required' => 'Pilih kursus terlebih dahulu.',
-            'course_id.exists' => 'Kursus tidak ditemukan.',
-            'finished_at.required' => 'Tanggal selesai harus diisi.',
-            'finished_at.date' => 'Format tanggal tidak valid.',
+            'course_id.required' => 'Pilih kelas terlebih dahulu.',
             'file.required' => 'File Excel harus diupload.',
-            'file.max' => 'Ukuran file maksimal 5MB.',
         ]);
 
         try {
@@ -53,15 +55,16 @@ class ImportLearnController
                 $request->boolean('create_missing_users')
             );
 
-            return back()->with('success', 'Import masuk antrian. Refresh halaman ini beberapa saat untuk melihat hasil.');
+            return back()->with('success', 'Import masuk antrian. Refresh beberapa saat untuk hasil.');
         } catch (\Throwable $th) {
-            return back()->with('danger', 'Terjadi kesalahan: ' . $th->getMessage());
+            return back()->with('danger', 'Terjadi kesalahan: '.$th->getMessage());
         }
     }
 
     public function downloadTemplate()
     {
-        return Excel::download(new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings {
+        return Excel::download(new class implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings
+        {
             public function array(): array
             {
                 return [

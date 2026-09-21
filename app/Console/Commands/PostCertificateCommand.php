@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use Carbon\Carbon;
-use App\Models\Learn\Learn;
-use App\Services\TokenService;
+use App\Models\Learning\Learn;
+use App\Services\Auth\TokenService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -39,9 +39,7 @@ class PostCertificateCommand extends Command
             'time' => now()->toDateTimeString(),
             'env' => app()->environment(),
             'sso_base' => config('services.sso.base_url') ?: '(KOSONG)',
-            'api_key_set' => config('services.sso.api_key') ? 'yes' : 'NO',
             'client_id_set' => config('services.sso.client_id') ? 'yes' : 'NO',
-            'admin_user_set' => config('services.sso.admin_username') ? 'yes' : 'NO',
             'filters' => [
                 'course' => $this->option('course'),
                 'learn' => $this->option('learn'),
@@ -321,9 +319,7 @@ class PostCertificateCommand extends Command
         $lines[] = 'time: ' . ($this->debug['time'] ?? '');
         $lines[] = 'env: ' . ($this->debug['env'] ?? '');
         $lines[] = 'sso_base: ' . ($this->debug['sso_base'] ?? '');
-        $lines[] = 'api_key_set: ' . ($this->debug['api_key_set'] ?? '');
         $lines[] = 'client_id_set: ' . ($this->debug['client_id_set'] ?? '');
-        $lines[] = 'admin_user_set: ' . ($this->debug['admin_user_set'] ?? '');
         $lines[] = 'token: ' . ($this->debug['token'] ?? '');
         $lines[] = 'filter_course: ' . ($this->debug['filters']['course'] ?? '-');
         $lines[] = 'filter_learn: ' . ($this->debug['filters']['learn'] ?? '-');
@@ -585,9 +581,7 @@ class PostCertificateCommand extends Command
 
     private function httpPost(string $url, array $payload, string $token, string $profile = 'legacy_auth')
     {
-        $headers = [
-            'apikey' => config('services.sso.api_key'),
-        ];
+        $headers = [];
 
         // Prestige SSO historis: header `auth` (bukan Authorization)
         if ($profile === 'authorization_only') {

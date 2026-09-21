@@ -1,7 +1,7 @@
-import BreadcrumbLearn from "@/Components/BreadcrumbLearn";
 import CardActivity from "@/Components/CardActivity";
-import App from "@/Layouts/Instructor/App";
-import { Link } from "@inertiajs/react";
+import AdminLayout from "@/Layouts/AdminLayout";
+import { btnSecondary, card, pageDescription, pageHeader, pageTitle } from "@/Components/Admin/ui";
+import { Head, Link } from "@inertiajs/react";
 import { useState } from "react";
 
 const STEPS = [
@@ -13,152 +13,82 @@ const STEPS = [
 const Activity = ({ slug, type }) => {
     const [activeSection, setActiveSection] = useState(null);
 
-    const currentStep = activeSection ? (activeSection === 'question' ? 1 : 2) : 0;
     const stepLabel = STEPS[activeSection === 'question' ? 1 : activeSection === 'interactive' ? 2 : 0].label;
+    const isPickingCategory = activeSection !== null;
 
     return (
-        <App>
-            <div className="max-w-5xl mx-auto mb-10">
+        <AdminLayout title="Tambah Aktivitas" hideTitle>
+            <Head title="Tambah Aktivitas" />
 
-                {/* Breadcrumb */}
-                <div className="flex justify-center mb-8 w-full">
-                    <div className="inline-flex flex-wrap items-center gap-2 md:gap-3 bg-white/90 backdrop-blur-md py-3 px-6 rounded-full shadow-[0_4px_25px_-4px_rgba(0,0,0,0.06)] border border-gray-100/80">
-                        <Link href="/instructor" className="opacity-70 hover:opacity-100 transition-transform hover:-translate-y-0.5">
-                            <BreadcrumbLearn title="Dashboard" activeTab={false} icon="grid-alt" size="lg" />
-                        </Link>
-                        <box-icon name="chevron-right" color="#cbd5e1" size="20px"></box-icon>
-                        <Link href={`/instructor/course/${slug}`} className="opacity-70 hover:opacity-100 transition-transform hover:-translate-y-0.5">
-                            <BreadcrumbLearn title="Detail Course" activeTab={false} icon="book-bookmark" size="lg" />
-                        </Link>
-                        <box-icon name="chevron-right" color="#cbd5e1" size="20px"></box-icon>
-                        <BreadcrumbLearn title="Tambah Aktivitas" activeTab={true} icon="list-plus" size="lg" />
+            <div className="w-full">
+                <div className={pageHeader}>
+                    <div>
+                        <p className="mb-1 text-sm font-medium text-primary-pressed">Kelas / Aktivitas</p>
+                        <h1 className={pageTitle}>Tambah aktivitas</h1>
+                        <p className={pageDescription}>Pilih jenis aktivitas yang ingin ditambahkan ke kelas ini.</p>
                     </div>
+                    <Link href={`/admin/course/${slug}`} className={btnSecondary}>
+                        <i className="bx bx-left-arrow-alt text-lg" aria-hidden />
+                        Kembali
+                    </Link>
                 </div>
 
-                {/* Stepper */}
-                <div className="flex items-center justify-center gap-3 mb-8">
-                    {['Jenis Aktivitas', 'Sub Kategori'].map((label, i) => {
-                        const isDone = (i === 0 && activeSection !== null);
-                        const isActive = (i === 0 && activeSection === null) || (i === 1 && activeSection !== null);
-                        return (
-                            <div key={i} className="flex items-center gap-3">
-                                <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all ${isDone
-                                    ? 'bg-green-100 text-green-700'
-                                    : isActive
-                                        ? 'bg-primary text-white shadow-sm'
-                                        : 'bg-gray-100 text-gray-400'
-                                    }`}>
-                                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${isDone ? 'bg-green-200' : isActive ? 'bg-white/20' : 'bg-gray-200'}`}>
-                                        {isDone ? '✓' : i + 1}
-                                    </span>
-                                    {label}
-                                </div>
-                                {i < 1 && (
-                                    <box-icon name="chevron-right" color={activeSection ? '#10b981' : '#cbd5e1'} size="18px"></box-icon>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
+                <section className={`${card} p-5 sm:p-6`} aria-labelledby="activity-picker-title">
+                    <ol className="mb-7 flex items-center gap-3 border-b border-hairline pb-5 text-sm" aria-label="Tahapan tambah aktivitas">
+                        <li className="flex items-center gap-2 font-semibold text-primary-pressed">
+                            <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${isPickingCategory ? 'bg-primary text-white' : 'bg-primary-mist text-primary-pressed'}`}>{isPickingCategory ? '✓' : '1'}</span>
+                            Jenis aktivitas
+                        </li>
+                        <span className="h-px w-7 bg-hairline-strong" aria-hidden />
+                        <li className={`flex items-center gap-2 font-semibold ${isPickingCategory ? 'text-primary-pressed' : 'text-steel'}`}>
+                            <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs ${isPickingCategory ? 'bg-primary-mist text-primary-pressed' : 'bg-surface text-steel'}`}>2</span>
+                            Subkategori
+                        </li>
+                    </ol>
 
-                {/* Title */}
-                <div className="text-center mb-8">
-                    <h1 className="text-2xl font-extrabold text-gray-800 tracking-tight">{stepLabel}</h1>
-                    <p className="text-gray-500 text-sm mt-1">
-                        {activeSection === null && 'Pilih jenis aktivitas yang ingin ditambahkan ke kursus ini.'}
-                        {activeSection === 'question' && 'Pilih jenis pertanyaan yang ingin dibuat.'}
-                        {activeSection === 'interactive' && 'Pilih metode interaktif untuk kursus ini.'}
-                    </p>
-                </div>
-
-                {/* Cards — Semua Kegiatan */}
-                {!activeSection && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                        <CardActivity
-                            title="Pertanyaan"
-                            description="Buat soal pilihan ganda untuk Pre Test, Quiz, dan Post Test guna menilai pemahaman peserta."
-                            onClick={() => setActiveSection('question')}
-                        />
-                        <Link href={`/instructor/course/${slug}/activity/task/create`} className="block">
-                            <CardActivity
-                                title="Tugas"
-                                description="Memasukkan deskripsi penugasan. Hasil tugas peserta dikirim langsung ke email pemateri."
-                            />
-                        </Link>
-                        <CardActivity
-                            title="Interaktif"
-                            description="Buat kegiatan pertemuan interaktif secara Daring atau Presentasi Video."
-                            onClick={() => setActiveSection('interactive')}
-                        />
-                        <Link href={`/instructor/course/${slug}/activity/literature/create`} className="block">
-                            <CardActivity
-                                title="Literatur"
-                                description="Tambahkan judul, sub judul, dan upload file PDF literatur untuk diakses peserta."
-                            />
-                        </Link>
+                    <div className="mb-5">
+                        <h2 id="activity-picker-title" className="text-base font-semibold text-ink">{stepLabel}</h2>
+                        <p className="mt-1 text-sm leading-6 text-steel">
+                            {activeSection === null && 'Pilih salah satu jenis aktivitas untuk melanjutkan.'}
+                            {activeSection === 'question' && 'Pilih jenis evaluasi yang ingin dibuat.'}
+                            {activeSection === 'interactive' && 'Pilih metode interaktif untuk kelas ini.'}
+                        </p>
                     </div>
-                )}
 
-                {/* Cards — Pertanyaan */}
-                {activeSection === 'question' && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto">
-                        <Link href={`/instructor/course/${slug}/activity/pre-test/create`} className="block">
-                            <CardActivity
-                                title="Pre Test/Quiz"
-                                description="Soal untuk menguji pemahaman awal peserta. Tidak menjadi syarat penerbitan Sertifikat Digital."
-                            />
-                        </Link>
-                        <Link href={`/instructor/course/${slug}/activity/post-test/create`} className="block">
-                            <CardActivity
-                                title="Post Test"
-                                description="Soal test akhir dengan skor minimum. Menjadi syarat penerbitan Sertifikat Digital."
-                            />
-                        </Link>
-                    </div>
-                )}
-
-                {/* Cards — Interaktif */}
-                {activeSection === 'interactive' && (
-                    <div className={`grid gap-4 ${type === 'unschedule' ? 'grid-cols-1 max-w-xs' : 'grid-cols-1 sm:grid-cols-2 max-w-xl'} mx-auto`}>
-                        {type !== 'unschedule' && (
-                            <Link href={`/instructor/course/${slug}/activity/meeting/create`} className="block">
-                                <CardActivity
-                                    title="Pertemuan Daring"
-                                    description="Memasukkan detail deskripsi pertemuan Daring dan URL yang digunakan peserta untuk bergabung."
-                                />
-                            </Link>
-                        )}
-                        <Link href={`/instructor/course/${slug}/activity/video/create`} className="block">
-                            <CardActivity
-                                title="Presentasi Video"
-                                description="Memasukkan deskripsi dan upload file video yang nanti diakses oleh peserta."
-                            />
-                        </Link>
-                    </div>
-                )}
-
-                {/* Back Button */}
-                <div className="flex justify-center mt-10">
-                    {activeSection ? (
-                        <button
-                            onClick={() => setActiveSection(null)}
-                            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 font-semibold text-sm transition-all shadow-sm hover:shadow"
-                        >
-                            <box-icon name="left-arrow-alt" color="#6b7280" size="18px"></box-icon>
-                            Kembali
-                        </button>
-                    ) : (
-                        <Link href={`/instructor/course/${slug}`}>
-                            <button className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 font-semibold text-sm transition-all shadow-sm hover:shadow">
-                                <box-icon name="left-arrow-alt" color="#6b7280" size="18px"></box-icon>
-                                Kembali ke Detail Course
-                            </button>
-                        </Link>
+                    {!activeSection && (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <CardActivity title="Pertanyaan" description="Buat pre-test, kuis, atau post-test untuk mengukur pemahaman peserta." onClick={() => setActiveSection('question')} />
+                            <Link href={`/admin/course/${slug}/activity/task/create`} className="block"><CardActivity title="Tugas" description="Tetapkan instruksi dan bobot tugas untuk peserta." /></Link>
+                            <CardActivity title="Interaktif" description="Tambahkan pertemuan daring atau presentasi video." onClick={() => setActiveSection('interactive')} />
+                            <Link href={`/admin/course/${slug}/activity/literature/create`} className="block"><CardActivity title="Literatur" description="Unggah materi PDF yang dapat dibaca peserta." /></Link>
+                        </div>
                     )}
-                </div>
 
+                    {activeSection === 'question' && (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <Link href={`/admin/course/${slug}/activity/pre-test/create`} className="block"><CardActivity title="Pre Test/Quiz" description="Ukur pemahaman awal peserta sebelum materi dimulai." /></Link>
+                            <Link href={`/admin/course/${slug}/activity/post-test/create`} className="block"><CardActivity title="Post Test" description="Nilai pemahaman akhir dan tetapkan batas kelulusan." /></Link>
+                        </div>
+                    )}
+
+                    {activeSection === 'interactive' && (
+                        <div className={`grid gap-3 ${type === 'unschedule' ? 'max-w-md' : 'sm:grid-cols-2'}`}>
+                            {type !== 'unschedule' && <Link href={`/admin/course/${slug}/activity/meeting/create`} className="block"><CardActivity title="Pertemuan Daring" description="Atur jadwal dan tautan pertemuan daring." /></Link>}
+                            <Link href={`/admin/course/${slug}/activity/video/create`} className="block"><CardActivity title="Presentasi Video" description="Unggah video dan atur durasi belajar peserta." /></Link>
+                        </div>
+                    )}
+
+                    {activeSection && (
+                        <div className="mt-6 border-t border-hairline pt-5">
+                            <button type="button" onClick={() => setActiveSection(null)} className={btnSecondary}>
+                                <i className="bx bx-left-arrow-alt text-lg" aria-hidden />
+                                Kembali ke jenis aktivitas
+                            </button>
+                        </div>
+                    )}
+                </section>
             </div>
-        </App>
+        </AdminLayout>
     );
 };
 

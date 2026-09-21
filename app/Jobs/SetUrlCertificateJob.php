@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Models\Learn\Learn;
+use App\Models\Learning\Learn;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

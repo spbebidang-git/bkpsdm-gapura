@@ -6,33 +6,42 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Block Admin from public/participant pages.
+ * Instructor module deferred — treat Instructor like non-public if still present.
+ */
 class BlockInstructorFromPublicRoutes
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
 
-        if ($user) {
-            // Evaluasi Admin
-            if ($user->hasRole('Admin')) {
-                $allowedRoutesForAdmin = [
-                    'dashboard',
-                    'profile.edit',
-                    'profile.update',
-                    'profile.destroy',
-                    'logout',
-                ];
+        if (! $user) {
+            return $next($request);
+        }
 
-                if ($request->route() && !in_array($request->route()->getName(), $allowedRoutesForAdmin)) {
-                    if (strpos($request->route()->getName(), 'admin.') !== 0) {
-                        return redirect()->route('admin.dashboard')->with('danger', 'Anda tidak memiliki akses ke halaman tersebut.');
-                    }
-                }
+        if ($user->hasRole('Admin')) {
+            $allowed = [
+                'dashboard',
+                'profile.edit',
+                'profile.update',
+                'profile.destroy',
+                'logout',
+            ];
+
+            $name = $request->route()?->getName();
+            if ($name && ! in_array($name, $allowed, true) && ! str_starts_with($name, 'admin.')) {
+                return redirect()->route('admin.dashboard')
+                    ->with('danger', 'Anda tidak memiliki akses ke halaman tersebut.');
+            }
+        }
+
+        // Instructor still in DB: keep off public until module removed
+        if ($user->hasRole('Instructor') && ! $user->hasRole('Admin')) {
+            $name = $request->route()?->getName();
+            if ($name && ! str_starts_with($name, 'instructor.') && $name !== 'logout') {
+                return redirect()->route('instructor.dashboard')
+                    ->with('danger', 'Anda tidak memiliki akses ke halaman tersebut.');
             }
         }
 

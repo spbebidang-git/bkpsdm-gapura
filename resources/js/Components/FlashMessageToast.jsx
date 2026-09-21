@@ -3,6 +3,13 @@ import { useEffect } from 'react';
 import { Bounce, toast } from 'react-toastify';
 
 const showFlashToast = (flash = {}) => {
+    // Admin pages pakai AdminAlert banner, bukan toast
+    try {
+        if (route().current()?.startsWith('admin.')) return;
+    } catch {
+        // route() belum siap — lanjut toast
+    }
+
     if (flash.success) {
         toast.success(flash.success, {
             position: 'top-right',

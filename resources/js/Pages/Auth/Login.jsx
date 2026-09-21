@@ -1,120 +1,7 @@
-import { Link, useForm, usePage } from "@inertiajs/react";
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { Bounce, toast } from "react-toastify";
+import { Link, usePage } from "@inertiajs/react";
 
 const Login = () => {
-    const { site } = usePage().props;
-
-    const [showPassword, setShowPassword] = useState(false);
-    const [captchaUrl, setCaptchaUrl] = useState("");
-    const [captchaInput, setCaptchaInput] = useState("");
-
-    const { data, setData, post, processing, errors } = useForm({
-        username: "",
-        password: "",
-        captcha: "",
-        captcha_key: "",
-    });
-
-    useEffect(() => {
-        fetchCaptcha();
-    }, []);
-
-    const fetchCaptcha = async () => {
-        try {
-            const res = await axios.get("/captcha-url");
-            setCaptchaUrl(res.data.img);
-            setCaptchaInput("");
-            setData("captcha", "");
-            setData("captcha_key", res.data.key);
-        } catch (err) {
-            console.error("Error fetching captcha:", err);
-        }
-    };
-
-    const handleChange = (e) => {
-        const key = e.target.id;
-        const value = e.target.value;
-        setData(key, value);
-    };
-
-    const handleCaptchaChange = (e) => {
-        const value = e.target.value;
-        setCaptchaInput(value);
-        setData("captcha", value);
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        post("/sign-in", {
-            onSuccess: (page) => {
-                // Cek apakah server memberi URL redirect ke luar Inertia
-                if (page.props.redirect_url) {
-                    window.location.href = page.props.redirect_url;
-                }
-            },
-            onError: (errors) => {
-                const toastConfig = {
-                    position: "top-right",
-                    autoClose: 4000,
-                    theme: "colored",
-                    transition: Bounce,
-                };
-
-                // Captcha error (dari validasi Laravel)
-                if (errors.captcha) {
-                    toast.error("❌ CAPTCHA salah. Silakan coba lagi.", toastConfig);
-                    fetchCaptcha();
-                    return;
-                }
-
-                // Username / password kosong (validasi required)
-                if (errors.username) {
-                    toast.warning("⚠️ Username atau NIP wajib diisi.", toastConfig);
-                    return;
-                }
-
-                if (errors.password) {
-                    toast.warning("⚠️ Password wajib diisi.", toastConfig);
-                    return;
-                }
-
-                // Error dari logika login controller
-                if (errors.email_or_username) {
-                    const msg = errors.email_or_username;
-
-                    if (msg.includes("Kredensial tidak ditemukan") || msg.includes("akses ditolak")) {
-                        toast.error("🚫 Akun tidak ditemukan atau akses ditolak.", toastConfig);
-                    } else if (msg.includes("Username atau password salah") || msg.includes("Email atau password salah")) {
-                        toast.error("🔑 Email atau password salah.", toastConfig);
-                    } else if (msg.includes("hak akses berbeda")) {
-                        toast.error("⛔ NIP ini terdaftar dengan hak akses yang berbeda.", toastConfig);
-                    } else if (msg.includes("SSO tidak merespon") || msg.includes("Kredensial salah")) {
-                        toast.error("🌐 Kredensial salah atau server SSO tidak merespon. Coba beberapa saat lagi.", {
-                            ...toastConfig,
-                            autoClose: 6000,
-                        });
-                    } else if (msg.includes("Gagal autentikasi SSO") || msg.includes("data NIP tidak ditemukan")) {
-                        toast.error("❓ NIP tidak ditemukan di sistem. Pastikan NIP Anda benar.", toastConfig);
-                    } else {
-                        // Fallback untuk pesan lainnya
-                        toast.error(`❌ ${msg}`, toastConfig);
-                    }
-
-                    fetchCaptcha();
-                    return;
-                }
-
-                // Fallback umum
-                toast.error(
-                    errors.danger || "Terjadi kesalahan. Pastikan username dan password benar, lalu coba lagi.",
-                    { ...toastConfig, autoClose: 5000 }
-                );
-                fetchCaptcha();
-            },
-        });
-    };
+    const { site, errors } = usePage().props;
 
     return (
         <section className="min-h-screen flex text-gray-900 bg-white">
@@ -159,9 +46,9 @@ const Login = () => {
 
                 <div className="w-full max-w-md bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden transform transition-all">
                     <div className="p-8 sm:p-10">
-                        <div className="hidden lg:block text-center mb-8">
+                        <div className="text-center mb-8">
                             <h2 className="text-3xl font-extrabold text-gray-800 mb-2 tracking-tight">Masuk</h2>
-                            <p className="text-gray-500 font-medium">Admin menggunakan email, peserta menggunakan NIP Prestige.</p>
+                            <p className="text-gray-500 font-medium">Gunakan akun Kedaton untuk masuk ke GAPURA.</p>
                         </div>
 
                         {errors.email_or_username && (
@@ -171,142 +58,13 @@ const Login = () => {
                             </div>
                         )}
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
-
-                            {/* Username / NIP */}
-                            <div>
-                                <label htmlFor="username" className="block mb-2 text-sm font-bold text-gray-700">
-                                    Email / NIP <span className="text-red-500">*</span>
-                                </label>
-                                <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <box-icon name='user' color='#9ca3af' size='20px'></box-icon>
-                                    </div>
-                                    <input
-                                        id="username"
-                                        type="text"
-                                        value={data.username}
-                                        onChange={handleChange}
-                                        placeholder="user@example.com / NIP"
-                                        autoComplete="username"
-                                        className={`block w-full pl-11 pr-4 py-3.5 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-xl focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${errors.username ? "border-red-500 bg-red-50 ring-red-100" : "hover:border-gray-300"}`}
-                                        required
-                                    />
-                                </div>
-                                {errors.username && (
-                                    <div className="mt-1.5 text-red-500 text-sm font-medium flex items-center gap-1">
-                                        <box-icon name='error-circle' color='#ef4444' size='16px'></box-icon>
-                                        {errors.username}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Password */}
-                            <div>
-                                <label htmlFor="password" className="block mb-2 text-sm font-bold text-gray-700">
-                                    Password <span className="text-red-500">*</span>
-                                </label>
-                                <div className="relative group">
-                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <box-icon name='lock-alt' color='#9ca3af' size='20px'></box-icon>
-                                    </div>
-                                    <input
-                                        id="password"
-                                        type={showPassword ? "text" : "password"}
-                                        value={data.password}
-                                        onChange={handleChange}
-                                        placeholder="••••••••"
-                                        autoComplete="current-password"
-                                        className={`block w-full pl-11 pr-12 py-3.5 bg-gray-50/50 border border-gray-200 text-gray-900 rounded-xl focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${errors.password ? "border-red-500 bg-red-50 ring-red-100" : "hover:border-gray-300"}`}
-                                        required
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary transition-colors focus:outline-none"
-                                    >
-                                        <box-icon name={showPassword ? "hide" : "show"} color="currentColor" size="22px"></box-icon>
-                                    </button>
-                                </div>
-                                {errors.password && (
-                                    <div className="mt-1.5 text-red-500 text-sm font-medium flex items-center gap-1">
-                                        <box-icon name='error-circle' color='#ef4444' size='16px'></box-icon>
-                                        {errors.password}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Captcha */}
-                            <div className="pt-2">
-                                <label className="block mb-2 text-sm font-bold text-gray-700">
-                                    Verifikasi Keamanan <span className="text-red-500">*</span>
-                                </label>
-                                <div className="flex flex-row items-center gap-3">
-                                    <div className="relative w-[55%] sm:w-[200px] flex-shrink-0 bg-gray-50 border border-gray-200 shadow-sm flex items-center justify-center rounded-xl overflow-hidden group cursor-pointer transition-all h-[52px] ring-2 ring-transparent hover:ring-primary/30" onClick={fetchCaptcha}>
-                                        <img
-                                            src={captchaUrl}
-                                            alt="captcha"
-                                            className="w-full h-full object-fill opacity-90 group-hover:opacity-100 transition-opacity"
-                                            onError={(e) => {
-                                                e.target.style.display = 'none';
-                                                e.target.nextSibling.style.display = 'flex';
-                                            }}
-                                            onLoad={(e) => {
-                                                e.target.style.display = 'block';
-                                                if (e.target.nextSibling) e.target.nextSibling.style.display = 'none';
-                                            }}
-                                        />
-                                        <div className="absolute inset-0 hidden flex-col items-center justify-center bg-gray-100 gap-1">
-                                            <box-icon name='image-alt' color='#9ca3af' size='28px'></box-icon>
-                                            <span className="text-[10px] text-gray-400 font-medium">Klik muat ulang</span>
-                                        </div>
-                                        <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                            <box-icon name='refresh' color='white' size='26px'></box-icon>
-                                        </div>
-                                    </div>
-                                    <input
-                                        type="text"
-                                        id="captcha"
-                                        value={captchaInput}
-                                        onChange={handleCaptchaChange}
-                                        placeholder="Captcha"
-                                        style={{ height: '52px' }}
-                                        className={`flex-1 min-w-0 px-4 bg-gray-50/50 border border-gray-200 text-gray-900 font-mono tracking-widest text-center rounded-xl focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 ${errors.captcha ? "border-red-500 bg-red-50 ring-red-100" : "hover:border-gray-300"}`}
-                                        required
-                                    />
-                                </div>
-                                {errors.captcha && (
-                                    <div className="mt-1.5 text-red-500 text-sm font-medium flex items-center gap-1">
-                                        <box-icon name='error-circle' color='#ef4444' size='16px'></box-icon>
-                                        {errors.captcha}
-                                    </div>
-                                )}
-                                <p className="mt-2 text-xs font-medium text-gray-500 text-center sm:text-left flex items-center justify-center sm:justify-start gap-1">
-                                    <box-icon name='info-circle' color='#6b7280' size='14px'></box-icon>
-                                    Klik gambar untuk mengganti kode
-                                </p>
-                            </div>
-
-                            <div className="pt-4">
-                                <button
-                                    type="submit"
-                                    className="w-full flex items-center justify-center gap-2 py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-base font-bold text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/50 transition-all transform hover:-translate-y-0.5"
-                                    disabled={processing}
-                                >
-                                    {processing ? (
-                                        <>
-                                            <box-icon name='loader-alt' animation='spin' color='white'></box-icon>
-                                            Memproses...
-                                        </>
-                                    ) : (
-                                        <>
-                                            Sign In
-                                            <box-icon name='right-arrow-alt' color='white' size='24px'></box-icon>
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </form>
+                        <a
+                            href="/auth/kedaton/redirect"
+                            className="w-full flex items-center justify-center gap-2 py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-base font-bold text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary/50 transition-all"
+                        >
+                            Masuk dengan Kedaton
+                            <box-icon name='log-in-circle' color='white' size='22px'></box-icon>
+                        </a>
                     </div>
 
                     <div className="px-8 py-5 bg-gray-50/80 border-t border-gray-100 text-center">

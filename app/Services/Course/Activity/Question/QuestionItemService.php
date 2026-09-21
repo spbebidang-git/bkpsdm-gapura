@@ -2,16 +2,19 @@
 
 namespace App\Services\Course\Activity\Question;
 
-use App\Models\Course\Question\QuestionItem;
-use Illuminate\Support\Facades\DB;
+use App\Repositories\Course\Activity\Assessment\Contracts\QuestionItemRepositoryInterface;
+use App\Repositories\Course\Activity\Assessment\Contracts\QuestionRepositoryInterface;
 
 class QuestionItemService
 {
+    public function __construct(
+        private readonly QuestionItemRepositoryInterface $questionItems,
+        private readonly QuestionRepositoryInterface $questions,
+    ) {}
+
     public function getQuestionItems($questionId)
     {
-        return QuestionItem::with('questionOptions')
-            ->where('question_variant_id', $questionId)
-            ->get()
+        return $this->questionItems->getByVariant($questionId)
             ->map(function ($row) {
                 return [
                     'id' => $row->id,
@@ -19,9 +22,9 @@ class QuestionItemService
                     'score' => $row->score,
                     'option1' => $row->questionOptions[0]->option,
                     'option2' => $row->questionOptions[1]->option,
-                    'option3' =>  $row->questionOptions[2]->option,
-                    'option4' =>  $row->questionOptions[3]->option,
-                    'is_correct' => $row->questionOptions->where('is_correct', 1)->first()->option
+                    'option3' => $row->questionOptions[2]->option,
+                    'option4' => $row->questionOptions[3]->option,
+                    'is_correct' => $row->questionOptions->where('is_correct', 1)->first()->option,
                 ];
             });
     }
@@ -30,12 +33,6 @@ class QuestionItemService
 
     public function getActivity($activityId, $variant)
     {
-        return DB::table('questions')
-            ->select('questions.description as title', 'questions.type', 'questions.is_loop', 'question_variants.variant', 'question_variants.mix')
-            ->join('question_variants', 'question_variants.question_id', '=', 'questions.id')
-            ->where('questions.activity_id', $activityId)
-            // ->where('questions.id', $questionId)
-            ->where('question_variants.id', $variant)
-            ->first();
+        return $this->questions->findActivityVariant($activityId, $variant);
     }
 }
