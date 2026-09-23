@@ -309,7 +309,7 @@ const Login = () => {
 
                     <div className="px-8 py-5 bg-gray-50/80 border-t border-gray-100 text-center">
                         <p className="text-sm font-medium text-gray-500">
-                            Mengalami kendala login? <a href="#" className="font-semibold text-primary hover:underline transition-all">Hubungi Admin</a>
+                            Mengalami kendala login? <a href="https://wa.me/628176746052" target="_blank" rel="noreferrer" className="font-semibold text-primary hover:underline transition-all">Hubungi Admin</a>
                         </p>
                     </div>
                 </div>
