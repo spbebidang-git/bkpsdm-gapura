@@ -6,9 +6,22 @@ use App\Http\Middleware\BlockInstructorFromPublicRoutes;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\IsParticipantMiddleware;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 // Auth::loginUsingId(1);
+Route::get('/manual-book', function () {
+    abort_unless(
+        Storage::disk('public')->exists('manual-book.pdf'),
+        404,
+        'Manual book tidak tersedia.',
+    );
+
+    return Storage::disk('public')->download('manual-book.pdf', 'manual-book.pdf', [
+        'Content-Type' => 'application/pdf',
+    ]);
+})->name('manual-book.download');
+
 Route::middleware(HandleInertiaRequests::class)->group(function () {
     # Sign In / Sign Out
     Route::middleware("guest")->group(function () {
