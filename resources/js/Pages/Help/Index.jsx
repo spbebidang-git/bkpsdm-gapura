@@ -1,5 +1,6 @@
 import App from "@/Layouts/App";
 import { Head, usePage } from "@inertiajs/react";
+import DOMPurify from "dompurify";
 import { useState } from "react";
 
 const Index = () => {
@@ -62,9 +63,10 @@ const Index = () => {
                                     </svg>
                                 </span>
                             </summary>
-                            <div className="mt-4 pt-4 border-t border-gray-100 text-gray-600 whitespace-pre-line leading-relaxed text-base">
-                                {item.answer}
-                            </div>
+                            <div
+                                className="prose prose-sm sm:prose-base max-w-none mt-4 pt-4 border-t border-gray-100 text-gray-600 leading-relaxed text-base prose-a:text-primary prose-a:font-medium hover:prose-a:text-primary/80"
+                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item.answer || "") }}
+                            />
                         </details>
                     ))}
                 </div>

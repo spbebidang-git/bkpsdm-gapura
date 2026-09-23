@@ -55,7 +55,7 @@ class HelpController extends Controller
 
         Help::create([
             'question' => $request->question,
-            'answer' => $request->answer,
+            'answer' => sanitize_html($request->answer),
             'is_active' => $request->has('is_active') ? (bool)$request->is_active : true,
         ]);
 
@@ -79,7 +79,7 @@ class HelpController extends Controller
 
         $help->update([
             'question' => $request->question,
-            'answer' => $request->answer,
+            'answer' => sanitize_html($request->answer),
             'is_active' => $request->has('is_active') ? (bool)$request->is_active : false,
         ]);
 

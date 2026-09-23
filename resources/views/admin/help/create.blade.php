@@ -18,9 +18,11 @@
 
                 <div class="mb-3">
                     <label for="answer" class="form-label">Jawaban</label>
-                    <textarea class="form-control @error('answer') is-invalid @enderror" name="answer" id="answer" rows="6">{{ old('answer') }}</textarea>
+                    <textarea class="wysiwyg-answer d-none" name="answer" id="answer" data-editor="#answer-editor">{{ old('answer') }}</textarea>
+                    <div id="answer-editor" class="bg-white @error('answer') border border-danger rounded @enderror"></div>
+                    <div class="form-text">Gunakan tombol tautan untuk menambahkan link yang dapat diklik pada halaman bantuan.</div>
                     @error('answer')
-                        <small class="invalid-feedback">{{ $message }}</small>
+                        <small class="d-block text-danger mt-1">{{ $message }}</small>
                     @enderror
                 </div>
 

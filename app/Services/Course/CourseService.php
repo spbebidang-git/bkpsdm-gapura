@@ -128,6 +128,7 @@ class CourseService
                     'total_participant' => $row->total_participant,
                     'status' => $row->status,
                     'star' => $row->getRating()['star'],
+                    'total_passed' => $row->total_passed,
                 ];
             });
     }
