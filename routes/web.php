@@ -14,6 +14,7 @@ Route::middleware(HandleInertiaRequests::class)->group(function () {
     # Sign In / Sign Out
     Route::middleware('guest')->group(function () {
         Route::get('/sign-in', [AuthController::class, 'index'])->name('sign-in.index');
+        Route::post('/sign-in', [AuthController::class, 'login'])->name('sign-in.store')->middleware('throttle:6,1');
         Route::get('/auth/kedaton/redirect', [AuthController::class, 'redirectToKedaton'])->name('kedaton.redirect')->middleware('throttle:30,1');
         Route::get('/auth/kedaton/callback', [AuthController::class, 'handleKedatonCallback'])->name('kedaton.callback')->middleware('throttle:30,1');
     });

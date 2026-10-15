@@ -14,15 +14,15 @@ class IsInstructorMiddleware
         $user = $request->user();
 
         // Admin absorbs instructor course management
-        if ($user && ($user->hasRole('Instructor') || $user->hasRole('Admin'))) {
+        if ($user && $user->hasAnyRole(['super_admin', 'trainer', 'administrator'])) {
             $this->instructor = $user;
             view()->share('instructor', $this->instructor);
 
             return $next($request);
         }
 
-        if ($user && $user->hasRole('Participant')) {
-            return to_route('home');
+        if ($user && $user->hasRole('participant')) {
+            return to_route('participant.dashboard');
         }
 
         return to_route('sign-in.index');

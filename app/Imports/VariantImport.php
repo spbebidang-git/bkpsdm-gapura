@@ -8,7 +8,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
-class VariantImport implements WithMultipleSheets, WithHeadingRow
+class VariantImport implements \Maatwebsite\Excel\Concerns\Import, WithMultipleSheets, WithHeadingRow
 {
     protected $codes;
 
@@ -19,7 +19,7 @@ class VariantImport implements WithMultipleSheets, WithHeadingRow
 
     public function sheets(): array
     {
-        if (is_int($this->codes)) {
+        if (is_int($this->codes) || is_string($this->codes)) {
             return [
                 0 => new VariantSheetImport($this->codes), // Mengambil sheet pertama (index 0)
             ];
@@ -27,8 +27,8 @@ class VariantImport implements WithMultipleSheets, WithHeadingRow
 
         $sheets = [];
 
-        foreach ($this->codes as $code) {
-            $sheets[$code] = new VariantDetailImport($code);
+        foreach ($this->codes as $code => $variantId) {
+            $sheets[$code] = new VariantDetailImport($variantId);
         }
 
         return $sheets;

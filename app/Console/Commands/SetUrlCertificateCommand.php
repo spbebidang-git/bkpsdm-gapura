@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Learning\Learn;
+use App\Services\Learning\LearnLifecycleService;
 use App\Services\Auth\TokenService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
@@ -144,14 +145,7 @@ class SetUrlCertificateCommand extends Command
                                 ]);
                             }
 
-                            Learn::where('course_id', $learn->course->id)
-                                ->where('participant_id', $learn->participant_id)
-                                ->update([
-                                    'url_certificate'     => $peserta['sertifikat'],
-                                    'is_post_certificate' => 1,
-                                ]);
-
-                            $dispatched++;
+                            if (app(LearnLifecycleService::class)->setCertificate($learn, $peserta['sertifikat'])) $dispatched++;
                         }
                     });
                 }

@@ -1,0 +1,247 @@
+.review-admin {
+    color: #526176;
+    font-family: var(--font-inter);
+}
+
+.review-admin .admin-crud-header h1 {
+    color: #1a2b3f;
+}
+
+.review-admin .admin-crud-header p {
+    color: #64748b;
+}
+
+.review-index-table .admin-table {
+    min-width: 900px;
+}
+
+.admin-shell .review-index-table .admin-table-toolbar > label {
+    flex: 1 1 250px;
+    max-width: 260px;
+}
+
+.admin-shell .review-index-table .admin-table-toolbar {
+    justify-content: flex-start;
+    gap: 8px;
+}
+
+.review-index-table .admin-table-count {
+    margin-left: auto;
+}
+
+.admin-shell .review-index-table .admin-table thead th {
+    padding: 14px 20px;
+    background: #f8fafc;
+    color: #8496b0;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.admin-shell .review-index-table .admin-table tbody td {
+    padding: 18px 20px;
+    color: #526176;
+    font-size: 13px;
+}
+
+.admin-shell .review-index-table .admin-table tbody tr:hover {
+    background: #fafcfc;
+}
+
+.admin-shell .review-index-table .admin-table-footer {
+    padding: 16px 20px;
+    background: #fff;
+}
+
+.admin-shell .review-index-table .admin-table-footer :is(.font-semibold, select, button) {
+    font-weight: 500;
+}
+
+.admin-shell .review-index-table .admin-table-footer :is(select, button) {
+    border-radius: 8px;
+}
+
+.admin-shell .review-index-table .admin-table-footer nav[aria-label='Paginasi tabel'] {
+    gap: 0;
+}
+
+.admin-shell .review-index-table .admin-table-footer nav[aria-label='Paginasi tabel'] > :is(button, span > button) {
+    min-width: 32px;
+    padding-right: 4px;
+    padding-left: 4px;
+}
+
+.review-index-table .admin-table thead th:first-child,
+.review-index-table .admin-table tbody td:first-child {
+    width: 56px;
+    text-align: center;
+}
+
+.review-index-table .admin-table thead th:nth-child(4),
+.review-index-table .admin-table tbody td:nth-child(4) {
+    text-align: center;
+}
+
+.review-filters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.review-filters select {
+    height: 40px;
+    max-width: min(240px, 32vw);
+    padding: 0 32px 0 12px;
+    border: 1px solid #e8ecf1;
+    border-radius: 10px;
+    background-color: #fff;
+    color: #526176;
+    font-size: 12px;
+    transition: border-color 150ms, box-shadow 150ms;
+}
+
+.review-filters select:hover {
+    border-color: #b8d9e2;
+}
+
+.review-filters select:focus {
+    border-color: #018083;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(1, 128, 131, 0.1);
+}
+
+.review-filters .review-filter-course {
+    width: 160px;
+}
+
+.review-filters .review-filter-star {
+    width: 118px;
+}
+
+.review-filters select:focus-visible,
+.review-filter-reset:focus-visible,
+.review-delete:focus-visible {
+    outline: 2px solid #018083;
+    outline-offset: 3px;
+}
+
+.review-filter-reset {
+    min-height: 36px;
+    padding: 0 8px;
+    color: #018083;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.review-filter-reset:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.review-stars {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    white-space: nowrap;
+    color: #dfe3e8;
+}
+
+.review-stars i {
+    font-size: 15px;
+}
+
+.review-stars i.is-filled {
+    color: #be8a00;
+}
+
+.review-course {
+    display: block;
+    min-width: 180px;
+    max-width: 360px;
+    color: #1a2b3f;
+    font-weight: 500;
+    line-height: 1.6;
+}
+
+.review-participant {
+    display: block;
+    min-width: 150px;
+    color: #526176;
+}
+
+.review-comment {
+    display: block;
+    min-width: 240px;
+    max-width: 480px;
+    overflow-wrap: anywhere;
+    color: #526176;
+    line-height: 1.6;
+}
+
+.review-delete {
+    display: inline-flex;
+    min-height: 32px;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid #ffcdcd;
+    border-radius: 8px;
+    background: #fff0f0;
+    padding: 0 10px;
+    color: #e74c3c;
+    font-size: 12px;
+    font-weight: 600;
+    transition: background-color 150ms, border-color 150ms;
+}
+
+.review-delete:hover {
+    border-color: #f2aaaa;
+    background: #ffe6e6;
+}
+
+.review-delete i {
+    font-size: 15px;
+}
+
+@media (max-width: 639px) {
+    .review-admin .admin-crud-header {
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .review-admin .admin-crud-header h1 {
+        font-size: 23px;
+    }
+
+    .review-index-table .admin-table-toolbar,
+    .review-index-table .admin-table-footer {
+        padding: 16px;
+    }
+
+    .review-index-table .admin-table-toolbar > label {
+        flex-basis: 100%;
+        max-width: none;
+    }
+
+    .review-filters {
+        width: 100%;
+        padding-top: 4px;
+    }
+
+    .review-filters label {
+        flex: 1 1 140px;
+    }
+
+    .review-filters select {
+        width: 100%;
+        max-width: none;
+    }
+
+    .review-filters .review-filter-course,
+    .review-filters .review-filter-star {
+        width: 100%;
+    }
+}

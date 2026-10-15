@@ -8,9 +8,9 @@ class ReviewService
 {
     public function __construct(private readonly ReviewRepositoryInterface $reviews) {}
 
-    public function getByAdmin()
+    public function getByAdmin(?int $courseId = null, ?int $star = null)
     {
-        return $this->reviews->getForAdmin()
+        return $this->reviews->getForAdmin($courseId, $star)
             ->map(function ($review) {
                 return [
                     'id' => $review->id,

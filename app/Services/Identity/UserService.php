@@ -4,6 +4,7 @@ namespace App\Services\Identity;
 
 use App\Repositories\Identity\Contracts\UserMetaRepositoryInterface;
 use App\Repositories\Identity\Contracts\UserRepositoryInterface;
+use App\Models\Identity\Opd;
 use Illuminate\Support\Facades\Log;
 
 class UserService
@@ -15,12 +16,12 @@ class UserService
 
     public function getParticipant()
     {
-        return $this->users->queryByRole('Participant', ['roles', 'metas'])->orderBy('id');
+        return $this->users->queryByRole('participant', ['roles', 'metas'])->orderBy('id');
     }
 
     public function getInstructor()
     {
-        return $this->users->getByRole('Admin', ['roles'])->sortBy('id')->values();
+        return $this->users->getByRole('administrator', ['roles'])->sortBy('id')->values();
     }
 
     public function getNip($userId)
@@ -44,6 +45,8 @@ class UserService
             update_user_meta($participantId, 'nip', $nip);
         }
 
+        $this->syncUserOpd($participantId, $data);
+
         if (array_key_exists('status_pegawai', $data) && filled($data['status_pegawai'])) {
             update_user_meta($participantId, 'status_pegawai', strtoupper(trim($data['status_pegawai'])));
         } elseif (array_key_exists('fv_status_pegawai', $data) && filled($data['fv_status_pegawai'])) {
@@ -58,7 +61,11 @@ class UserService
         }
 
         // Bersihkan meta lama; pertahankan key penting + key numerik (variant soal)
-        $protectedKeys = ['nip', 'status_pegawai', 'nama_jabatan', 'nip_hash'];
+        $protectedKeys = array_values(array_unique(array_merge(
+            ['nip', 'status_pegawai', 'nama_jabatan', 'nip_hash'],
+            config('services.kedaton.employee_opd_code_fields', []),
+            config('services.kedaton.employee_opd_name_fields', []),
+        )));
 
         $existingMetas = $this->userMetas->getByUser($participantId);
 
@@ -75,6 +82,36 @@ class UserService
                 $this->userMetas->delete($meta);
             }
         }
+    }
+
+    public function syncUserOpd(int|string $userId, array $data): ?Opd
+    {
+        $code = $this->firstScalar($data, config('services.kedaton.employee_opd_code_fields', []));
+        $name = $this->firstScalar($data, config('services.kedaton.employee_opd_name_fields', []));
+        if (! $code) return null;
+        $opd = Opd::withTrashed()->firstOrCreate(
+            ['code' => trim($code)],
+            ['name' => trim($name ?: $code), 'is_active' => true, 'synced_at' => now()],
+        );
+        if ($opd->trashed()) $opd->restore();
+        if ($name) $opd->update(['name' => trim($name), 'is_active' => true, 'synced_at' => now()]);
+        \App\Models\Identity\User::whereKey($userId)->update(['opd_id' => $opd->id]);
+        return $opd;
+    }
+
+    private function firstScalar(array $data, array $keys): ?string
+    {
+        foreach ($keys as $key) {
+            $value = $data[$key] ?? null;
+            if (is_scalar($value) && trim((string) $value) !== '') return trim((string) $value);
+        }
+        foreach (['data', 'user', 'pegawai', 'employee'] as $nested) {
+            if (is_array($data[$nested] ?? null)) {
+                $found = $this->firstScalar($data[$nested], $keys);
+                if ($found !== null) return $found;
+            }
+        }
+        return null;
     }
 
     private function resolveParticipantNip($participantId, array $data, ?string $loginNip = null): ?string

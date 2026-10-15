@@ -15,7 +15,7 @@ class ParticipantController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::role('Participant');
+        $query = User::role('participant');
 
         // Filter by employee status
         if ($request->has('employee_status')) {
@@ -48,7 +48,7 @@ class ParticipantController extends Controller
      */
     public function show(int $id)
     {
-        $participant = User::role('Participant')->find($id);
+        $participant = User::role('participant')->find($id);
 
         if (!$participant) {
             return response()->json([

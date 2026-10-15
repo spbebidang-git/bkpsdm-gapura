@@ -20,8 +20,8 @@ class StatisticController extends Controller
     public function overview()
     {
         $totalCourses = Course::where('status', 'publish')->count();
-        $totalParticipants = User::role('Participant')->count();
-        $totalInstructors = User::role('Instructor')->count();
+        $totalParticipants = User::role('participant')->count();
+        $totalInstructors = User::role('trainer')->count();
         $totalLearns = Learn::count();
         $totalCompleted = Learn::whereNotNull('finished_at')->count();
         $completionRate = $totalLearns > 0 ? round(($totalCompleted / $totalLearns) * 100, 2) : 0;
@@ -61,7 +61,7 @@ class StatisticController extends Controller
         $completions = Learn::whereYear('finished_at', $year)->count();
         $completionRate = $enrollments > 0 ? round(($completions / $enrollments) * 100, 2) : 0;
 
-        $newParticipants = User::role('Participant')
+        $newParticipants = User::role('participant')
             ->whereYear('created_at', $year)
             ->count();
 

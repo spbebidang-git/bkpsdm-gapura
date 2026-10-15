@@ -1,6 +1,116 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poly&family=Poppins:wght@300;500;600;700;800&display=swap');
+
+:root {
+    --font-poppins: "Poppins", ui-sans-serif, system-ui, sans-serif;
+    --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-poly: "Poly", ui-sans-serif, system-ui, sans-serif;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* GAPURA login palette --------------------------------------------------- */
+
+.gapura-login {
+    background: #f6faf9;
+    color: #173b3a;
+}
+
+.gapura-login > div:first-child {
+    background-color: rgba(189, 232, 226, 0.55);
+}
+
+.gapura-login > div:nth-child(2) {
+    background-color: rgba(223, 244, 241, 0.8);
+}
+
+.gapura-login aside {
+    background: radial-gradient(circle at 78% 20%, rgba(113, 213, 197, 0.16), transparent 30%),
+        linear-gradient(135deg, #075d5e 0%, #018083 54%, #0e5f68 100%);
+}
+
+.gapura-login aside > div:first-child {
+    border-color: rgba(154, 229, 217, 0.13);
+}
+
+.gapura-login aside h1 span {
+    background-image: linear-gradient(90deg, #dff7f3, #9ae5d9);
+}
+
+.gapura-login aside p,
+.gapura-login aside div div {
+    color: #dff7f3;
+}
+
+.gapura-login section {
+    background-color: #f8fbfa;
+}
+
+.gapura-login section h2,
+.gapura-login section label {
+    color: #075d5e;
+}
+
+.gapura-login section input:hover {
+    border-color: #7b918e;
+}
+
+.gapura-login section input:focus {
+    border-color: #018083;
+    --tw-ring-color: rgba(1, 128, 131, 0.12);
+}
+
+.gapura-login form > button[type="submit"] {
+    background-image: linear-gradient(90deg, #019b91 0%, #018083 100%);
+    box-shadow: 0 4px 16px rgba(1, 128, 131, 0.22);
+}
+
+.gapura-login form > button[type="submit"]:hover {
+    box-shadow: 0 6px 24px rgba(1, 128, 131, 0.3);
+}
+
+.gapura-login section a,
+.gapura-login section button[type="button"] {
+    color: #018083;
+}
+
+.gapura-login section > div > a {
+    border-color: #39a9a1;
+    color: #018083;
+}
+
+.gapura-login section > div > a:hover {
+    border-color: #018083;
+    background-color: #f0faf8;
+}
+
+.course-hero-layout {
+    display: flex;
+    flex-direction: column;
+}
+
+.course-hero-media,
+.course-hero-content {
+    width: 100%;
+}
+
+@media (min-width: 1024px) {
+    .course-hero-layout {
+        flex-direction: row;
+        align-items: flex-start;
+    }
+
+    .course-hero-media {
+        flex: 0 0 40%;
+        max-width: 40%;
+    }
+
+    .course-hero-content {
+        flex: 1 1 60%;
+        min-width: 0;
+    }
+}
 
 .form-label {
     @apply block mb-2 text-sm font-medium text-gray-900 dark:text-white capitalize
@@ -253,6 +363,24 @@
     box-shadow: 0 0 0 3px rgba(183, 83, 70, 0.1);
 }
 
+.admin-shell .course-thumbnail-field.is-invalid {
+    border-color: #b75346 !important;
+    box-shadow: 0 0 0 3px rgba(183, 83, 70, 0.1) !important;
+}
+
+.admin-shell .course-description-field.is-invalid .ql-toolbar,
+.admin-shell .course-description-field.is-invalid .ql-container {
+    border-color: #b75346 !important;
+}
+
+.admin-shell .course-description-field.is-invalid .ql-toolbar {
+    box-shadow: 0 -1px 0 #b75346 !important;
+}
+
+.admin-shell .course-description-field.is-invalid .ql-container {
+    box-shadow: 0 3px 0 rgba(183, 83, 70, 0.1) !important;
+}
+
 .admin-shell .button-primary {
     width: auto;
     border-radius: 8px;
@@ -392,4 +520,7 @@
     .admin-shell textarea {
         font-size: 1rem;
     }
+}
+div:has(> [data-field-validation-error]) > input:not([type='checkbox']):not([type='radio']) {
+    border-color: #ef4444;
 }

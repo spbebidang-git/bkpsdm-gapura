@@ -3,6 +3,7 @@
 namespace App\Repositories\Course;
 
 use App\Models\Course\Trainer;
+use App\Models\Identity\User;
 use App\Repositories\Course\Contracts\TrainerRepositoryInterface;
 use App\Repositories\EloquentRepository;
 use Illuminate\Database\Eloquent\Collection;
@@ -16,11 +17,25 @@ class TrainerRepository extends EloquentRepository implements TrainerRepositoryI
 
     public function getLatestForAdmin(): Collection
     {
-        return $this->query()->orderByDesc('id')->get();
+        return $this->query()->with(['user.opd', 'user.metas', 'opd'])->orderByDesc('id')->get();
     }
 
     public function getAllOrderedByName(): Collection
     {
-        return $this->query()->orderBy('name')->get();
+        return $this->query()->with(['user.opd', 'user.metas', 'opd'])->orderBy('name')->get();
+    }
+
+    public function getOrCreateForUser(User $user): Trainer
+    {
+        $trainer = Trainer::withTrashed()->firstOrCreate(
+            ['user_id' => $user->id],
+            ['name' => $user->name, 'jabatan' => 'Trainer'],
+        );
+
+        if ($trainer->trashed()) {
+            $trainer->restore();
+        }
+
+        return $trainer;
     }
 }

@@ -1,0 +1,24 @@
+.participant-shell { background: #FFFFFF; color: #1A2B3F; font-family: Inter, sans-serif; }
+.participant-shell h1, .participant-shell h2, .participant-shell h3, .participant-shell nav, .participant-shell button { font-family: Poppins, sans-serif; }
+.participant-shell h2 { color: #075D5E; font-weight: 600; }
+.participant-shell :is(a, button, input):focus-visible { outline: 2px solid #018083; outline-offset: 3px; }
+.participant-heading { margin-bottom: 28px; }
+.participant-heading h1 { font-size: 32px; line-height: 1.25; font-weight: 600; color: #075D5E; overflow-wrap: anywhere; }
+.participant-eyebrow { margin-bottom: 8px; font-family: Poppins, sans-serif; font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: #018083; }
+.participant-card { min-width: 0; border: 1px solid #E8ECF1; border-radius: 15px; padding: 24px; background: white; box-shadow: 0 2px 16px rgba(1,128,131,.06); }
+.participant-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 18px; border: 1px solid transparent; border-radius: 10px; font-family: Poppins, sans-serif; font-size: 13px; font-weight: 600; transition: background .2s, opacity .2s; }
+.participant-button-primary { background: linear-gradient(90deg,#019B91,#018083); color: white; }
+.participant-button-primary:hover { opacity: .9; }
+.participant-button-secondary { border-color: #39A9A1; background: white; color: #018083; }
+.participant-button-secondary:hover { background: #E6F3F3; }
+@media (max-width: 767px) { .participant-card { padding: 20px; } .participant-heading h1 { font-size: 26px; } }
+@media (prefers-reduced-motion: reduce) { .participant-shell *, .participant-shell *::before, .participant-shell *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+
+.participant-icon-surface { background: linear-gradient(135deg, #F0FAF8 0%, #E6F3F3 100%); box-shadow: inset 0 0 0 1px rgba(1,128,131,.12), 0 2px 6px rgba(1,128,131,.06); }
+
+.participant-shell.participant-shell--gray { background: #F8F9F8; }
+
+/* Frame the content where the outer gutters become visible. */
+@media (min-width: 1321px) {
+    .participant-content-frame { box-shadow: -1px 0 0 #DDE5E0, 1px 0 0 #DDE5E0; }
+}

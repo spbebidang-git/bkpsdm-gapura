@@ -7,6 +7,24 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Login lokal (development)
+
+Jalankan `php artisan db:seed` untuk membuat role, permission, dan akun demo lokal berikut. Login Super Admin menggunakan akun Prestige `elearning` seperti dijelaskan di bawah.
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Administrator | `admin@example.test` | `Satu2345!!` |
+| Trainer | `trainer@example.test` | `Satu2345!!` |
+| Participant | `participant@example.test` | `Satu2345!!` |
+
+Kredensial tersebut hanya untuk lingkungan development dan harus diganti sebelum deployment produksi.
+
+## Super Admin Prestige
+
+Akun Super Admin GAPURA menggunakan username `elearning` dan autentikasi Prestige. Atur `SSO_BASE_URL` ke host Prestige, `SSO_CLIENT_ID`, `SSO_CLIENT_SECRET`, `SSO_ADMIN_USERNAME=elearning`, dan `PRESTIGE_SUPER_ADMIN_EMAIL` pada environment. Password Prestige hanya dimasukkan pada halaman login; token akses dan refresh disimpan terenkripsi pada akun superadmin untuk sync kategori dan sertifikat, termasuk proses CLI dan queue.
+
+Setelah deployment, jalankan migrasi database lalu restart worker queue. Super Admin perlu login satu kali dengan akun `elearning` agar token integrasi tersimpan. Logout dari GAPURA tidak menghapus token integrasi tersebut. Jika refresh token Prestige tidak lagi berlaku, login kembali sebagai `elearning`.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
@@ -64,3 +82,7 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Log dan backup
+
+Konfigurasi, aktivasi enkripsi/off-site, batasan, monitoring, serta latihan pemulihan dijelaskan di [panduan log dan backup](docs/logging-backup-security.md). Backup baru memerlukan public recipient age; produksi juga memerlukan tujuan penyimpanan terpisah. Jalankan `php artisan backup:health` untuk memeriksa kesiapan dan umur backup terverifikasi.

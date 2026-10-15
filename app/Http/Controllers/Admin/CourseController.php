@@ -2,26 +2,49 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Course\Category;
 use App\Models\Course\Course;
-use App\Models\Identity\EmployeeStatus;
+use App\Models\Course\Trainer;
+use App\Http\Requests\Course\StoreCourseRequest;
+use App\Http\Requests\Course\UpdateCourseRequest;
+use App\Repositories\Course\Contracts\CategoryRepositoryInterface;
+use App\Repositories\Identity\Contracts\EmployeeStatusRepositoryInterface;
+use App\Repositories\Learning\Contracts\LearnRepositoryInterface;
 use App\Services\Course\Activity\ActivityService;
 use App\Services\Course\CourseService;
 use App\Services\Course\TrainerService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Models\Identity\Opd;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Yajra\DataTables\Facades\DataTables;
 
 class CourseController
 {
-    public function __construct(protected CourseService $course, protected ActivityService $activity, protected TrainerService $trainer) {}
+    public function __construct(
+        protected CourseService $course,
+        protected ActivityService $activity,
+        protected TrainerService $trainer,
+        protected CategoryRepositoryInterface $categories,
+        protected EmployeeStatusRepositoryInterface $employeeStatuses,
+        protected LearnRepositoryInterface $learns,
+    ) {}
 
     public function index()
     {
+        if ($this->isRestrictedTrainer(request()->user())) {
+            abort_unless(request()->user()->opd?->is_active, 403, 'Trainer belum memiliki OPD aktif dari Kedaton.');
+        }
         if (request()->ajax() && ! request()->header('X-Inertia')) {
-            return DataTables::of($this->course->getByAdmin())
+            return DataTables::of($this->course->getByAdmin($this->isRestrictedTrainer(request()->user()) ? request()->user()->id : null))
+                ->filter(function ($instance) {
+                    foreach (['status', 'type'] as $field) {
+                        $value = request()->input('course_' . $field);
+                        $allowed = $field === 'status' ? ['publish', 'draft'] : ['schedule', 'unschedule'];
+                        if (in_array($value, $allowed, true)) {
+                            $instance->collection = $instance->collection->where($field, $value)->values();
+                        }
+                    }
+                }, true)
                 ->addIndexColumn()
                 ->make();
         }
@@ -31,25 +54,17 @@ class CourseController
 
     public function overview(Course $course)
     {
-        $course->load(['category', 'schedules']);
+        $this->assertCourseAccess($course);
+        $course = $this->course->findForManagementOverview($course->id);
+        abort_unless($course, 404);
 
-        $finishedParticipant = DB::table('learns')
-            ->join('users', 'users.id', '=', 'learns.participant_id')
-            ->leftJoin('user_meta as job_title_meta', function ($join) {
-                $join->on('job_title_meta.user_id', '=', 'users.id')
-                    ->where('job_title_meta.key', '=', 'job_title');
-            })
-            ->where('learns.course_id', $course->id)
-            ->whereNotNull('learns.finished_at')
-            ->select('users.name', 'job_title_meta.value as job_title')
-            ->get();
-
-        $onGoingParticipant = DB::table('learns')
-            ->join('users', 'users.id', '=', 'learns.participant_id')
-            ->where('learns.course_id', $course->id)
-            ->whereNull('learns.finished_at')
-            ->select('users.name')
-            ->get();
+        $finishedParticipant = $this->learns->getCompletedByCourse($course->id)
+            ->map(fn ($learn) => [
+                'name' => $learn->participant?->name,
+                'job_title' => $learn->participant?->metas->first()?->value,
+            ]);
+        $onGoingParticipant = $this->learns->getOngoingByCourse($course->id)
+            ->map(fn ($learn) => ['name' => $learn->participant?->name]);
 
         return Inertia::render('Admin/Course/Show', [
             'course' => [
@@ -64,14 +79,10 @@ class CourseController
                 'category' => $course->category?->title,
                 'total_participant' => $course->total_participant,
                 'total_passed' => $course->total_passed,
+                'audience_scope' => $course->opd_id ? 'opd' : 'all',
+                'opd_id' => $course->opd_id,
+                'opd_name' => $course->opd?->name,
             ],
-            'schedules' => $course->schedules->map(fn ($s) => [
-                'id' => $s->id,
-                'date' => $s->date,
-                'time_from' => $s->time_from,
-                'time_to' => $s->time_to,
-                'quota' => $s->quota,
-            ]),
             'finishedParticipant' => $finishedParticipant,
             'onGoingParticipant' => $onGoingParticipant,
         ]);
@@ -80,64 +91,37 @@ class CourseController
     public function create()
     {
         return Inertia::render('Instructor/Course/Create', [
-            'employee_status' => EmployeeStatus::all(),
-            'categories' => Category::all(),
-            'trainers' => $this->trainer->getForForm(),
+            'employee_status' => $this->employeeStatuses->getAllOrderedByTitle(),
+            'categories' => $this->categories->all(),
+            ...$this->trainerFormProps(),
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreCourseRequest $request)
     {
-        if (is_string($request->schedules)) {
-            $request->merge([
-                'schedules' => json_decode($request->schedules, true)  // Dekode menjadi array
-            ]);
-        }
-
-        $request->validate([
-            'type' => 'required|string',
-            'category' => 'required|numeric',
-            'employee_status'   => 'required|min:1',
-            'employee_status.*' => 'exists:employee_status,id',
-            'title' => 'required|string',
-            'short_description' => 'required|string',
-            'description' => 'required|string',
-            'thumbnail' => 'required|image|max:10240|mimes:png,jpg',
-            'teaser_video' => 'nullable|string',
-            'expired' => 'required_if:type,unschedule',
-            'status' => 'required|string',
-            'jam_pelajaran' => 'required|string',
-            'schedules' => 'required_if:type,schedule|array|min:1',
-            'trainers' => 'nullable|array',
-            'trainers.*' => 'string|exists:trainers,id',
-        ]);
-
         try {
-            DB::beginTransaction();
+            $data = $this->assignCurrentTrainer($request->validated());
+            $this->course->createCourse($data);
 
-            $data = $request->only('type', 'category', 'employee_status', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status', 'jam_pelajaran', 'trainers');
-            $data['description'] = sanitize_html($data['description']);
-            $data['short_description'] = sanitize_plain_text($data['short_description']);
-
-            $this->course->createCourse(
-                $data,
-                $request->schedules
-            );
-
-            DB::commit();
-
-            return $this->afterCourseMutation('Course saved successfully.');
+            return $this->afterCourseMutation($request->input('type') === 'schedule'
+                ? 'Kelas berhasil dibuat sebagai draft. Tambahkan jadwal dari menu Kelola jadwal.'
+                : 'Kelas berhasil disimpan.');
+        } catch (ValidationException $th) {
+            throw $th;
         } catch (\Throwable $th) {
-            DB::rollBack();
             Log::error('Course store failed: ' . $th->getMessage(), [
                 'trace' => $th->getTraceAsString(),
             ]);
-            return redirect()->back()->withInput()->with('danger', 'Something went wrong: ' . $th->getMessage());
+            return redirect()->back()->withInput()->with('danger', 'Terjadi kesalahan saat menyimpan data: ' . $th->getMessage());
         }
     }
 
     public function show(Course $course)
     {
+        $this->assertCourseAccess($course);
+        $course = $this->course->findForManagementDetail($course->id);
+        abort_unless($course, 404);
+
         return Inertia::render('Instructor/Course/Show', [
             'course' => [
                 'title' => $course->title,
@@ -150,9 +134,26 @@ class CourseController
                 'total_passed' => $course->total_passed,
                 'efektifitas' => $course->efektifitas,
                 'is_locked' => (bool)$course->is_locked,
+                'category' => $course->category?->title,
+                'type' => $course->type,
+                'status' => $course->status,
+                'jam_pelajaran' => $course->jam_pelajaran,
+                'audience_scope' => $course->opd_id ? 'opd' : 'all',
+                'opd_id' => $course->opd_id,
+                'opd_name' => $course->opd?->name,
+                'employee_status' => $course->employeeStatus->map(fn ($s) => [
+                    'id' => $s->id,
+                    'title' => $s->title,
+                ]),
             ],
-            'activities' => $this->activity->getActivityByCourse($course->id),
-            'trainers' => $course->load('trainers')->trainers->map(fn ($t) => [
+            'schedules' => $course->type === 'schedule' ? $course->schedules->map(fn ($schedule) => [
+                'id' => $schedule->id,
+                'date' => $schedule->getRawOriginal('date'),
+                'time_from' => $schedule->getRawOriginal('time_from') ? \Carbon\Carbon::parse($schedule->getRawOriginal('time_from'))->format('H:i') : null,
+                'time_to' => $schedule->getRawOriginal('time_to') ? \Carbon\Carbon::parse($schedule->getRawOriginal('time_to'))->format('H:i') : null,
+                'quota' => $schedule->getRawOriginal('quota'),
+            ]) : [],
+            'trainers' => $course->trainers->map(fn ($t) => [
                 'id' => $t->id,
                 'name' => $t->name,
                 'jabatan' => $t->jabatan,
@@ -163,100 +164,56 @@ class CourseController
 
     public function edit(Course $course)
     {
+        $this->assertCourseAccess($course);
+        $course = $this->course->findForManagementDetail($course->id);
+        abort_unless($course, 404);
+
         // ambil id employee_status yg sudah terpilih
-        $selectedEmployeeStatus = $course->employeeStatus()->pluck('employee_status_id')->toArray();
+        $selectedEmployeeStatus = $course->employeeStatus->pluck('id')->all();
 
         return Inertia::render('Instructor/Course/Edit', [
             'course' => $course,
-            'employee_status' => Course::EMPLOYEE_STATUS,
-            'schedules' => $course->load('schedules')->schedules->map(function ($row) {
-                $timeFrom = $row->getRawOriginal('time_from');
-                $timeTo = $row->getRawOriginal('time_to');
-
-                return [
-                    'id' => $row->id,
-                    'date' => $row->getRawOriginal('date'),
-                    'time_from' => $timeFrom ? \Carbon\Carbon::parse($timeFrom)->format('H:i') : null,
-                    'time_to' => $timeTo ? \Carbon\Carbon::parse($timeTo)->format('H:i') : null,
-                    'quota' => $row->getRawOriginal('quota'),
-                ];
-            }),
-            'categories' => Category::all(),
-            'employee_status' => EmployeeStatus::all(),
+            'categories' => $this->categories->all(),
+            'employee_status' => $this->employeeStatuses->getAllOrderedByTitle(),
             'selected_employee_status' => $selectedEmployeeStatus,
-            'trainers' => $this->trainer->getForForm(),
-            'selected_trainers' => $course->load('trainers')->trainers->pluck('id')->toArray(),
+            'selected_trainers' => $course->trainers->pluck('id')->all(),
+            ...$this->trainerFormProps(),
         ]);
     }
 
-    public function update(Course $course, Request $request)
+    public function update(Course $course, UpdateCourseRequest $request)
     {
-        // dd($request->all());
-        if (is_string($request->schedules)) {
-            $request->merge([
-                'schedules' => json_decode($request->schedules, true)  // Dekode menjadi array
-            ]);
-        }
-
-        $request->validate([
-            'type' => 'required|string',
-            'category' => 'required|numeric',
-            'employee_status'   => 'required|min:1',
-            'employee_status.*' => 'exists:employee_status,id',
-            'title' => 'required|string',
-            'short_description' => 'required|string',
-            'description' => 'required|string',
-            'thumbnail' => 'nullable|image|max:10240|mimes:png,jpg',
-            'teaser_video' => 'nullable|string',
-            'expired' => 'required_if:type,unschedule',
-            'status' => 'required|string',
-            'jam_pelajaran' => 'required|string',
-            'schedules' => 'required_if:type,schedule|array|min:1',
-            'trainers' => 'nullable|array',
-            'trainers.*' => 'string|exists:trainers,id',
-        ]);
+        $this->assertCourseAccess($course);
 
         try {
-            DB::beginTransaction();
+            $data = $this->assignCurrentTrainer($request->validated());
+            $this->course->updateCourse($course, $data);
 
-            $data = $request->only('type', 'category', 'employee_status', 'title', 'short_description', 'description', 'thumbnail', 'teaser_video', 'expired', 'status', 'jam_pelajaran', 'trainers');
-            $data['description'] = sanitize_html($data['description']);
-            $data['short_description'] = sanitize_plain_text($data['short_description']);
-
-            $this->course->updateCourse(
-                $course,
-                $data,
-                $request->schedules
-            );
-
-            DB::commit();
-
-            return $this->afterCourseMutation('Course updated successfully.');
+            return $this->afterCourseMutation('Kelas berhasil diperbarui.');
+        } catch (ValidationException $th) {
+            throw $th;
         } catch (\Throwable $th) {
-            DB::rollBack();
             Log::error('Course update failed: ' . $th->getMessage(), [
                 'trace' => $th->getTraceAsString(),
             ]);
-            return redirect()->back()->withInput()->with('danger', 'Something went wrong: ' . $th->getMessage());
+            return redirect()->back()->withInput()->with('danger', 'Terjadi kesalahan saat menyimpan data: ' . $th->getMessage());
         }
     }
 
     public function destroy(Course $course)
     {
-        $course->delete();
+        $this->assertCourseAccess($course);
+        $this->course->deleteCourse($course);
 
-        return $this->afterCourseMutation('Course deleted successfully.');
+        return $this->afterCourseMutation('Kelas berhasil dihapus.');
     }
 
     public function lock(Course $course)
     {
-        if ($course->is_locked) {
+        $this->assertCourseAccess($course);
+        if (! $this->course->lockCourse($course)) {
             return redirect()->back()->with('danger', "Materi sudah dikunci.");
         }
-
-        $course->update([
-            'is_locked' => true
-        ]);
 
         return redirect()->back()->with('success', "Materi berhasil dikunci.");
     }
@@ -264,5 +221,69 @@ class CourseController
     protected function afterCourseMutation(string $message)
     {
         return to_route('admin.course.index')->with('success', $message);
+    }
+
+    protected function assertCourseAccess(Course $course): void
+    {
+        $user = request()->user();
+        if (! $this->isRestrictedTrainer($user)) {
+            return;
+        }
+
+        abort_unless($user->opd?->is_active && $course->opd_id === $user->opd_id, 403, 'Trainer hanya dapat mengelola kelas pada OPD sendiri.');
+
+        abort_unless($user?->hasRole('trainer') && $this->course->canBeManagedByTrainer($course, $user->id), 403);
+    }
+
+    protected function isRestrictedTrainer($user): bool
+    {
+        if (! $user?->hasRole('trainer')) {
+            return false;
+        }
+
+        return ! $user->hasAnyRole(['super_admin', 'administrator']);
+    }
+
+    /** @return array<string, mixed> */
+    protected function trainerFormProps(): array
+    {
+        $user = request()->user();
+
+        if (! $this->isRestrictedTrainer($user)) {
+            return [
+                'is_trainer' => false,
+                'trainers' => $this->trainer->getForForm(),
+            ];
+        }
+
+        $trainer = $this->trainer->getOrCreateForUser($user);
+
+        return [
+            'is_trainer' => true,
+            'trainers' => [],
+            'selected_trainers' => [$trainer->id],
+        ];
+    }
+
+    /** @param array<string, mixed> $data */
+    protected function assignCurrentTrainer(array $data): array
+    {
+        $user = request()->user();
+
+        if ($this->isRestrictedTrainer($user)) {
+            abort_unless($user->opd?->is_active, 403, 'Trainer harus memiliki OPD aktif dari Kedaton. Silakan login ulang setelah data OPD tersedia.');
+            $data['trainers'] = [$this->trainer->getOrCreateForUser($user)->id];
+            $data['opd_id'] = $user->opd_id;
+        } else {
+            $trainers = Trainer::with(['user.opd', 'opd'])->whereIn('id', $data['trainers'] ?? [])->get();
+            $opdIds = $trainers->pluck('organization_id')->filter()->unique();
+            if ($trainers->count() !== count($data['trainers'] ?? []) || $opdIds->count() !== 1
+                || ! Opd::whereKey($opdIds->first())->where('is_active', true)->exists()) {
+                throw ValidationException::withMessages(['trainers' => 'Pilih trainer dari satu OPD aktif yang sama.']);
+            }
+            $data['opd_id'] = $opdIds->first();
+        }
+
+        return $data;
     }
 }

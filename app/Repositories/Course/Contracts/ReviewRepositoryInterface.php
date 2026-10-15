@@ -9,5 +9,5 @@ interface ReviewRepositoryInterface extends BaseRepositoryInterface
 {
     public function getByCourse(int|string $courseId): Collection;
 
-    public function getForAdmin(): Collection;
+    public function getForAdmin(?int $courseId = null, ?int $star = null): Collection;
 }

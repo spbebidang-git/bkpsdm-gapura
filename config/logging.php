@@ -1,11 +1,12 @@
 <?php
 
+use App\Logging\SecureLogs;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
 use Monolog\Processor\PsrLogMessageProcessor;
 
-return [
+$config = [
 
     /*
     |--------------------------------------------------------------------------
@@ -62,14 +63,14 @@ return [
         'single' => [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
-            'level' => env('LOG_LEVEL', 'debug'),
+            'level' => env('LOG_LEVEL', 'info'),
             'replace_placeholders' => true,
         ],
 
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
-            'level' => env('LOG_LEVEL', 'debug'),
+            'level' => env('LOG_LEVEL', 'info'),
             'days' => env('LOG_DAILY_DAYS', 14),
             'replace_placeholders' => true,
         ],
@@ -78,7 +79,7 @@ return [
         'auth' => [
             'driver' => 'daily',
             'path' => storage_path('logs/auth.log'),
-            'level' => env('LOG_LEVEL', 'info'),
+            'level' => 'info',
             'days' => env('LOG_AUTH_DAYS', 30),
             'replace_placeholders' => true,
         ],
@@ -87,7 +88,7 @@ return [
         'backup' => [
             'driver' => 'daily',
             'path' => storage_path('logs/backup.log'),
-            'level' => env('LOG_LEVEL', 'info'),
+            'level' => 'info',
             'days' => env('LOG_BACKUP_DAYS', 30),
             'replace_placeholders' => true,
         ],
@@ -103,7 +104,7 @@ return [
 
         'papertrail' => [
             'driver' => 'monolog',
-            'level' => env('LOG_LEVEL', 'debug'),
+            'level' => env('LOG_LEVEL', 'info'),
             'handler' => env('LOG_PAPERTRAIL_HANDLER', SyslogUdpHandler::class),
             'handler_with' => [
                 'host' => env('PAPERTRAIL_URL'),
@@ -115,7 +116,7 @@ return [
 
         'stderr' => [
             'driver' => 'monolog',
-            'level' => env('LOG_LEVEL', 'debug'),
+            'level' => env('LOG_LEVEL', 'info'),
             'handler' => StreamHandler::class,
             'formatter' => env('LOG_STDERR_FORMATTER'),
             'with' => [
@@ -126,14 +127,14 @@ return [
 
         'syslog' => [
             'driver' => 'syslog',
-            'level' => env('LOG_LEVEL', 'debug'),
+            'level' => env('LOG_LEVEL', 'info'),
             'facility' => env('LOG_SYSLOG_FACILITY', LOG_USER),
             'replace_placeholders' => true,
         ],
 
         'errorlog' => [
             'driver' => 'errorlog',
-            'level' => env('LOG_LEVEL', 'debug'),
+            'level' => env('LOG_LEVEL', 'info'),
             'replace_placeholders' => true,
         ],
 
@@ -150,13 +151,27 @@ return [
         // - File harian: storage/logs/app-errors-YYYY-MM-DD.log
         // - Auto-delete setelah 7 hari
         'app_errors' => [
-            'driver'              => 'daily',
-            'path'                => storage_path('logs/app-errors.log'),
-            'level'               => 'error',
-            'days'                => 7,
-            'replace_placeholders'=> true,
+            'driver' => 'daily',
+            'path' => storage_path('logs/app-errors.log'),
+            'level' => 'error',
+            'days' => 7,
+            'replace_placeholders' => true,
         ],
 
     ],
 
 ];
+
+// Apply to each concrete channel, including optional external transports.
+foreach ($config['channels'] as $name => &$channel) {
+    if (! in_array($name, ['stack', 'null', 'emergency'], true)) {
+        $channel['tap'] = [SecureLogs::class];
+        $channel['permission'] = 0600;
+        $channel['locking'] = true;
+    }
+}
+unset($channel);
+$config['channels']['audit'] = $config['channels']['auth'];
+$config['channels']['audit']['path'] = storage_path('logs/audit.log');
+
+return $config;

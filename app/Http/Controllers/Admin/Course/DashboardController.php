@@ -14,9 +14,12 @@ class DashboardController
         $user = $request->user();
 
         // Admin sees all courses; Instructor only own
-        $courses = $user->hasRole('Admin')
-            ? $course->getByAdmin()
-            : $course->getByInstructor($user->id);
+        $restrictedTrainer = $user->hasRole('trainer')
+            && $user->getRoleNames()->every(fn (string $role) => in_array($role, ['trainer', 'participant'], true));
+
+        $courses = $restrictedTrainer
+            ? $course->getByInstructor($user->id)
+            : $course->getByAdmin();
 
         return Inertia::render('Instructor/Dashboard', [
             'courses' => $courses,

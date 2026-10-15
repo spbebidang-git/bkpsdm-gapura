@@ -384,7 +384,7 @@ class PostCertificateCommand extends Command
         }
 
         $lines[] = '=== POST_CERT_DEBUG_END ===';
-        $block = implode("\n", $lines);
+        $block = implode("\n", array_map(fn ($line) => app(\App\Logging\Redactor::class)->text($line), $lines));
 
         // stdout → Artisan::output() → JSON UI
         $this->line($block);
@@ -392,7 +392,8 @@ class PostCertificateCommand extends Command
 
         try {
             $path = storage_path('logs/post-certificate-last.txt');
-            file_put_contents($path, $block . "\n");
+            file_put_contents($path, $block . "\n", LOCK_EX);
+            chmod($path, 0600);
         } catch (\Throwable $e) {
             // ignore write fail
         }
@@ -448,7 +449,7 @@ class PostCertificateCommand extends Command
         }
 
         $url = rtrim((string) config('services.sso.base_url'), '/') . '/api/post_sertifikat';
-        $profile = $this->workingProfile ?? 'legacy_auth';
+        $profile = $this->workingProfile ?? 'authorization_only';
         $payload = $this->buildPayload($courseItem, $listNip, $dates, $profile);
 
         $response = $this->httpPost($url, $payload, $token, $profile);
@@ -498,6 +499,7 @@ class PostCertificateCommand extends Command
     private function probeProfiles($courseItem, string $nip, string &$token, array $dates, string $url): ?string
     {
         $profiles = [
+            'authorization_only',
             'legacy_auth',           // auth only, code, no Accept JSON (asli RatingController-ish)
             'legacy_auth_cat_id',    // auth only, category_id (RatingController paling lama)
             'auth_bearer_both',      // auth + Authorization + code

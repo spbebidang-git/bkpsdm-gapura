@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Admin\Course\Question;
 
 use App\Models\Course\Course;
+use App\Models\Course\Activity\Activity;
+use App\Models\Course\Activity\Assessment\Question;
+use App\Models\Course\Activity\Assessment\QuestionVariant;
 use App\Models\Course\Activity\Assessment\QuestionItem;
 use App\Models\Course\Activity\Assessment\QuestionOption;
 use App\Services\Course\Activity\Question\QuestionItemService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Yajra\DataTables\Facades\DataTables;
 use PhpParser\Node\Stmt\TryCatch;
 
 class QuestionItemController
@@ -22,8 +26,11 @@ class QuestionItemController
 
     public function index(Course $course, $activityId, $variantId)
     {
+        $this->assertVariant($course, $activityId, $variantId);
         $activity = $this->questionItem->getActivity($activityId, $variantId);
-        // dd($activity);
+        if (request()->ajax() && !request()->header('X-Inertia')) {
+            return DataTables::of($this->questionItem->getQuestionItems($variantId))->make();
+        }
         return Inertia::render('Instructor/Course/Variant/QuestionItem/Index', [
             'slug' => $course->slug,
             'activityId' => $activityId,
@@ -32,15 +39,16 @@ class QuestionItemController
             'activity' => [
                 'type' => $activity->type == 'pre' ? 'Pre-Test' : 'Post-Test',
                 'title' => $activity->title,
-                'is_loop' => $activity->is_loop ? 'Yes' : 'No',
+                'is_loop' => (bool) $activity->is_loop,
                 'variant' => $activity->variant,
-                'mix' => $activity->mix ? 'Yes' : 'No',
+                'mix' => (bool) $activity->mix,
             ]
         ]);
     }
 
     public function create(Course $course, $activityId, $variantId)
     {
+        $this->assertVariant($course, $activityId, $variantId);
         return Inertia::render('Instructor/Course/Variant/QuestionItem/Create', [
             'slug' => $course->slug,
             'activityId' => $activityId,
@@ -50,16 +58,17 @@ class QuestionItemController
 
     public function store(Course $course, $activityId, $variantId, Request $request)
     {
+        $this->assertVariant($course, $activityId, $variantId);
         $request->validate([
             'description' => 'required|string',
-            'options' => 'required|array',
+            'options' => 'required|array:option1,option2,option3,option4',
             'options.option1' => 'required|string',
             'options.option2' => 'required|string',
             'options.option3' => 'required|string',
             'options.option4' => 'required|string',
-            'correct_answer' => 'required|string',
+            'correct_answer' => 'required|in:1,2,3,4',
             'score' => 'required|integer|min:1|max:100',
-        ]);
+        ], [], ['description' => 'Pertanyaan']);
 
         try {
             DB::beginTransaction();
@@ -74,12 +83,15 @@ class QuestionItemController
             for ($i = 1; $i <= count($request->options); $i++) {
                 $option[] = [
                     'question_item_id' => $questionItem->id,
+                    'sort_order' => $i,
                     'option' => $request->options['option' . $i],
                     'is_correct' => $i == $request->correct_answer ? true : false
                 ];
             }
 
-            QuestionOption::insert($option);
+            foreach ($option as $attributes) {
+                QuestionOption::create($attributes);
+            }
 
             DB::commit();
 
@@ -93,6 +105,8 @@ class QuestionItemController
 
     public function edit(Course $course, $activityId, $variantId, QuestionItem $question_item)
     {
+        $this->assertVariant($course, $activityId, $variantId);
+        abort_unless($question_item->question_variant_id === $variantId, 404);
         return Inertia::render('Instructor/Course/Variant/QuestionItem/Edit', [
             'question' => [
                 'id' => $question_item->id,
@@ -102,7 +116,7 @@ class QuestionItemController
                 'option2' => $question_item->questionOptions[1]->option,
                 'option3' =>  $question_item->questionOptions[2]->option,
                 'option4' =>  $question_item->questionOptions[3]->option,
-                'is_correct' => $question_item->questionOptions->where('is_correct', 1)->first()->option
+                'correct_answer' => (string) ($question_item->questionOptions->search(fn ($option) => (bool) $option->is_correct) + 1)
             ],
             'slug' => $course->slug,
             'activityId' => $activityId,
@@ -112,16 +126,18 @@ class QuestionItemController
 
     public function update(Course $course, $activityId, $variantId, QuestionItem $question_item, Request $request)
     {
+        $this->assertVariant($course, $activityId, $variantId);
+        abort_unless($question_item->question_variant_id === $variantId, 404);
         $request->validate([
-            'description' => 'required|string|max:255',
-            'options' => 'required|array',
-            'options.option1' => 'required|string|max:255',
-            'options.option2' => 'required|string|max:255',
-            'options.option3' => 'required|string|max:255',
-            'options.option4' => 'required|string|max:255',
-            'correct_answer' => 'required|string',
+            'description' => 'required|string',
+            'options' => 'required|array:option1,option2,option3,option4',
+            'options.option1' => 'required|string',
+            'options.option2' => 'required|string',
+            'options.option3' => 'required|string',
+            'options.option4' => 'required|string',
+            'correct_answer' => 'required|in:1,2,3,4',
             'score' => 'required|integer|min:1|max:100',
-        ]);
+        ], [], ['description' => 'Pertanyaan']);
 
         try {
             DB::beginTransaction();
@@ -130,23 +146,11 @@ class QuestionItemController
                 'score' => $request->score
             ]);
 
-            $option = [];
-            for ($i = 1; $i <= count($request->options); $i++) {
-                $option[] = [
-                    'question_item_id' => $question_item->id,
-                    'option' => $request->options['option' . $i],
-                    'is_correct' => $request->options['option' . $i] == $request->correct_answer ? true : false
-                ];
-            }
-
-            $existingOptions = QuestionOption::where('question_item_id', $question_item->id)->get();
-
-            foreach ($existingOptions as $index => $existingOption) {
-                $optionKey = 'option' . ($index + 1);
-
+            foreach ($question_item->questionOptions as $index => $existingOption) {
                 $existingOption->update([
-                    'option' => $request->options[$optionKey],
-                    'is_correct' => $request->options[$optionKey] == $request->correct_answer,
+                    'option' => $request->options['option'.($index + 1)],
+                    'sort_order' => $index + 1,
+                    'is_correct' => (string) ($index + 1) === (string) $request->correct_answer,
                 ]);
             }
 
@@ -170,6 +174,8 @@ class QuestionItemController
 
     public function destroy(Course $course, $activityId, $variantId, QuestionItem $question_item)
     {
+        $this->assertVariant($course, $activityId, $variantId);
+        abort_unless($question_item->question_variant_id === $variantId, 404);
         try {
             DB::beginTransaction();
 
@@ -192,4 +198,12 @@ class QuestionItemController
             ])->with('danger', 'Gagal menghapus soal.');
         }
     }
+    private function assertVariant(Course $course, string $activityId, string $variantId): void
+    {
+        abort_unless(Activity::whereKey($activityId)->where('course_id', $course->id)
+            ->whereIn('type', ['pre-test', 'post-test'])->exists(), 404);
+        $question = Question::where('activity_id', $activityId)->firstOrFail();
+        abort_unless(QuestionVariant::whereKey($variantId)->where('question_id', $question->id)->exists(), 404);
+    }
+
 }

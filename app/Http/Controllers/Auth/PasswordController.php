@@ -15,7 +15,8 @@ class PasswordController extends Controller
      */
     public function update(Request $request): RedirectResponse
     {
-        abort_unless($request->user()->hasRole('Admin'), 403);
+        abort_unless($request->user()->hasAnyRole(['super_admin', 'administrator']), 403);
+        abort_if($request->user()->usesPrestigeAuthentication(), 403, 'Kata sandi dikelola oleh Prestige.');
 
         $validated = $request->validate([
             'current_password' => ['required', 'current_password'],

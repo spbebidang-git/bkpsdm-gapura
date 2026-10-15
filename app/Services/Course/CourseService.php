@@ -11,6 +11,7 @@ use App\Repositories\Course\Contracts\CourseRepositoryInterface;
 use App\Repositories\Course\Contracts\ScheduleRepositoryInterface;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Models\Identity\User;
 
 class CourseService
 {
@@ -22,22 +23,32 @@ class CourseService
         private readonly QuestionVariantRepositoryInterface $variants,
     ) {}
 
-    public function getRandomCourse()
+    public function getFeaturedCourses(int $limit = 6, ?User $user = null)
     {
-        return $this->courses->getPublishedActiveAt(Carbon::now())
+        return $this->courses->getFeaturedPublishedCourses(Carbon::now(), $limit, $user)
             ->map(function ($row) {
+                $ratingCount = (int) $row->rating_count;
+                $rating = $ratingCount > 0
+                    ? round(((float) $row->rating_total) / $ratingCount, 1)
+                    : 0;
+
                 return [
                     'id' => $row->id,
                     'type' => $row->type,
                     'title' => $row->title,
+                    'employee_status' => $row->employeeStatus->pluck('title')->map(fn ($t) => trim($t))->join(', '),
+                    'short_description' => $row->short_description,
                     'slug' => $row->slug,
                     'quota' => $row->quota,
                     'thumbnail' => $row->thumbnail_src,
                     'category' => optional($row->category)->title,
-                    'total_participant' => $row->total_participant,
+                    'total_participant' => (int) $row->total_participant_count,
+                    'total_passed' => (int) $row->total_passed_count,
                     'status' => $row->status,
-                    'star' => $row->getRating()['star'],
-                    'total_passed' => $row->total_passed,
+                    'audience_scope' => $row->opd_id ? 'opd' : 'all',
+                    'opd_id' => $row->opd_id,
+                    'opd_name' => $row->opd?->name,
+                    'star' => $rating,
                 ];
             });
     }
@@ -78,30 +89,39 @@ class CourseService
     //         });
     // }
 
-    public function getAllCourse()
+    public function getAllCourse(array $filters = [], ?User $user = null)
     {
-        return $this->courses->getPublishedAvailable(Carbon::now())
+        return $this->courses->getPublishedAvailable(Carbon::now(), filters: $filters, user: $user)
             ->map(function ($row) {
+                $ratingCount = (int) $row->rating_count;
+                $rating = $ratingCount > 0
+                    ? round(((float) $row->rating_total) / $ratingCount, 1)
+                    : 0;
+
                 return [
                     'id' => $row->id,
                     'type' => $row->type,
                     'title' => $row->title,
                     'employee_status' => $row->employeeStatus->pluck('title')->map(fn ($t) => trim($t))->join(', '),
+                    'short_description' => $row->short_description,
                     'slug' => $row->slug,
                     'quota' => $row->quota,
                     'thumbnail' => $row->thumbnail_src,
                     'category' => optional($row->category)->title,
-                    'total_participant' => $row->total_participant,
+                    'total_participant' => (int) $row->total_participant_count,
+                    'total_passed' => (int) $row->total_passed_count,
                     'status' => $row->status,
-                    'star' => $row->getRating()['star'],
+                    'audience_scope' => $row->opd_id ? 'opd' : 'all',
+                    'opd_id' => $row->opd_id,
+                    'opd_name' => $row->opd?->name,
+                    'star' => $rating,
                 ];
             });
     }
 
-    /** @deprecated ownership gone — all courses admin-managed */
     public function getByInstructor($instructorId = null)
     {
-        return $this->getByAdmin();
+        return $this->getByAdmin($instructorId);
     }
 
     public function getByParticipant($participantId)
@@ -121,6 +141,9 @@ class CourseService
                     'category' => optional($row->course->category)->title,
                     'total_participant' => $row->course->total_participant,
                     'status' => $row->course->status,
+                    'audience_scope' => $row->course->opd_id ? 'opd' : 'all',
+                    'opd_id' => $row->course->opd_id,
+                    'opd_name' => $row->course->opd?->name,
                     'schedule_id' => $row->id,
                     'initial_activity' => $row->course->activities->first() ? $row->course->activities->first()->id : 0,
                     'finished_at' => $row->course->learns->first()->finished_at ?? null,
@@ -129,9 +152,9 @@ class CourseService
             ->values();
     }
 
-    public function getByAdmin()
+    public function getByAdmin($userId = null)
     {
-        return $this->courses->getForInstructor()
+        return $this->courses->getForInstructor($userId)
             ->map(function ($row) {
                 return [
                     'id' => $row->id,
@@ -143,19 +166,23 @@ class CourseService
                     'category' => optional($row->category)->title,
                     'total_participant' => $row->total_participant,
                     'status' => $row->status,
+                    'audience_scope' => $row->opd_id ? 'opd' : 'all',
+                    'opd_id' => $row->opd_id,
+                    'opd_name' => $row->opd?->name,
+                    'schedules_count' => (int) $row->schedules_count,
                     'updated_at' => $row->updated_at,
                 ];
             });
     }
 
-    public function findBySlug($slug)
+    public function findBySlug($slug, ?User $user = null)
     {
-        return $this->courses->findBySlug($slug, ['reviews']);
+        return $this->courses->findVisibleBySlug($slug, $user, ['reviews', 'opd']);
     }
 
-    public function createCourse($data, $schedules = null)
+    public function createCourse($data)
     {
-        return DB::transaction(function () use ($data, $schedules) {
+        return DB::transaction(function () use ($data) {
             $course = $this->courses->create([
                 'category_id' => $data['category'],
                 'access_mode' => Course::mapTypeToAccessMode($data['type'] ?? null),
@@ -168,34 +195,21 @@ class CourseService
                 'default_access_hours' => $data['expired'] ?? null,
                 'jam_pelajaran' => $data['jam_pelajaran'],
                 'status' => $data['status'],
+                'opd_id' => $data['opd_id'] ?? null,
             ]);
 
             $this->courses->syncEmployeeStatuses($course, $data['employee_status']);
             $this->courses->syncTrainers($course, $data['trainers'] ?? []);
 
-            if ($schedules) {
-                foreach ($schedules as $item) {
-                    $this->schedules->create([
-                        'course_id' => $course->id,
-                        'date' => $item['date'],
-                        'time_from' => $item['time_from'],
-                        'time_to' => $item['time_to'],
-                        'quota' => $item['quota'],
-                    ]);
-                }
-
-                return true;
-            }
-
-            $this->schedules->create(['course_id' => $course->id]);
+            $this->ensureOpenCourseSchedule($course);
 
             return true;
         });
     }
 
-    public function updateCourse($course, $data, $schedules = null)
+    public function updateCourse($course, $data)
     {
-        return DB::transaction(function () use ($course, $data, $schedules) {
+        return DB::transaction(function () use ($course, $data) {
             $course = $this->courses->update($course, [
                 'category_id' => $data['category'],
                 'access_mode' => Course::mapTypeToAccessMode($data['type'] ?? null),
@@ -207,6 +221,7 @@ class CourseService
                 'default_access_hours' => ($data['expired'] ?? null) == 'undefined' ? null : ($data['expired'] ?? null),
                 'jam_pelajaran' => $data['jam_pelajaran'],
                 'status' => $data['status'],
+                'opd_id' => $data['opd_id'] ?? null,
             ]);
 
             $this->courses->syncEmployeeStatuses($course, $data['employee_status']);
@@ -220,54 +235,54 @@ class CourseService
                 $course->thumbnail = UploadMedia::file($data['thumbnail'], Course::$directoryImage);
                 $course = $this->courses->update($course, ['thumbnail' => $course->thumbnail]);
             }
-            // dd($schedules);
-            if ($schedules) {
-                $keepIds = [];
-                $existingIds = $this->schedules->getByCourse($course->id)->pluck('id')->all();
-
-                foreach ($schedules as $item) {
-                    $normTime = function ($value) {
-                        if ($value === null || $value === '') {
-                            return null;
-                        }
-                        try {
-                            return Carbon::parse($value)->format('H:i');
-                        } catch (\Throwable $e) {
-                            return $value;
-                        }
-                    };
-
-                    $payload = [
-                        'course_id' => $course->id,
-                        'date' => ! empty($item['date']) ? Carbon::parse($item['date'])->format('Y-m-d') : null,
-                        'time_from' => $normTime($item['time_from'] ?? null),
-                        'time_to' => $normTime($item['time_to'] ?? null),
-                        'quota' => $item['quota'] ?? null,
-                    ];
-
-                    // Only update real DB rows — never insert frontend Date.now() ids as PK
-                    $dbId = isset($item['id']) && in_array((string) $item['id'], $existingIds, true)
-                        ? (string) $item['id']
-                        : null;
-
-                    if ($dbId) {
-                        $schedule = $this->schedules->findByCourse($course->id, $dbId);
-                        $schedule = $this->schedules->update($schedule, $payload);
-                    } else {
-                        $schedule = $this->schedules->create($payload);
-                    }
-
-                    $keepIds[] = $schedule->id;
-                }
-
-                // Soft-delete jadwal yang tidak ada di kiriman terbaru
-                $this->schedules->deleteMissingForCourse($course->id, $keepIds);
-
-                return true;
-            }
+            $this->ensureOpenCourseSchedule($course);
 
             return true;
         });
+    }
+
+    /**
+     * Open courses still use a schedule as the enrolment container.  It has no
+     * date, time, or quota, so participants can activate the course at any time.
+     */
+    private function ensureOpenCourseSchedule(Course $course): void
+    {
+        if ($course->access_mode !== 'open' || $this->schedules->getByCourse($course->id)->isNotEmpty()) {
+            return;
+        }
+
+        $this->schedules->create(['course_id' => $course->id]);
+    }
+
+    public function findForManagementOverview(int|string $courseId): ?Course
+    {
+        return $this->courses->findForManagementOverview($courseId);
+    }
+
+    public function findForManagementDetail(int|string $courseId): ?Course
+    {
+        return $this->courses->findForManagementDetail($courseId);
+    }
+
+    public function canBeManagedByTrainer(Course $course, int|string $userId): bool
+    {
+        return $this->courses->isManagedByTrainer($course, $userId);
+    }
+
+    public function deleteCourse(Course $course): bool
+    {
+        return $this->courses->delete($course);
+    }
+
+    public function lockCourse(Course $course): bool
+    {
+        if ($course->is_locked) {
+            return false;
+        }
+
+        $this->courses->update($course, ['is_locked' => true]);
+
+        return true;
     }
 
     public function generatePrePostTestVariant($participantId, $course)
@@ -318,7 +333,8 @@ class CourseService
 
     public function checkEmployeeStatusCourse($userId, $course)
     {
-        $employeeStatus = get_user_meta($userId, 'status_pegawai');
+        $employeeStatus = \App\Models\Identity\User::with('employeeStatus')->find($userId)?->employeeStatus?->title
+            ?? get_user_meta($userId, 'status_pegawai');
         // ponytail: if user has no status_pegawai meta (SSO sync missed),
         // allow activation. Course restriction is defense-in-depth, not auth.
         if (! $employeeStatus) {

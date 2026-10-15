@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class LearnController extends Controller
 {
@@ -81,7 +82,8 @@ class LearnController extends Controller
             }
         }
 
-        $course = $this->course->findBySlug($course->slug);
+        $course = $this->course->findBySlug($course->slug, Auth::user());
+        abort_unless($course, 404);
 
         // Check Sequence
         $sequenceCheck = $this->checkLearningSequence($course, $schedule, $activity);
@@ -101,6 +103,10 @@ class LearnController extends Controller
 
     public function store(Course $course, Schedule $schedule, Activity $activity, Request $request)
     {
+        if ($activity->type === 'meeting') {
+            $request->validate(['status' => 'required|in:in_progress,done']);
+        }
+
         if ($activity->type == 'task') {
             $request->validate([
                 'file' => 'required|mimes:pdf|max:2048'
@@ -109,6 +115,8 @@ class LearnController extends Controller
 
         try {
             DB::beginTransaction();
+            $enrollment = \App\Models\Learning\Enrollment::query()->lockForUpdate()->find(request()->attributes->get('participant_enrollment')?->id);
+            abort_unless($enrollment && app(\App\Services\Learning\ParticipantEnrollmentService::class)->canWrite($enrollment), 403, 'Masa akses kelas ini telah berakhir.');
 
             $stored = false;
 
@@ -134,7 +142,7 @@ class LearnController extends Controller
             DB::commit();
 
             if (!empty($request->all()) && $activity->type == 'meeting') {
-                return response(null, 200);
+                return to_route($request->input('status') === 'done' ? 'participant.learn.result.index' : 'participant.learn.index', [$course->slug, $schedule->id, $activity->id]);
             }
 
             if (!empty($request->all()) && ($activity->type == 'pre-test' || $activity->type == 'post-test')) {
@@ -145,6 +153,7 @@ class LearnController extends Controller
 
         } catch (\Throwable $th) {
             DB::rollBack();
+            if ($th instanceof HttpException) throw $th;
             Log::error('LearnController@store Error: ' . $th->getMessage());
             return to_route('participant.learn.index', [$course->slug, $schedule->id, $activity->id])
                 ->withErrors(['error' => 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.']);
@@ -211,12 +220,8 @@ class LearnController extends Controller
 
     public function storeResult(Course $course, Schedule $schedule, Activity $activity, Request $request)
     {
-        $nextActivity = $this->activity->nextActivity($course->id, $activity->id);
-
-        if (!$nextActivity) {
-            return to_route('participant.rating.index', [$course->slug, $schedule->id])->with('success', 'Saved');
-        }
-
+        $enrollment = \App\Models\Learning\Enrollment::query()->find(request()->attributes->get('participant_enrollment')?->id);
+        abort_unless($enrollment && app(\App\Services\Learning\ParticipantEnrollmentService::class)->canWrite($enrollment), 403, 'Masa akses kelas ini telah berakhir.');
         // Prevent proceeding if minimum score not met
         if (in_array($activity->type, ['pre-test', 'post-test'])) {
             $isPassed = $this->learn->isPassedMinimumScore($this->participantId, $course->id, $activity->id);
@@ -226,7 +231,23 @@ class LearnController extends Controller
             }
         }
 
-        return to_route('participant.learn.instruction.index', [$course->slug, $schedule->id, $nextActivity])->with('success', 'Saved');
+        $learnItem = \App\Models\Learning\LearnItem::query()
+            ->whereHas('learn', fn ($query) => $query->where('enrollment_id', $enrollment->id))
+            ->where('activity_id', $activity->id)
+            ->where('status', 'done')
+            ->first();
+
+        if (! $learnItem) {
+            return to_route('participant.learn.index', [$course->slug, $schedule->id, $activity->id])
+                ->withErrors(['error' => 'Selesaikan kegiatan ini sebelum melanjutkan.']);
+        }
+
+        $learnItem->update(['locked_at' => $learnItem->locked_at ?? now()]);
+        $nextActivity = $this->activity->nextActivity($course->id, $activity->id);
+        if (! $nextActivity) {
+            return to_route('participant.rating.index', [$course->slug, $schedule->id]);
+        }
+
+        return to_route('participant.learn.instruction.index', [$course->slug, $schedule->id, $nextActivity]);
     }
 }
-

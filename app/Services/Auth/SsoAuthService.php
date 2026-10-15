@@ -49,30 +49,34 @@ class SsoAuthService
         return $user->fresh();
     }
 
-    /**
-     * Sole-admin rule: only SSO_ADMIN_NIP (default elearning) holds Admin.
-     * Everyone else → Participant (Admin stripped if present).
-     */
+    /** Authenticate the single GAPURA service administrator against Prestige. */
+    public function loginPrestigeSuperAdmin(string $username, string $password): User
+    {
+        if (! hash_equals((string) config('services.sso.admin_username', 'elearning'), trim($username))) {
+            throw new RuntimeException('Kredensial Prestige tidak valid.');
+        }
+
+        $tokenResponse = $this->passwordGrant($username, $password);
+        $user = User::withTrashed()->where('nip', $username)->first();
+
+        if (! $user || ! $user->usesPrestigeAuthentication() || ! $user->hasRole('super_admin')) {
+            throw new RuntimeException('Akun Super Admin Prestige belum dimigrasikan.');
+        }
+
+        if ($user->trashed()) {
+            $user->restore();
+        }
+
+        $this->persistTokens($user, $tokenResponse);
+
+        return $user->fresh();
+    }
+
+    /** Keep the role approved by Super Admin; new SSO identities start as participants. */
     protected function syncRolesAfterLogin(User $user, string $nip): void
     {
-        $adminNip = strtolower((string) config('services.sso.admin_nip', 'elearning'));
-
-        if (strtolower($nip) === $adminNip) {
-            $user->syncRoles(['Admin']);
-
-            $this->users->getByRole('Admin')
-                ->reject(fn (User $other) => $other->is($user))
-                ->each(fn (User $other) => $other->removeRole('Admin'));
-
-            return;
-        }
-
-        if ($user->hasRole('Admin')) {
-            $user->removeRole('Admin');
-        }
-
-        if (! $user->hasAnyRole(['Participant', 'Instructor'])) {
-            $user->assignRole('Participant');
+        if (! $user->hasAnyRole(['super_admin', 'administrator', 'trainer', 'participant'])) {
+            $user->assignRole('participant');
         }
     }
 
@@ -128,12 +132,12 @@ class SsoAuthService
             ]);
 
         if (! $response->successful()) {
-            throw new RuntimeException('Refresh token SSO gagal.');
+            throw new RuntimeException('Refresh token Prestige elearning gagal. Login ulang sebagai elearning.');
         }
 
         $json = $response->json();
         if (! is_array($json) || empty($json['access_token'])) {
-            throw new RuntimeException('Respons refresh SSO tidak valid.');
+            throw new RuntimeException('Respons refresh Prestige tidak valid. Login ulang sebagai elearning.');
         }
 
         return $json;
@@ -198,7 +202,7 @@ class SsoAuthService
 
         $refresh = $user->refresh_token;
         if (! $refresh) {
-            throw new RuntimeException('Sesi SSO habis. Login ulang.');
+            throw new RuntimeException('Token Prestige elearning kedaluwarsa. Login ulang sebagai elearning.');
         }
 
         $refreshed = $this->refreshGrant($refresh);
@@ -206,7 +210,7 @@ class SsoAuthService
 
         $fresh = $user->fresh()->access_token;
         if (! $fresh) {
-            throw new RuntimeException('Sesi SSO habis. Login ulang.');
+            throw new RuntimeException('Token Prestige elearning kedaluwarsa. Login ulang sebagai elearning.');
         }
 
         return $fresh;
@@ -232,11 +236,19 @@ class SsoAuthService
     {
         $meta = find_user_by_nip($nip);
         if ($meta?->user) {
+            if (! $meta->user->usesSsoAuthentication()) {
+                throw new RuntimeException('Akun lokal tidak dapat digunakan melalui SSO.');
+            }
+
             return $meta->user;
         }
 
         $byNip = $this->users->findByNip($nip);
         if ($byNip) {
+            if (! $byNip->usesSsoAuthentication()) {
+                throw new RuntimeException('Akun lokal tidak dapat digunakan melalui SSO.');
+            }
+
             return $byNip;
         }
 
@@ -246,6 +258,11 @@ class SsoAuthService
 
         $existingEmail = $this->users->findByEmail($email);
         if ($existingEmail) {
+            if (! $existingEmail->usesSsoAuthentication()
+                || (filled($existingEmail->nip) && $existingEmail->nip !== $nip)) {
+                throw new RuntimeException('Identitas SSO tidak dapat ditautkan ke akun yang sudah ada.');
+            }
+
             return $existingEmail;
         }
 
@@ -254,9 +271,10 @@ class SsoAuthService
                 'name' => $nipData['fv_nama'] ?? "User {$nip}",
                 'email' => $email,
                 'nip' => $nip,
+                'auth_source' => User::AUTH_SOURCE_SSO,
             ]);
 
-            $user->assignRole('Participant');
+            $user->assignRole('participant');
 
             return $user;
         });

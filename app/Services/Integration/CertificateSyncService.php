@@ -4,6 +4,7 @@ namespace App\Services\Integration;
 
 use App\Repositories\Learning\Contracts\LearnRepositoryInterface;
 use App\Services\Auth\TokenService;
+use App\Services\Learning\LearnLifecycleService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -125,11 +126,7 @@ class CertificateSyncService
 
                 // Update hanya jika ada perubahan URL
                 if ($learn->url_certificate !== $newSertifikatUrl) {
-                    $this->learns->update($learn, [
-                        'url_certificate' => $newSertifikatUrl,
-                        'is_post_certificate' => 1,
-                    ]);
-                    $updated++;
+                    if (app(LearnLifecycleService::class)->setCertificate($learn, $newSertifikatUrl)) $updated++;
                 }
             }
             // Jika tidak ditemukan di SSO, record lama akan tetap menggunakan url_certificate yang lama (tidak tersentuh)

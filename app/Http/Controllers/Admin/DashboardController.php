@@ -14,12 +14,17 @@ class DashboardController
 {
     public function __invoke(Request $request, CoursePerformanceService $service)
     {
-        $totalCourses = Course::count();
+        $user = $request->user();
+        $courseScope = Course::query();
+        if ($user?->hasRole('trainer')) {
+            $courseScope->whereHas('trainers', fn ($query) => $query->where('user_id', $user->id));
+        }
+        $totalCourses = $courseScope->count();
         $totalParticipants = User::role('participant')->count();
         $totalFinished = Learn::whereNotNull('finished_at')->count();
 
-        $popularCourses = Cache::remember('admin.dashboard.popularCourses', 3600, function () {
-            return Course::select('courses.id', 'courses.title')
+        $popularCourses = Cache::remember('admin.dashboard.popularCourses.'.($user?->id ?? 'all'), 3600, function () use ($user) {
+            $query = Course::select('courses.id', 'courses.title')
                 ->join('schedules', 'schedules.course_id', '=', 'courses.id')
                 ->join('schedule_user', 'schedule_user.schedule_id', '=', 'schedules.id')
                 ->leftJoin('learns', function ($join) {
@@ -32,8 +37,18 @@ class DashboardController
                     COUNT(DISTINCT learns.participant_id) as completion
                 ')
                 ->orderByDesc('participants')
-                ->limit(10)
-                ->get()
+                ->limit(10);
+
+            if ($user?->hasRole('trainer')) {
+                $query->whereExists(function ($subquery) use ($user) {
+                    $subquery->selectRaw('1')->from('course_trainer')
+                        ->join('trainers', 'trainers.id', '=', 'course_trainer.trainer_id')
+                        ->whereColumn('course_trainer.course_id', 'courses.id')
+                        ->where('trainers.user_id', $user->id);
+                });
+            }
+
+            return $query->get()
                 ->map(function ($course) {
                     $participants = (int) $course->participants;
                     $completion = (int) $course->completion;

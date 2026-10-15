@@ -35,8 +35,8 @@ class PostTestController
             'title' => 'required|string',
             'description' => 'required|string',
             'value' => 'required|numeric',
-            'timer' => 'required|numeric',
-            'min_score' => 'required',
+            'timer' => 'required|numeric|min:1',
+            'min_score' => 'required|numeric',
             'is_loop' => 'boolean'
         ]);
 
@@ -49,7 +49,7 @@ class PostTestController
                 'type' => 'post-test',
                 'title' => $request->title,
                 'value' => $request->value,
-                'timer' => $request->timer,
+                'timer' => $request->timer * 60,
                 'instruction' => $request->instruction,
             ]);
 
@@ -64,10 +64,10 @@ class PostTestController
 
             DB::commit();
 
-            return to_route('admin.course.show', $course->slug)->with('success', 'Post-Test created successfully.');
+            return to_route('admin.course.activities.index', $course->slug)->with('success', 'Post-Test berhasil ditambahkan.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            return to_route('admin.course.show', $course->slug)->with('danger', 'Something went wrong.');
+            return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
 
@@ -86,7 +86,7 @@ class PostTestController
             'title' => 'required|string',
             'description' => 'required|string',
             'value' => 'required|numeric',
-            'timer' => 'required|numeric',
+            'timer' => 'required|numeric|min:1',
             'min_score' => 'required|numeric'
         ]);
 
@@ -98,7 +98,7 @@ class PostTestController
                 'activity_id' => $post_test->id,
                 'title' => $request->title,
                 'value' => $request->value,
-                'timer' => $request->timer,
+                'timer' => $request->timer * 60,
                 'instruction' => $request->instruction,
             ]);
 
@@ -113,11 +113,11 @@ class PostTestController
 
             DB::commit();
 
-            return to_route('admin.course.show', $course->slug)->with('success', 'Post-Test updated successfully.');
+            return to_route('admin.course.activities.index', $course->slug)->with('success', 'Post-Test berhasil diperbarui.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('admin.course.show', $course->slug)->with('danger', 'Something went wrong.');
+            return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
 }

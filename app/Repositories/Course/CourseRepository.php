@@ -8,6 +8,7 @@ use App\Repositories\EloquentRepository;
 use Carbon\Carbon;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Collection;
+use App\Models\Identity\User;
 
 class CourseRepository extends EloquentRepository implements CourseRepositoryInterface
 {
@@ -30,15 +31,39 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
             ->first();
     }
 
-    public function getPublishedAvailable(?DateTimeInterface $at = null, ?int $limit = null): Collection
+    public function findVisibleBySlug(string $slug, ?User $user = null, array $relations = []): ?Course
+    {
+        return $this->query()->with($relations)->where('slug', $slug)
+            ->where(function ($status) use ($user) {
+                $status->where('status', 'publish');
+                if ($user) $status->orWhereHas('enrollments', fn ($q) => $q->where('participant_id', $user->id));
+            })
+            ->where(fn ($q) => $this->applyAudience($q, $user))->first();
+    }
+
+    public function getPublishedAvailable(?DateTimeInterface $at = null, ?int $limit = null, array $filters = [], ?User $user = null): Collection
     {
         $now = $at ? Carbon::instance($at) : now();
         $date = $now->toDateString();
         $time = $now->format('H:i:s');
 
         $query = $this->query()
-            ->with(['category', 'employeeStatus'])
+            ->with(['category', 'employeeStatus', 'opd'])
+            ->withCount([
+                'learns as total_passed_count' => fn ($query) => $query->whereNotNull('finished_at'),
+                'reviews as rating_count',
+            ])
+            ->withSum('reviews as rating_total', 'star')
+            ->select('courses.*')
+            ->selectSub(function ($query) {
+                $query->from('schedule_user')
+                    ->join('schedules', 'schedules.id', '=', 'schedule_user.schedule_id')
+                    ->whereColumn('schedules.course_id', 'courses.id')
+                    ->whereNull('schedules.deleted_at')
+                    ->selectRaw('count(*)');
+            }, 'total_participant_count')
             ->where('status', 'publish')
+            ->where(fn ($query) => $this->applyAudience($query, $user))
             ->where(function ($query) use ($date, $time) {
                 $query->where('access_mode', '!=', 'scheduled')
                     ->orWhereHas('schedules', function ($scheduleQuery) use ($date, $time) {
@@ -49,6 +74,12 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
                             });
                     });
             })
+            ->when($filters['search'] ?? null, fn ($query, $search) => $query->where('title', 'like', "%{$search}%"))
+            ->when($filters['category'] ?? null, fn ($query, $categoryId) => $query->where('category_id', $categoryId))
+            ->when($filters['employee_status'] ?? null, fn ($query, $employeeStatus) => $query->whereHas(
+                'employeeStatus',
+                fn ($statusQuery) => $statusQuery->where('title', $employeeStatus)
+            ))
             ->orderBy('id');
 
         if ($limit !== null) {
@@ -58,29 +89,69 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
         return $query->get();
     }
 
-    public function getPublishedActiveAt(DateTimeInterface $at, int $limit = 8): Collection
+    public function getFeaturedPublishedCourses(DateTimeInterface $at, int $limit = 6, ?User $user = null): Collection
     {
         $now = Carbon::instance($at);
 
         return $this->query()
-            ->with('category')
+            ->with(['category', 'employeeStatus', 'opd'])
+            ->withCount([
+                'learns as total_passed_count' => fn ($query) => $query->whereNotNull('finished_at'),
+                'reviews as rating_count',
+            ])
+            ->withSum('reviews as rating_total', 'star')
+            ->select('courses.*')
+            ->selectSub(function ($query) {
+                $query->from('schedule_user')
+                    ->join('schedules', 'schedules.id', '=', 'schedule_user.schedule_id')
+                    ->whereColumn('schedules.course_id', 'courses.id')
+                    ->whereNull('schedules.deleted_at')
+                    ->selectRaw('count(*)');
+            }, 'total_participant_count')
             ->where('status', 'publish')
+            ->where(fn ($query) => $this->applyAudience($query, $user))
             ->where(function ($query) use ($now) {
                 $query->where('access_mode', '!=', 'scheduled')
                     ->orWhereHas('schedules', function ($scheduleQuery) use ($now) {
-                        $scheduleQuery->whereDate('date', $now->toDateString())
-                            ->whereTime('time_from', '<=', $now->format('H:i:s'))
-                            ->whereTime('time_to', '>=', $now->format('H:i:s'));
+                        $scheduleQuery->where('date', '>', $now->toDateString())
+                            ->orWhere(function ($todayQuery) use ($now) {
+                                $todayQuery->whereDate('date', $now->toDateString())
+                                    ->whereTime('time_to', '>=', $now->format('H:i:s'));
+                            });
                     });
             })
-            ->orderByDesc('id')
+            ->inRandomOrder()
             ->limit($limit)
             ->get();
     }
 
     public function getForInstructor(int|string|null $instructorId = null): Collection
     {
-        return $this->query()->with(['category', 'employeeStatus'])->get();
+        $query = $this->query()->with(['category', 'employeeStatus', 'opd'])->withCount('schedules');
+
+        if ($instructorId !== null) {
+            $query->whereHas('trainers', fn ($trainer) => $trainer->where('user_id', $instructorId));
+            $user = User::find($instructorId);
+            if ($user?->opd_id) {
+                $query->whereNotNull('opd_id')->where('opd_id', $user->opd_id);
+            }
+        }
+
+        return $query->orderByDesc('courses.updated_at')->orderByDesc('courses.id')->get();
+    }
+
+    private function applyAudience($query, ?User $user): void
+    {
+        if ($user?->hasAnyRole(['super_admin', 'administrator'])) return;
+        if (! $user || ! $user->opd_id || ! $user->opd?->is_active) {
+            $query->whereNull('courses.opd_id');
+            return;
+        }
+        $query->where(function ($audience) use ($user) {
+            $audience->whereNull('courses.opd_id')
+                ->orWhere('courses.opd_id', $user->opd_id)
+                ->orWhereHas('enrollments', fn ($enrollments) => $enrollments->where('participant_id', $user->id));
+        });
     }
 
     public function getByParticipant(int|string $participantId): Collection
@@ -94,6 +165,24 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
                 'learns' => fn ($query) => $query->where('participant_id', $participantId),
             ])
             ->get();
+    }
+
+    public function findForManagementOverview(int|string $courseId): ?Course
+    {
+        return $this->query()->with(['category', 'schedules'])->find($courseId);
+    }
+
+    public function findForManagementDetail(int|string $courseId): ?Course
+    {
+        return $this->query()->with(['schedules', 'employeeStatus', 'trainers', 'category'])->find($courseId);
+    }
+
+    public function isManagedByTrainer(Course $course, int|string $userId): bool
+    {
+        return $this->query()
+            ->whereKey($course->id)
+            ->whereHas('trainers', fn ($trainer) => $trainer->where('user_id', $userId))
+            ->exists();
     }
 
     public function syncEmployeeStatuses(Course $course, array $employeeStatusIds): void

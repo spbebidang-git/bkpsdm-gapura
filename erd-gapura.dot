@@ -1,0 +1,182 @@
+digraph GAPURA_ERD {
+  graph [rankdir=LR, bgcolor="white", pad="0.35", nodesep="0.48", ranksep="1.25", splines=ortho, fontname="Arial", label="GAPURA — Entity Relationship Diagram\nSchema inferred from migrations through 2026-09-25", labelloc=t, fontsize=28, fontcolor="#18212f"];
+  node [shape=plain, fontname="Arial"];
+  edge [color="#536579", penwidth=1.35, arrowsize=0.75, fontname="Arial", fontsize=10, fontcolor="#536579"];
+
+  subgraph cluster_identity {
+    label="IDENTITY & ACCESS"; color="#7c9cc9"; penwidth=1.5; style="rounded"; fontname="Arial"; fontsize=16; fontcolor="#274c77";
+    users [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f3f8ff">
+        <TR><TD BGCOLOR="#274c77"><FONT COLOR="white"><B>users</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : ULID<BR/><B>UQ</B> email : string<BR/><B>UQ</B> nip : string, nullable<BR/>name, password, image<BR/>email_verified_at, remember_token<BR/>created_at, updated_at, deleted_at</TD></TR>
+      </TABLE>>];
+    user_meta [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f3f8ff">
+        <TR><TD BGCOLOR="#4f77a6"><FONT COLOR="white"><B>user_meta</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : ULID<BR/><B>FK</B> user_id : ULID<BR/>key : string, value : text<BR/>timestamps, deleted_at</TD></TR>
+      </TABLE>>];
+    trainers [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f3f8ff">
+        <TR><TD BGCOLOR="#4f77a6"><FONT COLOR="white"><B>trainers</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : ULID<BR/><B>UQ</B> user_id : ULID, nullable*<BR/>name, jabatan, photo<BR/>timestamps, deleted_at</TD></TR>
+      </TABLE>>];
+    roles [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f8f7f3">
+        <TR><TD BGCOLOR="#6e6657"><FONT COLOR="white"><B>roles</B> (Spatie)</FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : bigint<BR/>name, guard_name, team_id?</TD></TR>
+      </TABLE>>];
+    permissions [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f8f7f3">
+        <TR><TD BGCOLOR="#6e6657"><FONT COLOR="white"><B>permissions</B> (Spatie)</FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : bigint<BR/>name, guard_name</TD></TR>
+      </TABLE>>];
+    model_has_roles [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f8f7f3">
+        <TR><TD BGCOLOR="#958b78"><FONT COLOR="white"><B>model_has_roles</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK/FK</B> role_id : bigint<BR/><B>PK</B> model_id : ULID<BR/><B>PK</B> model_type : string</TD></TR>
+      </TABLE>>];
+    role_has_permissions [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f8f7f3">
+        <TR><TD BGCOLOR="#958b78"><FONT COLOR="white"><B>role_has_permissions</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK/FK</B> role_id : bigint<BR/><B>PK/FK</B> permission_id : bigint</TD></TR>
+      </TABLE>>];
+  }
+
+  subgraph cluster_catalog {
+    label="COURSE CATALOG"; color="#70a38b"; penwidth=1.5; style="rounded"; fontname="Arial"; fontsize=16; fontcolor="#276749";
+    categories [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f1fbf5">
+        <TR><TD BGCOLOR="#276749"><FONT COLOR="white"><B>categories</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : ULID<BR/><B>UQ</B> code : string, nullable<BR/>title, synced_at<BR/>timestamps, deleted_at</TD></TR>
+      </TABLE>>];
+    courses [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f1fbf5">
+        <TR><TD BGCOLOR="#276749"><FONT COLOR="white"><B>courses</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : ULID<BR/><B>FK</B> category_id : ULID<BR/>title, short_description, description<BR/>thumbnail, teaser_video?, outline_topic?<BR/>status, access_mode, default_access_hours?<BR/>jam_pelajaran?, is_locked<BR/>timestamps, deleted_at</TD></TR>
+      </TABLE>>];
+    employee_status [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f1fbf5">
+        <TR><TD BGCOLOR="#4f8a68"><FONT COLOR="white"><B>employee_status</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : ULID<BR/>title<BR/>timestamps, deleted_at</TD></TR>
+      </TABLE>>];
+    course_employee_status [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f1fbf5">
+        <TR><TD BGCOLOR="#6ba77f"><FONT COLOR="white"><B>course_employee_status</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK/FK</B> course_id : ULID<BR/><B>PK/FK</B> employee_status_id : ULID<BR/>deleted_at</TD></TR>
+      </TABLE>>];
+    course_trainer [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f1fbf5">
+        <TR><TD BGCOLOR="#6ba77f"><FONT COLOR="white"><B>course_trainer</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK/FK</B> course_id : ULID<BR/><B>PK/FK</B> trainer_id : ULID</TD></TR>
+      </TABLE>>];
+    schedules [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f1fbf5">
+        <TR><TD BGCOLOR="#4f8a68"><FONT COLOR="white"><B>schedules</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : ULID<BR/><B>FK</B> course_id : ULID<BR/>title?, register_from/to?<BR/>access_from/to?, date?, time_from/to?<BR/>quota?<BR/>timestamps, deleted_at</TD></TR>
+      </TABLE>>];
+    reviews [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#f1fbf5">
+        <TR><TD BGCOLOR="#4f8a68"><FONT COLOR="white"><B>reviews</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : ULID<BR/><B>FK</B> course_id : ULID<BR/><B>FK</B> user_id : ULID<BR/>star, description<BR/>timestamps, deleted_at</TD></TR>
+      </TABLE>>];
+  }
+
+  subgraph cluster_content {
+    label="LEARNING CONTENT & ASSESSMENT"; color="#b98950"; penwidth=1.5; style="rounded"; fontname="Arial"; fontsize=16; fontcolor="#875421";
+    activities [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#fff8ed">
+        <TR><TD BGCOLOR="#875421"><FONT COLOR="white"><B>activities</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : ULID<BR/><B>FK</B> course_id : ULID<BR/>type, title, timer?, value<BR/>instruction?, sort_order<BR/>timestamps, deleted_at</TD></TR>
+      </TABLE>>];
+    questions [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#fff8ed">
+        <TR><TD BGCOLOR="#a66f30"><FONT COLOR="white"><B>questions</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : ULID<BR/><B>UQ/FK</B> activity_id : ULID<BR/>description, type, min_score<BR/>is_loop, has_imported_question<BR/>timestamps, deleted_at</TD></TR>
+      </TABLE>>];
+    question_variants [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#fff8ed">
+        <TR><TD BGCOLOR="#b9823e"><FONT COLOR="white"><B>question_variants</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : ULID<BR/><B>FK</B> question_id : ULID<BR/><B>UQ</B> (question_id, variant)<BR/>variant, code?, mix, loop<BR/>timestamps, deleted_at</TD></TR>
+      </TABLE>>];
+    question_items [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#fff8ed">
+        <TR><TD BGCOLOR="#b9823e"><FONT COLOR="white"><B>question_items</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : ULID<BR/><B>FK</B> question_variant_id : ULID<BR/>description, score, sort_order<BR/>timestamps, deleted_at</TD></TR>
+      </TABLE>>];
+    question_options [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#fff8ed">
+        <TR><TD BGCOLOR="#b9823e"><FONT COLOR="white"><B>question_options</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : ULID<BR/><B>FK</B> question_item_id : ULID<BR/>option, is_correct, sort_order<BR/>timestamps, deleted_at</TD></TR>
+      </TABLE>>];
+    tasks [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#fff8ed">
+        <TR><TD BGCOLOR="#b9823e"><FONT COLOR="white"><B>tasks</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : ULID<BR/><B>UQ/FK</B> activity_id : ULID<BR/>description, is_calculated<BR/>attachment_path?<BR/>timestamps, deleted_at</TD></TR>
+      </TABLE>>];
+    interactives [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#fff8ed">
+        <TR><TD BGCOLOR="#b9823e"><FONT COLOR="white"><B>interactives</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : ULID<BR/><B>UQ/FK</B> activity_id : ULID<BR/>type, description?, url, duration?<BR/>end_meeting<BR/>timestamps, deleted_at</TD></TR>
+      </TABLE>>];
+    literatures [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#fff8ed">
+        <TR><TD BGCOLOR="#b9823e"><FONT COLOR="white"><B>literatures</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : ULID<BR/><B>UQ/FK</B> activity_id : ULID<BR/>sub_title?, content, document_path?<BR/>duration?<BR/>timestamps, deleted_at</TD></TR>
+      </TABLE>>];
+  }
+
+  subgraph cluster_learning {
+    label="ENROLMENT & PROGRESS"; color="#a07cae"; penwidth=1.5; style="rounded"; fontname="Arial"; fontsize=16; fontcolor="#6b3f7c";
+    enrollments [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#fcf4ff">
+        <TR><TD BGCOLOR="#6b3f7c"><FONT COLOR="white"><B>enrollments</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : ULID<BR/><B>FK</B> participant_id : ULID<BR/><B>FK</B> course_id : ULID<BR/><B>FK</B> schedule_id : ULID, nullable<BR/>status, enrolled_at<BR/>access_starts_at, access_ends_at?<BR/>timestamps, deleted_at</TD></TR>
+      </TABLE>>];
+    learns [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#fcf4ff">
+        <TR><TD BGCOLOR="#87539b"><FONT COLOR="white"><B>learns</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : ULID<BR/><B>UQ/FK</B> enrollment_id : ULID, nullable<BR/><B>FK</B> participant_id : ULID<BR/><B>FK</B> course_id : ULID<BR/>progress?, finished_at?, url_certificate?<BR/>is_post_certificate<BR/>timestamps, deleted_at</TD></TR>
+      </TABLE>>];
+    learn_items [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#fcf4ff">
+        <TR><TD BGCOLOR="#87539b"><FONT COLOR="white"><B>learn_items</B></FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK</B> id : ULID<BR/><B>FK</B> learn_id : ULID<BR/><B>FK</B> activity_id : ULID<BR/><B>UQ</B> (learn_id, activity_id)<BR/>title, type, response?, status<BR/>trial_total?<BR/>timestamps, deleted_at</TD></TR>
+      </TABLE>>];
+    schedule_user [label=<
+      <TABLE BORDER="0" CELLBORDER="0" CELLSPACING="0" CELLPADDING="7" BGCOLOR="#fcf4ff">
+        <TR><TD BGCOLOR="#a277b0"><FONT COLOR="white"><B>schedule_user</B> (legacy/BC)</FONT></TD></TR>
+        <TR><TD ALIGN="LEFT"><B>PK/FK</B> schedule_id : ULID<BR/><B>PK/FK</B> participant_id : ULID<BR/>timestamps</TD></TR>
+      </TABLE>>];
+  }
+
+  categories -> courses [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  courses -> activities [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  courses -> schedules [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  users -> user_meta [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  users -> trainers [label="0..1 : 0..1*", style=dashed, arrowhead=tee, arrowtail=tee, dir=both];
+  courses -> course_trainer [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  trainers -> course_trainer [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  courses -> course_employee_status [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  employee_status -> course_employee_status [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  courses -> reviews [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  users -> reviews [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  activities -> questions [label="1  :  0..1", arrowhead=tee, arrowtail=tee, dir=both];
+  activities -> tasks [label="1  :  0..1", arrowhead=tee, arrowtail=tee, dir=both];
+  activities -> interactives [label="1  :  0..1", arrowhead=tee, arrowtail=tee, dir=both];
+  activities -> literatures [label="1  :  0..1", arrowhead=tee, arrowtail=tee, dir=both];
+  questions -> question_variants [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  question_variants -> question_items [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  question_items -> question_options [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  users -> enrollments [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  courses -> enrollments [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  schedules -> enrollments [label="0..1 :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  enrollments -> learns [label="0..1 :  1", arrowhead=tee, arrowtail=tee, dir=both];
+  learns -> learn_items [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  activities -> learn_items [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  schedules -> schedule_user [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both, style=dashed];
+  users -> schedule_user [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both, style=dashed];
+  roles -> model_has_roles [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  users -> model_has_roles [label="morph: User", arrowhead=tee, arrowtail=crow, dir=both, style=dashed];
+  roles -> role_has_permissions [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+  permissions -> role_has_permissions [label="1  :  N", arrowhead=tee, arrowtail=crow, dir=both];
+}

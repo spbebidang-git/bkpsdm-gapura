@@ -1,0 +1,29 @@
+.public-course-detail { background: #F6FAF9; color: #1A2B3F; }
+.course-detail-hero { position: relative; overflow: hidden; background: #044849; }
+.course-detail-hero-background { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.course-detail-hero-overlay { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(4,72,73,.94), rgba(4,72,73,.76)); }
+.course-detail-hero-inner { position: relative; display: grid; gap: 32px; max-width: 1120px; margin: auto; padding: 32px 24px 40px; }
+.course-detail-content { display: grid; gap: 24px; max-width: 1120px; margin: auto; padding: 32px 24px 48px; align-items: start; }
+.course-detail-panel { padding: 24px; border-radius: 15px; background: white; box-shadow: 0 2px 16px rgba(1,128,131,.06); }
+.course-detail-section-heading { padding-bottom: 14px; border-bottom: 1px solid #E8ECF1; }
+.course-detail-description { margin-top: 16px; overflow-wrap: anywhere; }
+.course-detail-description > :first-child { margin-top: 0; }
+.course-detail-description > :last-child { margin-bottom: 0; }
+.course-detail-description img { max-width: 100%; height: auto; }
+.course-detail-description table { display: block; max-width: 100%; overflow-x: auto; }
+.course-detail-description > ul { display: grid; gap: 12px 24px; list-style: none; padding-left: 0; }
+.course-detail-description > ul > li { position: relative; margin: 0; padding-left: 22px; }
+.course-detail-description > ul > li::before { position: absolute; left: 0; content: '\2713'; color: #018083; font-weight: 600; }
+.course-detail-sidebar { min-width: 0; }
+@media (min-width: 768px) {
+    .course-detail-hero-inner { padding: 40px; }
+    .course-detail-content { padding: 40px 40px 64px; }
+    .course-detail-description > ul { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (min-width: 1024px) {
+    .course-detail-hero-inner { grid-template-columns: minmax(0,1fr) minmax(0,.9fr); gap: 56px; align-items: center; padding-top: 44px; padding-bottom: 44px; }
+    .course-detail-content { grid-template-columns: minmax(0,1fr) 320px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .public-course-detail a, .public-course-detail button { transition: none; }
+}

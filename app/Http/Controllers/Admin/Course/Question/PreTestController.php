@@ -37,7 +37,7 @@ class PreTestController
             'description' => 'required|string',
             'instruction' => 'required|string',
             'value' => 'required|numeric',
-            'timer' => 'required|numeric',
+            'timer' => 'required|numeric|min:1',
             'min_score' => 'required|numeric'
         ]);
 
@@ -50,7 +50,7 @@ class PreTestController
                 'type' => 'pre-test',
                 'title' => $request->title,
                 'value' => $request->value,
-                'timer' => $request->timer,
+                'timer' => $request->timer * 60,
                 'instruction' => $request->instruction,
             ]);
 
@@ -65,11 +65,11 @@ class PreTestController
 
             DB::commit();
 
-            return to_route('admin.course.show', $course->slug)->with('success', 'Pre-Test created successfully.');
+            return to_route('admin.course.activities.index', $course->slug)->with('success', 'Pre-Test berhasil ditambahkan.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('admin.course.show', $course->slug)->with('danger', 'Something went wrong.');
+            return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
 
@@ -87,7 +87,8 @@ class PreTestController
             'title' => 'required|string',
             'description' => 'required|string',
             'value' => 'required|numeric',
-            'timer' => 'required|numeric'
+            'timer' => 'required|numeric|min:1',
+            'min_score' => 'nullable|numeric',
         ]);
 
         try {
@@ -98,7 +99,7 @@ class PreTestController
                 'activity_id' => $pre_test->id,
                 'title' => $request->title,
                 'value' => $request->value,
-                'timer' => $request->timer,
+                'timer' => $request->timer * 60,
                 'instruction' => $request->instruction,
             ]);
 
@@ -113,11 +114,11 @@ class PreTestController
 
             DB::commit();
 
-            return to_route('admin.course.show', $course->slug)->with('success', 'Pre-Test updated successfully.');
+            return to_route('admin.course.activities.index', $course->slug)->with('success', 'Pre-Test berhasil diperbarui.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('admin.course.show', $course->slug)->with('danger', 'Something went wrong.');
+            return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
 }

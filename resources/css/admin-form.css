@@ -1,0 +1,251 @@
+.admin-managed-form {
+    color: #526176;
+    font-family: var(--font-inter);
+}
+
+.admin-managed-form .admin-crud-header {
+    margin-bottom: 24px;
+}
+
+.admin-managed-form .admin-crud-header h1 {
+    color: #1a2b3f;
+    font-family: var(--font-poppins);
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+}
+
+.admin-managed-form .admin-crud-header p {
+    color: #64748b;
+}
+
+.admin-form-back {
+    display: inline-flex;
+    min-height: 40px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 1px solid #c2c9d6;
+    border-radius: 10px;
+    background: #fff;
+    padding: 0 14px;
+    color: #526176;
+    font-family: var(--font-poppins);
+    font-size: 13px;
+    font-weight: 600;
+    transition: border-color 150ms, background-color 150ms, color 150ms;
+}
+
+.admin-form-back:hover {
+    border-color: #39a9a1;
+    background: #f0faf8;
+    color: #016668;
+}
+
+.admin-form-header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.admin-form-back:focus-visible,
+.admin-managed-form :is(button, input, select, textarea):focus-visible {
+    outline: 2px solid #018083;
+    outline-offset: 3px;
+}
+
+.admin-managed-form-card {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #e8ecf1;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 2px 16px rgba(1, 128, 131, 0.035);
+}
+
+.admin-managed-form-card--wide {
+    width: 100%;
+    padding: 24px;
+}
+
+.admin-managed-form-card--flush {
+    padding: 0;
+}
+
+.admin-managed-form-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 24px;
+}
+
+.admin-managed-form-section-head {
+    border-color: #e8ecf1;
+    background: #f8fafc;
+}
+
+.admin-managed-form-section-head h2 {
+    color: #075d5e;
+    font-family: var(--font-poppins);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.admin-managed-form-section-head p {
+    color: #8496b0;
+}
+
+.admin-managed-form .form-label {
+    display: block;
+    margin-bottom: 6px;
+    color: #075d5e;
+    font-family: var(--font-inter);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.admin-managed-form .form-control,
+.admin-select-control {
+    display: block;
+    width: 100%;
+    min-height: 46px;
+    border: 1px solid #d0d9e6;
+    border-radius: 10px;
+    background: #fff;
+    padding: 10px 14px;
+    color: #1a2b3f;
+    font-family: var(--font-inter);
+    font-size: 13px;
+    line-height: 1.5;
+    transition: border-color 150ms, box-shadow 150ms;
+}
+
+.admin-managed-form .form-control::placeholder {
+    color: #a8b8c8;
+}
+
+.admin-managed-form .form-control:focus,
+.admin-select-control:focus {
+    border-color: #018083;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(1, 128, 131, 0.1);
+}
+
+.admin-managed-form .form-control:read-only {
+    background: #f0f4fa;
+}
+
+.admin-managed-form .help-quill {
+    border-radius: 10px;
+}
+
+.admin-managed-form .help-quill .ql-toolbar.ql-snow {
+    border-color: #d0d9e6;
+    border-radius: 10px 10px 0 0;
+    background: #f8fafc;
+}
+
+.admin-managed-form .help-quill .ql-container.ql-snow {
+    border-color: #d0d9e6;
+    border-radius: 0 0 10px 10px;
+    color: #1a2b3f;
+    font-family: var(--font-inter);
+    font-size: 14px;
+}
+
+.admin-managed-form .help-quill .ql-editor.ql-blank::before {
+    color: #a8b8c8;
+    font-style: normal;
+}
+
+.admin-managed-form .help-quill:focus-within .ql-toolbar.ql-snow,
+.admin-managed-form .help-quill:focus-within .ql-container.ql-snow {
+    border-color: #018083;
+}
+
+.admin-managed-form-footer {
+    gap: 12px;
+    border-top: 1px solid #e8ecf1;
+    background: #f8fafc;
+    padding: 16px 24px;
+}
+
+.admin-managed-form-grid {
+    align-items: start;
+}
+
+.admin-managed-form-grid > .admin-managed-form-card {
+    border-color: #e8ecf1;
+    border-radius: 15px;
+    box-shadow: 0 2px 16px rgba(1, 128, 131, 0.035);
+}
+
+.admin-managed-form-grid > .admin-managed-form-card .admin-managed-form-section-head {
+    border-color: #e8ecf1;
+    background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+}
+
+.admin-managed-summary {
+    border-color: #e8ecf1;
+    background: #f8fafc;
+}
+
+.admin-managed-form-grid > aside > section {
+    border-color: #e8ecf1;
+    border-radius: 15px;
+    background: #fff;
+    box-shadow: 0 2px 16px rgba(1, 128, 131, 0.035);
+}
+
+.admin-managed-form-grid > aside > section:first-child {
+    border-color: #cfe4e0;
+    background: #f0faf8;
+}
+
+.admin-managed-form-grid > aside > section:first-child p {
+    color: #426663;
+}
+
+.admin-managed-form input[type='checkbox'] {
+    border-color: #c2c9d6;
+    color: #018083;
+}
+
+.admin-managed-form input[type='checkbox']:checked {
+    background-color: #018083;
+}
+
+.admin-managed-form-card--flush .admin-managed-form-footer {
+    border-color: #e8ecf1;
+}
+
+@media (max-width: 639px) {
+    .admin-managed-form .admin-crud-header {
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .admin-managed-form .admin-crud-header h1 {
+        font-size: 23px;
+    }
+
+    .admin-managed-form .admin-crud-header-actions {
+        justify-content: flex-start;
+    }
+
+    .admin-form-header-actions {
+        justify-content: flex-start;
+    }
+
+    .admin-managed-form-card--wide,
+    .admin-managed-form-body {
+        padding: 18px;
+    }
+
+    .admin-managed-form-footer {
+        padding: 16px 18px;
+    }
+}

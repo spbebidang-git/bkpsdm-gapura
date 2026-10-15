@@ -1,0 +1,264 @@
+{
+	"info": {
+		"_postman_id": "2a3ccb6f-e2f1-4801-a91f-3f8fb6e0c0b8",
+		"name": "simpeg_kominfo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "13046820"
+	},
+	"item": [
+		{
+			"name": "get_all",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "key",
+							"value": "p0s0b3dug",
+							"type": "text"
+						},
+						{
+							"key": "nip",
+							"value": "199111072019031003",
+							"type": "text"
+						},
+						{
+							"key": "nik",
+							"value": "",
+							"type": "text"
+						},
+						{
+							"key": "uker_kode",
+							"value": "",
+							"type": "text"
+						},
+						{
+							"key": "tipe_data",
+							"value": "pns",
+							"description": "thl/pns/perangkat",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://kedaton.gresikkab.go.id/api/get_data_api",
+					"protocol": "https",
+					"host": [
+						"kedaton",
+						"gresikkab",
+						"go",
+						"id"
+					],
+					"path": [
+						"api",
+						"get_data_api"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "auth_login_kedaton",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "username",
+							"value": "197908041997112001",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "Mysapkhashe09*",
+							"type": "text"
+						},
+						{
+							"key": "otp",
+							"value": "133505",
+							"type": "text"
+						},
+						{
+							"key": "app_id",
+							"value": "31c8b70467af95cf06baa2a1fad0efaff19df2d89c26224d56b13da24bb80c8d",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://kedaton.gresikkab.go.id/api/auth_login_kedaton",
+					"protocol": "https",
+					"host": [
+						"kedaton",
+						"gresikkab",
+						"go",
+						"id"
+					],
+					"path": [
+						"api",
+						"auth_login_kedaton"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "sso_authorize",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://kedaton.gresikkab.go.id/oauth/authorize?client_id=b7045799ad2c3682a6ca76f6bd416b6c116940183faa0d08082dc1293658305e&redirect_uri=https://localhost/&response_type=code&scope&state=123123123123",
+					"protocol": "https",
+					"host": [
+						"kedaton",
+						"gresikkab",
+						"go",
+						"id"
+					],
+					"path": [
+						"oauth",
+						"authorize"
+					],
+					"query": [
+						{
+							"key": "client_id",
+							"value": "b7045799ad2c3682a6ca76f6bd416b6c116940183faa0d08082dc1293658305e"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "https://localhost/"
+						},
+						{
+							"key": "response_type",
+							"value": "code"
+						},
+						{
+							"key": "scope",
+							"value": null,
+							"description": "dikosongi"
+						},
+						{
+							"key": "state",
+							"value": "123123123123",
+							"description": "random"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "sso_token",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "grant_type",
+							"value": "authorization_code",
+							"type": "text"
+						},
+						{
+							"key": "client_id",
+							"value": "b7045799ad2c3682a6ca76f6bd416b6c116940183faa0d08082dc1293658305e",
+							"type": "text"
+						},
+						{
+							"key": "client_secret",
+							"value": "88hDZJlj9LdlwLlwFPRNVLPj6Q4mZsSF4WbDfFXxGXfY6",
+							"type": "text"
+						},
+						{
+							"key": "code",
+							"value": "def502001130ef2e32b99077ada1a5194edc68ab4aabb3886f7e9dd035dfe4e9d325df9dfc313a4276be88fb6b80fe7cdb89512118acd506e69b33cf02235dd06ead4160207a27b34f7eb9d08b2e9a4a7f0cb5a72d8b47006ae0fcc7e18f5dbffac12ebb09b7ecc3e978f62d048424a568617871923ec9ececb18a4325d652f6d962f1f4f409b3ea6c4ec4a325d7452a53caefd2ce8872fad22d847a347856ff62b9e40aa5497b87d3db392a65e7ab05417e5b9faf6e5742e397828ce5b12245137cf248c4d7cb5ccef388206041893cf16cdaf1e8d67fa796e825c9bc3044d739edbcb0527e196f80950d0f04b28fcb82c56b928be264360a844f79b3de754b5ca4915862d9555a960f2c7c2859facf0459ba3cb025fe221dd9b13f8d91b336256f53b5684050d3691f08860e2511a49efbc01a6ecded4fade062f04532fa0846ec83a3a96c8e027c5166ef6e1ecfe3609c204ab09fdff92dcd83ba49d971bd23619704d802b76ab16f7316ad933bb6cba75d12db5209d83d9aad734c16a549e7d77b4ada647784d99ea300b385eea5596fb7e3",
+							"description": "didapat dari request",
+							"type": "text"
+						},
+						{
+							"key": "redirect_uri",
+							"value": "https://localhost/",
+							"description": "callback",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://kedaton.gresikkab.go.id/oauth/token",
+					"protocol": "https",
+					"host": [
+						"kedaton",
+						"gresikkab",
+						"go",
+						"id"
+					],
+					"path": [
+						"oauth",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "sso_token_check",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiJiNzA0NTc5OWFkMmMzNjgyYTZjYTc2ZjZiZDQxNmI2YzExNjk0MDE4M2ZhYTBkMDgwODJkYzEyOTM2NTgzMDVlIiwianRpIjoiZGMxMzk5MDgwZDZkNzliMzNmMTNjYjdiNTU4YzAwNmVmYTJlODczNDBmOGI1M2Y5NTBkMDMwNDY1ZjhkY2M1YWY3YjM3YWYxZjRjMGIyNGEiLCJpYXQiOjE3ODg0OTU1ODYuNzMwMjYyLCJuYmYiOjE3ODg0OTU1ODYuNzMwMjY1LCJleHAiOjE4MjAwMzE1ODYuNTk3OTczLCJzdWIiOiI3ODg4Iiwic2NvcGVzIjpbXX0.k74HXhsdFIKVJ2d2pnkd8mlFdhiBRRnaeAcyb3Q8D1-3V6g71u7Wn-pmHqnQSDVNoKiRWHbZHm0IJbH9ALWtjRLgjOlP1HSv4wwpFA_LRNisalbp1LIjspBuI9WOTyiGkOAXmNoVPvsSr1jgM3GIJ3s9XrCA8KwZTV4Ik4lyy4VAN3MpOdLwEnyGhFUUOBXI4Dxhs6CaxizMHcFMz02R1Mg83J-PEz0ukeK5j2IUWVg8U6jJwRnfsfF-dTIItxgiu4BXDC93Au4W95dV3AbnH9DYexurgmtl66bSaN6rbFpKphPhLVSXST7PasDgoQSFXn_SsjjuadUNDBIvIUOgqyLqBWeYQ5iqyW8gqZXG0wDKtiX-PHPoqsPAPL17rOTIs847ixRvmhfa81kQMTVTweF7nXG_wXivg6UjgXnFEaPQ2D46RuTeMkTprzC4Rq94ZmbVO5IU93lFcLzAo1Br9eSDDcZ499qis6k13p5luHW-I45JXuzwBifGr_a5s7g-n8P9bEFWYHzejBWuikMv208WViE-sfIN4hmzc6kQzl5NlXDQK3DGKDRdF6uviDEvV_-KGtNwePstHPl_Ltv0c9WqJdRCznUOEpio_B-1aKYiQ7ByKF9HwH9asslecwcwOyOqvAYhjavQ4KzR1waw9cdqlFcwIHRgueXuqcoFjoE",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "client_id",
+							"value": "b7045799ad2c3682a6ca76f6bd416b6c116940183faa0d08082dc1293658305e",
+							"type": "text"
+						},
+						{
+							"key": "client_secret",
+							"value": "88hDZJlj9LdlwLlwFPRNVLPj6Q4mZsSF4WbDfFXxGXfY6",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://kedaton.gresikkab.go.id/api/token/check",
+					"protocol": "https",
+					"host": [
+						"kedaton",
+						"gresikkab",
+						"go",
+						"id"
+					],
+					"path": [
+						"api",
+						"token",
+						"check"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

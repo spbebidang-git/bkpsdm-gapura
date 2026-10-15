@@ -1,0 +1,8 @@
+.public-help-hero { background: linear-gradient(90deg, #044849, #075D5E); }
+.public-help-hero-inner { width: 100%; padding: 32px 24px 40px; }
+@media (min-width: 640px) {
+    .public-help-hero-inner { padding-left: 36px; padding-right: 36px; }
+}
+@media (min-width: 1024px) {
+    .public-help-hero-inner { padding: 44px 48px; }
+}

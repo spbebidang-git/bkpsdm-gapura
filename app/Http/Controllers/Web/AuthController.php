@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Models\Identity\User;
 use App\Services\Auth\KedatonOAuthService;
+use App\Services\Auth\SsoAuthService;
 use App\Services\Identity\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,7 @@ class AuthController
     public function __construct(
         private readonly UserService $userService,
         private readonly KedatonOAuthService $kedaton,
+        private readonly SsoAuthService $prestige,
     )
     {
     }
@@ -23,6 +25,53 @@ class AuthController
     public function index()
     {
         return \Inertia\Inertia::render('Auth/Login');
+    }
+
+    public function login(Request $request)
+    {
+        $credentials = $request->validate([
+            'email' => ['required', 'string', 'max:255'],
+            'password' => ['required', 'string'],
+            'captcha' => ['required', 'captcha'],
+        ]);
+        unset($credentials['captcha']);
+
+        $identifier = trim($credentials['email']);
+        if (hash_equals((string) config('services.sso.admin_username', 'elearning'), $identifier)) {
+            try {
+                $user = $this->prestige->loginPrestigeSuperAdmin($identifier, $credentials['password']);
+            } catch (\Throwable $exception) {
+                Log::warning('Prestige super admin login failed.', ['exception' => $exception::class]);
+                return back()->withErrors(['email_or_username' => 'Kredensial Prestige tidak valid atau layanan sedang tidak tersedia.'])->onlyInput('email');
+            }
+
+            Auth::login($user, $request->boolean('remember'));
+            $request->session()->regenerate();
+
+            return to_route('admin.dashboard');
+        }
+
+        if (! filter_var($identifier, FILTER_VALIDATE_EMAIL)
+            || ! Auth::attempt(['email' => $identifier, 'password' => $credentials['password']], $request->boolean('remember'))) {
+            return back()->withErrors(['email_or_username' => 'Email/username atau password tidak sesuai.'])->onlyInput('email');
+        }
+
+        $request->session()->regenerate();
+        $user = $request->user();
+
+        if (! $user instanceof User
+            || ! $user->usesLocalAuthentication()
+            || ! $user->hasAnyRole(['super_admin', 'administrator', 'trainer', 'participant'])) {
+            Auth::logout();
+
+            return back()->withErrors([
+                'email_or_username' => 'Akun ini wajib masuk melalui SSO Kedaton.',
+            ])->onlyInput('email');
+        }
+
+        return to_route($user->hasRole('participant') && ! $user->hasAnyRole(['super_admin', 'administrator', 'trainer'])
+            ? 'participant.dashboard'
+            : 'admin.dashboard');
     }
 
     public function redirectToKedaton(Request $request)
@@ -83,10 +132,14 @@ class AuthController
                 return $this->invalidCredentialsResponse();
             }
 
+            if (! $user->hasAnyRole(['administrator', 'trainer', 'participant'])) {
+                $user->assignRole('participant');
+            }
+
             Auth::login($user);
             $request->session()->regenerate();
 
-            return to_route($user->hasRole('Admin') ? 'admin.dashboard' : 'home');
+            return to_route($user->hasAnyRole(['administrator', 'trainer']) ? 'admin.dashboard' : 'participant.dashboard');
         } catch (\Throwable $exception) {
             Log::warning('Kedaton OAuth authentication failed.', [
                 'exception' => $exception::class,
@@ -107,12 +160,36 @@ class AuthController
         if ($userMeta?->user) {
             $user = $userMeta->user;
 
-            return DB::transaction(function () use ($user, $data, $nip) {
-                $user->update(['name' => $data['fv_nama'] ?? $user->name]);
-                $this->userService->storeUserMeta($user->id, $data, $nip);
+            if (! $user->usesSsoAuthentication()) {
+                Log::warning('Kedaton SSO attempted to link a local account by NIP.', [
+                    'user_id' => $user->id,
+                ]);
 
-                return $user->fresh();
-            });
+                return null;
+            }
+
+            if (User::where('nip', $nip)->where('id', '!=', $user->id)->exists()) {
+                Log::warning('Kedaton SSO found conflicting accounts for a verified NIP.', [
+                    'user_id' => $user->id,
+                ]);
+
+                return null;
+            }
+
+            return $this->syncKedatonUser($user, $nip, $data);
+        }
+
+        $userByNip = User::where('nip', $nip)->first();
+        if ($userByNip) {
+            if (! $userByNip->usesSsoAuthentication()) {
+                Log::warning('Kedaton SSO attempted to link a local account by NIP column.', [
+                    'user_id' => $userByNip->id,
+                ]);
+
+                return null;
+            }
+
+            return $this->syncKedatonUser($userByNip, $nip, $data);
         }
 
         $email = trim((string) ($data['fv_email'] ?? ''));
@@ -122,27 +199,57 @@ class AuthController
 
         $existingUser = User::where('email', $email)->first();
         if ($existingUser) {
-            return DB::transaction(function () use ($existingUser, $data, $nip) {
-                $existingUser->update(['name' => $data['fv_nama'] ?? $existingUser->name]);
-                $this->userService->storeUserMeta($existingUser->id, $data, $nip);
+            if (! $existingUser->usesSsoAuthentication()
+                || (filled($existingUser->nip) && $existingUser->nip !== $nip)) {
+                Log::warning('Kedaton SSO attempted to link a local or mismatched account by email.', [
+                    'user_id' => $existingUser->id,
+                ]);
 
-                return $existingUser->fresh();
-            });
+                return null;
+            }
+
+            return $this->syncKedatonUser($existingUser, $nip, $data);
         }
 
         return DB::transaction(function () use ($data, $nip, $email) {
             $user = User::create([
                 'name' => $data['fv_nama'] ?? 'Peserta Kedaton',
                 'email' => $email,
+                'nip' => $nip,
+                'auth_source' => User::AUTH_SOURCE_SSO,
                 // Authentication is exclusively owned by Kedaton. This random
                 // value only satisfies the local user schema.
                 'password' => Str::password(64),
             ]);
 
-            $user->assignRole('Participant');
+            $user->assignRole('participant');
             $this->userService->storeUserMeta($user->id, $data, $nip);
 
             return $user;
+        });
+    }
+
+    /**
+     * Synchronize data from the provider only after the account has been
+     * confirmed as an SSO identity. Local accounts are never mutated here.
+     */
+    private function syncKedatonUser(User $user, string $nip, array $data): User
+    {
+        return DB::transaction(function () use ($user, $data, $nip) {
+            $attributes = [
+                'name' => $data['fv_nama'] ?? $user->name,
+                'nip' => $nip,
+            ];
+
+            $email = trim((string) ($data['fv_email'] ?? ''));
+            if ($email !== '' && ! User::where('email', $email)->where('id', '!=', $user->id)->exists()) {
+                $attributes['email'] = $email;
+            }
+
+            $user->update($attributes);
+            $this->userService->storeUserMeta($user->id, $data, $nip);
+
+            return $user->fresh();
         });
     }
 
@@ -160,7 +267,7 @@ class AuthController
         // Clear legacy SSO credentials when present. Kedaton's OAuth flow does
         // not persist its token, but older local accounts may still have these
         // encrypted fields from the previous integration.
-        if ($user instanceof User) {
+        if ($user instanceof User && ! $user->usesPrestigeAuthentication()) {
             $user->forceFill([
                 'access_token' => null,
                 'refresh_token' => null,

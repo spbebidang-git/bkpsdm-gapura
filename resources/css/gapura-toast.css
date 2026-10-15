@@ -1,0 +1,143 @@
+.Toastify__toast.gapura-toast {
+    width:min(90vw,430px);
+    min-height:64px;
+    padding:14px 16px;
+    border:1px solid #e8ecf1;
+    border-radius:8px;
+    background:#fff;
+    box-shadow:0 4px 16px rgba(26,43,63,.08),0 1px 3px rgba(26,43,63,.06);
+    color:#526176;
+    font-family:var(--font-inter),sans-serif;
+}
+.Toastify__toast-container--top-center { top:24px; width:min(90vw,430px); padding:0; }
+.gapura-toast .Toastify__toast-body { width:100%; margin:0; padding:0; }
+.gapura-toast .Toastify__close-button { align-self:flex-start; margin:1px 0 0 10px; padding:5px; border-radius:8px; color:#8496b0; opacity:.8; }
+.gapura-toast .Toastify__close-button:hover { background:#f0f4ff; color:#075d5e; opacity:1; }
+.gapura-toast .Toastify__progress-bar { height:3px; border-radius:0 0 8px 8px; background:#018083; }
+.gapura-toast-error .Toastify__progress-bar { background:#e74c3c; }
+.gapura-toast-content { display:flex; min-width:0; align-items:center; gap:12px; }
+.gapura-toast-icon { display:flex; width:28px; height:28px; flex:0 0 28px; align-items:center; justify-content:center; border-radius:50%; background:#ecfdf5; color:#059669; }
+.gapura-toast-icon i { font-size:19px; }
+.gapura-toast-content.is-error .gapura-toast-icon { background:#fff0f0; color:#e74c3c; }
+.gapura-toast-copy { display:flex; min-width:0; flex-direction:column; gap:2px; }
+.gapura-toast-copy strong { color:#1a2b3f; font-family:var(--font-inter),sans-serif; font-size:14px; font-weight:600; line-height:1.4; }
+.gapura-toast-copy > span { color:#64748b; font-family:var(--font-inter),sans-serif; font-size:13px; font-weight:400; line-height:1.5; overflow-wrap:anywhere; }
+.gapura-toast-enter--top-center { animation:gapuraToastEnter 240ms cubic-bezier(.2,.75,.25,1) both; }
+.gapura-toast-exit--top-center { animation:gapuraToastExit 200ms ease-in both; }
+@keyframes gapuraToastEnter { from { opacity:0; transform:translate3d(0,-8px,0); } to { opacity:1; transform:translate3d(0,0,0); } }
+@keyframes gapuraToastExit { from { opacity:1; transform:translate3d(0,0,0); } to { opacity:0; transform:translate3d(0,-6px,0); } }
+@media(max-width:480px) { .Toastify__toast.gapura-toast { width:calc(100vw - 32px); min-height:64px; margin:6px 16px; border-radius:8px; } .Toastify__toast-container--top-center { width:100%; padding:0; } }
+@media(prefers-reduced-motion:reduce) { .gapura-toast-enter--top-center,.gapura-toast-exit--top-center { animation-duration:1ms; } }
+
+/* Class activation — DESIGN.md §7.8. Keep these styles scoped to this flow. */
+.Toastify__toast.course-activation-toast {
+    --notice-accent: #018083;
+    min-height: 112px;
+    padding: 22px;
+    border-radius: 8px;
+    border-color: #E6F3F3;
+    background: #FFFFFF;
+    box-shadow: 0 16px 40px rgba(0, 60, 82, 0.16);
+    text-align: left;
+    cursor: default;
+}
+.Toastify__toast.course-activation-toast--warning { --notice-accent: #BE8A00; }
+.Toastify__toast.course-activation-toast--error { --notice-accent: #E74C3C; border-color: #FFCDD2; }
+.course-activation-notice { display: flex; align-items: flex-start; gap: 14px; min-width: 0; padding-right: 16px; }
+.course-activation-notice__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 44px;
+    height: 44px;
+    border-radius: 50%;
+    color: #018083;
+    background: #E6F3F3;
+    box-shadow: 0 0 0 5px #F6FAF9;
+}
+.course-activation-notice__icon svg { width: 24px; height: 24px; }
+.course-activation-notice.is-warning .course-activation-notice__icon { color: #BE8A00; background: #FFF5D6; box-shadow: 0 0 0 5px #FFFDF7; }
+.course-activation-notice.is-error .course-activation-notice__icon { color: #E74C3C; background: #FFF0F0; box-shadow: none; }
+.course-activation-notice__copy { min-width: 0; flex: 1; }
+.course-activation-notice__copy strong { display: block; color: #075D5E; font-family: var(--font-poppins), sans-serif; font-size: 16px; font-weight: 700; line-height: 1.5; }
+.course-activation-notice__copy p { margin: 6px 0 0; color: #64748B; font-family: var(--font-inter), sans-serif; font-size: 13px; line-height: 1.65; overflow-wrap: anywhere; }
+.course-activation-notice__action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 40px;
+    margin-top: 14px;
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 6px;
+    color: #FFFFFF;
+    background: linear-gradient(90deg, #019B91 0%, #018083 100%);
+    font-family: var(--font-poppins), sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 180ms ease, transform 180ms ease;
+}
+.course-activation-notice__action svg { width: 17px; height: 17px; flex-shrink: 0; }
+.course-activation-notice__action:hover { opacity: .9; }
+.course-activation-notice__action:active { transform: scale(.97); }
+.course-activation-toast__close { position: absolute; top: 10px; right: 10px; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 0; border-radius: 8px; color: #8496B0; background: transparent; cursor: pointer; }
+.course-activation-toast__close svg { width: 17px; height: 17px; }
+.course-activation-toast__close:hover { color: #075D5E; background: #F6FAF9; }
+.course-activation-notice__action:focus-visible, .course-activation-toast__close:focus-visible { outline: 3px solid rgba(1, 128, 131, .3); outline-offset: 3px; }
+.course-activation-toast .Toastify__progress-bar { height: 3px; background: var(--notice-accent); }
+.course-activation-toast .Toastify__progress-bar--bg { background: var(--notice-accent); opacity: .12; }
+.course-activation-toast.gapura-toast-enter--top-center { animation: courseActivationToastEnter 520ms cubic-bezier(.16, 1, .3, 1) both; }
+.course-activation-toast.gapura-toast-exit--top-center { animation: courseActivationToastExit 260ms ease both; }
+@keyframes courseActivationToastEnter {
+    0% { opacity: 0; transform: translateY(-14px) scale(.94); filter: blur(4px); }
+    65% { opacity: 1; transform: translateY(2px) scale(1.01); filter: blur(0); }
+    100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+@keyframes courseActivationToastExit { to { opacity: 0; transform: translateY(-8px) scale(.97); } }
+.Toastify__toast-container.course-activation-success-container {
+    inset: 0;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    transform: none;
+}
+.course-activation-success-container:has(.course-activation-toast) {
+    background: rgba(15, 23, 42, .4);
+    backdrop-filter: blur(3px);
+}
+.course-activation-success-container .Toastify__toast.course-activation-toast {
+    width: min(360px, calc(100vw - 32px), calc(100vh - 32px));
+    width: min(360px, calc(100vw - 32px), calc(100dvh - 32px));
+    aspect-ratio: 1 / 1;
+    min-height: 0;
+    margin: 0;
+    padding: 28px;
+    align-items: center;
+    text-align: center;
+}
+.course-activation-success-container .Toastify__toast-body { max-height: 100%; overflow-y: auto; }
+.course-activation-success-container .course-activation-notice { flex-direction: column; align-items: center; gap: 24px; padding-right: 0; }
+.course-activation-success-container .course-activation-notice__icon { flex: 0 0 64px; width: 64px; height: 64px; }
+.course-activation-success-container .course-activation-notice__icon svg { width: 34px; height: 34px; }
+.course-activation-success-container .course-activation-notice__copy { flex: none; }
+.course-activation-success-container .course-activation-notice__copy strong { font-size: 18px; }
+.course-activation-success-container .course-activation-notice__action { margin-top: 20px; }
+@media (max-height: 400px) {
+    .course-activation-success-container .Toastify__toast.course-activation-toast { padding: 20px; }
+    .course-activation-success-container .course-activation-notice { gap: 14px; }
+}
+@media (max-width: 480px) {
+    .Toastify__toast.course-activation-toast { width: calc(100vw - 32px); margin: 0 16px 12px; padding: 20px 16px; border-radius: 8px; }
+    .course-activation-notice { gap: 12px; }
+    .course-activation-notice__icon { flex-basis: 36px; height: 36px; }
+    .course-activation-notice__copy strong { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .course-activation-toast.gapura-toast-enter--top-center, .course-activation-toast.gapura-toast-exit--top-center { animation-duration: 1ms; }
+    .course-activation-notice__action { transition: none; }
+}

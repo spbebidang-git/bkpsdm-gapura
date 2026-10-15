@@ -2,18 +2,23 @@
 
 namespace App\Http\Controllers\Admin\Management;
 
+use App\Services\System\PermissionService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Permission;
+use Throwable;
 use Yajra\DataTables\Facades\DataTables;
 
 class PermissionController
 {
+    public function __construct(
+        private readonly PermissionService $permissions,
+    ) {}
+
     public function index()
     {
         if (request()->ajax() && ! request()->header('X-Inertia')) {
-            return DataTables::of(Permission::all())
+            return DataTables::of($this->permissions->getPermissionsForTable())
                 ->addIndexColumn()
                 ->make();
         }
@@ -28,20 +33,13 @@ class PermissionController
 
     public function store(Request $request)
     {
-        $request->validate(['name' => 'required|string']);
+        $validated = $request->validate(['name' => 'required|string'], [], ['name' => 'Nama hak akses']);
 
         try {
-            DB::beginTransaction();
-            Permission::create([
-                'name' => $request->name,
-                'guard_name' => 'web',
-            ]);
-            DB::commit();
+            $this->permissions->createPermission($validated);
 
             return to_route('admin.management.permission.index')->with('success', 'Permission has been saved.');
-        } catch (\Throwable) {
-            DB::rollBack();
-
+        } catch (Throwable) {
             return to_route('admin.management.permission.index')->with('danger', 'Something went wrong.');
         }
     }
@@ -58,17 +56,13 @@ class PermissionController
 
     public function update(Request $request, Permission $permission)
     {
-        $request->validate(['name' => 'required|string']);
+        $validated = $request->validate(['name' => 'required|string'], [], ['name' => 'Nama hak akses']);
 
         try {
-            DB::beginTransaction();
-            $permission->update($request->only('name'));
-            DB::commit();
+            $this->permissions->updatePermission($permission, $validated);
 
             return to_route('admin.management.permission.index')->with('success', 'Permission has been updated.');
-        } catch (\Throwable) {
-            DB::rollBack();
-
+        } catch (Throwable) {
             return to_route('admin.management.permission.index')->with('danger', 'Something went wrong.');
         }
     }
@@ -76,14 +70,10 @@ class PermissionController
     public function destroy(Permission $permission)
     {
         try {
-            DB::beginTransaction();
-            $permission->delete();
-            DB::commit();
+            $this->permissions->deletePermission($permission);
 
             return to_route('admin.management.permission.index')->with('success', 'Permission has been deleted.');
-        } catch (\Throwable) {
-            DB::rollBack();
-
+        } catch (Throwable) {
             return to_route('admin.management.permission.index')->with('danger', 'Something went wrong.');
         }
     }

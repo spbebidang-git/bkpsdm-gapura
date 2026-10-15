@@ -40,7 +40,8 @@ return [
         'api_key' => env('API_KEY'),
         'client_id' => env('SSO_CLIENT_ID'),
         'client_secret' => env('SSO_CLIENT_SECRET'),
-        'admin_username' => env('SSO_ADMIN_USERNAME'),
+        'admin_username' => env('SSO_ADMIN_USERNAME', 'elearning'),
+        'super_admin_email' => env('PRESTIGE_SUPER_ADMIN_EMAIL', 'genz.developt@gmail.com'),
         'admin_pass' => env('SSO_ADMIN_PASS'),
         'categories_path' => env('SSO_CATEGORIES_PATH', '/api/get_kode_kegiatan'),
         'admin_nip' => env('SSO_ADMIN_NIP', 'elearning'),
@@ -54,6 +55,13 @@ return [
         'scope' => env('KEDATON_SCOPE'),
         'data_key' => env('KEDATON_DATA_KEY'),
         'data_type' => env('KEDATON_DATA_TYPE', 'pns'),
+        'opd_master_path' => env('KEDATON_OPD_MASTER_PATH'),
+        'opd_master_method' => env('KEDATON_OPD_MASTER_METHOD', 'get'),
+        'opd_code_field' => env('KEDATON_OPD_CODE_FIELD', 'fc_kduker'),
+        'opd_name_field' => env('KEDATON_OPD_NAME_FIELD', 'fv_nama_uker'),
+        'opd_response_path' => env('KEDATON_OPD_RESPONSE_PATH', ''),
+        'employee_opd_code_fields' => array_values(array_filter(array_map('trim', explode(',', env('KEDATON_EMPLOYEE_OPD_CODE_FIELDS', 'fc_kduker,uker_kode,fv_kduker'))))),
+        'employee_opd_name_fields' => array_values(array_filter(array_map('trim', explode(',', env('KEDATON_EMPLOYEE_OPD_NAME_FIELDS', 'fv_nama_uker,fc_nama_uker,nama_uker,nama_opd,nama_unit_kerja'))))),
     ],
 
     // Removed kominfo static api_key

@@ -37,6 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'course.lock' => \App\Http\Middleware\CheckCourseLock::class,
+            'participant.enrollment' => \App\Http\Middleware\CheckParticipantEnrollmentAccess::class,
         ]);
 
         //

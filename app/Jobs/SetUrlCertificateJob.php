@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Learning\Learn;
+use App\Services\Learning\LearnLifecycleService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -25,9 +26,6 @@ class SetUrlCertificateJob implements ShouldQueue
         # update url certificate & mark as posted
         Learn::where('course_id', $this->data['course'])
             ->where('participant_id', $this->data['participant'])
-            ->update([
-                'url_certificate'    => $this->data['url_certificate'],
-                'is_post_certificate' => 1,
-            ]);
+            ->get()->each(fn (Learn $learn) => app(LearnLifecycleService::class)->setCertificate($learn, $this->data['url_certificate']));
     }
 }

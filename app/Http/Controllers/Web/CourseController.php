@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course\Course;
+use App\Services\Learning\ParticipantEnrollmentService;
 use App\Models\Course\Schedule;
 use App\Models\Learning\Learn;
 use App\Services\Course\CourseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class CourseController extends Controller
@@ -22,16 +24,28 @@ class CourseController extends Controller
         $this->participantId = Auth::user()->id ?? null;
     }
 
-    public function index()
+    public function index(Request $request)
     {
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:100'],
+            'employee_status' => ['nullable', 'string', Rule::in(['CPNS', 'PNS', 'PPPK', 'PPPK Paruh Waktu'])],
+            'category' => ['nullable', 'string', 'exists:categories,id'],
+        ]);
+
         return Inertia::render('Course/Index', [
-            'courses' => $this->course->getAllCourse()
+            'courses' => $this->course->getAllCourse($filters, $request->user()),
+            'categories' => \App\Models\Course\Category::query()
+                ->orderBy('title')
+                ->get(['id', 'title']),
+            'filters' => $filters,
         ]);
     }
 
     public function show($course)
     {
-        $course = $this->course->findBySlug($course);
+        $course = $this->course->findBySlug($course, request()->user());
+        abort_unless($course, 404);
+        $course->loadMissing(['trainers.user.metas']);
         $reviews = $course->reviews ? $course->reviews->load('user') : [];
 
         return Inertia::render('Course/Show', [
@@ -48,7 +62,11 @@ class CourseController extends Controller
                 'thumbnail' => $course->thumbnail_src,
                 'category' => $course->category->title,
                 'total_participant' => $course->total_participant,
+                'total_passed' => $course->total_passed,
                 'status' => $course->status,
+                'audience_scope' => $course->opd_id ? 'opd' : 'all',
+                'opd_id' => $course->opd_id,
+                'opd_name' => $course->opd?->name,
             ],
             'schedules' => $course->schedules
                 ->filter(function ($row) {
@@ -86,9 +104,10 @@ class CourseController extends Controller
                         ? \Carbon\Carbon::parse($dateRaw . ' ' . $timeFromRaw)
                         : null;
 
-                    $canEnter = $date
-                        && !$date->isFuture()
-                        && (!$start || $start->lessThanOrEqualTo($now));
+                    $canEnter = ! $date || (
+                        ! $date->isFuture()
+                        && (! $start || $start->lessThanOrEqualTo($now))
+                    );
 
                     $timeFromLabel = $timeFromRaw ? \Carbon\Carbon::parse($timeFromRaw)->format('H:i') : null;
                     $timeToLabel   = $timeToRaw ? \Carbon\Carbon::parse($timeToRaw)->format('H:i') : null;
@@ -114,12 +133,21 @@ class CourseController extends Controller
                     'created_at' => \Carbon\Carbon::parse($row->created_at)->diffForhumans()
                 ];
             }),
+            'trainers' => $course->trainers->map(fn ($trainer) => [
+                'id' => $trainer->id,
+                'name' => $trainer->name,
+                'position' => $trainer->jabatan,
+                'photo' => $trainer->photo_src,
+            ])->values(),
             'rating' => $course->getRating()
         ]);
     }
 
     public function store(Request $request, Course $course, Schedule $schedule)
     {
+        if (! $this->course->findBySlug($course->slug, Auth::user())) {
+            return response()->json(['status' => 403, 'message' => 'Kelas ini tidak tersedia untuk OPD Anda.', 'data' => false], 403);
+        }
         // dd($this->course->checkEmployeeStatusCourse(Auth::user()->id, $course));
         # check valid employee status
         if (!$this->course->checkEmployeeStatusCourse(Auth::user()->id, $course)) {
@@ -135,9 +163,17 @@ class CourseController extends Controller
 
             $participantId = Auth::user()->id;
 
+            $enrollment = app(ParticipantEnrollmentService::class)->activate($course, $schedule, (string) $participantId);
+            $expectedScheduleId = $course->access_mode === 'scheduled' ? $schedule->id : null;
+            if ($enrollment->status !== 'active' || $enrollment->schedule_id !== $expectedScheduleId) {
+                DB::rollBack();
+                $message = $enrollment->status !== 'active' ? 'Akses kelas ini telah berakhir.' : 'Anda sudah terdaftar pada sesi kelas yang lain.';
+                return response()->json(['status' => 409, 'message' => $message, 'data' => false], 409);
+            }
+
             $variant = $this->course->generatePrePostTestVariant($participantId, $course);
 
-            $schedule->participants()->attach($participantId);
+            $schedule->participants()->syncWithoutDetaching([$participantId]);
 
 
             DB::commit();

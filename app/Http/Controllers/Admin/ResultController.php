@@ -58,7 +58,7 @@ class ResultController
 
         return Inertia::render('Admin/Result/Show', [
             'course' => ['id' => $course->id, 'title' => $course->title, 'slug' => $course->slug],
-            'names' => User::role('Participant')->select('id', 'name')->get(),
+            'names' => User::role('participant')->select('id', 'name')->get(),
             'activities' => Activity::where('course_id', $course->id)->get(['id', 'title']),
             'filters' => $filters,
         ]);

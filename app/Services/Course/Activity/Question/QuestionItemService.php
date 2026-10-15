@@ -18,6 +18,8 @@ class QuestionItemService
             ->map(function ($row) {
                 return [
                     'id' => $row->id,
+                    'updated_at' => $row->updated_at,
+                    'correct_answer' => (string) ($row->questionOptions->search(fn ($option) => (bool) $option->is_correct) + 1),
                     'question' => $row->description,
                     'score' => $row->score,
                     'option1' => $row->questionOptions[0]->option,

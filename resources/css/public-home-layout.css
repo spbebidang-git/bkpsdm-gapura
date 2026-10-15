@@ -1,0 +1,10 @@
+/* The homepage shares the participant layout's soft outer frame. */
+.public-home-layout { background: #EEF1EF; }
+.public-home-layout > header { background: #EEF1EF; }
+.public-home-layout > main { background: #F8F9F8; }
+.public-home-layout > footer { background: #EEF1EF; }
+.public-home-layout > main > section.bg-gray-100 { background: #F8F9F8; }
+.public-home-layout > main > section > .bg-\[\#F6FAF9\] { background: #F8F9F8; }
+@media (min-width: 1321px) {
+    .public-home-layout > main { box-shadow: -1px 0 0 #DDE5E0, 1px 0 0 #DDE5E0; }
+}

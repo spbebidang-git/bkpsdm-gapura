@@ -20,7 +20,7 @@ class BlockInstructorFromPublicRoutes
             return $next($request);
         }
 
-        if ($user->hasRole('Admin')) {
+        if ($user->hasAnyRole(['super_admin', 'administrator']) && ! $user->hasRole('participant')) {
             $allowed = [
                 'dashboard',
                 'profile.edit',
@@ -37,10 +37,10 @@ class BlockInstructorFromPublicRoutes
         }
 
         // Instructor still in DB: keep off public until module removed
-        if ($user->hasRole('Instructor') && ! $user->hasRole('Admin')) {
+        if ($user->hasRole('trainer') && ! $user->hasAnyRole(['super_admin', 'administrator', 'participant'])) {
             $name = $request->route()?->getName();
             if ($name && ! str_starts_with($name, 'instructor.') && $name !== 'logout') {
-                return redirect()->route('instructor.dashboard')
+                return redirect()->route('admin.dashboard')
                     ->with('danger', 'Anda tidak memiliki akses ke halaman tersebut.');
             }
         }

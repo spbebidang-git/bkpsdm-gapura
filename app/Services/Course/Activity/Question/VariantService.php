@@ -24,10 +24,11 @@ class VariantService
             ->map(function ($row) {
                 return [
                     'id' => $row->id,
+                    'updated_at' => $row->updated_at,
                     'code' => $row->code,
                     'variant' => $row->variant,
                     'question_count' => $row->questionItems->count(),
-                    'mix' => $row->mix ? 'Ya' : 'Tidak',
+                    'mix' => (bool) $row->mix,
                     'loop' => $row->loop ? 'Ya' : 'Tidak',
                 ];
             });

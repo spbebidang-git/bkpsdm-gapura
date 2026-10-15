@@ -32,6 +32,8 @@ use App\Repositories\Identity\Contracts\EmployeeStatusRepositoryInterface;
 use App\Repositories\Identity\Contracts\UserMetaRepositoryInterface;
 use App\Repositories\Identity\Contracts\UserRepositoryInterface;
 use App\Repositories\Identity\EmployeeStatusRepository;
+use App\Repositories\Identity\Contracts\OpdRepositoryInterface;
+use App\Repositories\Identity\OpdRepository;
 use App\Repositories\Identity\UserMetaRepository;
 use App\Repositories\Identity\UserRepository;
 use App\Repositories\Learning\Contracts\EnrollmentRepositoryInterface;
@@ -47,7 +49,11 @@ use App\Repositories\Reporting\ResultRepository;
 use App\Repositories\Support\Contracts\HelpRepositoryInterface;
 use App\Repositories\Support\HelpRepository;
 use App\Repositories\System\Contracts\SettingRepositoryInterface;
+use App\Repositories\System\Contracts\RoleRepositoryInterface;
+use App\Repositories\System\Contracts\PermissionRepositoryInterface;
 use App\Repositories\System\SettingRepository;
+use App\Repositories\System\RoleRepository;
+use App\Repositories\System\PermissionRepository;
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -68,12 +74,15 @@ class RepositoryServiceProvider extends ServiceProvider
         QuestionOptionRepositoryInterface::class => QuestionOptionRepository::class,
         UserRepositoryInterface::class => UserRepository::class,
         EmployeeStatusRepositoryInterface::class => EmployeeStatusRepository::class,
+        OpdRepositoryInterface::class => OpdRepository::class,
         UserMetaRepositoryInterface::class => UserMetaRepository::class,
         EnrollmentRepositoryInterface::class => EnrollmentRepository::class,
         LearnRepositoryInterface::class => LearnRepository::class,
         LearnItemRepositoryInterface::class => LearnItemRepository::class,
         HelpRepositoryInterface::class => HelpRepository::class,
         SettingRepositoryInterface::class => SettingRepository::class,
+        RoleRepositoryInterface::class => RoleRepository::class,
+        PermissionRepositoryInterface::class => PermissionRepository::class,
         LearningReportRepositoryInterface::class => LearningReportRepository::class,
         ResultRepositoryInterface::class => ResultRepository::class,
     ];

@@ -16,11 +16,14 @@ export const btnPrimary =
 export const btnPrimarySm =
     `inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-primary bg-primary px-3.5 text-[13px] font-semibold text-white shadow-[0_1px_0_rgba(0,0,0,0.08)] transition-colors hover:border-primary-pressed hover:bg-primary-pressed disabled:pointer-events-none disabled:opacity-45 ${focusRing}`;
 
+export const btnWarnSm =
+    `inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-[#F0CAA1] bg-[#FFF4E8] px-3.5 text-[13px] font-semibold text-[#8A4300] shadow-[0_1px_0_rgba(0,0,0,0.08)] transition-colors hover:border-[#E8B87E] hover:bg-[#FDEBD4] disabled:pointer-events-none disabled:opacity-45 ${focusRing}`;
+
 export const btnSecondary =
-    `${buttonBase} border border-hairline-strong bg-canvas text-ink hover:border-primary/40 hover:bg-primary-mist/55 hover:text-primary-pressed`;
+    `${buttonBase} border border-hairline-strong bg-canvas text-ink hover:border-hairline-strong hover:bg-surface-soft hover:text-ink`;
 
 export const btnSecondarySm =
-    `inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-hairline-strong bg-canvas px-3 text-[13px] font-semibold text-charcoal transition-colors hover:border-primary/40 hover:bg-primary-mist/55 hover:text-primary-pressed ${focusRing}`;
+    `inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-hairline-strong bg-canvas px-3 text-[13px] font-semibold text-charcoal transition-colors hover:border-hairline-strong hover:bg-surface-soft hover:text-ink ${focusRing}`;
 
 export const btnGhost =
     `inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg bg-transparent px-3 text-sm font-semibold text-charcoal transition-colors hover:bg-primary-mist/55 hover:text-primary-pressed ${focusRing}`;

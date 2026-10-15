@@ -15,6 +15,6 @@ class QuestionItem extends Model
 
     public function questionOptions()
     {
-        return $this->hasMany(QuestionOption::class);
+        return $this->hasMany(QuestionOption::class)->orderBy('sort_order')->orderBy('id');
     }
 }

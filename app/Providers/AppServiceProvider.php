@@ -19,7 +19,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->extend('log', fn ($manager, $app) => new \App\Logging\SecureLogManager($app));
     }
 
     /**
@@ -69,6 +69,16 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perMinute(30)->by('sign-in-office:' . $request->ip()),
             ];
         });
+
+        foreach ([\Illuminate\Auth\Events\Login::class, \Illuminate\Auth\Events\Logout::class, \Illuminate\Auth\Events\Failed::class, \Illuminate\Auth\Events\PasswordReset::class] as $eventClass) {
+            \Illuminate\Support\Facades\Event::listen($eventClass, function ($event) {
+                \Illuminate\Support\Facades\Log::channel('auth')->info('auth.'.class_basename($event), [
+                    'actor_id' => $event->user?->getAuthIdentifier(),
+                    'guard' => $event->guard ?? null,
+                    // Credentials and login identifiers are deliberately excluded.
+                ]);
+            });
+        }
 
         Vite::prefetch(concurrency: 3);
 

@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
+use App\Services\Learning\LearnLifecycleService;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class RatingController
 {
@@ -23,28 +25,32 @@ class RatingController
         $this->user = $userService;
     }
 
-    public function index(Course $course)
+    public function index(Course $course, $scheduleId)
     {
         return Inertia::render('Participant/Rating/Index', [
             'course' => $course,
             'progress' => Learn::where('participant_id', $this->participantId)->where('course_id', $course->id)->first()->progress ?? '0 %',
+            'schedule_id' => $scheduleId,
             'initial_activity' =>  $course->activities->first() ? $course->activities->first()->id : 0,
         ]);
     }
 
-    public function store(Request $request, Course $course)
+    public function store(Request $request, Course $course, $scheduleId)
     {
         $request->validate([
             'rating' => 'required|numeric|min:1|max:5',
-            'description' => 'required|string'
+            'description' => 'nullable|string|max:1000'
         ]);
 
         try {
             DB::beginTransaction();
 
+            $enrollment = \App\Models\Learning\Enrollment::query()->lockForUpdate()->find(request()->attributes->get('participant_enrollment')?->id);
+            abort_unless($enrollment && app(\App\Services\Learning\ParticipantEnrollmentService::class)->canWrite($enrollment), 403, 'Masa akses kelas ini telah berakhir.');
+
             $course->reviews()->create([
                 'star' => $request->rating,
-                'description' => $request->description,
+                'description' => $request->input('description') ?? '',
                 'user_id' => $this->participantId,
             ]);
 
@@ -53,8 +59,7 @@ class RatingController
                 ->where('course_id', $course->id)
                 ->first();
 
-            $learn->finished_at = now();
-            $learn->save();
+            app(LearnLifecycleService::class)->finish($learn);
 
             // # POST SERTIFIKAT 
             // $token = Session::get('token');
@@ -95,9 +100,10 @@ class RatingController
 
             DB::commit();
 
-            return to_route('participant.survey.index', [$course->slug, 1]);
+            return to_route('participant.survey.index', [$course->slug, $scheduleId]);
         } catch (\Throwable $th) {
             DB::rollBack();
+            if ($th instanceof HttpException) throw $th;
             return response()->json([
                 'success' => false,
                 'message' => 'Something went wrong.'

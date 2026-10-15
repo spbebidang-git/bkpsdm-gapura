@@ -20,6 +20,10 @@ interface LearnRepositoryInterface extends BaseRepositoryInterface
 
     public function getByCourse(int|string $courseId): Collection;
 
+    public function getCompletedByCourse(int|string $courseId): Collection;
+
+    public function getOngoingByCourse(int|string $courseId): Collection;
+
     public function getForCertificateSync(
         int|string|null $courseId = null,
         int|string|null $learnId = null,

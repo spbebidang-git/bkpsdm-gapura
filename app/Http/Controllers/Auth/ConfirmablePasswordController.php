@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Services\Auth\SsoAuthService;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,9 +24,15 @@ class ConfirmablePasswordController extends Controller
     /**
      * Confirm the user's password.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, SsoAuthService $sso): RedirectResponse
     {
-        if (! Auth::guard('web')->validate([
+        if ($request->user()->usesPrestigeAuthentication()) {
+            try {
+                $sso->passwordGrant((string) config('services.sso.admin_username', 'elearning'), (string) $request->password);
+            } catch (\Throwable) {
+                throw ValidationException::withMessages(['password' => [__('auth.password')]]);
+            }
+        } elseif (! Auth::guard('web')->validate([
             'email' => $request->user()->email,
             'password' => $request->password,
         ])) {

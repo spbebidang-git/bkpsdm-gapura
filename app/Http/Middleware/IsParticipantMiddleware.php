@@ -9,13 +9,13 @@ class IsParticipantMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        if ($request->user() && $request->user()->hasRole('Participant')) {
+        if ($request->user() && $request->user()->hasRole('participant')) {
             view()->share('participant', $request->user());
 
             return $next($request);
         }
 
-        if ($request->user() && $request->user()->hasRole('Admin')) {
+        if ($request->user() && $request->user()->hasAnyRole(['super_admin', 'administrator', 'trainer'])) {
             return $this->redirectResponse($request, route('admin.dashboard'));
         }
 

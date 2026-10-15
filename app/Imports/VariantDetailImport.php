@@ -4,78 +4,44 @@ namespace App\Imports;
 
 use App\Models\Course\Activity\Assessment\QuestionItem;
 use App\Models\Course\Activity\Assessment\QuestionOption;
-use App\Models\Course\Activity\Assessment\QuestionVariant;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class VariantDetailImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
 {
-    private $code;
+    public function __construct(private readonly string $variantId) {}
 
-    public function __construct($code)
+    public function collection(Collection $rows): void
     {
-        $this->code = $code;
-    }
-
-    public function collection(Collection $rows)
-    {
-        // dd($rows);
         foreach ($rows as $row) {
-            $variant = QuestionVariant::where('code', $this->code)->first();
-            $questionItem = QuestionItem::create([
-                'question_variant_id' => $variant->id,
-                'description' => $row['description'],
-                'score' => $row['score'],
+            $data = Validator::make($row->toArray(), [
+                'description' => 'required|string',
+                'score' => 'required|integer|min:1|max:100',
+                'option_a' => 'required', 'option_b' => 'required',
+                'option_c' => 'required', 'option_d' => 'required',
+                'correct' => 'required',
+            ])->validate();
+            $options = array_map('strval', [$data['option_a'], $data['option_b'], $data['option_c'], $data['option_d']]);
+            if (count(array_keys($options, (string) $data['correct'], true)) !== 1) {
+                throw ValidationException::withMessages(['content' => 'Kunci jawaban harus cocok dengan tepat satu pilihan pada setiap soal.']);
+            }
+            $item = QuestionItem::create([
+                'question_variant_id' => $this->variantId,
+                'description' => sanitize_plain_text($data['description']),
+                'score' => $data['score'],
             ]);
-
-            QuestionOption::insert([
-                [
-                    'question_item_id' => $questionItem->id,
-                    'option' => $row['option_a'],
-                    'is_correct' => $row['option_a'] == $row['correct'] ? 1 : 0
-                ],
-                [
-                    'question_item_id' => $questionItem->id,
-                    'option' => $row['option_b'],
-                    'is_correct' => $row['option_b'] == $row['correct'] ? 1 : 0
-
-                ],
-                [
-                    'question_item_id' => $questionItem->id,
-                    'option' => $row['option_c'],
-                    'is_correct' => $row['option_c'] == $row['correct'] ? 1 : 0
-
-                ],
-                [
-                    'question_item_id' => $questionItem->id,
-                    'option' => $row['option_d'],
-                    'is_correct' => $row['option_d'] == $row['correct'] ? 1 : 0
-                ],
-            ]);
+            foreach ($options as $index => $option) {
+                QuestionOption::create([
+                    'question_item_id' => $item->id,
+                    'option' => $option,
+                    'sort_order' => $index + 1,
+                    'is_correct' => $option === (string) $data['correct'],
+                ]);
+            }
         }
     }
-
-    // public function model(array $row)
-    // {
-    //     $variant = QuestionVariant::where('code', $this->code)->first();
-
-    //     return new VariantDetail([
-    //         'question_variant_id' => $variant ? $variant->id : null,
-    //         'description' => $row['description'],
-    //         'score' => $row['score'],
-    //         'option_a' => $row['option_a'],
-    //         'option_b' => $row['option_b'],
-    //         'option_c' => $row['option_c'],
-    //         'option_d' => $row['option_d'],
-    //         'is_correct' => $row['is_correct'],
-    //     ]);
-    // }
-    // protected $sheetName
-    // public function __construct($sheetName)
-    // {
-    //     $this->sheetName = $sheetName;
-    // }
 }

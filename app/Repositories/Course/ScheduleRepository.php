@@ -24,7 +24,7 @@ class ScheduleRepository extends EloquentRepository implements ScheduleRepositor
         return $this->query()
             ->whereRelation('participants', 'participant_id', $participantId)
             ->with([
-                'course',
+                'course.opd',
                 'course.learns' => fn ($query) => $query->where('participant_id', $participantId),
                 'course.activities',
             ])

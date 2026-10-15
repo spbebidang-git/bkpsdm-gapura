@@ -11,16 +11,19 @@ use Inertia\Inertia;
 
 Route::prefix('/admin')
     ->name('admin.')
-    ->middleware([IsAdminMiddleware::class])
+    ->middleware([\App\Http\Middleware\AdminLocale::class, \App\Http\Middleware\AuditAdminActions::class, IsAdminMiddleware::class])
     ->group(function () {
         # Dashboard
         Route::get('/', \App\Http\Controllers\Admin\DashboardController::class)->name('dashboard');
         # Participant
-        Route::resource('participant', \App\Http\Controllers\Admin\ParticipantController::class)->only('index');
+        Route::resource('participant', \App\Http\Controllers\Admin\ParticipantController::class)->except('show');
         # Instructor — deferred (nav hidden); keep routes for now
         Route::resource('instructor', \App\Http\Controllers\Admin\InstructorController::class)->except('show');
 
         Route::resource('trainer', \App\Http\Controllers\Admin\TrainerController::class)->except('show');
+        Route::resource('opd', \App\Http\Controllers\Admin\OpdController::class)->except('show');
+        Route::post('opd/sync', [\App\Http\Controllers\Admin\OpdController::class, 'sync'])->name('opd.sync');
+        Route::resource('employee-status', \App\Http\Controllers\Admin\EmployeeStatusController::class)->except('show')->parameters(['employee-status' => 'employeeStatus']);
         # Category — SSO mirror read-only + sync
         Route::get('category', [\App\Http\Controllers\Admin\CategoryController::class, 'index'])->name('category.index');
         Route::post('category/sync', [\App\Http\Controllers\Admin\CategoryController::class, 'sync'])->name('category.sync');
@@ -32,6 +35,11 @@ Route::prefix('/admin')
                 Route::get('/create', [\App\Http\Controllers\Admin\CourseController::class, 'create'])->name('create');
                 Route::post('/', [\App\Http\Controllers\Admin\CourseController::class, 'store'])->name('store');
                 Route::get('/{course:slug}/overview', [\App\Http\Controllers\Admin\CourseController::class, 'overview'])->name('overview');
+                Route::get('/{course:slug}/schedules', [\App\Http\Controllers\Admin\Course\ScheduleController::class, 'index'])->name('schedules.index');
+                Route::post('/{course:slug}/schedules', [\App\Http\Controllers\Admin\Course\ScheduleController::class, 'store'])->name('schedules.store');
+                Route::put('/{course:slug}/schedules/{schedule}', [\App\Http\Controllers\Admin\Course\ScheduleController::class, 'update'])->name('schedules.update');
+                Route::delete('/{course:slug}/schedules/{schedule}', [\App\Http\Controllers\Admin\Course\ScheduleController::class, 'destroy'])->name('schedules.destroy');
+                Route::get('/{course:slug}/activities', [\App\Http\Controllers\Admin\Course\ActivityController::class, 'management'])->name('activities.index');
                 Route::get('/{course:slug}', [\App\Http\Controllers\Admin\CourseController::class, 'show'])->name('show');
                 Route::get('/{course:slug}/edit', [\App\Http\Controllers\Admin\CourseController::class, 'edit'])->name('edit');
                 Route::put('/{course:slug}', [\App\Http\Controllers\Admin\CourseController::class, 'update'])->name('update');
@@ -91,67 +99,24 @@ Route::prefix('/admin')
             ->name('management.')
             ->group(function () {
                 # Role
-                Route::resource('role', \App\Http\Controllers\Admin\Management\RoleController::class)->only('index');
+                Route::resource('role', \App\Http\Controllers\Admin\Management\RoleController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
                 # Permission
                 Route::resource('permission', \App\Http\Controllers\Admin\Management\PermissionController::class)->except('show');
                 # Setting
                 Route::resource('setting', \App\Http\Controllers\Admin\Management\SettingController::class)->only('index', 'store');
+                # Notification messages
+                Route::get('notification-messages', [\App\Http\Controllers\Admin\Management\NotificationMessageController::class, 'index'])->name('notification-messages.index');
+                Route::put('notification-messages', [\App\Http\Controllers\Admin\Management\NotificationMessageController::class, 'update'])->name('notification-messages.update');
                 # User
-                Route::resource('user', \App\Http\Controllers\Admin\Management\UserController::class)->except('show');
+                Route::resource('user', \App\Http\Controllers\Admin\Management\UserController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
                 # Log & backup
                 Route::get('log', [\App\Http\Controllers\Admin\Management\LogController::class, 'index'])->name('log.index');
                 Route::get('log/download', [\App\Http\Controllers\Admin\Management\LogController::class, 'download'])->name('log.download');
             });
 
-        Route::get('report', function () {
-            $query = \App\Models\Learning\Learn::with('participant', 'learnItems')->get();
-            $data = $query->map(function ($row) {
-                $pre = 0;
-                $preCorrect = 0;
-                $preWrong = 0;
-                $preScore = 0;
-                if ($row->learnItems->where('type', 'pre-test')->first()) {
-                    $responsePre = unserialize($row->learnItems->where('type', 'pre-test')->first()->response);
-                    foreach ($responsePre as $item) {
-                        $pre += $item['score'];
-                    }
-                    $preCorrect = count(array_filter($responsePre, fn($item) => $item['is_correct'] === true));
-                    $preWrong = count(array_filter($responsePre, fn($item) => $item['is_correct'] === false));
-                    $preScore = $responsePre[0]['score'] ?? 0;
-                }
-
-                $post = 0;
-                $postCorrect = 0;
-                $postWrong = 0;
-                $postScore = 0;
-                if ($row->learnItems->where('type', 'post-test')->first()) {
-                    $responsePost = unserialize($row->learnItems->where('type', 'post-test')->first()->response);
-                    foreach ($responsePost as $item) {
-                        $post += $item['score'];
-                    }
-                    $postCorrect = count(array_filter($responsePost, fn($item) => $item['is_correct'] === true));
-                    $postWrong = count(array_filter($responsePost, fn($item) => $item['is_correct'] === false));
-                    $postScore = $responsePost[0]['score'] ?? 0;
-                }
-
-                return [
-                    'name' => $row->participant->name,
-                    'pre_score_total' => $pre,
-                    'pre_correct' => $preCorrect,
-                    'pre_wrong' => $preWrong,
-                    'pre_score' => $preScore,
-                    'post_score_total' => $post,
-                    'post_correct' => $postCorrect,
-                    'post_wrong' => $postWrong,
-                    'post_score' => $postScore,
-                    'finished_at' => $row->finished_at,
-                ];
-            });
-
-            return Inertia::render('Report', [
-                'data' => $data,
-            ]);
-        })->name('report');
+        Route::get('report', [\App\Http\Controllers\Admin\ReportController::class, 'index'])->name('report');
+        Route::get('report/data', [\App\Http\Controllers\Admin\ReportController::class, 'data'])->name('report.data');
+        Route::get('report/groups', [\App\Http\Controllers\Admin\ReportController::class, 'groups'])->name('report.groups');
 
         Route::get('/certificate', [App\Http\Controllers\Admin\CertificateController::class, 'index'])->name('certificate.index');
         Route::post('/certificate/sync-push', [App\Http\Controllers\Admin\CertificateController::class, 'syncPush'])->name('certificate.sync-push');

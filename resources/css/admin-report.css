@@ -1,0 +1,87 @@
+.admin-shell .report-table.admin-table-frame {
+    overflow: hidden;
+    border-radius: 15px;
+    clip-path: inset(0 round 15px);
+    box-shadow: 0 2px 12px rgba(1, 128, 131, 0.025);
+}
+
+.admin-shell .report-table .admin-table-toolbar {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 20px;
+}
+
+.admin-shell .report-table .admin-search-input {
+    border-color: #e8ecf1;
+    border-radius: 10px;
+    font-size: 13px;
+}
+
+.admin-shell .report-table .admin-table-count {
+    margin-left: auto;
+    border: 0;
+    padding-left: 4px;
+    font-weight: 400;
+}
+
+.admin-shell .report-table .admin-table-count > span:first-child {
+    display: none;
+}
+
+.admin-shell .report-table .admin-table {
+    min-width: 1080px;
+}
+
+.admin-shell .report-table .admin-table thead th {
+    padding: 14px 20px;
+    background: #f8fafc;
+    color: #8496b0;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.admin-shell .report-table .admin-table tbody td {
+    padding: 18px 20px;
+    color: #526176;
+    font-size: 13px;
+}
+
+.admin-shell .report-table .admin-table tbody tr:hover {
+    background: #fafcfc;
+}
+
+.admin-shell .report-table .admin-table-footer {
+    padding: 16px 20px;
+    background: #fff;
+}
+
+.admin-shell .report-table .admin-table-footer :is(.font-semibold, select, button) {
+    font-weight: 500;
+}
+
+.admin-shell .report-table .admin-table-footer :is(select, button) {
+    border-radius: 8px;
+}
+
+.admin-shell .report-table .admin-table-footer nav[aria-label='Paginasi tabel'] {
+    gap: 0;
+}
+
+.admin-shell .report-table .admin-table-footer nav[aria-label='Paginasi tabel'] > :is(button, span > button) {
+    min-width: 32px;
+    padding-right: 4px;
+    padding-left: 4px;
+}
+
+@media (max-width: 639px) {
+    .admin-shell .report-table .admin-table-toolbar,
+    .admin-shell .report-table .admin-table-footer {
+        padding: 16px;
+    }
+
+    .admin-shell .report-table .admin-table-toolbar > label {
+        flex-basis: 100%;
+    }
+}

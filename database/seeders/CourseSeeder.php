@@ -5,38 +5,17 @@ namespace Database\Seeders;
 use App\Models\Course\Category;
 use App\Models\Course\Course;
 use App\Models\Course\Schedule;
+use App\Models\Course\Trainer;
 use App\Models\Identity\EmployeeStatus;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 class CourseSeeder extends Seeder
 {
-    /** 24 kelas realistis (gapura / diklat ASN). */
+    /** Dua kelas inti untuk development: satu scheduled, satu open. */
     private array $courses = [
-        ['title' => 'Dasar-Dasar Pelayanan Publik', 'jp' => 8, 'mode' => 'open'],
-        ['title' => 'Manajemen Kinerja ASN', 'jp' => 16, 'mode' => 'open'],
-        ['title' => 'Etika dan Integritas Pegawai', 'jp' => 8, 'mode' => 'open'],
-        ['title' => 'Penyusunan Laporan Kinerja', 'jp' => 12, 'mode' => 'scheduled'],
-        ['title' => 'Komunikasi Efektif di Tempat Kerja', 'jp' => 8, 'mode' => 'open'],
-        ['title' => 'Kepemimpinan Situasional', 'jp' => 16, 'mode' => 'scheduled'],
-        ['title' => 'Pengelolaan Arsip Digital', 'jp' => 8, 'mode' => 'open'],
-        ['title' => 'Analisis Data untuk Pengambilan Keputusan', 'jp' => 24, 'mode' => 'open'],
-        ['title' => 'Penyusunan Peraturan Daerah', 'jp' => 16, 'mode' => 'scheduled'],
-        ['title' => 'Pelayanan Prima Berbasis Digital', 'jp' => 8, 'mode' => 'open'],
-        ['title' => 'Manajemen Proyek Pemerintah', 'jp' => 24, 'mode' => 'scheduled'],
-        ['title' => 'Pengadaan Barang dan Jasa', 'jp' => 16, 'mode' => 'open'],
-        ['title' => 'Keuangan Daerah untuk Non-Keuangan', 'jp' => 12, 'mode' => 'open'],
-        ['title' => 'Sistem Informasi Manajemen Kepegawaian', 'jp' => 8, 'mode' => 'open'],
-        ['title' => 'Pencegahan Korupsi di Lingkungan Kerja', 'jp' => 8, 'mode' => 'open'],
-        ['title' => 'Penyusunan RPJMD dan Renstra', 'jp' => 24, 'mode' => 'scheduled'],
-        ['title' => 'Public Speaking untuk ASN', 'jp' => 8, 'mode' => 'open'],
-        ['title' => 'Manajemen Perubahan Organisasi', 'jp' => 16, 'mode' => 'open'],
+        ['title' => 'Pelayanan Publik Terjadwal', 'jp' => 12, 'mode' => 'scheduled'],
         ['title' => 'Literasi Digital Aparatur', 'jp' => 8, 'mode' => 'open'],
-        ['title' => 'Fasilitasi Musyawarah Perencanaan Pembangunan', 'jp' => 12, 'mode' => 'scheduled'],
-        ['title' => 'Standar Pelayanan Minimal', 'jp' => 8, 'mode' => 'open'],
-        ['title' => 'Pengelolaan Media Sosial Instansi', 'jp' => 8, 'mode' => 'open'],
-        ['title' => 'Audit Internal Sederhana', 'jp' => 16, 'mode' => 'scheduled'],
-        ['title' => 'Keselamatan dan Kesehatan Kerja (K3)', 'jp' => 8, 'mode' => 'open'],
     ];
 
     public function run(): void
@@ -62,6 +41,7 @@ class CourseSeeder extends Seeder
         }
 
         $created = 0;
+        $demoTrainer = Trainer::whereHas('user', fn ($query) => $query->where('email', 'trainer@example.test'))->first();
 
         foreach ($this->courses as $i => $row) {
             $slug = Str::slug($row['title']);
@@ -84,7 +64,7 @@ class CourseSeeder extends Seeder
                     'jam_pelajaran' => $row['jp'],
                     'teaser_video' => null,
                     'outline_topic' => "1. Pendahuluan\n2. Materi inti\n3. Praktik\n4. Evaluasi",
-                    'status' => $i < 20 ? 'publish' : 'draft', // 20 publish, 4 draft
+                    'status' => 'publish',
                     'is_locked' => false,
                     'deleted_at' => null,
                 ]
@@ -93,13 +73,18 @@ class CourseSeeder extends Seeder
             $course->employeeStatus()->sync(
                 $statuses->random(min(4, max(2, $statuses->count())))->pluck('id')->all()
             );
+            if ($demoTrainer) {
+                $course->trainers()->sync([$demoTrainer->id]);
+            }
 
             if ($mode === 'scheduled') {
                 // replace schedules for this course (idempotent re-seed)
                 $course->schedules()->forceDelete();
                 $this->seedSchedules($course, $i);
             } else {
-                $course->schedules()->forceDelete();
+                // Open courses need an empty schedule for participant activation.
+                // Preserve it on subsequent seeds so existing enrolments survive.
+                $course->schedules()->firstOrCreate([]);
             }
 
             $created++;

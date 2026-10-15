@@ -3,20 +3,14 @@
 namespace App\Services\Auth;
 
 use App\Models\Identity\User;
-use App\Repositories\Identity\Contracts\UserRepositoryInterface;
-use Illuminate\Support\Facades\Auth;
 use RuntimeException;
 
 /**
- * SSO bearer token for server-side calls (cert sync, category sync, artisan).
- * Uses logged-in user tokens — no shared admin password / API key.
+ * Shared Prestige bearer token for category and certificate integrations.
  */
 class TokenService
 {
-    public function __construct(
-        private readonly SsoAuthService $sso,
-        private readonly UserRepositoryInterface $users,
-    ) {}
+    public function __construct(private readonly SsoAuthService $sso) {}
 
     public function getToken(): string
     {
@@ -28,7 +22,7 @@ class TokenService
         $user = $this->resolveUser();
         $refresh = $user->refresh_token;
         if (! $refresh) {
-            throw new RuntimeException('Sesi SSO habis. Login admin ulang.');
+            throw new RuntimeException('Token Prestige elearning tidak tersedia. Login ulang sebagai elearning.');
         }
 
         $refreshed = $this->sso->refreshGrant($refresh);
@@ -36,7 +30,7 @@ class TokenService
 
         $token = $user->fresh()->access_token;
         if (! $token) {
-            throw new RuntimeException('Sesi SSO habis. Login admin ulang.');
+            throw new RuntimeException('Token Prestige elearning tidak tersedia. Login ulang sebagai elearning.');
         }
 
         return 'Bearer '.$token;
@@ -44,21 +38,17 @@ class TokenService
 
     protected function resolveUser(): User
     {
-        $user = Auth::user();
-        if ($user instanceof User && ($user->access_token || $user->refresh_token)) {
-            return $user;
-        }
-
-        // CLI / queue: reuse last Admin who still has SSO refresh token
-        $admin = $this->users->getByRole('Admin')
-            ->filter(fn (User $user) => $user->refresh_token !== null)
-            ->sortByDesc('token_expires_at')
+        $username = (string) config('services.sso.admin_username', 'elearning');
+        $user = User::query()
+            ->where('nip', $username)
+            ->where('auth_source', User::AUTH_SOURCE_PRESTIGE)
+            ->whereHas('roles', fn ($roles) => $roles->where('name', 'super_admin')->where('guard_name', 'web'))
             ->first();
 
-        if (! $admin) {
-            throw new RuntimeException('Tidak ada token SSO admin. Login sebagai Admin dulu.');
+        if (! $user || (! $user->access_token && ! $user->refresh_token)) {
+            throw new RuntimeException('Token Prestige elearning belum tersedia. Login ulang sebagai elearning.');
         }
 
-        return $admin;
+        return $user;
     }
 }

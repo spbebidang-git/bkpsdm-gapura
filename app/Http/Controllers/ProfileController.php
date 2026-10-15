@@ -29,7 +29,7 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        abort_unless($request->user()->hasRole('Admin'), 403);
+        abort_unless($request->user()->hasAnyRole(['super_admin', 'administrator']), 403);
 
         $request->user()->fill($request->validated());
 
@@ -47,7 +47,8 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-        abort_unless($request->user()->hasRole('Admin'), 403);
+        abort_unless($request->user()->hasAnyRole(['super_admin', 'administrator']), 403);
+        abort_if($request->user()->usesPrestigeAuthentication(), 403, 'Akun Super Admin Prestige tidak dapat dihapus.');
 
         $request->validate([
             'password' => ['required', 'current_password'],

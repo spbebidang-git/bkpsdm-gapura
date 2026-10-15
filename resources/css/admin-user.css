@@ -1,0 +1,13 @@
+.user-admin { color:#526176; font-family:var(--font-inter); }
+.user-admin .admin-crud-header-actions :is(a,button) { font-family:var(--font-poppins); }
+.user-admin-form .admin-crud-form { display:grid; gap:24px; }
+.user-admin-name { display:block; min-width:160px; color:#1a2b3f; font-weight:500; }
+.user-admin-email { overflow-wrap:anywhere; }
+.user-admin-table .admin-table { min-width:780px; }
+.user-admin-table .admin-table thead th:first-child,.user-admin-table .admin-table tbody td:first-child { width:56px; text-align:center; }
+@media(max-width:639px) {
+    .user-admin-form .admin-crud-header { flex-direction:column; }
+    .user-admin .admin-crud-header-actions { flex-wrap:wrap; }
+    .user-admin-form .admin-crud-header-actions { width:100%; }
+    .user-admin-form .admin-crud-header-actions > * { flex:1 1 auto; }
+}

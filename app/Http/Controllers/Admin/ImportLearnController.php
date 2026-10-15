@@ -41,7 +41,7 @@ class ImportLearnController
             'create_missing_users' => 'nullable|boolean',
         ], [
             'course_id.required' => 'Pilih kelas terlebih dahulu.',
-            'file.required' => 'File Excel harus diupload.',
+            'file.required' => 'Berkas Excel wajib diunggah.',
         ]);
 
         try {

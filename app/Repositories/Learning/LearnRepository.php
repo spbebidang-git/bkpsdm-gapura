@@ -41,6 +41,24 @@ class LearnRepository extends EloquentRepository implements LearnRepositoryInter
         return $this->query()->with(['participant', 'learnItems'])->where('course_id', $courseId)->get();
     }
 
+    public function getCompletedByCourse(int|string $courseId): Collection
+    {
+        return $this->query()
+            ->where('course_id', $courseId)
+            ->whereNotNull('finished_at')
+            ->with(['participant.metas' => fn ($query) => $query->where('key', 'job_title')])
+            ->get();
+    }
+
+    public function getOngoingByCourse(int|string $courseId): Collection
+    {
+        return $this->query()
+            ->where('course_id', $courseId)
+            ->whereNull('finished_at')
+            ->with('participant')
+            ->get();
+    }
+
     public function getForCertificateSync(
         int|string|null $courseId = null,
         int|string|null $learnId = null,

@@ -5,6 +5,9 @@ namespace App\Imports;
 use App\Models\Course\Activity\Activity;
 use App\Models\Course\Schedule;
 use App\Models\Learning\Learn;
+use App\Services\Learning\LearnLifecycleService;
+use App\Services\Learning\ParticipantEnrollmentService;
+use App\Models\Course\Course;
 use App\Models\Learning\LearnItem;
 use App\Models\Identity\User;
 use Carbon\Carbon;
@@ -41,7 +44,7 @@ class LearnBulkImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
         $activities = Activity::where('course_id', $this->courseId)->get();
 
         if ($activities->isEmpty()) {
-            $this->results['errors'][] = 'Course tidak memiliki activity.';
+            $this->results['errors'][] = 'Kelas tidak memiliki kegiatan.';
             return;
         }
 
@@ -117,13 +120,17 @@ class LearnBulkImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
 
                 DB::beginTransaction();
 
+                $enrollment = $firstSchedule
+                    ? app(ParticipantEnrollmentService::class)->activate(Course::findOrFail($this->courseId), $firstSchedule, (string) $user->id)
+                    : null;
+
                 $learn = $existingLearn ?? Learn::create([
                     'participant_id' => $user->id,
                     'course_id' => $this->courseId,
+                    'enrollment_id' => $enrollment?->id,
                 ]);
 
-                $learn->finished_at = $finishedAt;
-                $learn->save();
+                app(LearnLifecycleService::class)->finish($learn, $finishedAt);
 
                 $existingLearns->put($user->id, $learn);
 
@@ -200,7 +207,7 @@ class LearnBulkImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
             'nip' => $nip,
         ]);
 
-        $user->assignRole('Participant');
+        $user->assignRole('participant');
         update_user_meta($user->id, 'nip', $nip);
         update_user_meta($user->id, 'status_pegawai', '-');
 

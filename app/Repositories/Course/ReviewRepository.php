@@ -19,8 +19,13 @@ class ReviewRepository extends EloquentRepository implements ReviewRepositoryInt
         return $this->query()->with('user')->where('course_id', $courseId)->latest()->get();
     }
 
-    public function getForAdmin(): Collection
+    public function getForAdmin(?int $courseId = null, ?int $star = null): Collection
     {
-        return $this->query()->with(['user', 'course'])->latest()->get();
+        return $this->query()
+            ->with(['user', 'course'])
+            ->when($courseId, fn ($query) => $query->where('course_id', $courseId))
+            ->when($star, fn ($query) => $query->where('star', $star))
+            ->latest()
+            ->get();
     }
 }

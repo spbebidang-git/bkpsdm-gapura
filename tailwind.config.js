@@ -7,7 +7,7 @@ export default {
         './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
         './storage/framework/views/*.php',
         './resources/views/**/*.blade.php',
-        './resources/js/**/*.{js,jsx}',
+        './resources/js/**/*.{js,jsx,ts,tsx}',
         './node_modules/flowbite/**/*.js',
     ],
 
@@ -18,6 +18,11 @@ export default {
         extend: {
             fontFamily: {
                 sans: ['Inter', ...defaultTheme.fontFamily.sans],
+                primary: ['Poppins', ...defaultTheme.fontFamily.sans],
+                secondary: ['Inter', ...defaultTheme.fontFamily.sans],
+                poppins: ['Poppins', ...defaultTheme.fontFamily.sans],
+                inter: ['Inter', ...defaultTheme.fontFamily.sans],
+                poly: ['Poly', ...defaultTheme.fontFamily.sans],
             },
             colors: {
                 primary: {
@@ -28,6 +33,21 @@ export default {
                 secondary: {
                     DEFAULT: '#F68104',
                     soft: '#fff0e0',
+                },
+                success: {
+                    DEFAULT: '#246A3C',
+                    pressed: '#1B5230',
+                    mist: '#EAF7EE',
+                },
+                warning: {
+                    DEFAULT: '#B45309',
+                    pressed: '#92400E',
+                    mist: '#FFF4E8',
+                },
+                danger: {
+                    DEFAULT: '#A43B2F',
+                    pressed: '#862E24',
+                    mist: '#FFF4F1',
                 },
                 canvas: '#ffffff',
                 surface: {

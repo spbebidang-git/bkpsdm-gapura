@@ -1,0 +1,15 @@
+.opd-admin { color:#526176; font-family:var(--font-inter); }
+.opd-admin .admin-crud-header-actions :is(a,button) { font-family:var(--font-poppins); }
+.opd-admin .opd-config-warning { display:flex; align-items:center; gap:5px; margin-top:7px; color:#c53d32; font-size:12px; }
+.opd-admin .opd-config-warning i { font-size:15px; }
+.opd-admin .opd-code { color:#1a2b3f; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; font-weight:600; white-space:nowrap; }
+.opd-admin .opd-name { display:block; min-width:180px; max-width:520px; overflow-wrap:anywhere; color:#1a2b3f; font-weight:500; line-height:1.6; }
+.opd-admin .opd-source { display:inline-flex; align-items:center; gap:6px; color:#64748b; font-size:12px; white-space:nowrap; }
+.opd-admin .opd-source i { font-size:16px; color:#8496b0; }
+.opd-admin .opd-source.is-sso i { color:#018083; }
+.opd-admin-form .opd-form-fields { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.opd-admin-table .admin-table { min-width:780px; }
+.opd-admin-table .admin-table thead th:first-child,.opd-admin-table .admin-table tbody td:first-child { width:56px; text-align:center; }
+.opd-admin-table .admin-table thead th:last-child,.opd-admin-table .admin-table tbody td:last-child { text-align:right; }
+@media (max-width:767px) { .opd-admin-form .opd-form-fields { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:639px) { .opd-admin .admin-crud-header-actions { flex-wrap:wrap; } .opd-admin-form .admin-crud-header { flex-direction:column; } .opd-admin-form .admin-crud-header-actions { width:100%; } .opd-admin-form .admin-crud-header-actions > * { flex:1 1 auto; } .opd-admin-form .opd-form-fields { grid-template-columns:minmax(0,1fr); } }

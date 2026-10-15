@@ -1,0 +1,9 @@
+.trainer-admin { font-family:var(--font-inter); color:#526176; }
+.trainer-admin .admin-crud-header-actions button,.trainer-admin .admin-crud-header-actions a { border-radius:10px; font-family:var(--font-poppins); }
+.trainer-profile { display:flex; align-items:flex-start; gap:24px; }
+.trainer-profile > img { width:96px; height:96px; flex-shrink:0; border:1px solid #e8ecf1; border-radius:15px; object-fit:cover; }
+.trainer-profile dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px 24px; min-width:0; flex:1; }
+.trainer-profile dt { margin-bottom:6px; color:#8496b0; font-size:12px; }
+.trainer-profile dd { color:#1a2b3f; font-size:13px; overflow-wrap:anywhere; }
+.trainer-admin .course-thumbnail-field { border-radius:10px; }
+@media(max-width:639px) { .trainer-admin .admin-crud-header { flex-wrap:wrap; } .trainer-profile { flex-direction:column; gap:16px; } .trainer-profile dl { grid-template-columns:minmax(0,1fr); width:100%; } }

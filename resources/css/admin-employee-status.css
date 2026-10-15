@@ -1,0 +1,8 @@
+.employee-status-admin { color:#526176; font-family:var(--font-inter); }
+.employee-status-admin .admin-crud-header-actions :is(a,button) { font-family:var(--font-poppins); }
+.employee-status-admin .employee-status-name { display:block; min-width:180px; max-width:520px; overflow-wrap:anywhere; color:#1a2b3f; font-weight:500; line-height:1.6; }
+.employee-status-admin-form .employee-status-form-fields { grid-template-columns:minmax(0,1fr); max-width:520px; }
+.employee-status-table .admin-table { min-width:620px; }
+.employee-status-table .admin-table thead th:first-child,.employee-status-table .admin-table tbody td:first-child { width:56px; text-align:center; }
+.employee-status-table .admin-table thead th:last-child,.employee-status-table .admin-table tbody td:last-child { text-align:right; }
+@media (max-width:639px) { .employee-status-admin .admin-crud-header-actions { flex-wrap:wrap; } .employee-status-admin-form .admin-crud-header { flex-direction:column; } .employee-status-admin-form .admin-crud-header-actions { width:100%; } .employee-status-admin-form .admin-crud-header-actions > * { flex:1 1 auto; } }

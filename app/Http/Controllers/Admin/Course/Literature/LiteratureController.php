@@ -35,8 +35,10 @@ class LiteratureController
             'title' => 'required',
             'sub_title' => 'required',
             'value' => 'required|numeric',
-            'duration' => 'required|numeric',
+            'duration' => 'required|numeric|min:0.1',
             'content' => 'required|mimes:pdf|max:5120',
+        ], [
+            'duration.min' => 'Durasi membaca minimal 0,1 menit (6 detik).',
         ]);
 
         try {
@@ -56,16 +58,16 @@ class LiteratureController
                 'activity_id' => $activity->id,
                 'sub_title' => $request->sub_title,
                 'content' => $request->content,
-                'duration' => $request->duration,
+                'duration' => (int) round($request->duration * 60),
             ]);
 
             DB::commit();
 
-            return to_route('admin.course.show', $course->slug)->with('success', 'Literature created successfully.');
+            return to_route('admin.course.activities.index', $course->slug)->with('success', 'Literatur berhasil ditambahkan.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('admin.course.show', $course->slug)->with('danger', 'Something went wrong.');
+            return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
 
@@ -84,7 +86,9 @@ class LiteratureController
             'sub_title' => 'required',
             'value' => 'required|numeric',
             'content' => 'nullable|mimes:pdf|max:5120',
-            'duration' => 'required|numeric',
+            'duration' => 'required|numeric|min:0.1',
+        ], [
+            'duration.min' => 'Durasi membaca minimal 0,1 menit (6 detik).',
         ]);
 
         try {
@@ -103,15 +107,15 @@ class LiteratureController
                 'activity_id' => $activity->id,
                 'sub_title' => $request->sub_title,
                 'content' => $request->content,
-                'duration' => $request->duration,
+                'duration' => (int) round($request->duration * 60),
             ]);
 
             DB::commit();
 
-            return to_route('admin.course.show', $course->slug)->with('success', 'Literature updated successfully.');
+            return to_route('admin.course.activities.index', $course->slug)->with('success', 'Literatur berhasil diperbarui.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            return to_route('admin.course.show', $course->slug)->with('danger', 'Something went wrong.');
+            return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
 }

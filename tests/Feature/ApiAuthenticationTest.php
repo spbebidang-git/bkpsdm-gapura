@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Identity\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -16,43 +16,57 @@ class ApiAuthenticationTest extends TestCase
     {
         parent::setUp();
 
-        Role::findOrCreate('Admin');
-        Role::findOrCreate('Participant');
+        Role::findOrCreate('super_admin', 'web');
+        Role::findOrCreate('participant', 'web');
     }
 
-    public function test_admin_api_token_has_an_expiry_and_minimal_ability(): void
+    public function test_prestige_super_admin_can_create_an_api_token(): void
     {
-        $admin = User::factory()->create([
-            'email' => 'admin@test.com',
-            'password' => Hash::make('password123'),
+        config([
+            'services.sso.base_url' => 'https://prestige.test',
+            'services.sso.client_id' => 'client-id',
+            'services.sso.client_secret' => 'client-secret',
         ]);
-        $admin->assignRole('Admin');
+        $admin = User::factory()->create([
+            'email' => 'genz.developt@gmail.com',
+            'nip' => 'elearning',
+            'auth_source' => User::AUTH_SOURCE_PRESTIGE,
+        ]);
+        $admin->assignRole('super_admin');
+        Http::fake(['*/oauth/token' => Http::response([
+            'access_token' => 'prestige-access', 'refresh_token' => 'prestige-refresh', 'expires_in' => 3600,
+        ])]);
 
         $response = $this->postJson('/api/v1/login', [
-            'email' => 'admin@test.com',
-            'password' => 'password123',
+            'username' => 'elearning',
+            'password' => 'prestige-password',
             'device_name' => 'integration-test',
         ]);
 
-        $response->assertOk()->assertJsonPath('user.email', 'admin@test.com');
+        $response->assertOk()->assertJsonPath('user.email', 'genz.developt@gmail.com');
         $token = $admin->tokens()->firstOrFail();
-        $this->assertSame(['api:read'], $token->abilities);
-        $this->assertNotNull($token->expires_at);
-        $this->assertTrue($token->expires_at->isFuture());
+        $this->assertSame(['*'], $token->abilities);
+        $this->assertNull($token->expires_at);
     }
 
     public function test_participant_cannot_create_an_api_token_with_a_valid_password(): void
     {
-        $participant = User::factory()->create([
-            'email' => 'peserta@test.com',
-            'password' => Hash::make('password123'),
+        config([
+            'services.sso.base_url' => 'https://prestige.test',
+            'services.sso.client_id' => 'client-id',
+            'services.sso.client_secret' => 'client-secret',
         ]);
-        $participant->assignRole('Participant');
+        Http::fake([
+            '*/oauth/token' => Http::response(['access_token' => 'participant-access'], 200),
+            '*/api/get_nip_data' => Http::response([
+                'fv_nama' => 'Peserta', 'fv_email' => 'peserta@test.com',
+            ], 200),
+        ]);
 
         $this->postJson('/api/v1/login', [
-            'email' => 'peserta@test.com',
+            'username' => 'participant-nip',
             'password' => 'password123',
-        ])->assertUnprocessable()->assertJsonValidationErrors('email');
+        ])->assertUnprocessable()->assertJsonValidationErrors('username');
 
         $this->assertDatabaseCount('personal_access_tokens', 0);
     }

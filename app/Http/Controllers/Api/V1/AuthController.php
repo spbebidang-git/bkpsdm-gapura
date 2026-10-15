@@ -24,17 +24,17 @@ class AuthController
         ]);
 
         try {
-            $user = $this->sso->loginOrProvision(
-                trim($request->username),
-                $request->password
-            );
+            $username = trim($request->username);
+            $user = hash_equals((string) config('services.sso.admin_username', 'elearning'), $username)
+                ? $this->sso->loginPrestigeSuperAdmin($username, $request->password)
+                : $this->sso->loginOrProvision($username, $request->password);
         } catch (RuntimeException) {
             throw ValidationException::withMessages([
                 'username' => ['Kredensial SSO tidak valid.'],
             ]);
         }
 
-        if (! $user->hasRole('Admin')) {
+        if (! $user->hasAnyRole(['super_admin', 'administrator'])) {
             throw ValidationException::withMessages([
                 'username' => ['Hanya akun Admin yang dapat mengakses API.'],
             ]);

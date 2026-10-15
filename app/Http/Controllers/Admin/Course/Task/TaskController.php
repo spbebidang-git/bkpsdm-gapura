@@ -60,10 +60,10 @@ class TaskController
 
             DB::commit();
 
-            return to_route('admin.course.show', $course->slug)->with('success', 'Task created successfully.');
+            return to_route('admin.course.activities.index', $course->slug)->with('success', 'Tugas berhasil ditambahkan.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            return to_route('admin.course.show', $course->slug)->with('danger', 'Something went wrong.');
+            return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
 
@@ -103,10 +103,10 @@ class TaskController
 
             DB::commit();
 
-            return to_route('admin.course.show', $course->slug)->with('success', 'Task updated successfully.');
+            return to_route('admin.course.activities.index', $course->slug)->with('success', 'Tugas berhasil diperbarui.');
         } catch (\Throwable $th) {
             DB::rollBack();
-            return to_route('admin.course.show', $course->slug)->with('danger', 'Something went wrong.');
+            return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
 

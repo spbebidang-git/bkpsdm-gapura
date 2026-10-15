@@ -1,0 +1,10 @@
+.public-course-index { min-height: 70vh; background: #F6FAF9; color: #1A2B3F; }
+.course-index-content { width: 100%; padding: 24px 24px 48px; }
+.course-index-banner { height: clamp(160px, 32vw, 360px); overflow: hidden; border-radius: 15px; background: #075D5E; }
+.course-index-filters { scroll-margin-top: 100px; }
+@media (min-width: 768px) {
+    .course-index-content { padding: 32px 40px 64px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .public-course-index a, .public-course-index button, .public-course-index input { transition: none; }
+}

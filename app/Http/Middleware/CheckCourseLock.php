@@ -24,6 +24,7 @@ class CheckCourseLock
             
             // Allow read-only routes like index and result to pass through
             if (in_array($routeName, [
+                'admin.course.activities.index',
                 'instructor.course.activity.activity',
                 'instructor.course.activity.result',
                 'instructor.course.activity.variant.index',
@@ -31,7 +32,8 @@ class CheckCourseLock
                 return $next($request);
             }
 
-            return redirect()->route('instructor.course.show', $course->slug)
+            $destination = str_starts_with((string) $routeName, 'admin.') ? 'admin.course.activities.index' : 'instructor.course.show';
+            return redirect()->route($destination, $course->slug)
                              ->with('danger', 'Materi sedang dikunci, aktivitas tidak dapat diubah.');
         }
 

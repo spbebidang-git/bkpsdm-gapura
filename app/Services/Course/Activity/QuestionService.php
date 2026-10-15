@@ -52,18 +52,16 @@ class QuestionService
         ];
     }
 
-    public function getStatus($participantId, $activityId)
+    public function getStatus($participantId, $activityId, $courseId = null)
     {
-        $learn = $this->learns->findByParticipant($participantId, [
+        $relations = [
             'learnItems' => fn ($query) => $query->where('activity_id', $activityId),
-        ]);
+        ];
+        $learn = $courseId === null
+            ? $this->learns->findByParticipant($participantId, $relations)
+            : $this->learns->findByParticipantAndCourse($participantId, $courseId, $relations);
 
-        // dd($learn->learnItems);
-        if (! $learn) {
-            return 0;
-        }
-
-        return $learn->learnItems->first()->status;
+        return $learn?->learnItems->first()?->status ?? 0;
     }
 
     public function getPreTestParticipant($participantId, $activity)
@@ -97,7 +95,7 @@ class QuestionService
             'timer' => $activity->timer,
             'description' => $question->description,
             'type' => 'pre-test',
-            'status' => $this->getStatus($participantId, $activity->id),
+            'status' => $this->getStatus($participantId, $activity->id, $activity->course_id),
             'data' => [
                 'question_items' => $mappedQuestionItems,
                 'mix' => $questionVariant->mix,
@@ -185,7 +183,7 @@ class QuestionService
             'timer' => $activity->timer,
             'description' => $question->description,
             'type' => 'pre-test',
-            'status' => $this->getStatus($participantId, $activity->id),
+            'status' => $this->getStatus($participantId, $activity->id, $activity->course_id),
             'data' => [
                 'question_items' => $mappedQuestionItems,
                 'mix' => $questionVariant->mix,

@@ -58,6 +58,7 @@ class ActivityService
                     'value' => $row->value,
                     'end_meeting' => $endMeeting,
                     'has_imported' => $hasImported,
+                    'updated_at' => $row->updated_at?->toIso8601String(),
                     'status' => 0,
                 ];
             });
@@ -65,8 +66,16 @@ class ActivityService
 
     public function getActivityByParticipant($participantId, $courseId)
     {
+        $enrollmentId = request()->attributes->get('participant_enrollment')?->id;
+        $lockedActivities = \App\Models\Learning\LearnItem::query()
+            ->whereNotNull('locked_at')
+            ->whereHas('learn', function ($query) use ($participantId, $courseId, $enrollmentId) {
+                $query->where('participant_id', $participantId)->where('course_id', $courseId);
+                if ($enrollmentId) $query->where('enrollment_id', $enrollmentId);
+            })->pluck('activity_id')->map(fn ($id) => (string) $id)->all();
+
         return $this->activities->getByCourse($courseId, ['learnItem'])
-            ->map(function ($row) use ($participantId) {
+            ->map(function ($row) use ($participantId, $lockedActivities) {
                 return [
                     'id' => $row->id,
                     'course_id' => $row->course_id,
@@ -76,6 +85,7 @@ class ActivityService
                     'timer' => $row->timer,
                     'value' => $row->value,
                     'status' => $this->getStatus($participantId, $row->course_id, $row->id),
+                    'locked' => in_array((string) $row->id, $lockedActivities, true),
                 ];
             });
     }

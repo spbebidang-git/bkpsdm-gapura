@@ -7,6 +7,7 @@ use App\Repositories\Course\Activity\Contracts\ActivityRepositoryInterface;
 use App\Repositories\Learning\Contracts\LearnItemRepositoryInterface;
 use App\Repositories\Learning\Contracts\LearnRepositoryInterface;
 use App\Repositories\Reporting\Contracts\LearningReportRepositoryInterface;
+use App\Models\Learning\Enrollment;
 use Carbon\Carbon;
 
 class LearnService
@@ -22,12 +23,16 @@ class LearnService
     public function createLearn($participantId, $courseId, $activityId, array $learnItems, $scheduleId = null)
     {
         $learn = $this->learns->findByParticipantAndCourse($participantId, $courseId);
+        $enrollmentId = $this->currentEnrollmentId($participantId, $courseId, $scheduleId);
 
         if (! $learn) {
             $learn = $this->learns->create([
                 'participant_id' => $participantId,
                 'course_id' => $courseId,
+                'enrollment_id' => $enrollmentId,
             ]);
+        } elseif (! $learn->enrollment_id && $enrollmentId) {
+            $learn = $this->learns->update($learn, ['enrollment_id' => $enrollmentId]);
         }
 
         $this->createLearnItem($learn->id, $activityId, $learnItems);
@@ -222,15 +227,34 @@ class LearnService
         $learn = $this->learns->findByParticipantAndCourse($participantId, $courseId);
 
         if ($learn) {
+            if (! $learn->enrollment_id) {
+                $enrollmentId = $this->currentEnrollmentId($participantId, $courseId);
+                if ($enrollmentId) $this->learns->update($learn, ['enrollment_id' => $enrollmentId]);
+            }
             return true;
         }
 
         $this->learns->create([
             'participant_id' => $participantId,
             'course_id' => $courseId,
+            'enrollment_id' => $this->currentEnrollmentId($participantId, $courseId),
         ]);
 
         return false;
+    }
+
+    private function currentEnrollmentId(int|string $participantId, int|string $courseId, int|string|null $providedScheduleId = null): int|string|null
+    {
+        $course = \App\Models\Course\Course::query()->find($courseId);
+        $schedule = request()->route('schedule') ?? request()->route('scheduleId');
+        if (is_string($schedule)) $schedule = \App\Models\Course\Schedule::query()->find($schedule);
+        $scheduleId = $schedule?->id ?? $providedScheduleId;
+
+        if ($course?->access_mode !== 'scheduled') $scheduleId = null;
+        if ($course?->access_mode === 'scheduled' && ! $scheduleId) return null;
+
+        return Enrollment::query()->where('participant_id', $participantId)
+            ->where('course_id', $courseId)->where('schedule_id', $scheduleId)->value('id');
     }
 
     // public function checkValidOpenActivity()

@@ -35,8 +35,11 @@ class PresentationVideoController
             'title' => 'required|string',
             'description' => 'required|string',
             'value' => 'required|numeric',
-            'url' => 'required|string',
-            'duration' => 'required|numeric',
+            'url' => ['required', 'string', 'regex:%^https://(www\.)?youtube\.com/embed/[\w-]+(\?.*)?$%i'],
+            'duration' => 'required|numeric|min:0.1',
+        ], [
+            'url.regex' => 'Tautan video harus berupa tautan embed YouTube (contoh: https://www.youtube.com/embed/VIDEO_ID).',
+            'duration.min' => 'Durasi video minimal 0,1 menit (6 detik).',
         ]);
 
         try {
@@ -57,16 +60,16 @@ class PresentationVideoController
                 'type' => 'video',
                 'description' => $request->description,
                 'url' => $request->url,
-                'duration' => $request->duration
+                'duration' => (int) round($request->duration * 60)
             ]);
 
             DB::commit();
 
-            return to_route('admin.course.show', $course->slug)->with('success', 'Video created successfully.');
+            return to_route('admin.course.activities.index', $course->slug)->with('success', 'Presentasi video berhasil ditambahkan.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('admin.course.show', $course->slug)->with('danger', 'Something went wrong.');
+            return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
 
@@ -84,8 +87,11 @@ class PresentationVideoController
             'title' => 'required|string',
             'description' => 'required|string',
             'value' => 'required|numeric',
-            'url' => 'required|string',
-            'duration' => 'required|numeric',
+            'url' => ['required', 'string', 'regex:%^https://(www\.)?youtube\.com/embed/[\w-]+(\?.*)?$%i'],
+            'duration' => 'required|numeric|min:0.1',
+        ], [
+            'url.regex' => 'Tautan video harus berupa tautan embed YouTube (contoh: https://www.youtube.com/embed/VIDEO_ID).',
+            'duration.min' => 'Durasi video minimal 0,1 menit (6 detik).',
         ]);
 
         try {
@@ -105,16 +111,16 @@ class PresentationVideoController
                 'type' => 'video',
                 'description' => $request->description,
                 'url' => $request->url,
-                'duration' => $request->duration
+                'duration' => (int) round($request->duration * 60)
             ]);
 
             DB::commit();
 
-            return to_route('admin.course.show', $course->slug)->with('success', 'Video updated successfully.');
+            return to_route('admin.course.activities.index', $course->slug)->with('success', 'Presentasi video berhasil diperbarui.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('admin.course.show', $course->slug)->with('danger', 'Something went wrong.');
+            return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
 }

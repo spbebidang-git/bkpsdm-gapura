@@ -1,0 +1,14 @@
+.setting-admin { color:#526176; font-family:var(--font-inter); }
+.setting-admin .admin-crud-header-actions :is(a,button) { font-family:var(--font-poppins); }
+.setting-admin .admin-crud-form { display:grid; gap:20px; }
+.setting-upload { display:flex; align-items:center; gap:16px; padding:16px; border:1px solid #d0d9e6; border-radius:10px; background:#fff; cursor:pointer; transition:border-color .2s,background .2s; }
+.setting-upload:hover { border-color:#018083; background:#f5fbfa; }
+.setting-upload:focus-within { border-color:#018083; box-shadow:0 0 0 3px rgba(1,128,131,.1); }
+.setting-upload:has(input[aria-invalid='true']) { border-color:#ef4444; }
+.setting-upload:has(input:disabled) { cursor:wait; opacity:.6; }
+@media(max-width:639px) {
+    .setting-admin .admin-crud-header { flex-direction:column; }
+    .setting-admin .admin-crud-header-actions { width:100%; }
+    .setting-admin .admin-crud-header-actions > * { flex:1; }
+    .setting-upload { flex-wrap:wrap; gap:12px; }
+}

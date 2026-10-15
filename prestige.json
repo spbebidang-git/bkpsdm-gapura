@@ -1,0 +1,429 @@
+{
+	"info": {
+		"_postman_id": "90d7b83f-56bc-4c6c-81fb-7fc5a8a85a0e",
+		"name": "elearning Copy  baru",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "13046820"
+	},
+	"item": [
+		{
+			"name": "token",
+			"request": {
+				"auth": {
+					"type": "oauth2",
+					"oauth2": [
+						{
+							"key": "addTokenTo",
+							"value": "queryParams",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "200006172025211027",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "200006172025211027",
+							"type": "text"
+						},
+						{
+							"key": "grant_type",
+							"value": "password",
+							"type": "text"
+						},
+						{
+							"key": "client_id",
+							"value": "2",
+							"type": "text"
+						},
+						{
+							"key": "client_secret",
+							"value": "rdsIWQ8uMd5pQXxU4mmAaEiA1doMz5bHtoevLxRC",
+							"type": "text"
+						},
+						{
+							"key": "firebase_token",
+							"value": "",
+							"type": "default",
+							"disabled": true
+						}
+					]
+				},
+				"url": {
+					"raw": "https://prestige.gresikkab.go.id/oauth/token",
+					"protocol": "https",
+					"host": [
+						"prestige",
+						"gresikkab",
+						"go",
+						"id"
+					],
+					"path": [
+						"oauth",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_nip",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjExNzNhM2M1MTc3YjE4M2Q3NDUwYjQ5YTU5Y2VlMDhmYTI1NTgxMTZjNjBhZjQ5ZjM5NjIxMDg2YTE3MjhhN2U2Njk3ZjE2NWZlN2NlZTkyIn0.eyJhdWQiOiIyIiwianRpIjoiMTE3M2EzYzUxNzdiMTgzZDc0NTBiNDlhNTljZWUwOGZhMjU1ODExNmM2MGFmNDlmMzk2MjEwODZhMTcyOGE3ZTY2OTdmMTY1ZmU3Y2VlOTIiLCJpYXQiOjE3ODg1MTk3OTQsIm5iZiI6MTc4ODUxOTc5NCwiZXhwIjoxODIwMDU1Nzk0LCJzdWIiOiIyNTM3NCIsInNjb3BlcyI6W119.G2ig5TkKkNQrXTehzWXgSa-pvf-U5xZMCzopZ7JgTVAC5e34r6XQYCuALCdRLwoW96O-oS15eqy-A9evGBcMt6UIY0LtIaKE4bvCR5BbbjcBNNqODe0Jf4ZKvJP4ISX02qFZy3lqlKT9TSvrZgU8YzS02w8zxTVpPlFnyc4QsvKaEYtBurG3YUs9FE-_GGES7fx-aJlCbZ89klX8tXB4Bndjb5Hkj49yM-KKbjiA8_axIxrRdygC1WVyGwKua4-egLvgEOz1_fqSoGWAhfu_0aMiPJEGkefePNovyUJFReJJcKyTZ4TNbr_iB6Yfi7sep_VWk61ojf36hJBsZrZwddw0d2ulqtS9Bnx1tan4UtfsIXE7Tqp100-LDZ3VsEcm3jo9Mc4xymas7plNnlfwb_dn_wdjzOmPrMqu6bP_AmdKAIWKjqg7Pb2RHzoBDU8aOVl0kVZcicg5HS4eznu7z9Vj14CgUW_ECkrApEgMqfAXfBfWK-HXGwKxj4dCuLtjwnVpdNyJxE2xWDLbv6T7MtWDDzqgFNpTeAbvEQ7VwLtXz9ZCr-xw0DdrLFhIvqjXvN0C0gFGobTHC4Tuo8ZcvF6Oboen7BDUa_CzppYkGCRKTcFZajI7kcsiQ2ZjkCbzuTMgg5PDNntQAWWf5pC8wUPycGrFOjxkyMpaDWO1Ckg",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://prestige.gresikkab.go.id/api/get_nip_data",
+					"protocol": "https",
+					"host": [
+						"prestige",
+						"gresikkab",
+						"go",
+						"id"
+					],
+					"path": [
+						"api",
+						"get_nip_data"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_struktur",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "key",
+							"value": "p0s0b3dug",
+							"type": "text"
+						},
+						{
+							"key": "nip",
+							"value": "",
+							"type": "text"
+						},
+						{
+							"key": "nik",
+							"value": "",
+							"type": "text"
+						},
+						{
+							"key": "uker_kode",
+							"value": "",
+							"description": "opsional",
+							"type": "text"
+						},
+						{
+							"key": "tipe_data",
+							"value": "perangkat",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://kedaton.gresikkab.go.id/api/get_data_api",
+					"protocol": "https",
+					"host": [
+						"kedaton",
+						"gresikkab",
+						"go",
+						"id"
+					],
+					"path": [
+						"api",
+						"get_data_api"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_kode_kegiatan",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjhlYTBiMDNjNzljZjE3MWVlZjg1MmZlMmNlMjNhMzUzNWI2MjhkZTU2YWI0MjE0ZmVlNWViNGMwNzI0ZmNlZjNmOWRjMmUyYTBkZjI5MjQzIn0.eyJhdWQiOiIyIiwianRpIjoiOGVhMGIwM2M3OWNmMTcxZWVmODUyZmUyY2UyM2EzNTM1YjYyOGRlNTZhYjQyMTRmZWU1ZWI0YzA3MjRmY2VmM2Y5ZGMyZTJhMGRmMjkyNDMiLCJpYXQiOjE3NjkwNTQyMTcsIm5iZiI6MTc2OTA1NDIxNywiZXhwIjoxODAwNTkwMjE3LCJzdWIiOiIyNTM3NCIsInNjb3BlcyI6W119.eh2ddiP3GXuezmUMlSvIqrA9rCoHkYCieEemoleMs0paUhpWNnumnpzceAxjR7dJjiL3aHLam8cRvCpKjQistJfi8TifpjZF9SOsHxs3tr8Y9jPFCVRWzUmUZfsHLiMIUTgkpVGxrzCj037wy3uF7Q4uv4cl_4gXl2iTStIPKY-QvBAHMdRkHg7paMrZzlnGppV-MUcVQualRp1XbIx3BUE1oh4MAO2ohYj7T3WB7eVcDfltT296IrkRsUf4oCmBqekHXF5iFFg_AFAFogEYThfWvBDAJodYm-Kbr9eP1j04Y0ofVlvtrAEr_DHzZbmqYWaKDWwHgSAEWOoVF3nk6ONI11DXajbuJDuUYkNJbKPodFJAV56BW4NfKpyV0Ga4f5l7ajLfBDJp79HxfrzNoXsbyCPJfhmIYCFqOZrJG7OtqsC0UDoQexFrM0lfrvaUiYMv2KJ_DE3LVaaicW19Wq0MNoQVOltPQWJifEIHBNrRh3KLDO29cT9p9Hf3rbVTwMh9qikH2y7ndzJLkc3VmVUIC97v2wIA2UAqMH4Zi_SgwAQ8-Bm2p7VQEueIL0MHAaBNRuAuwBBMFRhwjh05J28ygQrfewvBhfIj_N2tYqD_NuOKrxt2pkqcuAhyTG8PJhPZ_PSGbNL15Zsr2Py9zjORSOK4yjOvLE4vZh-NdAE",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://prestige.gresikkab.go.id/api/get_kode_kegiatan",
+					"protocol": "https",
+					"host": [
+						"prestige",
+						"gresikkab",
+						"go",
+						"id"
+					],
+					"path": [
+						"api",
+						"get_kode_kegiatan"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "post_sertifikat",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImUzZjA5N2ViYzMzMWYyNWMxYTYzYmRmYTc1MWYwOGI5MTllOTFiM2I0YTk1NTYwZDhmZWE5MzZkNzhiODhjYWVlMTQ0OWI1YWJjYjZlMTkwIn0.eyJhdWQiOiIyIiwianRpIjoiZTNmMDk3ZWJjMzMxZjI1YzFhNjNiZGZhNzUxZjA4YjkxOWU5MWIzYjRhOTU1NjBkOGZlYTkzNmQ3OGI4OGNhZWUxNDQ5YjVhYmNiNmUxOTAiLCJpYXQiOjE3ODg1MjA3MTEsIm5iZiI6MTc4ODUyMDcxMSwiZXhwIjoxODIwMDU2NzExLCJzdWIiOiIyNTM3NCIsInNjb3BlcyI6W119.RYi5iCxNdoQtA-fW3ssOvWUvgLy1Rk5IkRcmlHwnRy_0c1kqDeW50sgsyG-2mMf1pMe4GZ3CtPUqOXLvvm7bSEYNJSb6J3aSa0vmlaqZVPqerbMPHQUhpVa-TBy53DBZ-I-zCTGniGpZZz0W2dYVlmWfuuMoBLieTloVxlBFTTbIJNMnGhDHcxJYfWNObYJk-henY1p-9hgPAwxJx1mjoqOL7k7ykL5UbNViDvmDA7mCL_1pFESJf4WbVldETWRB7mL6etTeDykevCGkeS7eRptPAKnszO52AH2STLnBMAxJsTu3bTZa5lHT9EMjr3sQwsrNyaLQwuN4NgpQhlTG6PfNYA4u4uQ9vH6gXOh62RHc19mMEi8dtEOfmxDaRxBBx9hbGaXJuov35HHYG3pvNYxnh7DfbGO9vJpI8vyAp0lQ7sedK61erxCVfQihNr-h7CBRWdxDoAU0ra-4VXk-iKShBuo4bVYbUHTpMP1IPECreQeOcgNHV1YT0AgS5vqh4PCTnJOjwZ4R_SasQgXJSfHT-LkN3ZIJ8L6REBgir-C3PlpAmFmd4Vmql6vCFfOSW932yt9hm9NirmaGxlj2BF69ipRrry8J2RQhslyKY2b5foyBT4iPSpUgq7pMKLOt2BIp3_Sdwkpg2iENVVZl84WJ-SNsE_tnwHMGfr1q_nM",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "fc_kduker",
+							"value": "0",
+							"description": "default 0",
+							"type": "text"
+						},
+						{
+							"key": "fc_kdsatker",
+							"value": "0",
+							"description": "default 0",
+							"type": "text"
+						},
+						{
+							"key": "fc_kdsubsatker",
+							"value": "0",
+							"description": "default 0",
+							"type": "text"
+						},
+						{
+							"key": "lama_diklat",
+							"value": "4",
+							"type": "text"
+						},
+						{
+							"key": "jenis_waktu",
+							"value": "J",
+							"description": "H untuk Hari, J, Untuk Jam",
+							"type": "text"
+						},
+						{
+							"key": "kode_kegiatan",
+							"value": "5",
+							"description": "mabil dari id get_diklat",
+							"type": "text"
+						},
+						{
+							"key": "nama_kegiatan",
+							"value": "Pelatihan Dinotech",
+							"type": "text"
+						},
+						{
+							"key": "tempat_kegiatan",
+							"value": "Dinas Komunikasi & Informatika",
+							"type": "text"
+						},
+						{
+							"key": "penyelenggara",
+							"value": "BKPSDM Gresik",
+							"type": "text"
+						},
+						{
+							"key": "tahun",
+							"value": "2026",
+							"type": "text"
+						},
+						{
+							"key": "tgl_mulai",
+							"value": "2026-11-03",
+							"description": "yyyy-mm-dd",
+							"type": "text"
+						},
+						{
+							"key": "tgl_selesai",
+							"value": "2026-11-03",
+							"description": "yyyy-mm-dd",
+							"type": "text"
+						},
+						{
+							"key": "peserta",
+							"value": "",
+							"description": "nip dipisah dengan koma",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://prestige.gresikkab.go.id/api/post_sertifikat",
+					"protocol": "https",
+					"host": [
+						"prestige",
+						"gresikkab",
+						"go",
+						"id"
+					],
+					"path": [
+						"api",
+						"post_sertifikat"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "post_sertifikat_pegawai",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6ImUzZjA5N2ViYzMzMWYyNWMxYTYzYmRmYTc1MWYwOGI5MTllOTFiM2I0YTk1NTYwZDhmZWE5MzZkNzhiODhjYWVlMTQ0OWI1YWJjYjZlMTkwIn0.eyJhdWQiOiIyIiwianRpIjoiZTNmMDk3ZWJjMzMxZjI1YzFhNjNiZGZhNzUxZjA4YjkxOWU5MWIzYjRhOTU1NjBkOGZlYTkzNmQ3OGI4OGNhZWUxNDQ5YjVhYmNiNmUxOTAiLCJpYXQiOjE3ODg1MjA3MTEsIm5iZiI6MTc4ODUyMDcxMSwiZXhwIjoxODIwMDU2NzExLCJzdWIiOiIyNTM3NCIsInNjb3BlcyI6W119.RYi5iCxNdoQtA-fW3ssOvWUvgLy1Rk5IkRcmlHwnRy_0c1kqDeW50sgsyG-2mMf1pMe4GZ3CtPUqOXLvvm7bSEYNJSb6J3aSa0vmlaqZVPqerbMPHQUhpVa-TBy53DBZ-I-zCTGniGpZZz0W2dYVlmWfuuMoBLieTloVxlBFTTbIJNMnGhDHcxJYfWNObYJk-henY1p-9hgPAwxJx1mjoqOL7k7ykL5UbNViDvmDA7mCL_1pFESJf4WbVldETWRB7mL6etTeDykevCGkeS7eRptPAKnszO52AH2STLnBMAxJsTu3bTZa5lHT9EMjr3sQwsrNyaLQwuN4NgpQhlTG6PfNYA4u4uQ9vH6gXOh62RHc19mMEi8dtEOfmxDaRxBBx9hbGaXJuov35HHYG3pvNYxnh7DfbGO9vJpI8vyAp0lQ7sedK61erxCVfQihNr-h7CBRWdxDoAU0ra-4VXk-iKShBuo4bVYbUHTpMP1IPECreQeOcgNHV1YT0AgS5vqh4PCTnJOjwZ4R_SasQgXJSfHT-LkN3ZIJ8L6REBgir-C3PlpAmFmd4Vmql6vCFfOSW932yt9hm9NirmaGxlj2BF69ipRrry8J2RQhslyKY2b5foyBT4iPSpUgq7pMKLOt2BIp3_Sdwkpg2iENVVZl84WJ-SNsE_tnwHMGfr1q_nM",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "kode",
+							"value": "2434",
+							"description": "kode yang didapat sebelumnya",
+							"type": "text"
+						},
+						{
+							"key": "nip",
+							"value": "199210212019031005",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://prestige.gresikkab.go.id/api/post_sertifikat_pegawai",
+					"protocol": "https",
+					"host": [
+						"prestige",
+						"gresikkab",
+						"go",
+						"id"
+					],
+					"path": [
+						"api",
+						"post_sertifikat_pegawai"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_data_sertifikat",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjhlYTBiMDNjNzljZjE3MWVlZjg1MmZlMmNlMjNhMzUzNWI2MjhkZTU2YWI0MjE0ZmVlNWViNGMwNzI0ZmNlZjNmOWRjMmUyYTBkZjI5MjQzIn0.eyJhdWQiOiIyIiwianRpIjoiOGVhMGIwM2M3OWNmMTcxZWVmODUyZmUyY2UyM2EzNTM1YjYyOGRlNTZhYjQyMTRmZWU1ZWI0YzA3MjRmY2VmM2Y5ZGMyZTJhMGRmMjkyNDMiLCJpYXQiOjE3NjkwNTQyMTcsIm5iZiI6MTc2OTA1NDIxNywiZXhwIjoxODAwNTkwMjE3LCJzdWIiOiIyNTM3NCIsInNjb3BlcyI6W119.eh2ddiP3GXuezmUMlSvIqrA9rCoHkYCieEemoleMs0paUhpWNnumnpzceAxjR7dJjiL3aHLam8cRvCpKjQistJfi8TifpjZF9SOsHxs3tr8Y9jPFCVRWzUmUZfsHLiMIUTgkpVGxrzCj037wy3uF7Q4uv4cl_4gXl2iTStIPKY-QvBAHMdRkHg7paMrZzlnGppV-MUcVQualRp1XbIx3BUE1oh4MAO2ohYj7T3WB7eVcDfltT296IrkRsUf4oCmBqekHXF5iFFg_AFAFogEYThfWvBDAJodYm-Kbr9eP1j04Y0ofVlvtrAEr_DHzZbmqYWaKDWwHgSAEWOoVF3nk6ONI11DXajbuJDuUYkNJbKPodFJAV56BW4NfKpyV0Ga4f5l7ajLfBDJp79HxfrzNoXsbyCPJfhmIYCFqOZrJG7OtqsC0UDoQexFrM0lfrvaUiYMv2KJ_DE3LVaaicW19Wq0MNoQVOltPQWJifEIHBNrRh3KLDO29cT9p9Hf3rbVTwMh9qikH2y7ndzJLkc3VmVUIC97v2wIA2UAqMH4Zi_SgwAQ8-Bm2p7VQEueIL0MHAaBNRuAuwBBMFRhwjh05J28ygQrfewvBhfIj_N2tYqD_NuOKrxt2pkqcuAhyTG8PJhPZ_PSGbNL15Zsr2Py9zjORSOK4yjOvLE4vZh-NdAE",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "nip",
+							"value": "-",
+							"description": "default - / jika cari nip maka selain itu dianggap -",
+							"type": "text"
+						},
+						{
+							"key": "kode",
+							"value": "2434",
+							"description": "default -",
+							"type": "text"
+						},
+						{
+							"key": "kegiatan",
+							"value": "",
+							"description": "default -",
+							"type": "text"
+						},
+						{
+							"key": "kode_kegiatan",
+							"value": "",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://prestige.gresikkab.go.id/api/get_data_sertifikat",
+					"protocol": "https",
+					"host": [
+						"prestige",
+						"gresikkab",
+						"go",
+						"id"
+					],
+					"path": [
+						"api",
+						"get_data_sertifikat"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "New Request",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}

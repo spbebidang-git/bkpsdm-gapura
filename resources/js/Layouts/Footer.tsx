@@ -1,0 +1,36 @@
+import Copyright from '@/Components/Copyright';
+import { usePage } from '@inertiajs/react';
+import type { ReactNode } from 'react';
+
+export default function Footer() {
+    const { site } = usePage().props;
+
+    return (
+        <footer id="site-contact" className="scroll-mt-24 bg-gray-100">
+            <div className="relative mx-auto w-full max-w-[1320px] overflow-hidden bg-gradient-to-b from-[#075D5E] to-[#018083] px-6 pb-8 pt-16 lg:px-12">
+                <div className="pointer-events-none absolute -right-20 -top-44 h-96 w-96 rounded-full bg-white/5 blur-3xl" />
+                <div className="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-white/5 blur-3xl" />
+                <div className="relative z-10 mx-auto w-full border-b border-white/10 pb-12">
+                    <div className="flex flex-col gap-12 lg:gap-16 xl:flex-row">
+                        <div className="flex w-full flex-col xl:w-5/12">
+                            <div className="mb-6 w-56 rounded-2xl border border-white/10 bg-white/10 p-4 shadow-lg backdrop-blur-sm"><img src={site.logo} alt="GAPURA" className="object-contain" /></div>
+                            <p className="pr-0 text-justify text-sm font-medium leading-relaxed text-teal-50/80 md:text-[15px] xl:pr-8">GAPURA (Gerbang Pengembangan Kompetensi menuju Smart ASN) merupakan sistem pembelajaran untuk meningkatkan kompetensi aparatur sipil negara di lingkungan Pemerintah Kabupaten Gresik melalui e-learning yang dapat diakses di mana pun dan kapan pun.</p>
+                        </div>
+                        <div className="flex w-full flex-col justify-center text-white xl:w-7/12">
+                            <section className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-colors duration-300 hover:bg-white/10">
+                                <h2 className="mb-5 flex items-center gap-3 text-xl font-extrabold tracking-wide"><span className="h-6 w-2 rounded-full bg-teal-400" />Kantor BKPSDM Gresik — Jawa Timur</h2>
+                                <FooterDetail icon="map" label="Alamat">Lt. 3 Kantor Bupati Gresik<br />Jl. Dr. Wahidin Sudirohusodo No. 245</FooterDetail>
+                            </section>
+                            <div className="flex flex-col gap-6 md:flex-row"><FooterDetail icon="phone-call" label="Kontak" className="md:w-1/2">Telp: 3952825-30 ext 307<br />Fax: 3952825-30 ext 307</FooterDetail><FooterDetail icon="envelope" label="Email" className="break-all md:w-1/2">bkpsdm@gresikkab.go.id</FooterDetail></div>
+                        </div>
+                    </div>
+                </div>
+                <div className="relative z-10 mx-auto flex w-full justify-center pt-6 opacity-80 transition-opacity hover:opacity-100"><Copyright /></div>
+            </div>
+        </footer>
+    );
+}
+
+function FooterDetail({ icon, label, children, className = '' }: { icon: string; label: string; children: ReactNode; className?: string }) {
+    return <div className={`flex gap-4 ${className}`}><span className="self-start shrink-0 rounded-xl border border-white/10 bg-white/10 p-2.5 shadow-sm backdrop-blur-sm"><box-icon name={icon} color="white" size="22px" /></span><div><p className="mb-1 text-[11px] font-bold uppercase tracking-widest text-teal-200/80">{label}</p><p className="text-sm font-medium leading-relaxed text-teal-50/90 sm:text-base">{children}</p></div></div>;
+}

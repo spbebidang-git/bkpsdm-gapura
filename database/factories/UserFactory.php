@@ -19,6 +19,7 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'nip' => fake()->unique()->numerify('##################'),
+            'auth_source' => User::AUTH_SOURCE_SSO,
             'email_verified_at' => now(),
             'remember_token' => Str::random(10),
         ];

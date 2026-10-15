@@ -1,0 +1,16 @@
+.swal2-container.admin-confirm-container { backdrop-filter:blur(4px); }
+.swal2-popup.admin-confirm-dialog { max-width:calc(100vw - 32px); border:1px solid #e8ecf1; border-radius:18px; background:linear-gradient(135deg,#fff 0%,#f8faff 100%); box-shadow:0 16px 48px rgba(0,20,30,.2); font-family:var(--font-inter),sans-serif; }
+.admin-confirm-dialog .swal2-icon.swal2-warning { width:54px; height:54px; margin:0 auto 16px; border-color:#ffcdcd; color:#e74c3c; }
+.admin-confirm-dialog .swal2-icon.swal2-warning .swal2-icon-content { font-size:32px; }
+.admin-confirm-dialog .admin-confirm-title { margin:0; color:#075d5e; font-family:var(--font-poppins),sans-serif; font-size:19px; font-weight:600; line-height:1.4; }
+.admin-confirm-dialog .admin-confirm-message { margin:8px 0 0; color:#526176; font-family:var(--font-inter),sans-serif; font-size:14px; line-height:1.65; }
+.admin-confirm-dialog .admin-confirm-actions { display:flex; flex-wrap:wrap; gap:10px; margin:24px 0 0; }
+.admin-confirm-dialog .admin-confirm-actions button { min-height:40px; margin:0; padding:0 18px; border-radius:10px; font-family:var(--font-poppins),sans-serif; font-size:13px; font-weight:600; transition:background-color .18s ease,border-color .18s ease,transform .18s ease; }
+.admin-confirm-dialog .admin-confirm-actions button:active { transform:scale(.97); }
+.admin-confirm-dialog .admin-confirm-delete { border:1px solid #e74c3c; background:#e74c3c; color:#fff; }
+.admin-confirm-dialog .admin-confirm-delete:hover { border-color:#c93d32; background:#c93d32; }
+.admin-confirm-dialog .admin-confirm-cancel { border:1px solid #c2c9d6; background:#fff; color:#526176; }
+.admin-confirm-dialog .admin-confirm-cancel:hover { border-color:#aeb8c7; background:#f0f4fa; color:#1a2b3f; }
+.admin-confirm-dialog :is(button, .swal2-close):focus-visible { outline:2px solid #018083; outline-offset:3px; }
+@media(max-width:480px) { .swal2-popup.admin-confirm-dialog { padding:24px 20px!important; } .admin-confirm-dialog .admin-confirm-actions { width:100%; } .admin-confirm-dialog .admin-confirm-actions button { flex:1; } }
+@media(prefers-reduced-motion:reduce) { .admin-confirm-dialog .admin-confirm-actions button { transition:none; } }

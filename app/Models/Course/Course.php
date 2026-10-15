@@ -4,6 +4,7 @@ namespace App\Models\Course;
 
 use App\Models\Course\Activity\Activity;
 use App\Models\Identity\EmployeeStatus;
+use App\Models\Identity\Opd;
 use App\Models\Learning\Enrollment;
 use App\Models\Learning\Learn;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -30,6 +31,11 @@ class Course extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function opd()
+    {
+        return $this->belongsTo(Opd::class);
     }
 
     public function reviews()

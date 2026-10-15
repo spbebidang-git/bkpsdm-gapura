@@ -1,0 +1,192 @@
+.admin-index-page {
+    color: #526176;
+    font-family: var(--font-inter);
+}
+
+.admin-index-page .admin-crud-header h1 {
+    color: #1a2b3f;
+    font-family: var(--font-poppins);
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+}
+
+.admin-index-page .admin-crud-header p {
+    color: #64748b;
+}
+
+.admin-index-create {
+    display: inline-flex;
+    min-height: 40px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 10px;
+    background: #018083;
+    padding: 0 16px;
+    color: #fff;
+    font-family: var(--font-poppins);
+    font-size: 13px;
+    font-weight: 600;
+    transition: background-color 150ms;
+}
+
+.admin-index-create:hover {
+    background: #016668;
+}
+
+.admin-index-create:focus-visible {
+    outline: 2px solid #018083;
+    outline-offset: 3px;
+}
+
+.admin-index-create i {
+    font-size: 18px;
+}
+
+.admin-index-table.admin-table-frame {
+    overflow: hidden;
+    border-radius: 15px;
+    clip-path: inset(0 round 15px);
+    box-shadow: 0 2px 12px rgba(1, 128, 131, 0.025);
+}
+
+.admin-index-table .admin-table-toolbar {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 20px;
+}
+
+.admin-index-table .admin-search-input {
+    border-color: #e8ecf1;
+    border-radius: 10px;
+    font-size: 13px;
+}
+
+.admin-index-table .admin-table-count {
+    margin-left: auto;
+    border: 0;
+    padding-left: 4px;
+    font-weight: 400;
+}
+
+.admin-index-table .admin-table-count > span:first-child {
+    display: none;
+}
+
+.admin-shell .admin-index-table .admin-table {
+    min-width: 760px;
+}
+
+.admin-shell .admin-index-table .admin-table thead th {
+    padding: 14px 20px;
+    background: #f8fafc;
+    color: #8496b0;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.admin-shell .admin-index-table .admin-table tbody td {
+    padding: 18px 20px;
+    color: #526176;
+    font-size: 13px;
+}
+
+.admin-shell .admin-index-table .admin-table tbody tr:hover {
+    background: #fafcfc;
+}
+
+.admin-shell .admin-index-table .admin-table-footer {
+    padding: 16px 20px;
+    background: #fff;
+}
+
+.admin-shell .admin-index-table .admin-table-footer :is(.font-semibold, select, button) {
+    font-weight: 500;
+}
+
+.admin-shell .admin-index-table .admin-table-footer :is(select, button) {
+    border-radius: 8px;
+}
+
+.admin-shell .admin-index-table .admin-table-footer nav[aria-label='Paginasi tabel'] {
+    gap: 0;
+}
+
+.admin-shell .admin-index-table .admin-table-footer nav[aria-label='Paginasi tabel'] > :is(button, span > button) {
+    min-width: 32px;
+    padding-right: 4px;
+    padding-left: 4px;
+}
+
+.management-role-badge {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #b8d9e2;
+    border-radius: 6px;
+    background: #eaf5f6;
+    padding: 3px 8px;
+    color: #17606a;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.admin-user-index-table .admin-table {
+    min-width: 1020px;
+}
+
+.management-user-name {
+    display: block;
+    min-width: 130px;
+    color: #1a2b3f;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.management-user-email {
+    display: block;
+    min-width: 210px;
+    color: #526176;
+    white-space: nowrap;
+}
+
+.management-user-source {
+    white-space: nowrap;
+}
+
+.management-user-roles {
+    min-width: 145px;
+}
+
+@media (max-width: 639px) {
+    .admin-index-page .admin-crud-header {
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .admin-index-page .admin-crud-header h1 {
+        font-size: 23px;
+    }
+
+    .admin-index-page .admin-crud-header-actions {
+        justify-content: flex-start;
+    }
+
+    .admin-index-create {
+        padding: 0 12px;
+        font-size: 12px;
+    }
+
+    .admin-index-table .admin-table-toolbar,
+    .admin-index-table .admin-table-footer {
+        padding: 16px;
+    }
+
+    .admin-index-table .admin-table-toolbar > label {
+        flex-basis: 100%;
+    }
+}

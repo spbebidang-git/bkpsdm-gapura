@@ -1,0 +1,19 @@
+.notification-message-admin { color:#526176; font-family:var(--font-inter); }
+.notification-message-admin .admin-crud-header-actions :is(a,button) { font-family:var(--font-poppins); }
+.notification-message-admin .admin-crud-form { display:grid; gap:20px; }
+.notification-message-list { display:flex; flex-direction:column; }
+.notification-message-row { display:grid; grid-template-columns:220px minmax(0,1fr); align-items:start; gap:24px; padding:24px 0; }
+.notification-message-row:first-child { padding-top:0; }
+.notification-message-row:last-child { padding-bottom:0; }
+.notification-message-row + .notification-message-row { border-top:1px solid #e8ecf1; }
+.notification-message-context h3 { color:#075d5e; font-family:var(--font-poppins); font-size:13px; font-weight:600; line-height:1.6; }
+.notification-message-context p { margin-top:6px; color:#8496b0; font-size:12px; line-height:1.6; }
+.notification-message-context code { color:#526176; }
+.notification-message-fields { display:grid; gap:20px; min-width:0; }
+@media(max-width:1023px) { .notification-message-row { grid-template-columns:minmax(0,1fr); gap:16px; } }
+@media(max-width:639px) {
+    .notification-message-admin .admin-crud-header { flex-direction:column; }
+    .notification-message-admin .admin-crud-header-actions { width:100%; }
+    .notification-message-admin .admin-crud-header-actions > * { flex:1; }
+    .notification-message-row { padding:20px 0; }
+}

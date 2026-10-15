@@ -37,7 +37,9 @@ class OnlineMeetingController
             'description' => 'required|string',
             'value' => 'required|numeric',
             'url' => 'required|string',
-            'duration' => 'required|numeric',
+            'duration' => 'required|numeric|min:0.1',
+        ], [
+            'duration.min' => 'Durasi pertemuan minimal 0,1 menit (6 detik).',
         ]);
 
         try {
@@ -58,16 +60,16 @@ class OnlineMeetingController
                 'type' => 'meeting',
                 'description' => $request->description,
                 'url' => $request->url,
-                'duration' => $request->duration
+                'duration' => (int) round($request->duration * 60)
             ]);
 
             DB::commit();
 
-            return to_route('admin.course.show', $course->slug)->with('success', 'Meeting created successfully.');
+            return to_route('admin.course.activities.index', $course->slug)->with('success', 'Pertemuan daring berhasil ditambahkan.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('admin.course.show', $course->slug)->with('danger', 'Something went wrong.');
+            return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
 
@@ -86,7 +88,9 @@ class OnlineMeetingController
             'description' => 'required|string',
             'value' => 'required|numeric',
             'url' => 'required|string',
-            'duration' => 'required|numeric',
+            'duration' => 'required|numeric|min:0.1',
+        ], [
+            'duration.min' => 'Durasi pertemuan minimal 0,1 menit (6 detik).',
         ]);
 
         try {
@@ -106,16 +110,16 @@ class OnlineMeetingController
                 'type' => 'meeting',
                 'description' => $request->description,
                 'url' => $request->url,
-                'duration' => $request->duration
+                'duration' => (int) round($request->duration * 60)
             ]);
 
             DB::commit();
 
-            return to_route('admin.course.show', $course->slug)->with('success', 'Meeting updated successfully.');
+            return to_route('admin.course.activities.index', $course->slug)->with('success', 'Pertemuan daring berhasil diperbarui.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('admin.course.show', $course->slug)->with('danger', 'Something went wrong.');
+            return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
 
@@ -131,11 +135,11 @@ class OnlineMeetingController
 
             DB::commit();
 
-            return to_route('admin.course.show', $course->slug)->with('success', 'Meeting ended successfully.');
+            return to_route('admin.course.activities.index', $course->slug)->with('success', 'Pertemuan daring berhasil diakhiri.');
         } catch (\Throwable $th) {
             DB::rollBack();
 
-            return to_route('admin.course.show', $course->slug)->with('danger', 'Something went wrong.');
+            return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
 }

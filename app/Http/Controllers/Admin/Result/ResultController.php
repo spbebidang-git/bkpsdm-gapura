@@ -54,7 +54,7 @@ class ResultController
             ];
         });
         // dd($results);
-        $names = User::role('Participant')->select('id', 'name')->get();
+        $names = User::role('participant')->select('id', 'name')->get();
         $activities = Activity::where('course_id', $course->id)->get();
 
         return Inertia::render('Instructor/Result/Show', [

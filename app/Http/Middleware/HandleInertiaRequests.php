@@ -39,7 +39,15 @@ class HandleInertiaRequests extends Middleware
                     'email' => $request->user()->email,
                     'profile_picture' => $request->user()->profile_picture,
                     'roles' => $request->user()->getRoleNames()->values(),
-                    'is_admin' => $request->user()->hasRole('Admin'),
+                    'is_admin' => $request->user()->hasAnyRole(['super_admin', 'administrator']),
+                    'is_super_admin' => $request->user()->hasRole('super_admin'),
+                    'is_trainer' => $request->user()->hasRole('trainer'),
+                    'permissions' => $request->user()->getAllPermissions()->pluck('name')->values(),
+                    'opd' => $request->user()->opd ? [
+                        'id' => $request->user()->opd->id,
+                        'code' => $request->user()->opd->code,
+                        'name' => $request->user()->opd->name,
+                    ] : null,
                 ] : null,
             ],
             'site' => [

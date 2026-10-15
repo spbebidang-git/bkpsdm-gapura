@@ -3,6 +3,7 @@
 namespace App\Models\Identity;
 
 use App\Models\Course\Schedule;
+use App\Models\Identity\Opd;
 use App\Models\Learning\Enrollment;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use LogicException;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -23,14 +25,28 @@ class User extends Authenticatable
 
     public static $directoryImage = 'assets/media/images/users/';
 
+    public const AUTH_SOURCE_LOCAL = 'local';
+
+    public const AUTH_SOURCE_SSO = 'sso';
+
+    public const AUTH_SOURCE_PRESTIGE = 'prestige';
+
     protected $fillable = [
         'name',
         'nip',
         'email',
+        'password',
+        'auth_source',
         'access_token',
         'refresh_token',
         'token_expires_at',
         'image',
+        'opd_id',
+        'employee_status_id',
+    ];
+
+    protected $attributes = [
+        'auth_source' => self::AUTH_SOURCE_SSO,
     ];
 
     protected $hidden = [
@@ -42,16 +58,35 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
+            'password' => 'hashed',
             'access_token' => 'encrypted',
             'refresh_token' => 'encrypted',
             'token_expires_at' => 'datetime',
         ];
     }
 
-    /** No local password — SSO only. */
-    public function getAuthPassword(): string
+    protected static function booted(): void
     {
-        return '';
+        static::updating(function (self $user): void {
+            if ($user->isDirty('auth_source')) {
+                throw new LogicException('Sumber autentikasi akun tidak dapat diubah.');
+            }
+        });
+    }
+
+    public function usesLocalAuthentication(): bool
+    {
+        return $this->auth_source === self::AUTH_SOURCE_LOCAL;
+    }
+
+    public function usesSsoAuthentication(): bool
+    {
+        return $this->auth_source === self::AUTH_SOURCE_SSO;
+    }
+
+    public function usesPrestigeAuthentication(): bool
+    {
+        return $this->auth_source === self::AUTH_SOURCE_PRESTIGE;
     }
 
     public function enrollments(): HasMany
@@ -62,6 +97,16 @@ class User extends Authenticatable
     public function metas()
     {
         return $this->hasMany(UserMeta::class);
+    }
+
+    public function opd()
+    {
+        return $this->belongsTo(Opd::class);
+    }
+
+    public function employeeStatus()
+    {
+        return $this->belongsTo(EmployeeStatus::class);
     }
 
     public function schedules()
@@ -98,17 +143,17 @@ class User extends Authenticatable
 
     public function isAdmin(): Attribute
     {
-        return Attribute::get(fn () => $this->hasRole('Admin'));
+        return Attribute::get(fn () => $this->hasAnyRole(['super_admin', 'administrator']));
     }
 
     public function isInstructor(): Attribute
     {
-        return Attribute::get(fn () => $this->hasRole('Instructor'));
+        return Attribute::get(fn () => $this->hasRole('trainer'));
     }
 
     public function isParticipant(): Attribute
     {
-        return Attribute::get(fn () => $this->hasRole('Participant'));
+        return Attribute::get(fn () => $this->hasRole('participant'));
     }
 
     public function profilePicture(): Attribute
