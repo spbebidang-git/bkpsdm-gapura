@@ -7,12 +7,7 @@ const Edit = ({ slug, activityId, questionId, question }) => {
     const { errors } = usePage().props;
 
     const [description, setDescription] = useState(question.description);
-    const [options, setOptions] = useState({
-        option1: question.option1,
-        option2: question.option2,
-        option3: question.option3,
-        option4: question.option4,
-    });
+    const [options, setOptions] = useState(question.options);
     const [correct_answer, setCorrect_answer] = useState(question.is_correct);
     const [score, setScore] = useState(question.score);
 
@@ -81,7 +76,7 @@ const Edit = ({ slug, activityId, questionId, question }) => {
 
                         {/* KETERANGAN PENGISIAN OPSI */}
                         <div className="mb-4 text-sm text-gray-600 leading-relaxed">
-                            Isi empat opsi jawaban pada kolom yang tersedia.
+                            Ubah opsi jawaban pada kolom yang tersedia.
                             Pastikan tiap opsi berisi teks yang jelas.
                             Pilih salah satu sebagai{" "}
                             <span className="font-semibold text-primary">jawaban benar</span>
@@ -96,7 +91,7 @@ const Edit = ({ slug, activityId, questionId, question }) => {
                         </div>
 
                         {/* INPUT OPSI JAWABAN */}
-                        {['option1', 'option2', 'option3', 'option4'].map((option, index) => (
+                        {Object.keys(options).map((option, index) => (
                             <div
                                 className="flex sm:grid sm:grid-cols-4 items-center justify-between gap-3 sm:gap-5 mb-5"
                                 key={option}

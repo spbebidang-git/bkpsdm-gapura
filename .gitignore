@@ -27,6 +27,21 @@ yarn-error.log
 
 # Ignore everything inside public/assets/media
 public/assets/media/images/courses
+/public/assets/media/h5p/
+/public/assets/media/scorm/
+
+# H5P public runtime: keep only browser assets used by the player.
+/public/vendor/h5p-standalone/*.d.ts
+/public/vendor/h5p-standalone/fonts/open-sans/
+/public/vendor/h5p-standalone/fonts/h5p-core-29.*
+/public/vendor/h5p-standalone/fonts/h5p-core-30.eot
+/public/vendor/h5p-standalone/fonts/h5p-core-30.svg
+/public/vendor/h5p-standalone/fonts/h5p-core-30.ttf
+/public/vendor/h5p-standalone/fonts/h5p-core-30.woff
+/public/vendor/h5p-standalone/fonts/h5p-hub-publish.eot
+/public/vendor/h5p-standalone/fonts/h5p-hub-publish.svg
+/public/vendor/h5p-standalone/fonts/h5p-hub-publish.ttf
+/public/vendor/h5p-standalone/styles/font-open-sans.css
 
 # Allow only specific paths (documents/static & images/static)
 !public/assets/media/documents/

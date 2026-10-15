@@ -96,6 +96,18 @@ const Activity = ({ slug, type }) => {
                                 description="Tambahkan judul, sub judul, dan upload file PDF literatur untuk diakses peserta."
                             />
                         </Link>
+                        <Link href={`/instructor/course/${slug}/activity/h5p/create`} className="block">
+                            <CardActivity
+                                title="H5P Interaktif"
+                                description="Unggah paket konten interaktif H5P (.h5p) seperti video interaktif atau kuis."
+                            />
+                        </Link>
+                        <Link href={`/instructor/course/${slug}/activity/scorm/create`} className="block">
+                            <CardActivity
+                                title="SCORM"
+                                description="Unggah paket SCORM (.zip, SCORM 1.2/2004) ekspor dari Articulate, iSpring, dll."
+                            />
+                        </Link>
                     </div>
                 )}
 

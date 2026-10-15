@@ -12,18 +12,30 @@ class QuestionItemService
         return QuestionItem::with('questionOptions')
             ->where('question_variant_id', $questionId)
             ->get()
-            ->map(function ($row) {
-                return [
-                    'id' => $row->id,
-                    'question' => $row->description,
-                    'score' => $row->score,
-                    'option1' => $row->questionOptions[0]->option,
-                    'option2' => $row->questionOptions[1]->option,
-                    'option3' =>  $row->questionOptions[2]->option,
-                    'option4' =>  $row->questionOptions[3]->option,
-                    'is_correct' => $row->questionOptions->where('is_correct', 1)->first()->option
-                ];
-            });
+            ->map(fn (QuestionItem $row) => $this->formatQuestionItem($row));
+    }
+
+    /**
+     * Moodle questions may contain a variable number of answer choices.
+     * Keeping the options as a collection prevents an incomplete imported
+     * question from crashing the whole question-management page.
+     */
+    protected function formatQuestionItem(QuestionItem $row): array
+    {
+        $options = $row->questionOptions
+            ->values()
+            ->map(fn ($option) => [
+                'id' => $option->id,
+                'text' => $option->option,
+                'is_correct' => (bool) $option->is_correct,
+            ]);
+
+        return [
+            'id' => $row->id,
+            'question' => $row->description,
+            'score' => $row->score,
+            'options' => $options,
+        ];
     }
 
     public function createQuestionItem() {}

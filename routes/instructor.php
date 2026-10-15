@@ -21,6 +21,13 @@ Route::prefix('/instructor')
             ->group(function () {
                 Route::get('/create', [\App\Http\Controllers\Instructor\CourseController::class, 'create'])->name('create');
                 Route::post('/', [\App\Http\Controllers\Instructor\CourseController::class, 'store'])->name('store');
+
+                # Import kursus dari Moodle Backup (.mbz) — harus sebelum route {course:slug}
+                Route::get('/import', [\App\Http\Controllers\Instructor\Course\ImportController::class, 'index'])->name('import.index');
+                Route::post('/import/analyze', [\App\Http\Controllers\Instructor\Course\ImportController::class, 'analyze'])->name('import.analyze');
+                Route::post('/import/analyze-local', [\App\Http\Controllers\Instructor\Course\ImportController::class, 'analyzeLocal'])->name('import.analyze-local');
+                Route::post('/import', [\App\Http\Controllers\Instructor\Course\ImportController::class, 'store'])->name('import.store');
+
                 Route::get('/{course:slug}', [\App\Http\Controllers\Instructor\CourseController::class, 'show'])->name('show');
                 Route::get('/{course:slug}/edit', [\App\Http\Controllers\Instructor\CourseController::class, 'edit'])->name('edit');
                 Route::put('/{course:slug}', [\App\Http\Controllers\Instructor\CourseController::class, 'update'])->name('update');
@@ -64,6 +71,10 @@ Route::prefix('/instructor')
                         Route::resource('video', \App\Http\Controllers\Instructor\Course\Interactive\PresentationVideoController::class);
                         # Literature
                         Route::resource('literature', \App\Http\Controllers\Instructor\Course\Literature\LiteratureController::class);
+                        # H5P Interaktif
+                        Route::resource('h5p', \App\Http\Controllers\Instructor\Course\H5p\H5pController::class);
+                        # SCORM
+                        Route::resource('scorm', \App\Http\Controllers\Instructor\Course\Scorm\ScormController::class);
                     });
             });
 

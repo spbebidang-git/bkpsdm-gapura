@@ -147,7 +147,7 @@ const Index = ({ slug, activity, variants, variantWarning }) => {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="flex justify-center items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                                                <div className="flex justify-center items-center gap-2">
                                                     <Link
                                                         href={`/instructor/course/${slug}/activity/variant/${activity.activity_id}/${item.id}/question-item`}
                                                     >

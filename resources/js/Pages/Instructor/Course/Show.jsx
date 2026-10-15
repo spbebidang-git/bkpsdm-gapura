@@ -247,7 +247,11 @@ const Show = ({ course, activities }) => {
                                                         ? 'Pre-Test / Kuis'
                                                         : item.type === 'post-test'
                                                             ? 'Post-Test'
-                                                            : item.type}
+                                                            : item.type === 'h5p'
+                                                                ? 'H5P Interaktif'
+                                                                : item.type === 'scorm'
+                                                                    ? 'SCORM'
+                                                                    : item.type}
                                                 </span>
                                             </td>
 
@@ -264,7 +268,7 @@ const Show = ({ course, activities }) => {
                                             </td>
 
                                             <td className="px-6 py-4">
-                                                <div className="flex justify-center items-center gap-2 flex-wrap sm:flex-nowrap opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                                                <div className="flex justify-center items-center gap-2 flex-wrap sm:flex-nowrap opacity-100 transition-opacity">
 
                                                     {/* Pre-test / Post-test */}
                                                     {(item.type === "pre-test" || item.type === "post-test") && (

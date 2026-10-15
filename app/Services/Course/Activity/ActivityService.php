@@ -10,23 +10,29 @@ use App\Models\Learn\Learn;
 
 class ActivityService
 {
-    protected $question, $task, $interactive, $literature;
+    protected $question, $task, $interactive, $literature, $h5p, $scorm;
 
     public function  __construct(
         QuestionService $questionService,
         TaskService $taskService,
         InteractiveService $interactiveService,
-        LiteratureService $literatureService
+        LiteratureService $literatureService,
+        H5pService $h5pService,
+        ScormService $scormService
     ) {
         $this->question = $questionService;
         $this->task = $taskService;
         $this->interactive = $interactiveService;
         $this->literature = $literatureService;
+        $this->h5p = $h5pService;
+        $this->scorm = $scormService;
     }
 
     public function getActivityByCourse($courseId)
     {
         return Activity::where('course_id', $courseId)
+            ->orderBy('position')
+            ->orderBy('id')
             ->get()
             ->map(function ($row) {
                 $endMeeting = null;
@@ -70,6 +76,8 @@ class ActivityService
     {
         return Activity::with(['learnItem'])
             ->where('course_id', $courseId)
+            ->orderBy('position')
+            ->orderBy('id')
             ->get()
             ->map(function ($row) use ($participantId) {
                 return [
@@ -107,6 +115,11 @@ class ActivityService
         if (isset($data['instruction'])) {
             $data['instruction'] = sanitize_html($data['instruction']);
         }
+        // Aktivitas baru diletakkan paling akhir (position = maks + 10).
+        if (!isset($data['position']) && isset($data['course_id'])) {
+            $maxPosition = Activity::where('course_id', $data['course_id'])->max('position') ?? 0;
+            $data['position'] = $maxPosition + 10;
+        }
         return Activity::create($data);
     }
 
@@ -142,6 +155,14 @@ class ActivityService
         if ($activity->type === 'literature') {
             return $this->literature->getLiterature($activity);
         }
+
+        if ($activity->type === 'h5p') {
+            return $this->h5p->getH5p($activity);
+        }
+
+        if ($activity->type === 'scorm') {
+            return $this->scorm->getScorm($activity);
+        }
     }
 
     public function getDetailActivityParticipant($participantId, $activityId)
@@ -170,6 +191,14 @@ class ActivityService
 
         if ($activity->type === 'literature') {
             return $this->literature->getLiterature($activity);
+        }
+
+        if ($activity->type === 'h5p') {
+            return $this->h5p->getH5p($activity);
+        }
+
+        if ($activity->type === 'scorm') {
+            return $this->scorm->getScorm($activity);
         }
     }
 
@@ -200,6 +229,14 @@ class ActivityService
         if ($activity->type == 'literature') {
             return $this->literature->storeLiterature($participantId, $courseId, $activityId, $request);
         }
+
+        if ($activity->type == 'h5p') {
+            return $this->h5p->storeH5p($participantId, $courseId, $activityId, $request);
+        }
+
+        if ($activity->type == 'scorm') {
+            return $this->scorm->storeScorm($participantId, $courseId, $activityId, $request);
+        }
     }
 
     public function updateActivity($request)
@@ -222,23 +259,27 @@ class ActivityService
 
     public function nextActivity($courseId, $activityId)
     {
-        $activity = Activity::where('id', $activityId)->first();
-        $nextActivity = Activity::where('id', '>', $activity->id)
-            ->where('course_id', $courseId)
-            ->orderBy('id', 'asc')
-            ->first();
-        // dd($nextActivity);
-        if ($nextActivity) {
-            return $nextActivity->id;
-        } else {
+        $activities = Activity::where('course_id', $courseId)
+            ->orderBy('position')
+            ->orderBy('id')
+            ->get();
+
+        $index = $activities->search(fn($activity) => $activity->id == $activityId);
+
+        if ($index === false || $index >= $activities->count() - 1) {
             return null;
         }
+
+        return $activities[$index + 1]->id;
     }
 
     // ActivityService.php
     public function getPreviousActivity($courseId, $currentActivityId)
     {
-        $activities = Activity::where('course_id', $courseId)->orderBy('id')->get();
+        $activities = Activity::where('course_id', $courseId)
+            ->orderBy('position')
+            ->orderBy('id')
+            ->get();
         $index = $activities->search(function ($activity) use ($currentActivityId) {
             return $activity->id == $currentActivityId;
         });

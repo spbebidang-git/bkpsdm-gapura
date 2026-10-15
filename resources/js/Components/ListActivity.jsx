@@ -50,6 +50,16 @@ const ListActivity = ({
                 setDescription("Membaca Materi");
                 setIcon("book"); // Misalnya ikon untuk materi adalah 'book'
                 break;
+            case "h5p":
+                setTitle("H5P Interaktif");
+                setDescription("Mengerjakan Konten Interaktif");
+                setIcon("joystick");
+                break;
+            case "scorm":
+                setTitle("SCORM");
+                setDescription("Mempelajari Modul SCORM");
+                setIcon("book-open");
+                break;
             default:
                 setTitle("");
                 setDescription("");

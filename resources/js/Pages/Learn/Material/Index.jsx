@@ -11,9 +11,25 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
     const [answers, setAnswers] = useState({});
     const [file, setFile] = useState(null);
     const [duration, setDuration] = useState(activity.data?.duration ?? 0);
+    // H5P & SCORM: tombol aktif hanya setelah konten diselesaikan.
+    const isCompletionGated = activity.type == 'h5p' || activity.type == 'scorm';
     const isTimedActivity = activity.type == 'video' || activity.type == 'literature';
-    const isSubmitEnabled = !isTimedActivity || duration === 0;
+    const [contentCompleted, setContentCompleted] = useState(false);
+    // H5P/SCORM: tombol baru muncul & aktif setelah konten selesai ditonton
+    // (sinyal xAPI untuk H5P, lesson_status untuk SCORM).
+    const isSubmitEnabled = isCompletionGated ? contentCompleted : (!isTimedActivity || duration === 0);
     const timedActivityStorageKey = buildTimedActivityStorageKey(schedule.id, activity_id);
+
+    useEffect(() => {
+        if (!isCompletionGated) return;
+        const onMessage = (ev) => {
+            if (ev.data && (ev.data.type === 'h5p-completed' || ev.data.type === 'scorm-completed')) {
+                setContentCompleted(true);
+            }
+        };
+        window.addEventListener('message', onMessage);
+        return () => window.removeEventListener('message', onMessage);
+    }, [isCompletionGated]);
 
     const formattedAnswers = Object.values(answers).map(answer => ({ ...answer }));
 
@@ -216,6 +232,13 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
             router.post(route('participant.learn.store', { course: slug, schedule: schedule.id, activity: activity_id }), formattedAnswers);
         }
 
+        // store h5p / scorm
+        if (activity.type == 'h5p' || activity.type == 'scorm') {
+            localStorage.removeItem(timedActivityStorageKey);
+            const formattedAnswers = Object.values(answers).map(answer => ({ ...answer }));
+            router.post(route('participant.learn.store', { course: slug, schedule: schedule.id, activity: activity_id }), formattedAnswers);
+        }
+
         // toast.error('Kamu belum memenuhi nilai yang ditetapkan. Silakan ulangi post-test untuk mencoba lagi', {
         //     position: "top-center",
         //     autoClose: 5000,
@@ -230,20 +253,28 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
     return <Learn type="material" course={course} progress={progress} activities={activities} activity={activity} timer={activity.timer} displayTimerSeconds={duration} formattedAnswers={formattedAnswers} activity_id={activity_id} schedule={schedule}>
         <div className="flex flex-col h-full bg-white">
             <div className="flex-1 rounded-xl bg-gray-50 p-3 lg:p-4 mb-4 shadow-inner border border-gray-100 flex flex-col min-h-0">
-                <div className="flex-1 overflow-y-auto pr-2 flex flex-col">
+                <div className={`flex min-h-0 flex-1 flex-col ${activity.type === 'scorm' ? 'overflow-hidden' : 'overflow-y-auto pr-2'}`}>
                     <Activity question_result={question_result} slug={course.slug} id={activity_id} type={activity.type} data={activity.data} status={activity.status} answers={answers} file={file} setFile={setFile}
                         setAnswers={setAnswers} schedule={schedule} />
                 </div>
             </div>
             <div className="w-full sm:w-64 mx-auto shrink-0 pb-1">
-                {isSubmitEnabled ? <button onClick={(e) => handleSubmit(e, course.slug)} className="w-full px-6 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5 flex justify-center items-center gap-2">
-                    Kirim Jawaban
-                    <box-icon name="send" color="white" size="20px"></box-icon>
-                </button>
-                    : <button className="w-full px-6 py-3.5 bg-gray-300 text-gray-500 font-bold rounded-xl shadow-sm cursor-not-allowed flex justify-center items-center gap-2">
+                {isCompletionGated && !contentCompleted ? (
+                    // H5P/SCORM belum selesai: tombol disembunyikan.
+                    <p className="text-center text-xs text-gray-400">
+                        Selesaikan konten untuk melanjutkan
+                    </p>
+                ) : isSubmitEnabled ? (
+                    <button onClick={(e) => handleSubmit(e, course.slug)} className="w-full px-6 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5 flex justify-center items-center gap-2">
+                        Kirim Jawaban
+                        <box-icon name="send" color="white" size="20px"></box-icon>
+                    </button>
+                ) : (
+                    <button className="w-full px-6 py-3.5 bg-gray-300 text-gray-500 font-bold rounded-xl shadow-sm cursor-not-allowed flex justify-center items-center gap-2">
                         Selanjutnya
                         <box-icon name="time" color="#6b7280" size="20px"></box-icon>
-                    </button>}
+                    </button>
+                )}
             </div>
         </div>
     </Learn>

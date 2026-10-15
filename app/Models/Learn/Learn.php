@@ -26,6 +26,11 @@ class Learn extends Model
         return $this->hasMany(LearnItem::class);
     }
 
+    public function runtimeStates()
+    {
+        return $this->hasMany(ActivityRuntimeState::class);
+    }
+
     public function course()
     {
         return $this->belongsTo(Course::class);

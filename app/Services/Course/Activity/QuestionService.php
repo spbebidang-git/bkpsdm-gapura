@@ -68,6 +68,27 @@ class QuestionService
         return $learn->learnItems->first()->status;
     }
 
+    /**
+     * Petakan item soal ke format frontend. Jumlah opsi fleksibel
+     * (a, b, c, d, e, ...) — tidak dipaksa 4, agar soal impor Moodle
+     * dengan 2/3/5 pilihan tetap tampil. Penilaian berbasis is_correct
+     * (lihat calculateScore), bukan jumlah/urutan opsi.
+     */
+    private function mapQuestionItems($questionItems)
+    {
+        return $questionItems->map(function ($row) {
+            $options = [];
+            foreach ($row->questionOptions as $i => $opt) {
+                $options[chr(97 + $i)] = $opt->option; // 97 = 'a'
+            }
+            return [
+                'question_id' => $row->id,
+                'question' => $row->description,
+                'option' => $options,
+            ];
+        });
+    }
+
     public function getPreTestParticipant($participantId, $activity)
     {
         $question = Question::with('questionVariant.questionItems.questionOptions')
@@ -78,24 +99,30 @@ class QuestionService
 
         $preTestVariantId = get_user_meta($participantId, $activity->id);
 
-        $questionVariant = $question->questionVariant->where('id', $preTestVariantId)->first();
+        $questionVariant = $question
+            ? $question->questionVariant->where('id', $preTestVariantId)->first()
+            : null;
 
-        $questionItems = $question->questionVariant->where('id', $preTestVariantId)->first()->questionItems;
-
-        $mappedQuestionItems = $questionItems->map(function ($row) {
+        // Belum ada varian soal (mis. kuis belum diisi) — kembalikan kosong
+        // agar tidak error di sisi peserta.
+        if (!$questionVariant) {
             return [
-                'question_id' => $row->id,
-                'question' => $row->description,
-                'option' => [
-                    'a' => $row->questionOptions[0]->option,
-                    'b' => $row->questionOptions[1]->option,
-                    'c' => $row->questionOptions[2]->option,
-                    'd' => $row->questionOptions[3]->option,
+                'activity_id' => $activity->id,
+                'title' => $activity->title,
+                'timer' => $activity->timer,
+                'description' => $question->description ?? '',
+                'type' => 'pre-test',
+                'status' => $this->getStatus($participantId, $activity->id),
+                'data' => [
+                    'question_items' => [],
+                    'mix' => 0,
+                    'is_loop' => $question->is_loop ?? 0,
+                    'min_score' => $question->min_score ?? 0,
                 ]
             ];
-        });
+        }
 
-        // dd($activity->learnItem->getStatus($participantId));
+        $mappedQuestionItems = $this->mapQuestionItems($questionVariant->questionItems);
 
         return [
             'activity_id' => $activity->id,
@@ -172,24 +199,30 @@ class QuestionService
 
         $preTestVariantId = get_user_meta($participantId, $activity->id);
 
-        $questionVariant = $question->questionVariant->where('id', $preTestVariantId)->first();
+        $questionVariant = $question
+            ? $question->questionVariant->where('id', $preTestVariantId)->first()
+            : null;
 
-        $questionItems = $question->questionVariant->where('id', $preTestVariantId)->first()->questionItems;
-
-        $mappedQuestionItems = $questionItems->map(function ($row) {
+        // Belum ada varian soal (mis. kuis belum diisi) — kembalikan kosong
+        // agar tidak error di sisi peserta.
+        if (!$questionVariant) {
             return [
-                'question_id' => $row->id,
-                'question' => $row->description,
-                'option' => [
-                    'a' => $row->questionOptions[0]->option,
-                    'b' => $row->questionOptions[1]->option,
-                    'c' => $row->questionOptions[2]->option,
-                    'd' => $row->questionOptions[3]->option,
+                'activity_id' => $activity->id,
+                'title' => $activity->title,
+                'timer' => $activity->timer,
+                'description' => $question->description ?? '',
+                'type' => 'pre-test',
+                'status' => $this->getStatus($participantId, $activity->id),
+                'data' => [
+                    'question_items' => [],
+                    'mix' => 0,
+                    'is_loop' => $question->is_loop ?? 0,
+                    'min_score' => $question->min_score ?? 0,
                 ]
             ];
-        });
+        }
 
-        // dd($activity->learnItem->getStatus($participantId));
+        $mappedQuestionItems = $this->mapQuestionItems($questionVariant->questionItems);
 
         return [
             'activity_id' => $activity->id,

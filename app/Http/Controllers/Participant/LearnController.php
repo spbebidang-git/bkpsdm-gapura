@@ -117,8 +117,8 @@ class LearnController extends Controller
                 $stored = $this->activity->storeActivity($this->participantId, $course->id, $activity->id, $request->all());
             }
 
-            // Handle Meeting, Video, Literature (No answers required)
-            if (empty($request->all()) && in_array($activity->type, ['meeting', 'video', 'literature'])) {
+            // Handle Meeting, Video, Literature, H5P, SCORM (No answers required)
+            if (empty($request->all()) && in_array($activity->type, ['meeting', 'video', 'literature', 'h5p', 'scorm'])) {
                 $stored = $this->activity->storeActivity($this->participantId, $course->id, $activity->id, $request->all());
             }
 

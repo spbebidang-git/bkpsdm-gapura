@@ -136,10 +136,7 @@ const Index = ({ slug, activityId, questionId, questionItems, activity }) => {
                                 <tr>
                                     <th className="px-4 py-4 font-semibold whitespace-nowrap text-center">#</th>
                                     <th className="px-6 py-4 font-semibold whitespace-nowrap min-w-[300px]">Pertanyaan</th>
-                                    <th className="px-4 py-4 font-semibold whitespace-nowrap text-center">Opsi A</th>
-                                    <th className="px-4 py-4 font-semibold whitespace-nowrap text-center">Opsi B</th>
-                                    <th className="px-4 py-4 font-semibold whitespace-nowrap text-center">Opsi C</th>
-                                    <th className="px-4 py-4 font-semibold whitespace-nowrap text-center">Opsi D</th>
+                                    <th className="px-6 py-4 font-semibold whitespace-nowrap min-w-[320px]">Pilihan Jawaban</th>
                                     <th className="px-4 py-4 font-semibold whitespace-nowrap text-center">Skor</th>
                                     <th className="px-6 py-4 font-semibold whitespace-nowrap text-center min-w-[150px]">Aksi</th>
                                 </tr>
@@ -161,29 +158,25 @@ const Index = ({ slug, activityId, questionId, questionItems, activity }) => {
                                                 </div>
                                             </td>
 
-                                            {/* Highlight jawaban benar */}
-                                            <td className="px-4 py-4 text-center align-middle">
-                                                <div className={`p-2 rounded-lg inline-block w-full text-xs font-semibold
-                                                    ${item.is_correct === item.option1 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-gray-600'}`}>
-                                                    {item.option1}
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-4 text-center align-middle">
-                                                <div className={`p-2 rounded-lg inline-block w-full text-xs font-semibold
-                                                    ${item.is_correct === item.option2 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-gray-600'}`}>
-                                                    {item.option2}
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-4 text-center align-middle">
-                                                <div className={`p-2 rounded-lg inline-block w-full text-xs font-semibold
-                                                    ${item.is_correct === item.option3 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-gray-600'}`}>
-                                                    {item.option3}
-                                                </div>
-                                            </td>
-                                            <td className="px-4 py-4 text-center align-middle">
-                                                <div className={`p-2 rounded-lg inline-block w-full text-xs font-semibold
-                                                    ${item.is_correct === item.option4 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-gray-600'}`}>
-                                                    {item.option4}
+                                            <td className="px-6 py-4 align-middle">
+                                                <div className="grid gap-2">
+                                                    {item.options.length ? item.options.map((option, optionIndex) => (
+                                                        <div
+                                                            key={option.id}
+                                                            className={`flex items-start gap-2 p-2 rounded-lg text-xs font-semibold ${
+                                                                option.is_correct
+                                                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                                                    : 'text-gray-600 bg-gray-50 border border-gray-100'
+                                                            }`}
+                                                        >
+                                                            <span className="shrink-0 uppercase">
+                                                                {String.fromCharCode(65 + optionIndex)}.
+                                                            </span>
+                                                            <span>{option.text}</span>
+                                                        </div>
+                                                    )) : (
+                                                        <span className="text-xs text-red-600">Belum ada pilihan jawaban.</span>
+                                                    )}
                                                 </div>
                                             </td>
 
@@ -192,7 +185,7 @@ const Index = ({ slug, activityId, questionId, questionItems, activity }) => {
                                             </td>
 
                                             <td className="px-6 py-4">
-                                                <div className="flex gap-2 justify-center opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                                                <div className="flex gap-2 justify-center">
                                                     <Link
                                                         href={`/instructor/course/${slug}/activity/variant/${activityId}/${questionId}/question-item/${item.id}/edit`}
                                                     >

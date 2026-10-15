@@ -1,6 +1,8 @@
 import { router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import H5pPlayer from "@/Components/H5pPlayer";
+import ScormPlayer from "@/Components/ScormPlayer";
 
 const Activity = ({ id, type, data, slug, question_result, status, answer, setAnswers, file, setFile, schedule }) => {
     const [submitted, setSubmitted] = useState(status);
@@ -482,6 +484,22 @@ const Activity = ({ id, type, data, slug, question_result, status, answer, setAn
                         Selanjutnya
                     </button>}
                 </div> */}
+            </div>
+        )
+    }
+
+    if (type === 'h5p') {
+        return (
+            <div className="p-2 xl:p-4">
+                <H5pPlayer path={data.h5p_path} />
+            </div>
+        )
+    }
+
+    if (type === 'scorm') {
+        return (
+            <div className="h-full min-h-0 p-1 sm:p-2">
+                <ScormPlayer path={data.scorm_path} />
             </div>
         )
     }

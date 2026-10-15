@@ -23,13 +23,22 @@ const Dashboard = ({ courses }) => {
             <div className="max-w-7xl mx-auto bg-white border border-gray-100 overflow-hidden rounded-2xl shadow-sm">
                 <div className="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/50">
                     <h2 className="text-xl font-bold text-gray-800">Daftar Kursus</h2>
-                    <Link
-                        href="/instructor/course/create"
-                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-sm hover:shadow text-sm font-semibold transition-all whitespace-nowrap"
-                    >
-                        <box-icon name='plus' color='#ffffff' size='18px'></box-icon>
-                        Tambah Kursus
-                    </Link>
+                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                        <Link
+                            href="/instructor/course/import"
+                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-primary text-primary hover:bg-primary/5 rounded-xl shadow-sm hover:shadow text-sm font-semibold transition-all whitespace-nowrap"
+                        >
+                            <box-icon name='import' color='currentColor' size='18px'></box-icon>
+                            Impor Moodle
+                        </Link>
+                        <Link
+                            href="/instructor/course/create"
+                            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl shadow-sm hover:shadow text-sm font-semibold transition-all whitespace-nowrap"
+                        >
+                            <box-icon name='plus' color='#ffffff' size='18px'></box-icon>
+                            Tambah Kursus
+                        </Link>
+                    </div>
                 </div>
 
                 <div className="relative overflow-x-auto max-h-[600px] w-full">
@@ -78,7 +87,7 @@ const Dashboard = ({ courses }) => {
                                         </td>
 
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex justify-center items-center gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                                            <div className="flex justify-center items-center gap-2">
                                                 <Link href={`/instructor/course/${item.slug}`}>
                                                     <button className="inline-flex items-center justify-center px-4 py-2 text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
                                                         Detail

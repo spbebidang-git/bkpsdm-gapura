@@ -9,6 +9,21 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
+// Halaman terisolasi pemutar H5P (dimuat via iframe oleh materi).
+Route::get('/h5p-view/{folder}', [\App\Http\Controllers\H5pViewController::class, 'show'])->name('h5p.view');
+// File konten paket H5P dengan dukungan HTTP Range (video bisa diputar/seek).
+Route::get('/h5p-content/{folder}/{path}', [\App\Http\Controllers\H5pViewController::class, 'content'])
+    ->where('path', '.*')->name('h5p.content');
+Route::match(['get', 'post'], '/h5p-runtime/{folder}', [\App\Http\Controllers\ActivityRuntimeStateController::class, 'h5p'])
+    ->middleware('auth')->name('h5p.runtime');
+
+// Halaman terisolasi pemutar SCORM + penyaluran file paket (Range-capable).
+Route::get('/scorm-view/{folder}', [\App\Http\Controllers\ScormViewController::class, 'show'])->name('scorm.view');
+Route::get('/scorm-content/{folder}/{path}', [\App\Http\Controllers\ScormViewController::class, 'content'])
+    ->where('path', '.*')->name('scorm.content');
+Route::post('/scorm-runtime/{folder}', [\App\Http\Controllers\ActivityRuntimeStateController::class, 'storeScorm'])
+    ->middleware('auth')->name('scorm.runtime.store');
+
 // Auth::loginUsingId(1);
 Route::get('/manual-book', function () {
     abort_unless(

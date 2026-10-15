@@ -93,16 +93,17 @@ class QuestionItemController
 
     public function edit(Course $course, $activityId, $variantId, QuestionItem $question_item)
     {
+        $options = $question_item->questionOptions->values();
+
         return Inertia::render('Instructor/Course/Variant/QuestionItem/Edit', [
             'question' => [
                 'id' => $question_item->id,
                 'description' => $question_item->description,
                 'score' => $question_item->score,
-                'option1' => $question_item->questionOptions[0]->option,
-                'option2' => $question_item->questionOptions[1]->option,
-                'option3' =>  $question_item->questionOptions[2]->option,
-                'option4' =>  $question_item->questionOptions[3]->option,
-                'is_correct' => $question_item->questionOptions->where('is_correct', 1)->first()->option
+                'options' => $options->mapWithKeys(
+                    fn ($option, $index) => ['option' . ($index + 1) => $option->option]
+                ),
+                'is_correct' => $options->firstWhere('is_correct', 1)?->option ?? '',
             ],
             'slug' => $course->slug,
             'activityId' => $activityId,
@@ -114,11 +115,8 @@ class QuestionItemController
     {
         $request->validate([
             'description' => 'required|string|max:255',
-            'options' => 'required|array',
-            'options.option1' => 'required|string|max:255',
-            'options.option2' => 'required|string|max:255',
-            'options.option3' => 'required|string|max:255',
-            'options.option4' => 'required|string|max:255',
+            'options' => 'required|array|min:2',
+            'options.*' => 'required|string|max:255',
             'correct_answer' => 'required|string',
             'score' => 'required|integer|min:1|max:100',
         ]);
@@ -129,15 +127,6 @@ class QuestionItemController
                 'description' => sanitize_plain_text($request->description),
                 'score' => $request->score
             ]);
-
-            $option = [];
-            for ($i = 1; $i <= count($request->options); $i++) {
-                $option[] = [
-                    'question_item_id' => $question_item->id,
-                    'option' => $request->options['option' . $i],
-                    'is_correct' => $request->options['option' . $i] == $request->correct_answer ? true : false
-                ];
-            }
 
             $existingOptions = QuestionOption::where('question_item_id', $question_item->id)->get();
 
