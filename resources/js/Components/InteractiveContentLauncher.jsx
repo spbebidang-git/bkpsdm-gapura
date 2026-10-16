@@ -17,19 +17,25 @@ const InteractiveContentLauncher = ({
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [isContentCompleted, setIsContentCompleted] = useState(
-        activity.status === "done"
+        activity.status === "done" || activity.status === 1
     );
-    const label = activity.type === "h5p" ? "H5P" : "SCORM";
+    const label = activity.type === "h5p"
+        ? "H5P"
+        : (activity.type === "scorm" ? "SCORM" : "VIDEO");
     const contentPath = activity.type === "h5p"
         ? activity.data?.h5p_path
-        : activity.data?.scorm_path;
+        : (activity.type === "scorm"
+            ? activity.data?.scorm_path
+            : activity.data?.src_video);
 
     useEffect(() => {
         setIsOpen(false);
-        setIsContentCompleted(activity.status === "done");
+        setIsContentCompleted(activity.status === "done" || activity.status === 1);
     }, [activity.status, activityId]);
 
     useEffect(() => {
+        if (activity.type === "video") return;
+
         const expectedMessage = activity.type === "h5p"
             ? "h5p-completed"
             : "scorm-completed";
@@ -145,6 +151,7 @@ const InteractiveContentLauncher = ({
                                 setFile={setFile}
                                 setAnswers={setAnswers}
                                 schedule={schedule}
+                                onVideoCompleted={() => setIsContentCompleted(true)}
                             />
                         </div>
 

@@ -229,6 +229,7 @@ class MbzImportService
             // Kumpulkan seluruh blob konten agar literature dan H5P dapat
             // diekstrak dari MBZ dalam satu pass tar per modul.
             $pendingLiterature = [];
+            $pendingVideo = [];
             $pendingH5p = [];
 
             foreach ($parsed['activities'] as $activity) {
@@ -262,6 +263,8 @@ class MbzImportService
 
                 if ($activity['app_type'] === 'literature' && !empty($activity['file'])) {
                     $pendingLiterature[] = ['activity' => $created, 'data' => $activity];
+                } elseif ($activity['app_type'] === 'video' && !empty($activity['file'])) {
+                    $pendingVideo[] = ['activity' => $created, 'data' => $activity];
                 } elseif ($activity['app_type'] === 'h5p' && !empty($activity['file'])) {
                     $pendingH5p[] = ['activity' => $created, 'data' => $activity];
                 } else {
@@ -272,10 +275,11 @@ class MbzImportService
             }
 
             // Ekstrak semua file literature + H5P modul ini dalam SATU pass tar.
-            if (!empty($pendingLiterature) || !empty($pendingH5p)) {
+            if (!empty($pendingLiterature) || !empty($pendingVideo) || !empty($pendingH5p)) {
                 $this->importModuleContents(
                     $mbzPaths[$token],
                     $pendingLiterature,
+                    $pendingVideo,
                     $pendingH5p
                 );
             }
@@ -328,6 +332,16 @@ class MbzImportService
                 Interactive::create([
                     'activity_id' => $activity->id,
                     'type'        => 'meeting',
+                    'description' => $note,
+                    'url'         => '#',
+                    'duration'    => 0,
+                ]);
+                break;
+
+            case 'video':
+                Interactive::create([
+                    'activity_id' => $activity->id,
+                    'type'        => 'video',
                     'description' => $note,
                     'url'         => '#',
                     'duration'    => 0,
@@ -403,6 +417,7 @@ class MbzImportService
     protected function importModuleContents(
         string $mbzPath,
         array $pendingLiterature,
+        array $pendingVideo,
         array $pendingH5p
     ): void
     {
@@ -411,7 +426,7 @@ class MbzImportService
             @mkdir($dir, 0775, true);
         }
 
-        $allPending = array_merge($pendingLiterature, $pendingH5p);
+        $allPending = array_merge($pendingLiterature, $pendingVideo, $pendingH5p);
         $hashes = array_map(fn($p) => $p['data']['file']['contenthash'], $allPending);
         $extractDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'mbz_content_' . bin2hex(random_bytes(6));
 
@@ -436,6 +451,30 @@ class MbzImportService
                 'sub_title'   => Str::limit($p['data']['title'], 250, ''),
                 'duration'    => 0,
                 'content'     => $storedName,
+            ]);
+        }
+
+        foreach ($pendingVideo as $p) {
+            $file = $p['data']['file'];
+            $hash = $file['contenthash'];
+            $storedName = '';
+
+            if (isset($extracted[$hash])) {
+                $ext = strtolower(pathinfo($file['filename'], PATHINFO_EXTENSION) ?: 'mp4');
+                $candidate = generate_unique_string(16) . '.' . $ext;
+                if (@rename($extracted[$hash], $dir . DIRECTORY_SEPARATOR . $candidate)) {
+                    $storedName = $candidate;
+                }
+            }
+
+            Interactive::create([
+                'activity_id' => $p['activity']->id,
+                'type'        => 'video',
+                'description' => 'Video diimpor otomatis dari Moodle.',
+                'url'         => $storedName === ''
+                    ? '#'
+                    : '/assets/media/documents/literatures/' . $storedName,
+                'duration'    => 0,
             ]);
         }
 

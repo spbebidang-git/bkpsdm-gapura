@@ -157,7 +157,10 @@ class LearnService
 
     public function getInititalActivityId($courseId)
     {
-        return Activity::where('course_id', $courseId)->first()->id;
+        return Activity::where('course_id', $courseId)
+            ->orderBy('position')
+            ->orderBy('id')
+            ->value('id');
     }
 
     public function setTrialTotal($learnItem)
@@ -169,14 +172,19 @@ class LearnService
     public function checkValidOpenActivity($participantId, $courseId, $activityId)
     {
         # get all activity 
-        $activities = Activity::where('course_id', $courseId)->get();
+        $activities = Activity::where('course_id', $courseId)
+            ->orderBy('position')
+            ->orderBy('id')
+            ->get();
         # get learn items 
         $learn = Learn::with('learnItems')->where('participant_id', $participantId)->where('course_id', $courseId)->first();
 
 
         $currentActivityId = $activityId; // Ganti dengan activity_id saat ini
 
-        $sortedActivityIds = $activities->pluck('id')->sort()->values()->toArray(); // Mengambil daftar activity_id yang sudah diurutkan
+        // Urutan kegiatan mengikuti kolom position. Aktivitas hasil impor H5P/
+        // SCORM dapat memiliki ID lebih besar walaupun berada di tengah agenda.
+        $sortedActivityIds = $activities->pluck('id')->values()->toArray();
 
         if (!$learn) {
             // If no learning record, only allow the first activity

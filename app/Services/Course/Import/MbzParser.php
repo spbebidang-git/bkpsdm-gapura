@@ -141,6 +141,10 @@ class MbzParser
                 $fileRef = null;
                 if ($supported && $appType === 'literature') {
                     $fileRef = $this->resolveActivityFile($work, $directory, $files);
+                    if ($fileRef !== null && $this->isVideoFile($fileRef)) {
+                        $appType = 'video';
+                        $note = 'File video ditemukan — akan diimpor sebagai Presentasi Video.';
+                    }
                 } elseif ($supported && $appType === 'h5p') {
                     $fileRef = $this->resolveActivityFile($work, $directory, $files, 'h5p');
                     if ($fileRef !== null) {
@@ -362,6 +366,15 @@ class MbzParser
             'mimetype'    => $candidate['mimetype'],
             'filesize'    => $candidate['filesize'],
         ];
+    }
+
+    protected function isVideoFile(array $file): bool
+    {
+        $mimeType = strtolower((string) ($file['mimetype'] ?? ''));
+        $extension = strtolower(pathinfo((string) ($file['filename'] ?? ''), PATHINFO_EXTENSION));
+
+        return str_starts_with($mimeType, 'video/')
+            || in_array($extension, ['mp4', 'webm', 'ogg', 'ogv', 'mov', 'm4v'], true);
     }
 
     /**

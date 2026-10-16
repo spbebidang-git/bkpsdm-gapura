@@ -94,6 +94,69 @@
                 });
             }
 
+            // Ketika iframe popup dilepas, request AJAX biasa dapat dibatalkan oleh
+            // browser. Kirim checkpoint terakhir lewat sendBeacon agar posisi paling
+            // baru tetap sampai ke server tanpa menahan proses penutupan popup.
+            function saveCurrentStateOnUnload() {
+                if (!runtimeUrl || disposed) return;
+                var runtime = getRuntime();
+                if (!runtime || !runtime.instances) return;
+
+                runtime.instances.forEach(function (instance) {
+                    if (!instance || typeof instance.getCurrentState !== 'function') return;
+
+                    var state = instance.getCurrentState();
+                    if (state === undefined) return;
+
+                    var serialized;
+                    try {
+                        serialized = JSON.stringify(state);
+                    } catch (error) {
+                        return;
+                    }
+
+                    var url = runtimeUrl
+                        .replace(':contentId', instance.contentId)
+                        .replace(':dataType', 'state')
+                        .replace(':subContentId', '0');
+                    var body = new URLSearchParams({
+                        data: serialized,
+                        preload: '1',
+                        invalidate: '1'
+                    });
+                    var bodySize = body.toString().length;
+                    var sent = false;
+
+                    // Keepalive request umumnya dibatasi sekitar 64 KB.
+                    if (navigator.sendBeacon && bodySize < 60000) {
+                        sent = navigator.sendBeacon(url, body);
+                    }
+
+                    if (!sent && window.fetch && bodySize < 60000) {
+                        fetch(url, {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            keepalive: true,
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                                'Accept': 'application/json'
+                            },
+                            body: body.toString()
+                        }).catch(function () {});
+                        sent = true;
+                    }
+
+                    // State besar tidak dapat memakai keepalive. Runtime H5P sudah
+                    // mendukung request sinkron khusus saat unload sebagai fallback.
+                    if (!sent && runtime.setUserData) {
+                        runtime.setUserData(instance.contentId, 'state', state, {
+                            deleteOnChange: true,
+                            async: false
+                        });
+                    }
+                });
+            }
+
             function bindCompletionListener() {
                 if (completionListenerBound) return true;
                 var runtime = getRuntime();
@@ -209,6 +272,7 @@
             });
 
             window.addEventListener('pagehide', function () {
+                saveCurrentStateOnUnload();
                 disposed = true;
                 if (resizeObserver) resizeObserver.disconnect();
                 if (resizeFrame !== null) cancelAnimationFrame(resizeFrame);

@@ -190,7 +190,7 @@ class ActivityService
         }
 
         if ($activity->type === 'video') {
-            return $this->interactive->getVideo($activity);
+            return $this->interactive->getVideo($activity, $participantId);
         }
 
         if ($activity->type === 'literature') {

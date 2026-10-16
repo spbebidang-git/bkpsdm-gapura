@@ -154,7 +154,7 @@ const Learn = ({
                                     onTimeout={handleTimeout}
                                 />
                             ) : null}
-                            {type === "material" && (activity.type === "video" || activity.type === "literature") ? (
+                            {type === "material" && activity.type === "literature" ? (
                                 <CountdownTimer
                                     currentSeconds={displayTimerSeconds}
                                     variant="muted"

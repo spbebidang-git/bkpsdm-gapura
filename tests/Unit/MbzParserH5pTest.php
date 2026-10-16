@@ -85,4 +85,23 @@ XML
         $this->assertSame('package-hash', $result['contenthash']);
         $this->assertSame('module.h5p', $result['filename']);
     }
+
+    public function test_moodle_video_file_is_detected_from_mime_type_or_extension(): void
+    {
+        $method = new ReflectionMethod(MbzParser::class, 'isVideoFile');
+        $parser = new MbzParser();
+
+        $this->assertTrue($method->invoke($parser, [
+            'filename' => 'video-tanpa-ekstensi',
+            'mimetype' => 'video/mp4',
+        ]));
+        $this->assertTrue($method->invoke($parser, [
+            'filename' => 'pengantar.webm',
+            'mimetype' => 'application/octet-stream',
+        ]));
+        $this->assertFalse($method->invoke($parser, [
+            'filename' => 'materi.pdf',
+            'mimetype' => 'application/pdf',
+        ]));
+    }
 }

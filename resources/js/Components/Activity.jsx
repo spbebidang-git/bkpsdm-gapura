@@ -1,10 +1,76 @@
 import { router, usePage } from "@inertiajs/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import H5pPlayer from "@/Components/H5pPlayer";
 import ScormPlayer from "@/Components/ScormPlayer";
 
-const Activity = ({ id, type, data, slug, question_result, status, answer, setAnswers, file, setFile, schedule }) => {
+const isExternalVideoEmbed = (url = "") => /(?:youtube\.com|youtu\.be|vimeo\.com)/i.test(url);
+
+const ControlledVideo = ({ src, onCompleted }) => {
+    const videoRef = useRef(null);
+    const furthestWatchedRef = useRef(0);
+    const completedRef = useRef(false);
+
+    useEffect(() => {
+        furthestWatchedRef.current = 0;
+        completedRef.current = false;
+
+        const video = videoRef.current;
+        if (video) video.currentTime = 0;
+    }, [src]);
+
+    const handleTimeUpdate = (event) => {
+        const video = event.currentTarget;
+        if (video.seeking) return;
+
+        furthestWatchedRef.current = Math.max(
+            furthestWatchedRef.current,
+            video.currentTime
+        );
+    };
+
+    const handleSeeking = (event) => {
+        const video = event.currentTarget;
+        const allowedTime = furthestWatchedRef.current + 0.75;
+
+        if (video.currentTime > allowedTime) {
+            video.currentTime = furthestWatchedRef.current;
+        }
+    };
+
+    const handleRateChange = (event) => {
+        if (event.currentTarget.playbackRate !== 1) {
+            event.currentTarget.playbackRate = 1;
+        }
+    };
+
+    const handleEnded = () => {
+        if (completedRef.current) return;
+
+        completedRef.current = true;
+        onCompleted?.();
+    };
+
+    return (
+        <video
+            ref={videoRef}
+            src={src}
+            controls
+            controlsList="nodownload noplaybackrate"
+            disablePictureInPicture
+            onTimeUpdate={handleTimeUpdate}
+            onSeeking={handleSeeking}
+            onRateChange={handleRateChange}
+            onEnded={handleEnded}
+            className="h-full max-h-full w-full max-w-6xl bg-black object-contain shadow"
+            preload="metadata"
+        >
+            Browser Anda tidak mendukung pemutar video.
+        </video>
+    );
+};
+
+const Activity = ({ id, type, data, slug, question_result, status, answer, setAnswers, file, setFile, schedule, onVideoCompleted }) => {
     const [submitted, setSubmitted] = useState(status);
 
     console.log(123 + status)
@@ -440,6 +506,8 @@ const Activity = ({ id, type, data, slug, question_result, status, answer, setAn
     }
 
     if (type === 'video') {
+        const videoUrl = data.src_video ?? '';
+
         const handleSubmit = () => {
             // setActiveButton(false)
             // console.log(answers)
@@ -448,16 +516,22 @@ const Activity = ({ id, type, data, slug, question_result, status, answer, setAn
         }
 
         return (
-            <div className="flex flex-col items-center rounded-xl overflow-hidden p-6">
-                <iframe
-                    className="xl:w-[912px] xl:h-[512px] aspect-video shadow"
-                    src={`${data.src_video}?rel=0`}
-                    title="YouTube video player"
-                    frameBorder="0"
-                    allowfullscreen="true"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope;"
-
-                ></iframe>
+            <div className="flex h-full min-h-0 flex-col items-center justify-center overflow-hidden rounded-xl p-1 sm:p-2">
+                {!isExternalVideoEmbed(videoUrl) ? (
+                    <ControlledVideo
+                        src={videoUrl}
+                        onCompleted={onVideoCompleted}
+                    />
+                ) : (
+                    <iframe
+                        className="aspect-video max-h-full w-full max-w-6xl shadow"
+                        src={`${videoUrl}${videoUrl.includes('?') ? '&' : '?'}rel=0`}
+                        title="Video pembelajaran"
+                        frameBorder="0"
+                        allowFullScreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope"
+                    ></iframe>
+                )}
             </div>
 
         )

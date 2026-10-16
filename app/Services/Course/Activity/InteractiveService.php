@@ -30,12 +30,14 @@ class InteractiveService
         ];
     }
 
-    public function getStatus($participantId, $activityId)
+    public function getStatus($participantId, $activityId, $courseId = null)
     {
         $learn = Learn::with(['learnItems' => function ($query) use ($activityId) {
             return $query->where('activity_id', $activityId);
         }])
-            ->where('participant_id', $participantId)->first();
+            ->where('participant_id', $participantId)
+            ->when($courseId !== null, fn ($query) => $query->where('course_id', $courseId))
+            ->first();
 
         if (!$learn || !$learn->learnItems->first()) {
             return 0;
@@ -72,14 +74,18 @@ class InteractiveService
         ];
     }
 
-    public function getVideo($activity)
+    public function getVideo($activity, ?int $participantId = null)
     {
         $interactive = Interactive::where('activity_id', $activity->id)->first();
+        $status = $participantId === null
+            ? 0
+            : $this->getStatus($participantId, $activity->id, $activity->course_id);
+
         return [
             'activity_id' => $activity->id,
             'title' => $activity->title,
             'type' => 'video',
-            'status' => $activity->learnItem && $activity->learnItem->status == 'done' ? 1 : 0,
+            'status' => $status,
             'data' => [
                 'src_video' => $interactive->url,
                 'duration' => $interactive->duration

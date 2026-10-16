@@ -12,8 +12,10 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
     const [answers, setAnswers] = useState({});
     const [file, setFile] = useState(null);
     const [duration, setDuration] = useState(activity.data?.duration ?? 0);
-    const isCompletionGated = activity.type == 'h5p' || activity.type == 'scorm';
-    const isTimedActivity = activity.type == 'video' || activity.type == 'literature';
+    const isCompletionGated = activity.type == 'h5p'
+        || activity.type == 'scorm'
+        || activity.type == 'video';
+    const isTimedActivity = activity.type == 'literature';
     const [isCompletingContent, setIsCompletingContent] = useState(false);
     const isSubmitEnabled = !isTimedActivity || duration === 0;
     const timedActivityStorageKey = buildTimedActivityStorageKey(schedule.id, activity_id);
