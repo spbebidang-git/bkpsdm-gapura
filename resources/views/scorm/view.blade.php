@@ -239,6 +239,10 @@
 
             window.API = API;             // SCORM 1.2
             window.API_1484_11 = API2004; // SCORM 2004
+            // Pulihkan status completion dari runtime sebelumnya agar launcher
+            // langsung mengenali paket yang memang sudah tuntas.
+            checkCompletion();
+
             function persistOnUnload() {
                 if (unloadPersisted) return;
                 unloadPersisted = true;

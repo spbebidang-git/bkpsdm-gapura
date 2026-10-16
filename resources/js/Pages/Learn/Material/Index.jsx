@@ -287,7 +287,7 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
             <div className="w-full sm:w-64 mx-auto shrink-0 pb-1">
                 {isCompletionGated ? (
                     <p className="text-center text-xs text-gray-400">
-                        Jalankan konten lalu tekan Selesai pada popup
+                        Tombol Selesai muncul setelah konten dituntaskan
                     </p>
                 ) : isSubmitEnabled ? (
                     <button onClick={(e) => handleSubmit(e, course.slug)} className="w-full px-6 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5 flex justify-center items-center gap-2">

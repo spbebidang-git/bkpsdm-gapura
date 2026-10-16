@@ -16,6 +16,9 @@ const InteractiveContentLauncher = ({
     isFinishing = false,
 }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [isContentCompleted, setIsContentCompleted] = useState(
+        activity.status === "done"
+    );
     const label = activity.type === "h5p" ? "H5P" : "SCORM";
     const contentPath = activity.type === "h5p"
         ? activity.data?.h5p_path
@@ -23,7 +26,24 @@ const InteractiveContentLauncher = ({
 
     useEffect(() => {
         setIsOpen(false);
-    }, [activityId]);
+        setIsContentCompleted(activity.status === "done");
+    }, [activity.status, activityId]);
+
+    useEffect(() => {
+        const expectedMessage = activity.type === "h5p"
+            ? "h5p-completed"
+            : "scorm-completed";
+
+        const handleCompletionMessage = (event) => {
+            if (event.origin !== window.location.origin) return;
+            if (event.data?.type !== expectedMessage) return;
+
+            setIsContentCompleted(true);
+        };
+
+        window.addEventListener("message", handleCompletionMessage);
+        return () => window.removeEventListener("message", handleCompletionMessage);
+    }, [activity.type]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -128,23 +148,34 @@ const InteractiveContentLauncher = ({
                             />
                         </div>
 
-                        <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-gray-200 bg-white px-4 py-3 sm:flex-row sm:justify-end sm:px-6">
-                            <button
-                                type="button"
-                                onClick={() => setIsOpen(false)}
-                                disabled={isFinishing}
-                                className="rounded-xl border border-gray-300 px-6 py-2.5 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
-                            >
-                                Tutup
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleFinish}
-                                disabled={isFinishing}
-                                className="rounded-xl bg-primary px-7 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-primary/90 disabled:cursor-wait disabled:opacity-60"
-                            >
-                                {isFinishing ? "Menyimpan..." : "Selesai"}
-                            </button>
+                        <div className="flex shrink-0 flex-col gap-3 border-t border-gray-200 bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                            <p className={`text-xs font-medium ${
+                                isContentCompleted ? "text-green-600" : "text-gray-500"
+                            }`}>
+                                {isContentCompleted
+                                    ? `Konten ${label} telah selesai.`
+                                    : `Selesaikan konten ${label} agar tombol Selesai muncul.`}
+                            </p>
+                            <div className="flex flex-col-reverse gap-2 sm:flex-row">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsOpen(false)}
+                                    disabled={isFinishing}
+                                    className="rounded-xl border border-gray-300 px-6 py-2.5 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+                                >
+                                    Tutup
+                                </button>
+                                {isContentCompleted && (
+                                    <button
+                                        type="button"
+                                        onClick={handleFinish}
+                                        disabled={isFinishing}
+                                        className="rounded-xl bg-primary px-7 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-primary/90 disabled:cursor-wait disabled:opacity-60"
+                                    >
+                                        {isFinishing ? "Menyimpan..." : "Selesai"}
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>,
