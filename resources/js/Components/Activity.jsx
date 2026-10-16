@@ -490,7 +490,7 @@ const Activity = ({ id, type, data, slug, question_result, status, answer, setAn
 
     if (type === 'h5p') {
         return (
-            <div className="p-2 xl:p-4">
+            <div className="h-full min-h-0 w-full overflow-hidden p-0 sm:p-2">
                 <H5pPlayer path={data.h5p_path} />
             </div>
         )

@@ -16,6 +16,7 @@ const TYPE_LABEL = {
     video: "Video",
     meeting: "Pertemuan",
     literature: "Literatur",
+    h5p: "H5P Interaktif",
 };
 
 const typeBadgeClass = (type) =>
@@ -26,6 +27,7 @@ const typeBadgeClass = (type) =>
         task: "bg-purple-100 text-purple-700",
         meeting: "bg-teal-100 text-teal-700",
         video: "bg-indigo-100 text-indigo-700",
+        h5p: "bg-emerald-100 text-emerald-700",
     }[type] || "bg-gray-100 text-gray-600");
 
 const Import = ({ categories, employee_status }) => {

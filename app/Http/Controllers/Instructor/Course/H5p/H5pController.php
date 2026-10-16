@@ -72,7 +72,10 @@ class H5pController
 
     public function update(Request $request, Course $course, Activity $h5p)
     {
-        $this->validatePackage($request, false);
+        // Aktivitas placeholder hasil impor Moodle wajib dilengkapi paket pada
+        // penyimpanan pertama. Aktivitas yang sudah siap boleh tetap memakai
+        // paket lama.
+        $this->validatePackage($request, !$this->h5p->hasPackage($h5p->id));
 
         try {
             DB::beginTransaction();

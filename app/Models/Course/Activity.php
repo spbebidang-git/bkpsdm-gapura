@@ -24,4 +24,9 @@ class Activity extends Model
     {
         return $this->hasOne(LearnItem::class, 'activity_id');
     }
+
+    public function h5p()
+    {
+        return $this->hasOne(H5p::class, 'activity_id');
+    }
 }

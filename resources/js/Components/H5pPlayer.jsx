@@ -9,7 +9,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
  */
 const H5pPlayer = ({ path }) => {
     const iframeRef = useRef(null);
-    const [height, setHeight] = useState(520);
+    const containerRef = useRef(null);
+    const [contentHeight, setContentHeight] = useState(520);
+    const [availableHeight, setAvailableHeight] = useState(0);
 
     const src = useMemo(() => {
         if (!path) return null;
@@ -24,11 +26,32 @@ const H5pPlayer = ({ path }) => {
             if (data && data.type === "h5p-resize" && typeof data.height === "number") {
                 // Batasi agar tidak terlalu kecil/besar tak wajar.
                 const h = Math.min(Math.max(data.height, 320), 4000);
-                setHeight(h + 8); // sedikit ruang bawah
+                setContentHeight(h + 8); // sedikit ruang bawah
             }
         };
         window.addEventListener("message", onMessage);
         return () => window.removeEventListener("message", onMessage);
+    }, []);
+
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const updateAvailableHeight = () => {
+            setAvailableHeight(container.clientHeight);
+        };
+
+        updateAvailableHeight();
+
+        if (!window.ResizeObserver) {
+            window.addEventListener("resize", updateAvailableHeight);
+            return () => window.removeEventListener("resize", updateAvailableHeight);
+        }
+
+        const observer = new ResizeObserver(updateAvailableHeight);
+        observer.observe(container);
+
+        return () => observer.disconnect();
     }, []);
 
     if (!src) {
@@ -39,16 +62,27 @@ const H5pPlayer = ({ path }) => {
         );
     }
 
+    const scale = availableHeight > 0 && contentHeight > availableHeight
+        ? availableHeight / contentHeight
+        : 1;
+
     return (
-        // Batasi lebar player supaya tinggi (mengikuti rasio video) muat di
-        // area materi tanpa scroll. Konten H5P menyesuaikan ke lebar iframe.
-        <div className="mx-auto w-full" style={{ maxWidth: "760px" }}>
+        // Render dengan lebar penuh agar layout H5P tidak terpotong, lalu
+        // perkecil secara proporsional bila tingginya melebihi area popup.
+        <div
+            ref={containerRef}
+            className="relative mx-auto h-full min-h-0 w-full overflow-hidden"
+        >
             <iframe
                 ref={iframeRef}
                 src={src}
                 title="Konten H5P"
-                className="w-full rounded-xl border border-gray-100 block"
-                style={{ height: `${height}px` }}
+                className="absolute left-0 top-0 block w-full rounded-xl border border-gray-100"
+                style={{
+                    height: `${contentHeight}px`,
+                    transform: `scale(${scale})`,
+                    transformOrigin: "top center",
+                }}
                 allow="autoplay; fullscreen; encrypted-media; microphone; camera"
                 allowFullScreen
                 scrolling="no"

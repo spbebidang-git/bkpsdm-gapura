@@ -1,4 +1,5 @@
 import Activity from '@/Components/Activity';
+import InteractiveContentLauncher from '@/Components/InteractiveContentLauncher';
 import Learn from '@/Layouts/Participant/Learn';
 import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
@@ -11,25 +12,11 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
     const [answers, setAnswers] = useState({});
     const [file, setFile] = useState(null);
     const [duration, setDuration] = useState(activity.data?.duration ?? 0);
-    // H5P & SCORM: tombol aktif hanya setelah konten diselesaikan.
     const isCompletionGated = activity.type == 'h5p' || activity.type == 'scorm';
     const isTimedActivity = activity.type == 'video' || activity.type == 'literature';
-    const [contentCompleted, setContentCompleted] = useState(false);
-    // H5P/SCORM: tombol baru muncul & aktif setelah konten selesai ditonton
-    // (sinyal xAPI untuk H5P, lesson_status untuk SCORM).
-    const isSubmitEnabled = isCompletionGated ? contentCompleted : (!isTimedActivity || duration === 0);
+    const [isCompletingContent, setIsCompletingContent] = useState(false);
+    const isSubmitEnabled = !isTimedActivity || duration === 0;
     const timedActivityStorageKey = buildTimedActivityStorageKey(schedule.id, activity_id);
-
-    useEffect(() => {
-        if (!isCompletionGated) return;
-        const onMessage = (ev) => {
-            if (ev.data && (ev.data.type === 'h5p-completed' || ev.data.type === 'scorm-completed')) {
-                setContentCompleted(true);
-            }
-        };
-        window.addEventListener('message', onMessage);
-        return () => window.removeEventListener('message', onMessage);
-    }, [isCompletionGated]);
 
     const formattedAnswers = Object.values(answers).map(answer => ({ ...answer }));
 
@@ -250,19 +237,57 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
         // });
     };
 
+    const handleInteractiveFinish = () => {
+        if (isCompletingContent) return;
+
+        setIsCompletingContent(true);
+
+        router.post(
+            route('participant.learn.store', {
+                course: course.slug,
+                schedule: schedule.id,
+                activity: activity_id,
+            }),
+            {},
+            {
+                onError: () => {
+                    toast.error("Gagal menyelesaikan konten. Silakan coba lagi.", {
+                        position: "top-center",
+                    });
+                },
+                onFinish: () => setIsCompletingContent(false),
+            }
+        );
+    };
+
     return <Learn type="material" course={course} progress={progress} activities={activities} activity={activity} timer={activity.timer} displayTimerSeconds={duration} formattedAnswers={formattedAnswers} activity_id={activity_id} schedule={schedule}>
         <div className="flex flex-col h-full bg-white">
             <div className="flex-1 rounded-xl bg-gray-50 p-3 lg:p-4 mb-4 shadow-inner border border-gray-100 flex flex-col min-h-0">
-                <div className={`flex min-h-0 flex-1 flex-col ${activity.type === 'scorm' ? 'overflow-hidden' : 'overflow-y-auto pr-2'}`}>
-                    <Activity question_result={question_result} slug={course.slug} id={activity_id} type={activity.type} data={activity.data} status={activity.status} answers={answers} file={file} setFile={setFile}
-                        setAnswers={setAnswers} schedule={schedule} />
-                </div>
+                {isCompletionGated ? (
+                    <InteractiveContentLauncher
+                        activity={activity}
+                        activityId={activity_id}
+                        courseSlug={course.slug}
+                        schedule={schedule}
+                        questionResult={question_result}
+                        answers={answers}
+                        setAnswers={setAnswers}
+                        file={file}
+                        setFile={setFile}
+                        onFinish={handleInteractiveFinish}
+                        isFinishing={isCompletingContent}
+                    />
+                ) : (
+                    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pr-2">
+                        <Activity question_result={question_result} slug={course.slug} id={activity_id} type={activity.type} data={activity.data} status={activity.status} answers={answers} file={file} setFile={setFile}
+                            setAnswers={setAnswers} schedule={schedule} />
+                    </div>
+                )}
             </div>
             <div className="w-full sm:w-64 mx-auto shrink-0 pb-1">
-                {isCompletionGated && !contentCompleted ? (
-                    // H5P/SCORM belum selesai: tombol disembunyikan.
+                {isCompletionGated ? (
                     <p className="text-center text-xs text-gray-400">
-                        Selesaikan konten untuk melanjutkan
+                        Jalankan konten lalu tekan Selesai pada popup
                     </p>
                 ) : isSubmitEnabled ? (
                     <button onClick={(e) => handleSubmit(e, course.slug)} className="w-full px-6 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5 flex justify-center items-center gap-2">

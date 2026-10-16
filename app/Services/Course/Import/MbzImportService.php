@@ -12,7 +12,9 @@ use App\Models\Course\Question\QuestionOption;
 use App\Models\Course\Question\QuestionVariant;
 use App\Models\Course\Schedule;
 use App\Models\Course\Task;
+use App\Services\Course\Activity\H5pService;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -33,10 +35,12 @@ class MbzImportService
     const TMP_DIR = 'mbz_imports';
 
     protected MbzParser $parser;
+    protected H5pService $h5p;
 
-    public function __construct(MbzParser $parser)
+    public function __construct(MbzParser $parser, H5pService $h5p)
     {
         $this->parser = $parser;
+        $this->h5p = $h5p;
     }
 
     /**
@@ -222,8 +226,10 @@ class MbzImportService
             // Label cadangan bila sebuah aktivitas tidak punya judul section.
             $fileLabel = $this->moduleLabelFromActivities($parsed['activities'], $moduleIndex);
 
-            // Kumpulkan literature berkonten agar bisa diekstrak satu pass.
+            // Kumpulkan seluruh blob konten agar literature dan H5P dapat
+            // diekstrak dari MBZ dalam satu pass tar per modul.
             $pendingLiterature = [];
+            $pendingH5p = [];
 
             foreach ($parsed['activities'] as $activity) {
                 if (!$activity['supported']) {
@@ -256,6 +262,8 @@ class MbzImportService
 
                 if ($activity['app_type'] === 'literature' && !empty($activity['file'])) {
                     $pendingLiterature[] = ['activity' => $created, 'data' => $activity];
+                } elseif ($activity['app_type'] === 'h5p' && !empty($activity['file'])) {
+                    $pendingH5p[] = ['activity' => $created, 'data' => $activity];
                 } else {
                     // Buat baris anak: soal kuis bila tersedia, selainnya
                     // placeholder agar halaman edit/detail tidak error.
@@ -263,9 +271,13 @@ class MbzImportService
                 }
             }
 
-            // Ekstrak semua file konten modul ini dalam SATU pass tar.
-            if (!empty($pendingLiterature)) {
-                $this->importLiteratureContents($mbzPaths[$token], $pendingLiterature);
+            // Ekstrak semua file literature + H5P modul ini dalam SATU pass tar.
+            if (!empty($pendingLiterature) || !empty($pendingH5p)) {
+                $this->importModuleContents(
+                    $mbzPaths[$token],
+                    $pendingLiterature,
+                    $pendingH5p
+                );
             }
         }
 
@@ -331,6 +343,14 @@ class MbzImportService
                     'content'     => '',
                 ]);
                 break;
+
+            case 'h5p':
+                $this->h5p->createPlaceholder([
+                    'activity_id' => $activity->id,
+                    'sub_title'   => Str::limit($data['title'], 250, ''),
+                    'duration'    => 0,
+                ]);
+                break;
         }
     }
 
@@ -380,31 +400,35 @@ class MbzImportService
      * Ekstrak konten beberapa literature sekaligus (satu pass tar) lalu buat
      * baris Literature. $pending = [ ['activity'=>Activity, 'data'=>arr], ... ].
      */
-    protected function importLiteratureContents(string $mbzPath, array $pending): void
+    protected function importModuleContents(
+        string $mbzPath,
+        array $pendingLiterature,
+        array $pendingH5p
+    ): void
     {
         $dir = public_path(trim(Literature::$directoryDocument, '/'));
         if (!is_dir($dir)) {
             @mkdir($dir, 0775, true);
         }
 
-        $hashes = array_map(fn($p) => $p['data']['file']['contenthash'], $pending);
+        $allPending = array_merge($pendingLiterature, $pendingH5p);
+        $hashes = array_map(fn($p) => $p['data']['file']['contenthash'], $allPending);
         $extractDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'mbz_content_' . bin2hex(random_bytes(6));
 
         // Satu pass: ekstrak semua blob konten modul ini.
         $extracted = $this->parser->extractFiles($mbzPath, $hashes, $extractDir);
 
-        foreach ($pending as $p) {
+        foreach ($pendingLiterature as $p) {
             $file = $p['data']['file'];
             $hash = $file['contenthash'];
-            if (!isset($extracted[$hash])) {
-                continue; // gagal ekstrak: literature dibuat tanpa file
-            }
+            $storedName = '';
 
-            $ext = strtolower(pathinfo($file['filename'], PATHINFO_EXTENSION) ?: 'pdf');
-            $storedName = generate_unique_string(16) . '.' . $ext;
-
-            if (!@rename($extracted[$hash], $dir . DIRECTORY_SEPARATOR . $storedName)) {
-                continue;
+            if (isset($extracted[$hash])) {
+                $ext = strtolower(pathinfo($file['filename'], PATHINFO_EXTENSION) ?: 'pdf');
+                $candidate = generate_unique_string(16) . '.' . $ext;
+                if (@rename($extracted[$hash], $dir . DIRECTORY_SEPARATOR . $candidate)) {
+                    $storedName = $candidate;
+                }
             }
 
             Literature::create([
@@ -413,6 +437,37 @@ class MbzImportService
                 'duration'    => 0,
                 'content'     => $storedName,
             ]);
+        }
+
+        foreach ($pendingH5p as $p) {
+            $file = $p['data']['file'];
+            $hash = $file['contenthash'];
+            $placeholder = [
+                'activity_id' => $p['activity']->id,
+                'sub_title'   => Str::limit($p['data']['title'], 250, ''),
+                'duration'    => 0,
+            ];
+
+            if (!isset($extracted[$hash])) {
+                $this->h5p->createPlaceholder($placeholder);
+                continue;
+            }
+
+            try {
+                $this->h5p->createH5pFromPath($placeholder + [
+                    'package_path' => $extracted[$hash],
+                ]);
+            } catch (\Throwable $e) {
+                // Backup lama kadang hanya menyimpan referensi, atau paketnya
+                // rusak. Pertahankan aktivitas agar instruktur cukup upload
+                // ulang dari tombol Edit, tanpa membuat aktivitas baru.
+                Log::warning('MBZ H5P package import failed; placeholder created.', [
+                    'activity_id' => $p['activity']->id,
+                    'filename'    => $file['filename'] ?? null,
+                    'error'       => $e->getMessage(),
+                ]);
+                $this->h5p->createPlaceholder($placeholder);
+            }
         }
 
         // Bersihkan direktori ekstrak sementara.

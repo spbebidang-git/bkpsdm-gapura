@@ -2,7 +2,7 @@ import BreadcrumbLearn from "@/Components/BreadcrumbLearn";
 import CountdownTimer from "@/Components/CountDownTimer";
 import ListActivity from "@/Components/ListActivity";
 import { Link, router, usePage } from "@inertiajs/react";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
 const Learn = ({
@@ -23,6 +23,33 @@ const Learn = ({
 
     const [isSidebarVisible, setSidebarVisible] = useState(true);
     const [isSidebarContentVisible, setSidebarContentVisible] = useState(true);
+    const agendaScrollRef = useRef(null);
+    const activeActivityRef = useRef(null);
+
+    useEffect(() => {
+        if (!isSidebarContentVisible) return;
+
+        const frameId = window.requestAnimationFrame(() => {
+            const container = agendaScrollRef.current;
+            const activeItem = activeActivityRef.current;
+
+            if (!container || !activeItem) return;
+
+            const containerRect = container.getBoundingClientRect();
+            const activeItemRect = activeItem.getBoundingClientRect();
+            const targetTop = container.scrollTop
+                + activeItemRect.top
+                - containerRect.top
+                - 16;
+
+            container.scrollTo({
+                top: Math.max(0, targetTop),
+                behavior: "auto",
+            });
+        });
+
+        return () => window.cancelAnimationFrame(frameId);
+    }, [activity.activity_id, isSidebarContentVisible]);
 
     const toggleSidebar = () => {
         if (isSidebarVisible) {
@@ -178,6 +205,7 @@ const Learn = ({
                                 Agenda Kegiatan
                             </div>
                             <div
+                                ref={agendaScrollRef}
                                 className="flex-1 overflow-y-auto border-t"
                                 style={{ maxHeight: "calc(100vh - 56px)" }}
                             >
@@ -185,23 +213,27 @@ const Learn = ({
                                     <div className="text-lg font-medium">
                                         <ul className="list-outside list-decimal">
                                             {activities &&
-                                                activities.map((item, index) => (
-                                                    <ListActivity
-                                                        key={index}
-                                                        type={item.type}
-                                                        slug={course.slug}
-                                                        activityId={item.id}
-                                                        activity={item.title}
-                                                        status={item.status}
-                                                        isActive={
-                                                            item.id === activity.activity_id
-                                                                ? 1
-                                                                : 0
-                                                        }
-                                                        value={item.value}
-                                                        schedule={schedule}
-                                                    />
-                                                ))}
+                                                activities.map((item) => {
+                                                    const isActive = item.id === activity.activity_id;
+
+                                                    return (
+                                                        <div
+                                                            key={item.id}
+                                                            ref={isActive ? activeActivityRef : null}
+                                                        >
+                                                            <ListActivity
+                                                                type={item.type}
+                                                                slug={course.slug}
+                                                                activityId={item.id}
+                                                                activity={item.title}
+                                                                status={item.status}
+                                                                isActive={isActive ? 1 : 0}
+                                                                value={item.value}
+                                                                schedule={schedule}
+                                                            />
+                                                        </div>
+                                                    );
+                                                })}
                                         </ul>
                                     </div>
                                 </div>

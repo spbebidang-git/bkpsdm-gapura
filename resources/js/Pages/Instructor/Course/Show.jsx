@@ -330,8 +330,16 @@ const Show = ({ course, activities }) => {
                                                         <Link
                                                             href={`/instructor/course/${course.slug}/activity/${item.type}/${item.id}/edit`}
                                                         >
-                                                            <button className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-600 rounded-lg transition-colors border border-amber-200/50">
-                                                                Edit
+                                                            <button
+                                                                className={`inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors border ${
+                                                                    item.type === "h5p" && !item.has_package
+                                                                        ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200/50"
+                                                                        : "bg-amber-50 hover:bg-amber-100 text-amber-600 border-amber-200/50"
+                                                                }`}
+                                                            >
+                                                                {item.type === "h5p" && !item.has_package
+                                                                    ? "Upload H5P"
+                                                                    : "Edit"}
                                                             </button>
                                                         </Link>
                                                     )}

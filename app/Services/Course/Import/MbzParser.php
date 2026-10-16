@@ -32,7 +32,7 @@ class MbzParser
         'assignment'      => 'task',
         'bigbluebuttonbn' => 'meeting',
         'zoom'            => 'meeting',
-        'h5pactivity'     => null,
+        'h5pactivity'     => 'h5p',
         'scorm'           => null,
         'forum'           => null,
         'choice'          => null,
@@ -47,7 +47,6 @@ class MbzParser
 
     /** Alasan singkat kenapa sebuah modul belum didukung. */
     const UNSUPPORTED_REASON = [
-        'h5pactivity' => 'Konten H5P tidak ikut diimpor dari .mbz. Setelah impor, tambahkan via menu "H5P Interaktif" dengan mengunggah paket .h5p.',
         'scorm'       => 'Paket SCORM belum didukung. Unggah terpisah sebagai paket SCORM.',
         'forum'       => 'Forum diskusi tidak dipakai di aplikasi ini.',
         'choice'      => 'Aktivitas pilihan (choice) tidak dipakai.',
@@ -142,6 +141,14 @@ class MbzParser
                 $fileRef = null;
                 if ($supported && $appType === 'literature') {
                     $fileRef = $this->resolveActivityFile($work, $directory, $files);
+                } elseif ($supported && $appType === 'h5p') {
+                    $fileRef = $this->resolveActivityFile($work, $directory, $files, 'h5p');
+                    if ($fileRef !== null) {
+                        $note = 'Paket H5P ditemukan — akan dimuat otomatis.';
+                    } else {
+                        $note = 'Paket H5P tidak ada di backup — aktivitas tetap dibuat agar file .h5p dapat langsung diunggah lewat Edit.';
+                        $warnings[] = "Paket H5P tidak ditemukan: \"{$title}\" — aktivitas upload akan tetap dibuat.";
+                    }
                 }
 
                 // Soal kuis (otomatis mengisi pre-test/post-test).
@@ -300,7 +307,12 @@ class MbzParser
      * Cari file utama milik sebuah aktivitas (mis. PDF dari resource) lewat
      * inforef.xml yang sudah diekstrak -> daftar id file -> index files.xml.
      */
-    protected function resolveActivityFile(string $workDir, string $directory, array $files): ?array
+    protected function resolveActivityFile(
+        string $workDir,
+        string $directory,
+        array $files,
+        ?string $requiredExtension = null
+    ): ?array
     {
         if ($directory === '' || empty($files)) {
             return null;
@@ -327,6 +339,12 @@ class MbzParser
             }
             $f = $files[$id];
             if ($f['filename'] === '' || $f['filename'] === '.' || $f['filesize'] <= 0) {
+                continue;
+            }
+            if (
+                $requiredExtension !== null
+                && strtolower(pathinfo($f['filename'], PATHINFO_EXTENSION)) !== strtolower($requiredExtension)
+            ) {
                 continue;
             }
             if ($candidate === null || $f['filesize'] > $candidate['filesize']) {

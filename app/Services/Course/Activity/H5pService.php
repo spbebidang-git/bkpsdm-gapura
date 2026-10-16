@@ -52,6 +52,39 @@ class H5pService
     public function createH5p(array $data): H5p
     {
         $folder = $this->extractPackage($data['package']);
+
+        return $this->createRecord($data, $folder);
+    }
+
+    /**
+     * Buat H5P dari blob paket yang sudah diekstrak dari arsip Moodle.
+     */
+    public function createH5pFromPath(array $data): H5p
+    {
+        $folder = $this->extractPackage($data['package_path']);
+
+        return $this->createRecord($data, $folder);
+    }
+
+    /**
+     * Buat baris H5P tanpa paket. Dipakai ketika metadata aktivitas ada di
+     * Moodle tetapi file .h5p tidak disertakan dalam backup.
+     */
+    public function createPlaceholder(array $data): H5p
+    {
+        return H5p::updateOrCreate(
+            ['activity_id' => $data['activity_id']],
+            [
+                'sub_title'    => $data['sub_title'] ?? null,
+                'folder'       => '',
+                'main_library' => null,
+                'duration'     => $data['duration'] ?? 0,
+            ]
+        );
+    }
+
+    protected function createRecord(array $data, string $folder): H5p
+    {
         $meta = $this->readManifest($folder);
 
         return H5p::create([
@@ -69,6 +102,7 @@ class H5pService
     public function getH5p($activity): array
     {
         $h5p = H5p::where('activity_id', $activity->id)->first();
+        $ready = $this->folderIsReady($h5p?->folder);
 
         return [
             'activity_id' => $activity->id,
@@ -76,8 +110,11 @@ class H5pService
             'type'        => 'h5p',
             'data'        => [
                 'duration'     => $h5p->duration ?? 0,
-                'h5p_path'     => '/' . trim(H5p::$directory, '/') . '/' . $h5p->folder,
-                'main_library' => $h5p->main_library,
+                'h5p_path'     => $ready
+                    ? '/' . trim(H5p::$directory, '/') . '/' . $h5p->folder
+                    : null,
+                'main_library' => $h5p->main_library ?? null,
+                'ready'        => $ready,
             ],
         ];
     }
@@ -85,38 +122,70 @@ class H5pService
     public function getH5pForEdit($activity): array
     {
         $h5p = H5p::where('activity_id', $activity->id)->first();
+        $ready = $this->folderIsReady($h5p?->folder);
 
         return [
             'id'           => $activity->id,
             'title'        => $activity->title,
             'value'        => $activity->value,
             'instruction'  => $activity->instruction,
-            'sub_title'    => $h5p->sub_title,
-            'duration'     => $h5p->duration,
-            'main_library' => $h5p->main_library,
-            'folder'       => $h5p->folder,
-            'h5p_path'     => '/' . trim(H5p::$directory, '/') . '/' . $h5p->folder,
+            'sub_title'    => $h5p->sub_title ?? null,
+            'duration'     => $h5p->duration ?? 0,
+            'main_library' => $h5p->main_library ?? null,
+            'folder'       => $h5p->folder ?? '',
+            'h5p_path'     => $ready
+                ? '/' . trim(H5p::$directory, '/') . '/' . $h5p->folder
+                : null,
+            'has_package'  => $ready,
         ];
+    }
+
+    public function hasPackage(int $activityId): bool
+    {
+        return $this->isReady(
+            H5p::where('activity_id', $activityId)->first()
+        );
+    }
+
+    public function isReady(?H5p $h5p): bool
+    {
+        return $this->folderIsReady($h5p?->folder);
     }
 
     public function updateH5p(array $data): bool
     {
         $h5p = H5p::where('activity_id', $data['activity_id'])->first();
+        $oldFolder = null;
+
+        if (!$h5p) {
+            $h5p = $this->createPlaceholder([
+                'activity_id' => $data['activity_id'],
+                'sub_title'   => $data['sub_title'] ?? null,
+                'duration'    => $data['duration'] ?? 0,
+            ]);
+        }
 
         $h5p->sub_title = $data['sub_title'] ?? $h5p->sub_title;
         $h5p->duration  = $data['duration'] ?? $h5p->duration;
 
         // Ganti paket hanya bila ada unggahan baru.
         if (!empty($data['package']) && $data['package'] instanceof UploadedFile) {
-            $this->deleteFolder($h5p->folder);
+            $oldFolder = $h5p->folder;
             $folder = $this->extractPackage($data['package']);
             $meta = $this->readManifest($folder);
             $h5p->folder = $folder;
             $h5p->main_library = $meta['mainLibrary'] ?? null;
             ActivityRuntimeState::where('activity_id', $h5p->activity_id)->delete();
+        } elseif (!$this->folderIsReady($h5p->folder)) {
+            throw new RuntimeException('Paket H5P wajib diunggah untuk melengkapi aktivitas hasil impor Moodle.');
         }
 
         $h5p->save();
+
+        // Paket lama baru dihapus setelah metadata paket baru berhasil disimpan.
+        if ($oldFolder !== null && $oldFolder !== $h5p->folder) {
+            $this->deleteFolder($oldFolder);
+        }
 
         return true;
     }
@@ -124,7 +193,7 @@ class H5pService
     /**
      * Ekstrak file .h5p ke folder unik di public. Mengembalikan nama folder.
      */
-    protected function extractPackage(UploadedFile $package): string
+    protected function extractPackage(UploadedFile|string $package): string
     {
         $folderName = 'h5p_' . bin2hex(random_bytes(8));
         $baseDir = public_path(trim(H5p::$directory, '/'));
@@ -137,8 +206,14 @@ class H5pService
             throw new RuntimeException('Gagal membuat folder H5P.');
         }
 
+        $packagePath = $package instanceof UploadedFile ? $package->getRealPath() : $package;
+        if (!$packagePath || !is_file($packagePath)) {
+            $this->deleteFolder($folderName);
+            throw new RuntimeException('File paket H5P tidak ditemukan.');
+        }
+
         $zip = new ZipArchive();
-        if ($zip->open($package->getRealPath()) !== true) {
+        if ($zip->open($packagePath) !== true) {
             $this->deleteFolder($folderName);
             throw new RuntimeException('File .h5p tidak dapat dibuka (bukan arsip ZIP yang valid).');
         }
@@ -150,15 +225,21 @@ class H5pService
             throw new RuntimeException('Paket .h5p tidak valid: h5p.json tidak ditemukan.');
         }
 
-        // Ekstraksi aman dari zip-slip.
+        // Tolak seluruh paket bila ada entri zip-slip. Sekadar melewati nama
+        // berbahaya tidak cukup karena extractTo() mengekstrak semua entri.
         for ($i = 0; $i < $zip->numFiles; $i++) {
             $entry = $zip->getNameIndex($i);
             if ($entry === false) {
                 continue;
             }
             $normalized = str_replace('\\', '/', $entry);
-            if (str_contains($normalized, '../') || str_starts_with($normalized, '/')) {
-                continue; // lewati entri berbahaya
+            if (
+                str_starts_with($normalized, '/')
+                || preg_match('#(^|/)\.\.(/|$)#', $normalized)
+            ) {
+                $zip->close();
+                $this->deleteFolder($folderName);
+                throw new RuntimeException('Paket .h5p tidak aman: terdapat path file yang tidak valid.');
             }
         }
 
@@ -198,6 +279,10 @@ class H5pService
 
     protected function deleteFolder(string $folderName): void
     {
+        if ($folderName === '' || !preg_match('/^h5p_[a-f0-9]{16}$/', $folderName)) {
+            return;
+        }
+
         $dir = public_path(trim(H5p::$directory, '/') . '/' . $folderName);
         if (!is_dir($dir)) {
             return;
@@ -210,5 +295,16 @@ class H5pService
             $item->isDir() ? @rmdir($item->getPathname()) : @unlink($item->getPathname());
         }
         @rmdir($dir);
+    }
+
+    protected function folderIsReady(?string $folderName): bool
+    {
+        if ($folderName === '' || $folderName === null) {
+            return false;
+        }
+
+        return is_file(
+            public_path(trim(H5p::$directory, '/') . '/' . $folderName . '/h5p.json')
+        );
     }
 }

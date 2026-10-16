@@ -30,7 +30,8 @@ class ActivityService
 
     public function getActivityByCourse($courseId)
     {
-        return Activity::where('course_id', $courseId)
+        return Activity::with('h5p')
+            ->where('course_id', $courseId)
             ->orderBy('position')
             ->orderBy('id')
             ->get()
@@ -67,6 +68,9 @@ class ActivityService
                     'value' => $row->value,
                     'end_meeting' => $endMeeting,
                     'has_imported' => $hasImported,
+                    'has_package' => $row->type === 'h5p'
+                        ? $this->h5p->isReady($row->h5p)
+                        : null,
                     'status' => 0
                 ];
             });

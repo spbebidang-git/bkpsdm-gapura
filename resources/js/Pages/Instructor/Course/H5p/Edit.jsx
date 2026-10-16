@@ -13,9 +13,9 @@ const Edit = ({ slug, activity }) => {
     const [values, setValues] = useState({
         title: activity?.title || "",
         sub_title: activity?.sub_title || "",
-        value: activity?.value || "",
+        value: activity?.value ?? 0,
         instruction: activity?.instruction || "",
-        duration: activity?.duration || "",
+        duration: activity?.duration ?? 0,
         package: null, // paket baru (opsional)
     });
     const [progress, setProgress] = useState(null);
@@ -67,6 +67,14 @@ const Edit = ({ slug, activity }) => {
             <form onSubmit={handleSubmit} encType="multipart/form-data">
                 <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div className="p-8">
+                        {!activity?.has_package && (
+                            <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                                Aktivitas H5P sudah dibuat dari Moodle, tetapi paketnya tidak ada di backup.
+                                Unggah file <strong>.h5p</strong> di bawah lalu simpan—tidak perlu membuat
+                                aktivitas H5P baru.
+                            </div>
+                        )}
+
                         <FormInput
                             title="title"
                             label="Judul"
@@ -116,12 +124,22 @@ const Edit = ({ slug, activity }) => {
                         />
 
                         <div className="mb-3">
-                            <FormLabel title="Ganti Paket H5P (.h5p)" />
+                            <FormLabel
+                                title={activity?.has_package
+                                    ? "Ganti Paket H5P (.h5p)"
+                                    : "Unggah Paket H5P (.h5p)"}
+                            />
                             <p className="text-xs text-gray-500 mb-2">
-                                Kosongkan jika tidak ingin mengganti paket. Paket saat ini:{" "}
-                                <span className="font-medium text-gray-700">
-                                    {activity?.main_library || activity?.folder || "-"}
-                                </span>
+                                {activity?.has_package ? (
+                                    <>
+                                        Kosongkan jika tidak ingin mengganti paket. Paket saat ini:{" "}
+                                        <span className="font-medium text-gray-700">
+                                            {activity?.main_library || activity?.folder}
+                                        </span>
+                                    </>
+                                ) : (
+                                    "Paket wajib diunggah untuk mengaktifkan konten hasil impor Moodle."
+                                )}
                             </p>
 
                             <label
@@ -137,7 +155,13 @@ const Edit = ({ slug, activity }) => {
                                     <p className="text-sm text-gray-700 font-semibold">Klik untuk unggah paket baru</p>
                                     <p className="text-xs text-gray-600">Format .h5p • Maksimal 200MB</p>
                                 </div>
-                                <input id="package" type="file" accept=".h5p" onChange={handleFileChange} className="hidden" />
+                                <input
+                                    id="package"
+                                    type="file"
+                                    accept=".h5p"
+                                    onChange={handleFileChange}
+                                    className="hidden"
+                                />
                             </label>
 
                             {values.package && (
@@ -176,7 +200,7 @@ const Edit = ({ slug, activity }) => {
                     </Link>
                     <button
                         type="submit"
-                        disabled={progress !== null}
+                        disabled={progress !== null || (!activity?.has_package && !values.package)}
                         className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 font-semibold shadow-sm transition-colors disabled:opacity-50"
                     >
                         {progress !== null ? "Mengunggah..." : "Simpan Perubahan"}
