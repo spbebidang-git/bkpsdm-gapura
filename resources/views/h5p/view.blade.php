@@ -224,11 +224,19 @@
 
             var runtimeUrl = @json($runtimeUrl ?? null);
             var h5pUser = @json($h5pUser ?? null);
+            var contentUserData = @json($contentUserData ?? null);
             if (runtimeUrl && h5pUser) {
                 options.id = @json($contentId ?? null);
                 options.saveFreq = 15;
                 options.ajax = { contentUserDataUrl: runtimeUrl };
                 options.user = h5pUser;
+
+                // Wajib di-preload: H5P core membuat instance kontennya tanpa
+                // menunggu callback getUserData(), jadi state yang hanya tersedia
+                // lewat AJAX selalu datang terlambat dan konten mulai dari nol.
+                if (contentUserData) {
+                    options.contentUserData = contentUserData;
+                }
             }
 
             new H5PStandalone.H5P(el, options)
@@ -265,6 +273,17 @@
                 if (ev.data && (ev.data.context === 'h5p' || ev.data.action === 'resize')) {
                     scheduleHeightReport();
                 }
+            });
+
+            // Iframe yang dilepas dari DOM tidak memicu pagehide/unload, sehingga
+            // checkpoint terakhir tidak pernah terkirim saat popup ditutup. Parent
+            // meminta penyimpanan secara eksplisit lalu menunggu konfirmasi ini.
+            window.addEventListener('message', function (ev) {
+                if (ev.origin !== window.location.origin) return;
+                if (!ev.data || ev.data.type !== 'player-save-state') return;
+
+                saveCurrentStateOnUnload();
+                parent.postMessage({ type: 'player-state-saved' }, window.location.origin);
             });
 
             document.addEventListener('visibilitychange', function () {

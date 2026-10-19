@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course\H5p;
+use App\Models\Learn\ActivityRuntimeState;
 use App\Models\Learn\Learn;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -56,6 +57,7 @@ class H5pViewController
         $user = $request->user();
         $runtimeUrl = null;
         $h5pUser = null;
+        $contentUserData = null;
 
         $learn = $user && $h5p?->activity
             ? Learn::where('participant_id', $user->id)
@@ -72,6 +74,20 @@ class H5pViewController
                 'name' => (string) $user->name,
                 'mail' => (string) $user->email,
             ];
+
+            // State harus ikut tertanam di halaman, bukan diambil lewat AJAX.
+            // H5P core memanggil newRunnable() segera setelah getUserData() tanpa
+            // menunggu callback-nya, sehingga state yang datang belakangan tidak
+            // pernah terpakai dan konten selalu mulai dari awal. Pada jalur
+            // preload, getUserData() memanggil callback-nya secara sinkron.
+            $runtime = ActivityRuntimeState::where('learn_id', $learn->id)
+                ->where('activity_id', $h5p->activity_id)
+                ->first();
+            $saved = is_array($runtime?->state) ? ($runtime->state['content_user_data'] ?? null) : null;
+
+            if (is_array($saved) && $saved !== []) {
+                $contentUserData = $saved;
+            }
         }
 
         return view('h5p.view', [
@@ -80,6 +96,7 @@ class H5pViewController
             'contentId' => $h5p ? 'activity-' . $h5p->activity_id : $folder,
             'runtimeUrl' => $runtimeUrl,
             'h5pUser' => $h5pUser,
+            'contentUserData' => $contentUserData,
         ]);
     }
 

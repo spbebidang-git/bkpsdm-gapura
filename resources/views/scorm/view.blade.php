@@ -254,6 +254,17 @@
                 if (document.hidden) persistState(false);
             });
 
+            // Iframe yang dilepas dari DOM tidak memicu pagehide/unload, sehingga
+            // commit terakhir tidak pernah terkirim saat popup ditutup. Parent
+            // meminta penyimpanan secara eksplisit lalu menunggu konfirmasi ini.
+            window.addEventListener('message', function (ev) {
+                if (ev.origin !== window.location.origin) return;
+                if (!ev.data || ev.data.type !== 'player-save-state') return;
+
+                persistOnUnload();
+                parent.postMessage({ type: 'player-state-saved' }, window.location.origin);
+            });
+
             // Luncurkan SCO.
             var sco = document.getElementById('sco');
             var loading = document.getElementById('scorm-loading');

@@ -1,5 +1,5 @@
 import Activity from "@/Components/Activity";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 const InteractiveContentLauncher = ({
@@ -19,6 +19,7 @@ const InteractiveContentLauncher = ({
     const [isContentCompleted, setIsContentCompleted] = useState(
         activity.status === "done" || activity.status === 1
     );
+    const playerBodyRef = useRef(null);
     const label = activity.type === "h5p"
         ? "H5P"
         : (activity.type === "scorm" ? "SCORM" : "VIDEO");
@@ -51,6 +52,49 @@ const InteractiveContentLauncher = ({
         return () => window.removeEventListener("message", handleCompletionMessage);
     }, [activity.type]);
 
+    // Melepas iframe dari DOM tidak memicu pagehide/unload di dalamnya, jadi
+    // player tidak sempat mengirim checkpoint terakhir. Minta player menyimpan
+    // lewat postMessage dan tunggu konfirmasinya sebentar sebelum iframe dilepas,
+    // supaya posisi terakhir peserta tidak hilang.
+    const requestPlayerSave = useCallback(() => new Promise((resolve) => {
+        const target = playerBodyRef.current
+            ?.querySelector("iframe")
+            ?.contentWindow;
+
+        if (!target || activity.type === "video") {
+            resolve();
+            return;
+        }
+
+        let settled = false;
+        let timer = null;
+
+        const settle = () => {
+            if (settled) return;
+            settled = true;
+            window.removeEventListener("message", onAck);
+            if (timer) clearTimeout(timer);
+            resolve();
+        };
+
+        const onAck = (event) => {
+            if (event.source !== target) return;
+            if (event.data?.type !== "player-state-saved") return;
+            settle();
+        };
+
+        window.addEventListener("message", onAck);
+        // Jangan menahan penutupan popup bila player tidak merespons.
+        timer = setTimeout(settle, 1000);
+        target.postMessage({ type: "player-save-state" }, window.location.origin);
+    }), [activity.type]);
+
+    const closePlayer = useCallback(async () => {
+        if (isFinishing) return;
+        await requestPlayerSave();
+        setIsOpen(false);
+    }, [isFinishing, requestPlayerSave]);
+
     useEffect(() => {
         if (!isOpen) return;
 
@@ -58,8 +102,8 @@ const InteractiveContentLauncher = ({
         document.body.style.overflow = "hidden";
 
         const onKeyDown = (event) => {
-            if (event.key === "Escape" && !isFinishing) {
-                setIsOpen(false);
+            if (event.key === "Escape") {
+                closePlayer();
             }
         };
 
@@ -69,14 +113,15 @@ const InteractiveContentLauncher = ({
             document.body.style.overflow = previousOverflow;
             window.removeEventListener("keydown", onKeyDown);
         };
-    }, [isFinishing, isOpen]);
+    }, [closePlayer, isOpen]);
 
-    const handleFinish = () => {
+    const handleFinish = async () => {
         if (isFinishing) return;
 
         // Modal tetap terbuka selama request agar peserta mendapat indikator
-        // penyimpanan. Navigasi sukses akan melepas iframe dan memicu pagehide
-        // runtime untuk mengirim state terakhir.
+        // penyimpanan. Navigasi Inertia hanya menukar DOM, jadi state terakhir
+        // harus diminta lebih dulu seperti pada penutupan biasa.
+        await requestPlayerSave();
         onFinish();
     };
 
@@ -129,7 +174,7 @@ const InteractiveContentLauncher = ({
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setIsOpen(false)}
+                                onClick={closePlayer}
                                 disabled={isFinishing}
                                 className="ml-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-2xl text-gray-500 transition hover:bg-gray-100 hover:text-gray-800 disabled:opacity-50"
                                 aria-label="Tutup player"
@@ -138,7 +183,7 @@ const InteractiveContentLauncher = ({
                             </button>
                         </div>
 
-                        <div className={bodyClass}>
+                        <div ref={playerBodyRef} className={bodyClass}>
                             <Activity
                                 question_result={questionResult}
                                 slug={courseSlug}
@@ -166,7 +211,7 @@ const InteractiveContentLauncher = ({
                             <div className="flex flex-col-reverse gap-2 sm:flex-row">
                                 <button
                                     type="button"
-                                    onClick={() => setIsOpen(false)}
+                                    onClick={closePlayer}
                                     disabled={isFinishing}
                                     className="rounded-xl border border-gray-300 px-6 py-2.5 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
                                 >
