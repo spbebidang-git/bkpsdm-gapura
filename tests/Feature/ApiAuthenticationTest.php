@@ -28,7 +28,7 @@ class ApiAuthenticationTest extends TestCase
             'services.sso.client_secret' => 'client-secret',
         ]);
         $admin = User::factory()->create([
-            'email' => 'genz.developt@gmail.com',
+            'email' => 'elearning@prestige.local',
             'nip' => 'elearning',
             'auth_source' => User::AUTH_SOURCE_PRESTIGE,
         ]);
@@ -43,7 +43,7 @@ class ApiAuthenticationTest extends TestCase
             'device_name' => 'integration-test',
         ]);
 
-        $response->assertOk()->assertJsonPath('user.email', 'genz.developt@gmail.com');
+        $response->assertOk()->assertJsonPath('user.email', 'elearning@prestige.local');
         $token = $admin->tokens()->firstOrFail();
         $this->assertSame(['*'], $token->abilities);
         $this->assertNull($token->expires_at);

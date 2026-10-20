@@ -197,10 +197,9 @@ class AuthControllerTest extends TestCase
             'services.sso.client_id' => 'client-id',
             'services.sso.client_secret' => 'client-secret',
             'services.sso.admin_username' => 'elearning',
-            'services.sso.super_admin_email' => 'genz.developt@gmail.com',
         ]);
         $admin = User::factory()->create([
-            'email' => 'genz.developt@gmail.com',
+            'email' => 'elearning@prestige.local',
             'nip' => 'elearning',
             'auth_source' => User::AUTH_SOURCE_PRESTIGE,
         ]);

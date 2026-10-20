@@ -40,7 +40,7 @@ class AuthenticationTest extends TestCase
     {
         \Spatie\Permission\Models\Role::findOrCreate('super_admin', 'web');
         $user = User::factory()->create([
-            'email' => 'genz.developt@gmail.com',
+            'email' => 'elearning@prestige.local',
             'nip' => 'elearning',
             'auth_source' => User::AUTH_SOURCE_PRESTIGE,
             'access_token' => 'prestige-access',
@@ -66,7 +66,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $superAdmin = User::factory()->create([
-            'email' => 'genz.developt@gmail.com', 'nip' => 'elearning',
+            'email' => 'elearning@prestige.local', 'nip' => 'elearning',
             'auth_source' => User::AUTH_SOURCE_PRESTIGE, 'access_token' => 'expired-token',
             'refresh_token' => 'prestige-refresh', 'token_expires_at' => now()->subMinute(),
         ]);

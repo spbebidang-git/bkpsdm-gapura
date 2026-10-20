@@ -13,7 +13,7 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         $username = (string) config('services.sso.admin_username', 'elearning');
-        $email = (string) config('services.sso.super_admin_email', 'genz.developt@gmail.com');
+        $email = 'elearning@prestige.local';
         $conflict = DB::table('users')->where('nip', $username)->where('email', '!=', $email)->first();
         if ($conflict) {
             throw new \RuntimeException("Prestige username '{$username}' sudah digunakan akun lain (ID {$conflict->id}).");
@@ -22,7 +22,7 @@ class UserSeeder extends Seeder
         $superAdmin = User::withTrashed()->firstOrCreate(
             ['email' => $email],
             [
-                'name' => 'Super Admin',
+                'name' => 'eLearning',
                 'password' => Hash::make(Str::password(64)),
                 'auth_source' => User::AUTH_SOURCE_PRESTIGE,
                 'nip' => $username,
@@ -33,7 +33,7 @@ class UserSeeder extends Seeder
             $superAdmin->restore();
         }
 
-        $superAdmin->update(['name' => 'Super Admin']);
+        $superAdmin->update(['name' => 'eLearning']);
         $superAdmin->syncRoles(['super_admin']);
 
         // The Prestige password is never stored locally; this random hash only

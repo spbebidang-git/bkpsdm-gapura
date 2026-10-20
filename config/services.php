@@ -41,7 +41,6 @@ return [
         'client_id' => env('SSO_CLIENT_ID'),
         'client_secret' => env('SSO_CLIENT_SECRET'),
         'admin_username' => env('SSO_ADMIN_USERNAME', 'elearning'),
-        'super_admin_email' => env('PRESTIGE_SUPER_ADMIN_EMAIL', 'genz.developt@gmail.com'),
         'admin_pass' => env('SSO_ADMIN_PASS'),
         'categories_path' => env('SSO_CATEGORIES_PATH', '/api/get_kode_kegiatan'),
         'admin_nip' => env('SSO_ADMIN_NIP', 'elearning'),
