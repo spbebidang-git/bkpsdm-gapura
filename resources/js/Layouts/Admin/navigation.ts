@@ -4,7 +4,7 @@ export interface NavGroup { label: string; hideLabel?: boolean; items: NavItem[]
 export const navigation: NavGroup[] = [
     { label: 'Ringkasan', hideLabel: true, items: [{ label: 'Dashboard', route: 'admin.dashboard', match: 'admin.dashboard', icon: 'bx-grid-alt' }] },
     { label: 'Master', items: [
-        { label: 'Kategori', route: 'admin.category.index', match: 'admin.category.*', icon: 'bx-category', permission: 'category.manage' },
+        { label: 'Kategori', route: 'admin.category.index', match: 'admin.category.*', icon: 'bx-category', permission: 'category.view' },
         { label: 'OPD', route: 'admin.opd.index', match: 'admin.opd.*', icon: 'bx-buildings', permission: 'opd.manage' },
         { label: 'Status pegawai', route: 'admin.employee-status.index', match: 'admin.employee-status.*', icon: 'bx-id-card', permission: 'employee-status.manage' },
         { label: 'Trainer', route: 'admin.trainer.index', match: 'admin.trainer.*', icon: 'bx-user-voice', permission: 'trainer.manage' },
@@ -13,6 +13,7 @@ export const navigation: NavGroup[] = [
     ] },
     { label: 'Hasil', items: [
         { label: 'Laporan', route: 'admin.report', match: 'admin.report', icon: 'bx-file', permission: 'result.view' },
+        { label: 'Data sertifikat', route: 'admin.certificate.index', match: 'admin.certificate.*', icon: 'bx-award', permission: 'certificate.manage' },
         { label: 'Ulasan', route: 'admin.review.index', match: 'admin.review.*', icon: 'bx-star', permission: 'review.manage' },
     ] },
     { label: 'Manajemen', items: [

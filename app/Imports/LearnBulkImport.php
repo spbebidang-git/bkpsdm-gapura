@@ -159,7 +159,7 @@ class LearnBulkImport implements ToCollection, WithHeadingRow, SkipsEmptyRows
                 DB::rollBack();
                 $this->results['failed']++;
                 $this->results['errors'][] = "Baris {$rowNumber}: " . $th->getMessage();
-                Log::error("LearnBulkImport error row {$rowNumber}: " . $th->getMessage());
+                Log::error('Baris impor pembelajaran gagal.', ['event' => 'learn.import.row_failed', 'row_number' => $rowNumber, 'exception' => $th]);
             }
         }
     }

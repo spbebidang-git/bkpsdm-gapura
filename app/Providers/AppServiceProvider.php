@@ -55,24 +55,25 @@ class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('sign-in', function (Request $request) {
-            $username = Str::lower(trim((string) $request->input('username')));
+            $username = Str::lower(trim((string) $request->input('email')));
             $identityKey = hash('sha256', $username . '|' . $request->ip());
+
+            $response = fn () => back()->withErrors([
+                'email_or_username' => 'Terlalu banyak percobaan login. Silakan tunggu beberapa saat lalu coba lagi.',
+            ])->onlyInput('email');
 
             return [
                 Limit::perMinute(5)
                     ->by('sign-in:' . $identityKey)
-                    ->response(function () {
-                        return back()->withErrors([
-                            'email_or_username' => 'Terlalu banyak percobaan login. Silakan tunggu sekitar 1 menit lalu coba lagi.',
-                        ]);
-                    }),
-                Limit::perMinute(30)->by('sign-in-office:' . $request->ip()),
+                    ->response($response),
+                Limit::perMinute(30)->by('sign-in-office:' . $request->ip())->response($response),
             ];
         });
 
         foreach ([\Illuminate\Auth\Events\Login::class, \Illuminate\Auth\Events\Logout::class, \Illuminate\Auth\Events\Failed::class, \Illuminate\Auth\Events\PasswordReset::class] as $eventClass) {
             \Illuminate\Support\Facades\Event::listen($eventClass, function ($event) {
-                \Illuminate\Support\Facades\Log::channel('auth')->info('auth.'.class_basename($event), [
+                \Illuminate\Support\Facades\Log::channel('auth')->log($event instanceof \Illuminate\Auth\Events\Failed ? 'warning' : 'info', 'Peristiwa autentikasi diproses.', [
+                    'event' => 'auth.'.Str::snake(class_basename($event)),
                     'actor_id' => $event->user?->getAuthIdentifier(),
                     'guard' => $event->guard ?? null,
                     // Credentials and login identifiers are deliberately excluded.

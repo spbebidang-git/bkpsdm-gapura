@@ -2,162 +2,27 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Learning\Learn;
-use App\Services\Learning\LearnLifecycleService;
-use App\Services\Auth\TokenService;
+use App\Services\Integration\CertificateSyncService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class SetUrlCertificateCommand extends Command
 {
     protected $signature = 'app:set-url-certificate-command';
+
     protected $description = 'Fetch and set URL certificates for participants';
 
-    protected TokenService $tokenService;
-
-    public function handle(TokenService $tokenService): int
+    public function handle(CertificateSyncService $service): int
     {
-        $this->tokenService = $tokenService;
         try {
-            if (app()->isLocal()) {
-                Log::debug('[SetUrlCertificate] Mulai proses pull sertifikat.');
-            }
+            $this->info($service->syncPull(onlyMissing: true)['message']);
 
-            # Ambil token
-            $token = $tokenService->getToken();
+            return self::SUCCESS;
+        } catch (\Throwable $e) {
+            Log::error('Pengambilan sertifikat gagal.', ['event' => 'certificate.pull.failed', 'exception' => $e]);
+            $this->error('Pengambilan sertifikat gagal. Periksa log menggunakan ID proses.');
 
-            if (app()->isLocal()) {
-                Log::debug('[SetUrlCertificate] Token berhasil diambil.');
-            }
-
-            $url = rtrim((string) config('services.sso.base_url'), '/').'/api/get_data_sertifikat';
-
-            $response = Http::withHeaders(['Authorization' => $token])
-                ->acceptJson()
-                ->asForm()
-                ->post($url);
-
-            if ($response->status() === 401) {
-                Log::warning('[SetUrlCertificate] Token 401 — force refresh dan retry.');
-                $token = $this->tokenService->forceRefresh();
-                $response = Http::withHeaders(['Authorization' => $token])
-                    ->acceptJson()
-                    ->asForm()
-                    ->post($url);
-            }
-
-            if (app()->isLocal()) {
-                Log::debug('[SetUrlCertificate] SSO response.', [
-                    'http_status' => $response->status(),
-                    'body'        => $response->body(),
-                ]);
-            }
-
-            if (!$response->successful()) {
-                $this->error('Gagal mengambil data sertifikat dari SSO: ' . $response->body());
-                Log::warning('SetUrlCertificate: gagal ambil data SSO.', ['body' => $response->body()]);
-                return Command::FAILURE;
-            }
-
-            $dataKelas = json_decode($response->body(), true);
-
-            if (empty($dataKelas)) {
-                $this->info('Tidak ada data sertifikat dari SSO.');
-                return Command::SUCCESS;
-            }
-
-            # Filter dan kelompokkan data
-            $groupedData = [];
-            foreach ($dataKelas as $kelas) {
-                if (!is_array($kelas) || empty($kelas['nama_kegiatan'])) {
-                    continue;
-                }
-
-                $key = $kelas['nama_kegiatan'] . '|' . ($kelas['tgl_mulai'] ?? '') . '|' . ($kelas['tgl_selesai'] ?? '');
-
-                if (!isset($groupedData[$key])) {
-                    $groupedData[$key] = [
-                        'nama_kegiatan' => $kelas['nama_kegiatan'],
-                        'peserta'       => [],
-                    ];
-                }
-
-                if (empty($kelas['peserta']) || !is_array($kelas['peserta'])) {
-                    continue;
-                }
-
-                foreach ($kelas['peserta'] as $peserta) {
-                    $sertifikat = $peserta['sertifikat'] ?? '';
-                    if (strpos($sertifikat, 'http') !== false && $sertifikat !== '-') {
-                        $groupedData[$key]['peserta'][] = [
-                            'nip'        => $peserta['nip'] ?? '',
-                            'sertifikat' => $sertifikat,
-                        ];
-                    }
-                }
-            }
-
-            $filteredData = array_values($groupedData);
-
-            if (app()->isLocal()) {
-                Log::debug('[SetUrlCertificate] Data dari SSO setelah filter.', [
-                    'total_kegiatan'          => count($filteredData),
-                    'total_peserta_bersertifikat' => array_sum(array_map(fn($k) => count($k['peserta']), $filteredData)),
-                ]);
-            }
-
-            # Ambil data learn yang belum punya URL sertifikat
-            $learns = Learn::with('course')
-                ->whereNull('url_certificate')
-                ->get();
-
-            if (app()->isLocal()) {
-                Log::debug('[SetUrlCertificate] Learns belum punya URL: ' . $learns->count() . ' item.');
-            }
-
-            $dispatched = 0;
-            foreach ($filteredData as $kelas) {
-                foreach ($kelas['peserta'] as $peserta) {
-                    $ssoNip = normalize_nip($peserta['nip'] ?? null);
-                    if (!$ssoNip) {
-                        continue;
-                    }
-
-                    $learns->each(function ($learn) use ($kelas, $peserta, $ssoNip, &$dispatched) {
-                        // learn orphan / course terhapus → course null
-                        if (!$learn->course) {
-                            return;
-                        }
-
-                        $localNip = normalize_nip(get_user_meta($learn->participant_id, 'nip'));
-                        if (
-                            $kelas['nama_kegiatan'] === $learn->course->title &&
-                            $localNip &&
-                            $localNip === $ssoNip
-                        ) {
-                            if (app()->isLocal()) {
-                                Log::debug('[SetUrlCertificate] Match ditemukan, update URL.', [
-                                    'course'      => $learn->course->title,
-                                    'participant' => $learn->participant_id,
-                                    'nip'         => $ssoNip,
-                                    'url'         => $peserta['sertifikat'],
-                                ]);
-                            }
-
-                            if (app(LearnLifecycleService::class)->setCertificate($learn, $peserta['sertifikat'])) $dispatched++;
-                        }
-                    });
-                }
-            }
-
-            $this->info("Pull selesai. {$dispatched} sertifikat di-dispatch untuk diperbarui.");
-            return Command::SUCCESS;
-
-        } catch (\Throwable $th) {
-            Log::error('Exception utama SetUrlCertificate:', ['message' => $th->getMessage()]);
-            $this->error('Gagal: ' . $th->getMessage());
-            return Command::FAILURE;
+            return self::FAILURE;
         }
     }
 }

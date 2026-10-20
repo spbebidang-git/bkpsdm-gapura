@@ -38,7 +38,7 @@ class TrainerController extends Controller
 
         return Inertia::render('Admin/Trainer/Index', [
             'opds' => Opd::orderBy('name')->get(['id', 'name']),
-            'isSuperAdmin' => request()->user()?->hasRole('super_admin') ?? false,
+            'canEditLinkedUser' => request()->user()?->hasAnyRole(['super_admin', 'administrator']) ?? false,
         ]);
     }
 
@@ -68,7 +68,7 @@ class TrainerController extends Controller
     public function edit(Trainer $trainer)
     {
         if ($trainer->user_id) {
-            abort_unless(request()->user()?->hasRole('super_admin'), 403);
+            abort_unless(request()->user()?->hasAnyRole(['super_admin', 'administrator']), 403);
 
             $trainer->loadMissing(['user.opd', 'user.metas']);
             $user = $trainer->user;
@@ -125,7 +125,7 @@ class TrainerController extends Controller
     protected function validateTrainer(Request $request, ?Trainer $trainer = null): array
     {
         if ($trainer?->user_id) {
-            abort_unless($request->user()?->hasRole('super_admin'), 403);
+            abort_unless($request->user()?->hasAnyRole(['super_admin', 'administrator']), 403);
         }
         $source = $request->input('source');
         $isUser = $source === 'user';

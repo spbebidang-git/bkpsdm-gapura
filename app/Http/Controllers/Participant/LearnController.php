@@ -154,7 +154,7 @@ class LearnController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             if ($th instanceof HttpException) throw $th;
-            Log::error('LearnController@store Error: ' . $th->getMessage());
+            Log::error('Penyimpanan pembelajaran gagal.', ['event' => 'learn.store.failed', 'exception' => $th]);
             return to_route('participant.learn.index', [$course->slug, $schedule->id, $activity->id])
                 ->withErrors(['error' => 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.']);
         }

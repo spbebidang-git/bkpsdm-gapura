@@ -13,7 +13,7 @@ class IsAdminMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        if ($this->shouldBypassAuthentication()) {
+        if ($this->shouldBypassAuthentication($request)) {
             $admin = $this->developmentAdmin();
 
             abort_unless($admin, 503, 'Admin development access is enabled, but no Admin user is available.');
@@ -31,6 +31,16 @@ class IsAdminMiddleware
 
             if (! $request->routeIs('admin.*')) {
                 return to_route('admin.dashboard');
+            }
+
+            if ($this->isRestrictedTrainer($user) && ! $user->opd_id) {
+                $message = 'Akun trainer Anda belum memiliki OPD. Hubungi administrator untuk melengkapi data OPD.';
+
+                if (! $request->routeIs('admin.dashboard')) {
+                    return to_route('admin.dashboard')->with('danger', $message);
+                }
+
+                $request->session()->flash('danger', $message);
             }
 
             if (! $user->hasRole('super_admin') && ($permission = $this->requiredPermission($request)) && ! $user->can($permission)) {
@@ -59,9 +69,11 @@ class IsAdminMiddleware
         return to_route('sign-in.index');
     }
 
-    private function shouldBypassAuthentication(): bool
+    private function shouldBypassAuthentication(Request $request): bool
     {
-        return app()->environment('local')
+        // Development access must never replace an authenticated user's identity.
+        return $request->user() === null
+            && app()->environment('local')
             && config('app.dev_admin_bypass');
     }
 
@@ -120,7 +132,8 @@ class IsAdminMiddleware
             'admin.import-learn' => 'import.manage',
             'admin.review' => 'review.manage',
             'admin.help' => 'help.manage',
-            'admin.category' => 'category.manage',
+            'admin.category.index' => 'category.view',
+            'admin.category.sync' => 'category.manage',
             'admin.opd' => 'opd.manage',
             'admin.trainer' => 'trainer.manage',
             'admin.instructor' => 'trainer.manage',

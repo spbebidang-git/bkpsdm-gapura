@@ -1,0 +1,230 @@
+[
+  {
+    "kode_uker": "001",
+    "nama_uker": "BADAN PENDAPATAN, PENGELOLAAN KEUANGAN DAN ASET DAERAH"
+  },
+  {
+    "kode_uker": "002",
+    "nama_uker": "BADAN KEPEGAWAIAN DAN PENGEMBANGAN SUMBER DAYA MANUSIA"
+  },
+  {
+    "kode_uker": "003",
+    "nama_uker": "BADAN PERENCANAAN PEMBANGUNAN, PENELITIAN DAN PENGEMBANGAN DAERAH"
+  },
+  {
+    "kode_uker": "004",
+    "nama_uker": "DINAS PENANAMAN MODAL DAN PELAYANAN TERPADU SATU PINTU"
+  },
+  {
+    "kode_uker": "005",
+    "nama_uker": "DINAS PEKERJAAN UMUM DAN TATA RUANG"
+  },
+  {
+    "kode_uker": "006",
+    "nama_uker": "DINAS PENDIDIKAN"
+  },
+  {
+    "kode_uker": "007",
+    "nama_uker": "DINAS KEPEMUDAAN DAN OLAH RAGA"
+  },
+  {
+    "kode_uker": "008",
+    "nama_uker": "DINAS KEPENDUDUKAN DAN PENCATATAN SIPIL"
+  },
+  {
+    "kode_uker": "009",
+    "nama_uker": "DINAS PERIKANAN"
+  },
+  {
+    "kode_uker": "010",
+    "nama_uker": "DINAS PERTANIAN"
+  },
+  {
+    "kode_uker": "011",
+    "nama_uker": "DINAS KESEHATAN"
+  },
+  {
+    "kode_uker": "012",
+    "nama_uker": "DINAS PERHUBUNGAN"
+  },
+  {
+    "kode_uker": "013",
+    "nama_uker": "DINAS TENAGA KERJA"
+  },
+  {
+    "kode_uker": "014",
+    "nama_uker": "DINAS LINGKUNGAN HIDUP"
+  },
+  {
+    "kode_uker": "015",
+    "nama_uker": "INSPEKTORAT"
+  },
+  {
+    "kode_uker": "017",
+    "nama_uker": "DINAS KELUARGA BERENCANA, PEMBERDAYAAN PEREMPUAN DAN PERLINDUNGAN ANAK"
+  },
+  {
+    "kode_uker": "018",
+    "nama_uker": "RSUD IBNU SINA(deleted)"
+  },
+  {
+    "kode_uker": "020",
+    "nama_uker": "DINAS PEMBERDAYAAN MASYARAKAT DAN DESA"
+  },
+  {
+    "kode_uker": "021",
+    "nama_uker": "BADAN PENANGGULANGAN BENCANA DAERAH"
+  },
+  {
+    "kode_uker": "022",
+    "nama_uker": "DINAS CIPTA KARYA, PERUMAHAN DAN KAWASAN PERMUKIMAN"
+  },
+  {
+    "kode_uker": "026",
+    "nama_uker": "KECAMATAN BUNGAH"
+  },
+  {
+    "kode_uker": "027",
+    "nama_uker": "KECAMATAN CERME"
+  },
+  {
+    "kode_uker": "029",
+    "nama_uker": "KECAMATAN DUDUK SAMPEYAN"
+  },
+  {
+    "kode_uker": "024",
+    "nama_uker": "KECAMATAN BALONGPANGGANG"
+  },
+  {
+    "kode_uker": "030",
+    "nama_uker": "KECAMATAN DUKUN"
+  },
+  {
+    "kode_uker": "025",
+    "nama_uker": "KECAMATAN BENJENG"
+  },
+  {
+    "kode_uker": "016",
+    "nama_uker": "DINAS PERPUSTAKAAN DAN KEARSIPAN"
+  },
+  {
+    "kode_uker": "028",
+    "nama_uker": "KECAMATAN DRIYOREJO"
+  },
+  {
+    "kode_uker": "031",
+    "nama_uker": "KECAMATAN GRESIK"
+  },
+  {
+    "kode_uker": "032",
+    "nama_uker": "KECAMATAN KEBOMAS"
+  },
+  {
+    "kode_uker": "033",
+    "nama_uker": "KECAMATAN KEDAMEAN"
+  },
+  {
+    "kode_uker": "035",
+    "nama_uker": "KECAMATAN MENGANTI"
+  },
+  {
+    "kode_uker": "036",
+    "nama_uker": "KECAMATAN PANCENG"
+  },
+  {
+    "kode_uker": "038",
+    "nama_uker": "KECAMATAN SIDAYU"
+  },
+  {
+    "kode_uker": "039",
+    "nama_uker": "KECAMATAN TAMBAK"
+  },
+  {
+    "kode_uker": "041",
+    "nama_uker": "KECAMATAN WRINGINANOM"
+  },
+  {
+    "kode_uker": "042",
+    "nama_uker": "SEKRETARIAT DAERAH"
+  },
+  {
+    "kode_uker": "043",
+    "nama_uker": "BADAN KESATUAN BANGSA DAN POLITIK"
+  },
+  {
+    "kode_uker": "044",
+    "nama_uker": "DINAS KOPERASI, USAHA MIKRO, PERINDUSTRIAN DAN PERDAGANGAN"
+  },
+  {
+    "kode_uker": "045",
+    "nama_uker": "KOMISI PEMILIHAN UMUM(deleted)"
+  },
+  {
+    "kode_uker": "046",
+    "nama_uker": "SEKRETARIAT DPRD"
+  },
+  {
+    "kode_uker": "047",
+    "nama_uker": "DINAS KOMUNIKASI DAN INFORMATIKA"
+  },
+  {
+    "kode_uker": "023",
+    "nama_uker": "DINAS SOSIAL"
+  },
+  {
+    "kode_uker": "049",
+    "nama_uker": "BADAN NARKOTIKA NASIONAL(deleted)"
+  },
+  {
+    "kode_uker": "050",
+    "nama_uker": "DINAS PARIWISATA DAN EKONOMI KREATIF, KEBUDAYAAN, KEPEMUDAAN DAN OLAH RAGA"
+  },
+  {
+    "kode_uker": "048",
+    "nama_uker": "DINAS PERTANAHAN"
+  },
+  {
+    "kode_uker": "052",
+    "nama_uker": "KECAMATAN KEBOMAS"
+  },
+  {
+    "kode_uker": "053",
+    "nama_uker": "Dinas Pekerjaan Umum dan Tata Ruang"
+  },
+  {
+    "kode_uker": "054",
+    "nama_uker": "STAF AHLI BUPATI BIDANG PEMERINTAHAN, HUKUM DAN POLITIK"
+  },
+  {
+    "kode_uker": "055",
+    "nama_uker": "STAF AHLI BUPATI BIDANG EKONOMI DAN SOSIAL"
+  },
+  {
+    "kode_uker": "056",
+    "nama_uker": "STAF AHLI BUPATI BIDANG FISIK PRASARANA"
+  },
+  {
+    "kode_uker": "057",
+    "nama_uker": "PUSKESMAS DRIYOREJO(deleted)"
+  },
+  {
+    "kode_uker": "040",
+    "nama_uker": "KECAMATAN UJUNGPANGKAH"
+  },
+  {
+    "kode_uker": "051",
+    "nama_uker": "DINAS PEMADAM KEBAKARAN DAN PENYELAMATAN"
+  },
+  {
+    "kode_uker": "019",
+    "nama_uker": "SATUAN POLISI PAMONG PRAJA"
+  },
+  {
+    "kode_uker": "037",
+    "nama_uker": "KECAMATAN SANGKAPURA"
+  },
+  {
+    "kode_uker": "034",
+    "nama_uker": "KECAMATAN MANYAR"
+  }
+]

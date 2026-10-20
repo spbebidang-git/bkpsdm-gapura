@@ -7,7 +7,6 @@ use App\Repositories\System\Contracts\SettingRepositoryInterface;
 use App\Services\Auth\TokenService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class CategorySyncService
 {
@@ -88,7 +87,7 @@ class CategorySyncService
             'updated' => $updated,
             'soft_deleted' => $softDeleted,
             'restored' => $restored,
-            'message' => "Sync OK — created: {$created}, updated: {$updated}, restored: {$restored}, soft-deleted: {$softDeleted}",
+            'message' => "Sinkronisasi kategori berhasil. Ditambahkan: {$created}, diperbarui: {$updated}, dipulihkan: {$restored}, dihapus: {$softDeleted}",
         ];
     }
 
@@ -116,9 +115,8 @@ class CategorySyncService
         }
 
         if (! $response->successful()) {
-            Log::warning('[CategorySyncService] SSO fetch failed', [
+            Log::warning('Data kategori SSO gagal diambil.', ['event' => 'category.fetch.failed',
                 'status' => $response->status(),
-                'body' => Str::limit($response->body(), 300),
             ]);
             throw new \RuntimeException('Gagal ambil kategori dari SSO (HTTP '.$response->status().').');
         }

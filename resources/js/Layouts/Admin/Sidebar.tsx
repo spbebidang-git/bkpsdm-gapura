@@ -7,6 +7,7 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
     const user = auth?.user;
     const [desktop, setDesktop] = useState(false);
     const sidebarRef = useRef<HTMLElement>(null);
+    const navRef = useRef<HTMLElement>(null);
     useEffect(() => {
         if (sidebarRef.current) sidebarRef.current.inert = !open && !desktop;
     }, [open, desktop]);
@@ -20,6 +21,33 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
     const canSee = (item: any) => user?.is_super_admin || user?.permissions?.includes(item.permission) || (!item.permission && trainerRoutes.has(item.route));
     const groups = navigation.map((group) => ({ ...group, items: group.items.filter(canSee) })).filter((group) => group.items.length > 0);
 
+    const activeRoute = groups.flatMap((group) => group.items).find((item) => isActive(item.match))?.route;
+
+    useEffect(() => {
+        if (!desktop) return;
+        let frame = 0;
+        const revealActive = () => {
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(() => {
+                const nav = navRef.current;
+                const active = nav?.querySelector<HTMLElement>('[aria-current="page"]');
+                if (!nav || !active) return;
+                const viewport = nav.getBoundingClientRect();
+                const item = active.getBoundingClientRect();
+                if (item.top < viewport.top + 8 || item.bottom > viewport.bottom - 8) {
+                    // Scroll only the navigation, keeping the page and keyboard focus in place.
+                    nav.scrollTo({ top: nav.scrollTop + item.top - viewport.top - (nav.clientHeight - item.height) / 2, behavior: 'auto' });
+                }
+            });
+        };
+        revealActive();
+        window.addEventListener('resize', revealActive);
+        return () => {
+            cancelAnimationFrame(frame);
+            window.removeEventListener('resize', revealActive);
+        };
+    }, [desktop, activeRoute]);
+
     return (
         <>
             {open && <button type="button" aria-label="Tutup navigasi" className="admin-sidebar-overlay lg:hidden" onClick={onClose} />}
@@ -32,7 +60,7 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
                         <i className="bx bx-x" aria-hidden />
                     </button>
                 </div>
-                <nav className="admin-nav admin-sidebar-nav">
+                <nav ref={navRef} className="admin-nav admin-sidebar-nav">
                     {groups.map((group) => (
                         <section key={group.label}>
                             {!group.hideLabel && <h2>{group.label}</h2>}

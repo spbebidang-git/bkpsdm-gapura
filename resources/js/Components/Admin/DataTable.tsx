@@ -34,6 +34,7 @@ export default function DataTable({
     columns,
     pageSize = 10,
     params: extraParams = {},
+    hideSearch = false,
     searchPlaceholder = 'Cari data…',
     emptyTitle = 'Belum ada data',
     emptyDescription = 'Data akan muncul di sini setelah tersedia.',
@@ -215,7 +216,7 @@ export default function DataTable({
     return (
         <section className={`admin-table-frame ${className}`} aria-busy={loading}>
             <div className="admin-table-toolbar">
-                <label className="relative min-w-0 flex-1 sm:max-w-sm">
+                {!hideSearch && <label className="relative min-w-0 flex-1 sm:max-w-sm">
                     <span className="sr-only">Cari dalam tabel</span>
                     <i className="bx bx-search pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-lg text-stone" aria-hidden />
                     <input
@@ -235,7 +236,7 @@ export default function DataTable({
                             <i className="bx bx-x text-lg" aria-hidden />
                         </button>
                     )}
-                </label>
+                </label>}
 
                 {toolbarFilters}
                 <div className="admin-table-count" aria-live="polite">

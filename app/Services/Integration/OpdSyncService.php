@@ -21,9 +21,9 @@ class OpdSyncService
         $seen = [];
 
         foreach ($rows as $row) {
-            $code = trim((string) ($row[config('services.kedaton.opd_code_field')] ?? $row['code'] ?? $row['kode'] ?? $row['uker_kode'] ?? ''));
-            $name = trim((string) ($row[config('services.kedaton.opd_name_field')] ?? $row['name'] ?? $row['nama'] ?? $row['title'] ?? ''));
-            if ($code === '' || $name === '') continue;
+            $code = trim((string) ($row[config('services.kedaton.opd_code_field')] ?? $row['kode_uker'] ?? ''));
+            $name = trim((string) ($row[config('services.kedaton.opd_name_field')] ?? $row['nama_uker'] ?? $row['uker'] ?? ''));
+            if ($code === '' || $name === '' || in_array($code, $seen, true)) continue;
             $seen[] = $code;
             $opd = $this->opds->findByCodeIncludingTrashed($code);
             if ($opd) {
@@ -40,7 +40,7 @@ class OpdSyncService
         $deactivated = $this->opds->deactivateMissingSynced($seen);
 
         return compact('created', 'updated', 'restored', 'deactivated') + [
-            'message' => "Sync OPD OK — dibuat: {$created}, diperbarui: {$updated}, dipulihkan: {$restored}, dinonaktifkan: {$deactivated}",
+            'message' => "Sinkronisasi OPD berhasil. Ditambahkan: {$created}, diperbarui: {$updated}, dipulihkan: {$restored}, dinonaktifkan: {$deactivated}",
         ];
     }
 
@@ -50,21 +50,33 @@ class OpdSyncService
         $path = config('services.kedaton.opd_master_path');
         if (! filled($path)) throw new RuntimeException('KEDATON_OPD_MASTER_PATH belum dikonfigurasi.');
         $url = rtrim((string) config('services.kedaton.base_url'), '/') . '/' . ltrim($path, '/');
+        $key = config('services.kedaton.data_key');
+        if (! filled($key)) throw new RuntimeException('KEDATON_DATA_KEY belum dikonfigurasi.');
         $http = Http::timeout(20)->acceptJson();
-        $response = strtolower((string) config('services.kedaton.opd_master_method', 'get')) === 'post'
-            ? $http->asForm()->post($url, ['key' => config('services.kedaton.data_key'), 'tipe_data' => config('services.kedaton.data_type', 'pns')])
+        $response = strtolower((string) config('services.kedaton.opd_master_method', 'post')) === 'post'
+            ? $http->asForm()->post($url, [
+                'key' => $key,
+                'nip' => '',
+                'nik' => '',
+                'uker_kode' => '',
+                'tipe_data' => config('services.kedaton.opd_data_type', 'perangkat'),
+            ])
             : $http->withToken((string) config('services.kedaton.data_key'))->get($url);
         if (! $response->successful()) {
-            Log::warning('Kedaton OPD master fetch failed', ['status' => $response->status()]);
+            Log::warning('Data OPD Kedaton gagal diambil.', ['event' => 'opd.fetch.failed','status' => $response->status()]);
             throw new RuntimeException('Gagal mengambil master OPD dari Kedaton (HTTP '.$response->status().').');
         }
         $json = $response->json();
         if (! is_array($json)) throw new RuntimeException('Respons master OPD Kedaton tidak valid.');
+        if (isset($json['message']) && strtoupper((string) $json['message']) !== 'BERHASIL') {
+            throw new RuntimeException('Pengambilan struktur OPD ditolak oleh Kedaton.');
+        }
         foreach (array_filter(explode('.', (string) config('services.kedaton.opd_response_path', ''))) as $segment) {
             if ($segment === '') continue;
             $json = $json[$segment] ?? null;
             if (! is_array($json)) throw new RuntimeException('Path respons master OPD tidak ditemukan.');
         }
+        if (! array_is_list($json)) throw new RuntimeException('Daftar struktur OPD tidak valid.');
         return array_values(array_filter($json, 'is_array'));
     }
 }

@@ -57,7 +57,8 @@ class ImportLearnController
 
             return back()->with('success', 'Import masuk antrian. Refresh beberapa saat untuk hasil.');
         } catch (\Throwable $th) {
-            return back()->with('danger', 'Terjadi kesalahan: '.$th->getMessage());
+            report($th);
+            return back()->with('danger', 'Impor gagal diproses. Periksa log menggunakan ID permintaan.');
         }
     }
 

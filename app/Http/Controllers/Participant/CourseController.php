@@ -34,9 +34,9 @@ class CourseController
                 'courses' => $this->course->getByParticipant($this->participantId)
             ]);
         } catch (\Throwable $e) {
-            \Log::channel('app_errors')->error('Participant CourseController@index error: ' . $e->getMessage(), [
-                'user'  => $this->participantId,
-                'trace' => $e->getTraceAsString(),
+            \Log::error('Daftar kelas peserta gagal dimuat.', ['event' => 'participant.course.list_failed',
+                'actor_id'  => $this->participantId,
+                'exception' => $e,
             ]);
             return redirect()->route('home')
                 ->with('danger', 'Terjadi kesalahan saat memuat daftar kelas. Silakan coba lagi.');
@@ -128,9 +128,10 @@ class CourseController
                 'learn' => $data
             ]);
         } catch (\Throwable $e) {
-            \Log::channel('app_errors')->error('Participant CourseController@show error: ' . $e->getMessage(), [
-                'course' => $course->slug ?? null,
-                'user'   => $this->participantId,
+            \Log::error('Detail kelas peserta gagal dimuat.', ['event' => 'participant.course.show_failed',
+                'exception' => $e,
+                'course_id' => $course->id,
+                'actor_id'   => $this->participantId,
             ]);
             return redirect()->route('participant.course.index')
                 ->with('danger', 'Terjadi kesalahan saat memuat halaman kelas. Silakan coba lagi.');

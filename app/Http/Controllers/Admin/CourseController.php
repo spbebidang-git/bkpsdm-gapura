@@ -109,10 +109,10 @@ class CourseController
         } catch (ValidationException $th) {
             throw $th;
         } catch (\Throwable $th) {
-            Log::error('Course store failed: ' . $th->getMessage(), [
-                'trace' => $th->getTraceAsString(),
+            Log::error('Penyimpanan kelas gagal.', ['event' => 'course.store.failed',
+                'exception' => $th,
             ]);
-            return redirect()->back()->withInput()->with('danger', 'Terjadi kesalahan saat menyimpan data: ' . $th->getMessage());
+            return redirect()->back()->withInput()->with('danger', 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.');
         }
     }
 
@@ -193,10 +193,10 @@ class CourseController
         } catch (ValidationException $th) {
             throw $th;
         } catch (\Throwable $th) {
-            Log::error('Course update failed: ' . $th->getMessage(), [
-                'trace' => $th->getTraceAsString(),
+            Log::error('Pembaruan kelas gagal.', ['event' => 'course.update.failed',
+                'exception' => $th,
             ]);
-            return redirect()->back()->withInput()->with('danger', 'Terjadi kesalahan saat menyimpan data: ' . $th->getMessage());
+            return redirect()->back()->withInput()->with('danger', 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.');
         }
     }
 

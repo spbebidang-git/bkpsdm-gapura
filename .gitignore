@@ -4,12 +4,11 @@
 /public/hot
 /public/storage
 /public/build/
+/public/assets/
 manifest.json
-/public/assets/media/documents/*
 /public/assets/media/images/managements/*
 /storage/*.key
 /vendor
-/public/assets/media/tasks/*
 .env
 .env.backup
 .env.production
@@ -24,18 +23,6 @@ yarn-error.log
 /.idea
 /.vscode
 /.zed
-
-# Ignore everything inside public/assets/media
-public/assets/media/images/courses
-
-# Allow only specific paths (documents/static & images/static)
-!public/assets/media/documents/
-!public/assets/media/documents/static/
-!public/assets/media/documents/static/*
-
-!public/assets/media/images/
-!public/assets/media/images/static/
-!public/assets/media/images/static/*
 
 # Ignore all Markdown files
 *.md

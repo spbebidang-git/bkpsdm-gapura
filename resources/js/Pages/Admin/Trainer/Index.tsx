@@ -6,7 +6,7 @@ import { Head } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import '@/../css/admin-course-index.css';
 
-export default function Index({ opds = [], isSuperAdmin = false }) {
+export default function Index({ opds = [], canEditLinkedUser = false }) {
     const [opdId, setOpdId] = useState('');
     const [tableKey, setTableKey] = useState(0);
 
@@ -76,12 +76,12 @@ export default function Index({ opds = [], isSuperAdmin = false }) {
                 meta: { align: 'right' },
                 cell: ({ getValue, row }) => (
                     <RowActions editHref={row.original.user_id
-                        ? (isSuperAdmin ? route('admin.trainer.edit', getValue()) : undefined)
+                        ? (canEditLinkedUser ? route('admin.trainer.edit', getValue()) : undefined)
                         : route('admin.trainer.edit', getValue())} deleteUrl={route('admin.trainer.destroy', getValue())} deleteMessage={`Trainer “${row.original.name}” akan dihapus.${row.original.source === 'sso' ? ' Role trainer dan akses trainer pengguna akan dicabut.' : ''}`} onDeleted={() => setTableKey((k) => k + 1)} iconOnly variant="course" />
                 ),
             },
         ],
-        [isSuperAdmin]
+        [canEditLinkedUser]
     );
 
     return (

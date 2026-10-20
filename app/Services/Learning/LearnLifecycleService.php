@@ -30,11 +30,12 @@ class LearnLifecycleService
         if (! $this->notifications->validCertificateUrl($url)) return false;
         return DB::transaction(function () use ($learn, $url) {
             $locked = Learn::query()->lockForUpdate()->find($learn->id);
-            if (! $locked || $this->notifications->validCertificateUrl($locked->url_certificate)) return false;
+            if (! $locked || $locked->url_certificate === $url) return false;
+            $firstCertificate = ! $this->notifications->validCertificateUrl($locked->url_certificate);
             $locked->url_certificate = $url;
             $locked->is_post_certificate = true;
             $locked->save();
-            $this->notifications->certificate($locked);
+            if ($firstCertificate) $this->notifications->certificate($locked);
             return true;
         });
     }

@@ -34,8 +34,9 @@ class CertificateController
             return redirect()->back()->with('redirect_url', $learns->url_certificate);
 
         } catch (\Throwable $e) {
-            Log::channel('app_errors')->error('Participant CertificateController error: ' . $e->getMessage(), [
-                'user'   => Auth::id(),
+            Log::error('Sertifikat peserta gagal dimuat.', ['event' => 'participant.certificate.failed',
+                'exception' => $e,
+                'actor_id' => Auth::id(),
                 'course' => $request->course ?? null,
             ]);
             return redirect()->back()->with('danger', 'Terjadi kesalahan saat memuat sertifikat. Silakan coba lagi.');

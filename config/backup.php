@@ -7,7 +7,7 @@ return [
     'root' => storage_path('app/backups'),
     'remote_disk' => env('BACKUP_REMOTE_DISK'),
     'remote_prefix' => env('BACKUP_REMOTE_PREFIX', 'gapura'),
-    'require_remote' => env('BACKUP_REQUIRE_REMOTE', true),
+    'require_remote' => env('BACKUP_REQUIRE_REMOTE', false),
     'daily_keep' => (int) env('BACKUP_DAILY_KEEP', 7),
     'weekly_keep' => (int) env('BACKUP_WEEKLY_KEEP', 4),
     'log_keep' => (int) env('LOG_BACKUP_KEEP', 30),

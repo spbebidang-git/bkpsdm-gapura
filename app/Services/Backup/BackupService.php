@@ -104,13 +104,13 @@ class BackupService
                 throw new RuntimeException('Cannot publish backup manifest.');
             }
             $this->prune($kind, $path);
-            Log::channel('backup')->info('Backup completed and verified', ['kind' => $kind, 'name' => $name, 'bytes' => $meta['bytes'], 'sha256' => $meta['sha256']]);
+            Log::channel('backup')->info('Backup selesai dan terverifikasi.', ['event' => 'backup.completed','kind' => $kind, 'name' => $name, 'bytes' => $meta['bytes'], 'sha256' => $meta['sha256']]);
 
             return $path;
         } catch (\Throwable $e) {
             // Process exceptions may contain credentials or arbitrary server output.
             $this->alert('Backup failed', ['kind' => $kind, 'exception_class' => $e::class]);
-            throw new RuntimeException('Backup failed. Check dependencies, configuration, disk capacity and off-site storage.', 0, $e);
+            throw new RuntimeException('Backup failed. Check dependencies, configuration, disk capacity and any configured remote storage.', 0, $e);
         } finally {
             if ($work !== null && is_dir($work)) {
                 File::deleteDirectory($work);
@@ -134,7 +134,7 @@ class BackupService
             }
         }
         $disk = config('backup.remote_disk');
-        if ((app()->environment('production') || config('backup.require_remote')) && ! $disk) {
+        if (config('backup.require_remote') && ! $disk) {
             throw new RuntimeException('An off-site backup disk is required.');
         }
         if ($disk && (config('filesystems.disks.'.$disk.'.visibility') === 'public'
@@ -243,13 +243,13 @@ class BackupService
 
     public function alert(string $message, array $context = []): void
     {
-        Log::channel('backup')->error($message, $context);
-        Log::channel('stderr')->error($message, $context);
+        Log::channel('backup')->error('Backup memerlukan perhatian.', ['event' => 'backup.alert', 'reason' => $message] + $context);
+        Log::channel('stderr')->error('Backup memerlukan perhatian.', ['event' => 'backup.alert', 'reason' => $message] + $context);
         if ($email = config('backup.alert_email')) {
             try {
                 Mail::raw($message.' '.json_encode($context, JSON_THROW_ON_ERROR), fn ($mail) => $mail->to($email)->subject('[Gapura] Backup requires attention'));
             } catch (\Throwable) {
-                Log::channel('stderr')->error('Backup alert delivery failed');
+                Log::channel('stderr')->error('Peringatan backup gagal dikirim.', ['event' => 'backup.alert.delivery_failed']);
             }
         }
     }

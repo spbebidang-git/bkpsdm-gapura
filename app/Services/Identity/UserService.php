@@ -137,7 +137,7 @@ class UserService
             return $candidate;
         }
 
-        Log::warning('User meta sync skipped NIP update because no valid NIP candidate was found.', [
+        Log::warning('Pembaruan identitas dilewati karena data belum valid.', ['event' => 'identity.sync.skipped',
             'participant_id' => $participantId,
             'keys' => array_keys($data),
         ]);

@@ -47,7 +47,8 @@ class ImportLearnJob implements ShouldQueue
         Log::info('ImportLearnJob selesai', [
             'course_id' => $this->courseId,
             'admin_id' => $this->adminId,
-            'results' => $results,
+            'event' => 'learn.import.completed',
+            'counts' => array_intersect_key($results, array_flip(['success', 'skipped', 'failed', 'created_users'])),
         ]);
 
         Storage::delete($this->filePath);
@@ -58,7 +59,8 @@ class ImportLearnJob implements ShouldQueue
         Log::error('ImportLearnJob gagal', [
             'course_id' => $this->courseId,
             'admin_id' => $this->adminId,
-            'error' => $e?->getMessage(),
+            'event' => 'learn.import.failed',
+            'exception_class' => $e ? $e::class : null,
         ]);
 
         Cache::put('import_learn:' . $this->adminId, [
@@ -67,7 +69,7 @@ class ImportLearnJob implements ShouldQueue
                 'skipped' => 0,
                 'failed' => 0,
                 'created_users' => 0,
-                'errors' => ['Import gagal: ' . ($e?->getMessage() ?? 'unknown')],
+                'errors' => ['Impor gagal. Periksa log menggunakan ID proses terkait.'],
             ],
             'course' => (string) $this->courseId,
         ], now()->addHours(6));

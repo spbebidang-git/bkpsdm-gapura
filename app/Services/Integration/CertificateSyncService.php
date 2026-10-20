@@ -5,8 +5,10 @@ namespace App\Services\Integration;
 use App\Repositories\Learning\Contracts\LearnRepositoryInterface;
 use App\Services\Auth\TokenService;
 use App\Services\Learning\LearnLifecycleService;
+use App\Services\Learning\ParticipantNotificationService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use RuntimeException;
 
 class CertificateSyncService
 {
@@ -15,126 +17,103 @@ class CertificateSyncService
         private readonly LearnRepositoryInterface $learns,
     ) {}
 
-    /**
-     * Lakukan sync pull: ambil URL sertifikat dari SSO lalu update DB.
-     *
-     * @return array{updated: int, message: string}
-     *
-     * @throws \Throwable
-     */
-    public function syncPull(?int $courseId = null, ?int $learnId = null, bool $onlyHasUrl = false): array
+    public function syncPull(?string $courseId = null, ?string $learnId = null, bool $onlyHasUrl = false, bool $onlyMissing = false): array
     {
-        // Ambil token
+        $validator = app(ParticipantNotificationService::class);
+        $targets = $this->learns->getForCertificateSync($courseId, $learnId, $onlyHasUrl)
+            ->loadMissing('participant.metas')
+            ->filter(fn ($learn) => $learn->finished_at && $learn->is_post_certificate && $learn->prestige_certificate_registered_at
+                && (! $onlyMissing || ! $validator->validCertificateUrl($learn->url_certificate)));
+        $groups = $targets->filter(function ($learn) {
+            if (! filled($learn->course?->prestige_certificate_code)) {
+                Log::warning('Kode sertifikat belum tersedia; pengambilan dilewati.', ['event' => 'certificate.pull.code_missing','course_id' => $learn->course_id, 'learn_id' => $learn->id]);
+
+                return false;
+            }
+
+            return true;
+        })->groupBy(fn ($learn) => $learn->course->prestige_certificate_code);
+        if ($groups->isEmpty()) {
+            return ['updated' => 0, 'message' => 'Tidak ada sertifikat yang siap diambil. Pastikan kegiatan dan pegawai sudah dikirim serta kode Prestige tersimpan.'];
+        }
+
         $token = $this->tokenService->getToken();
-
-        // Jika testing di local, buat mock data palsu agar status UI berubah
-        if (app()->environment('local')) {
-            Log::info('--- SIMULASI PULL LOKAL (Menyuntikkan URL dummy ke data) ---');
-
-            $mockData = [];
-            $learnsMock = $this->learns->getForCertificateSync($courseId, $learnId);
-            $grouped = $learnsMock->groupBy(function ($l) {
-                return $l->course?->title ?? 'Unknown';
-            });
-
-            foreach ($grouped as $title => $items) {
-                $pesertaGroup = [];
-                foreach ($items as $item) {
-                    $nip = get_user_meta($item->participant_id, 'nip');
-                    if ($nip) {
-                        $pesertaGroup[] = [
-                            'nip' => trim($nip),
-                            'sertifikat' => 'https://gapura.test/dummy-cert-view/'.$item->id.'.pdf',
-                        ];
-                    }
-                }
-                $mockData[] = [
-                    'nama_kegiatan' => $title,
-                    'peserta' => $pesertaGroup,
-                ];
-            }
-
-            Http::fake([
-                config('services.sso.base_url').'*' => Http::response($mockData, 200),
-            ]);
-        }
-
         $url = rtrim((string) config('services.sso.base_url'), '/').'/api/get_data_sertifikat';
-
-        $response = Http::withHeaders(['Authorization' => $token])
-            ->acceptJson()
-            ->asForm()
-            ->post($url);
-
-        if ($response->status() === 401) {
-            Log::warning('[CertificateSyncService] Token 401 — force refresh dan retry.');
-            $token = $this->tokenService->forceRefresh();
-            $response = Http::withHeaders(['Authorization' => $token])
-                ->acceptJson()
-                ->asForm()
-                ->post($url);
-        }
-
-        if (! $response->successful()) {
-            Log::warning('[CertificateSyncService] Gagal ambil data SSO.', ['body' => $response->body()]);
-            throw new \Exception('Gagal mengambil data sertifikat dari SSO (HTTP '.$response->status().').');
-        }
-
-        $dataKelas = json_decode($response->body(), true);
-
-        if (empty($dataKelas)) {
-            return ['updated' => 0, 'message' => 'Tidak ada data sertifikat dari SSO.'];
-        }
-
-        // Key: "Nama Kegiatan|NIP" => Value: "URL Sertifikat"
-        $ssoMap = [];
-        foreach ($dataKelas as $kelas) {
-            $courseName = trim($kelas['nama_kegiatan'] ?? '');
-            if ($courseName === '' || empty($kelas['peserta']) || ! is_array($kelas['peserta'])) {
-                continue;
-            }
-            foreach ($kelas['peserta'] as $peserta) {
-                $nip = normalize_nip($peserta['nip'] ?? null);
-                $url = trim($peserta['sertifikat'] ?? '');
-
-                if ($nip && strpos($url, 'http') !== false && $url !== '-') {
-                    $ssoMap[$courseName.'|'.$nip] = $url;
-                }
-            }
-        }
-
-        // Ambil records learn, filter per course/learn jika diberikan
-        $learns = $this->learns->getForCertificateSync($courseId, $learnId, $onlyHasUrl);
-
         $updated = 0;
-        foreach ($learns as $learn) {
-            $courseTitle = trim($learn->course?->title ?? '');
-            if ($courseTitle === '') {
-                continue;
+        foreach ($groups as $code => $learns) {
+            $attempt = 0;
+            $send = function () use (&$token, &$attempt, $url, $code, $courseId, $learnId) {
+                $parameters = ['nip' => '-', 'kode' => (string) $code, 'kegiatan' => '-', 'kode_kegiatan' => '-'];
+                $exchange = CertificateHttpLogger::request($url, 'multipart/form-data', $parameters, ++$attempt, [
+                    'kode' => $code, 'course_id' => $courseId, 'learn_id' => $learnId,
+                ]);
+                try {
+                    $response = Http::withHeaders(['Authorization' => $token])->acceptJson()->asMultipart()->timeout(60)->post($url, $parameters);
+                } catch (\Throwable $e) {
+                    CertificateHttpLogger::failed($exchange, $e);
+                    throw $e;
+                }
+                CertificateHttpLogger::response($exchange, $response, '[CertificateSync] Detail respons ambil sertifikat Prestige.');
+
+                return $response;
+            };
+            $response = $send();
+            if ($response->status() === 401) {
+                $token = $this->tokenService->forceRefresh();
+                $response = $send();
             }
-
-            $userNip = normalize_nip(get_user_meta($learn->participant_id, 'nip'));
-            if (! $userNip) {
-                continue;
+            $rows = CertificateResponse::data($response);
+            if (! array_is_list($rows)) {
+                throw new RuntimeException('Format daftar sertifikat Prestige tidak valid.');
             }
+            $updates = [];
+            $conflicts = [];
+            // Match within the requested activity code. A title or date change must not change its identity.
+            $byNip = $learns->groupBy(fn ($learn) => normalize_nip($learn->participant?->nip) ?? '');
+            foreach ($rows as $row) {
+                if (! is_array($row) || ! is_string($row['nama_kegiatan'] ?? null) || ! is_array($row['peserta'] ?? null)) {
+                    throw new RuntimeException('Format kegiatan sertifikat Prestige tidak valid.');
+                }
+                if (isset($row['kode']) && trim((string) $row['kode']) !== (string) $code) {
+                    Log::warning('Kode kegiatan respons berbeda; pengambilan dilewati.', ['event' => 'certificate.pull.code_mismatch','kode' => $code]);
 
-            $lookupKey = $courseTitle.'|'.$userNip;
+                    continue;
+                }
+                foreach ($row['peserta'] as $participant) {
+                    if (! is_array($participant)) {
+                        throw new RuntimeException('Format peserta sertifikat Prestige tidak valid.');
+                    }
+                    $nip = normalize_nip($participant['nip'] ?? null);
+                    $certificate = $participant['sertifikat'] ?? null;
+                    if (! $nip || ! is_string($certificate) || ! $validator->validCertificateUrl(trim($certificate))) {
+                        continue;
+                    }
+                    $matches = $byNip->get($nip, collect());
+                    if ($matches->count() !== 1) {
+                        if ($matches->count() > 1) {
+                            Log::warning('Peserta kegiatan ambigu; pembaruan dilewati.', ['event' => 'certificate.pull.ambiguous','kode' => $code]);
+                        }
 
-            // Jika ditemukan di SSO data terbaru
-            if (isset($ssoMap[$lookupKey])) {
-                $newSertifikatUrl = $ssoMap[$lookupKey];
-
-                // Update hanya jika ada perubahan URL
-                if ($learn->url_certificate !== $newSertifikatUrl) {
-                    if (app(LearnLifecycleService::class)->setCertificate($learn, $newSertifikatUrl)) $updated++;
+                        continue;
+                    }
+                    $learn = $matches->first();
+                    $certificate = trim($certificate);
+                    if (isset($updates[$learn->id]) && $updates[$learn->id] !== $certificate) {
+                        $conflicts[$learn->id] = true;
+                        Log::warning('URL sertifikat konflik; pembaruan dilewati.', ['event' => 'certificate.pull.conflict','kode' => $code, 'learn_id' => $learn->id]);
+                    }
+                    $updates[$learn->id] = $certificate;
                 }
             }
-            // Jika tidak ditemukan di SSO, record lama akan tetap menggunakan url_certificate yang lama (tidak tersentuh)
+            foreach ($updates as $id => $certificate) {
+                if (! isset($conflicts[$id]) && app(LearnLifecycleService::class)->setCertificate($learns->firstWhere('id', $id), $certificate)) {
+                    $updated++;
+                }
+            }
         }
 
-        return [
-            'updated' => $updated,
-            'message' => "Pull selesai. {$updated} sertifikat berhasil disinkronisasi ulang.",
-        ];
+        Log::info('Pengambilan sertifikat selesai.', ['event' => 'certificate.pull.completed', 'updated_count' => $updated]);
+
+        return ['updated' => $updated, 'message' => "Pull selesai. {$updated} sertifikat berhasil disinkronisasi."];
     }
 }

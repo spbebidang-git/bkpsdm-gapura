@@ -23,6 +23,8 @@ return [
         'string' => ':attribute harus terdiri dari :min hingga :max karakter.',
     ],
     'boolean' => ':attribute harus bernilai benar atau salah.',
+    'captcha' => 'Kode captcha tidak sesuai. Silakan coba lagi.',
+    'captcha_api' => 'Kode captcha tidak sesuai. Silakan coba lagi.',
     'can' => ':attribute berisi nilai yang tidak diizinkan.',
     'confirmed' => 'Konfirmasi :attribute tidak cocok.',
     'contains' => ':attribute belum memuat nilai yang diwajibkan.',
@@ -156,8 +158,15 @@ return [
     'url' => ':attribute harus berupa URL yang valid.',
     'ulid' => ':attribute harus berupa ULID yang valid.',
     'uuid' => ':attribute harus berupa UUID yang valid.',
-    'custom' => [],
+    'custom' => [
+        'captcha' => [
+            'captcha' => 'Kode captcha tidak sesuai. Silakan coba lagi.',
+            'captcha_api' => 'Kode captcha tidak sesuai. Silakan coba lagi.',
+            'required' => 'Kode captcha wajib diisi.',
+        ],
+    ],
     'attributes' => [
+        'captcha' => 'Captcha',
         'name' => 'Nama', 'code' => 'Kode OPD/Unit Kerja', 'is_active' => 'Status',
         'email' => 'Alamat email', 'nip' => 'NIP', 'password' => 'Kata sandi',
         'password_confirmation' => 'Konfirmasi kata sandi', 'current_password' => 'Kata sandi saat ini',

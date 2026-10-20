@@ -147,16 +147,6 @@ $config = [
             'path' => storage_path('logs/laravel.log'),
         ],
 
-        // Channel khusus untuk error aplikasi
-        // - File harian: storage/logs/app-errors-YYYY-MM-DD.log
-        // - Auto-delete setelah 7 hari
-        'app_errors' => [
-            'driver' => 'daily',
-            'path' => storage_path('logs/app-errors.log'),
-            'level' => 'error',
-            'days' => 7,
-            'replace_placeholders' => true,
-        ],
 
     ],
 
@@ -173,5 +163,8 @@ foreach ($config['channels'] as $name => &$channel) {
 unset($channel);
 $config['channels']['audit'] = $config['channels']['auth'];
 $config['channels']['audit']['path'] = storage_path('logs/audit.log');
+$config['channels']['audit']['days'] = (int) env('LOG_AUDIT_DAYS', 30);
+// Compatibility for existing callers; historical app-errors files remain readable.
+$config['channels']['app_errors'] = $config['channels']['daily'];
 
 return $config;

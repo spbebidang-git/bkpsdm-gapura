@@ -1,37 +1,34 @@
+import Modal from '@/Components/Modal';
+import { DialogTitle } from '@headlessui/react';
 import DataTable from '@/Components/Admin/DataTable';
-import {
-    badgeInfo,
-    badgeOk,
-    badgePending,
-    btnPrimarySm,
-    btnSecondarySm,
-    btnXs,
-    card,
-    pageDescription,
-    pageEyebrow,
-    pageHeader,
-    pageTitle,
-} from '@/Components/Admin/ui';
+import { CrudPageHeader } from '@/Components/Admin/CrudPrimitives';
+import { btnSecondarySm } from '@/Components/Admin/ui';
+import '@/../css/admin-course-index.css';
+import '@/../css/admin-certificate.css';
 import AdminLayout from '@/Layouts/Admin/App';
 import { Head, router } from '@inertiajs/react';
 import { useMemo, useRef, useState } from 'react';
 
 export default function Index({ courses = [] }) {
+    const [preview, setPreview] = useState(null);
+    const [search, setSearch] = useState('');
     const [status, setStatus] = useState('');
     const [courseId, setCourseId] = useState('');
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
     const [tableKey, setTableKey] = useState(0);
     const processing = useRef(false);
+    const [syncing, setSyncing] = useState<string | null>(null);
 
     const filterParams = useMemo(
         () => ({
+            q: search,
             status_filter: status,
             course_filter: courseId,
             date_from: dateFrom,
             date_to: dateTo,
         }),
-        [status, courseId, dateFrom, dateTo]
+        [status, courseId, dateFrom, dateTo, search]
     );
 
     const columns = useMemo(
@@ -52,28 +49,25 @@ export default function Index({ courses = [] }) {
             },
             {
                 accessorKey: 'name',
+                enableSorting: false,
+                enableGlobalFilter: false,
                 header: 'Nama',
                 cell: ({ getValue }) => (
-                    <span className="font-medium text-[#003C52]">{getValue() || '—'}</span>
-                ),
-            },
-            {
-                accessorKey: 'satker',
-                header: 'Satker',
-                enableSorting: false,
-                cell: ({ getValue }) => (
-                    <span className="text-[#526176]">{getValue() || '—'}</span>
+                    <span className="certificate-name">{getValue() || '—'}</span>
                 ),
             },
             {
                 accessorKey: 'course',
+                enableSorting: false,
+                enableGlobalFilter: false,
                 header: 'Kelas',
                 cell: ({ getValue }) => (
-                    <span className="text-[#526176]">{getValue() || '—'}</span>
+                    <span className="certificate-course">{getValue() || '—'}</span>
                 ),
             },
             {
                 accessorKey: 'finished_at',
+                enableGlobalFilter: false,
                 header: 'Selesai',
                 cell: ({ getValue }) => (
                     <span className="tabular-nums text-[#526176]">{getValue() || '—'}</span>
@@ -87,12 +81,12 @@ export default function Index({ courses = [] }) {
                 cell: ({ row, getValue }) => {
                     const s = row.original?.status_code;
                     const map = {
-                        available: badgeOk,
-                        sent: badgeInfo,
-                        pending: badgePending,
+                        available: 'certificate-status is-available',
+                        sent: 'certificate-status is-sent',
+                        pending: 'certificate-status is-pending',
                     };
                     return (
-                        <span className={map[s] || badgePending}>
+                        <span className={map[s] || 'certificate-status is-pending'}>
                             {getValue() || 'Menunggu'}
                         </span>
                     );
@@ -105,13 +99,13 @@ export default function Index({ courses = [] }) {
                 enableGlobalFilter: false,
                 cell: ({ getValue }) => {
                     const url = getValue();
-                    if (!url || url === '-' || url === '') {
+                    if (!url || !/^https?:\/\//i.test(url)) {
                         return <span className="text-[#C2C9D6]">—</span>;
                     }
                     return (
-                        <a href={url} target="_blank" rel="noreferrer" className={btnXs}>
-                            Unduh
-                        </a>
+                        <button type="button" onClick={() => setPreview(url)} className="certificate-preview">
+                            <i className="bx bx-show" aria-hidden /> Pratinjau
+                        </button>
                     );
                 },
             },
@@ -122,6 +116,7 @@ export default function Index({ courses = [] }) {
     const sync = (type) => {
         if (processing.current) return;
         processing.current = true;
+        setSyncing(type);
         const url =
             type === 'push'
                 ? route('admin.certificate.sync-push')
@@ -134,6 +129,7 @@ export default function Index({ courses = [] }) {
                 onSuccess: () => setTableKey((k) => k + 1),
                 onFinish: () => {
                     processing.current = false;
+                    setSyncing(null);
                 },
             }
         );
@@ -142,80 +138,71 @@ export default function Index({ courses = [] }) {
     return (
         <AdminLayout title="Sertifikat" hideTitle>
             <Head title="Sertifikat" />
-            <div className="space-y-5">
-                <div className={pageHeader}>
-                    <div className="min-w-0">
-                        <p className={pageEyebrow}>Operasional</p>
-                        <h1 className={pageTitle}>Sertifikat</h1>
-                        <p className={pageDescription}>Status penerbitan sertifikat peserta dan sinkronisasi dengan SSO.</p>
-                    </div>
-                    <div className="shrink-0">
-                        <div className="flex shrink-0 flex-wrap gap-2">
-                            <button type="button" onClick={() => sync('push')} className={btnPrimarySm}>
-                                Kirim ke SSO
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => sync('pull')}
-                                className={btnSecondarySm}
-                            >
-                                Ambil dari SSO
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <div className={`${card} grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4`} aria-label="Filter sertifikat">
-                    <select
-                        value={status}
-                        onChange={(e) => setStatus(e.target.value)}
-                        className="form-control"
-                        aria-label="Filter status"
-                    >
-                        <option value="">Semua status</option>
-                        <option value="menunggu">Menunggu</option>
-                        <option value="dikirim">Dikirim</option>
-                        <option value="tersedia">Tersedia</option>
-                    </select>
-                    <select
-                        value={courseId}
-                        onChange={(e) => setCourseId(e.target.value)}
-                        className="form-control"
-                        aria-label="Filter kelas"
-                    >
-                        <option value="">Semua kelas</option>
-                        {courses.map((c) => (
-                            <option key={c.id} value={c.id}>
-                                {c.title}
-                            </option>
-                        ))}
-                    </select>
-                    <input
-                        type="date"
-                        value={dateFrom}
-                        onChange={(e) => setDateFrom(e.target.value)}
-                        className="form-control"
-                        aria-label="Tanggal mulai"
-                    />
-                    <input
-                        type="date"
-                        value={dateTo}
-                        onChange={(e) => setDateTo(e.target.value)}
-                        className="form-control"
-                        aria-label="Tanggal akhir"
-                    />
-                </div>
-
+            <div className="certificate-admin course-index">
+                <CrudPageHeader
+                    title="Sertifikat"
+                    description="Kelola sertifikat peserta yang telah menyelesaikan kelas dan sinkronkan dengan Kedaton SSO."
+                    actions={<>
+                        <a href={`${route('admin.certificate.export')}?${new URLSearchParams(filterParams)}`} className="course-index-create">
+                            <i className="bx bx-download" aria-hidden /> Ekspor Excel
+                        </a>
+                        <button type="button" onClick={() => sync('push')} disabled={Boolean(syncing)} className="certificate-secondary" aria-live="polite">
+                            <i className={`bx ${syncing === 'push' ? 'bx-loader-alt bx-spin' : 'bx-cloud-upload'}`} aria-hidden />
+                            {syncing === 'push' ? 'Mengirim…' : 'Kirim ke SSO'}
+                        </button>
+                        <button type="button" onClick={() => sync('pull')} disabled={Boolean(syncing)} className="certificate-secondary" aria-live="polite">
+                            <i className={`bx ${syncing === 'pull' ? 'bx-loader-alt bx-spin' : 'bx-cloud-download'}`} aria-hidden />
+                            {syncing === 'pull' ? 'Mengambil…' : 'Ambil dari SSO'}
+                        </button>
+                    </>}
+                />
                 <DataTable
-                    key={tableKey}
+                    refreshKey={tableKey}
+                    className="course-index-table admin-crud-table certificate-table"
                     url={route('admin.certificate.index')}
                     columns={columns}
                     params={filterParams}
-                    searchPlaceholder="Cari peserta, satker, atau kelas..."
+                    hideSearch
+                    toolbarFilters={<div className="certificate-toolbar">
+                        <label className="certificate-search">
+                            <span className="sr-only">Cari peserta atau kelas</span>
+                            <i className="bx bx-search" aria-hidden />
+                            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} className="admin-search-input" placeholder="Cari peserta atau kelas..." />
+                        </label>
+                        <div className="certificate-filters" aria-label="Filter sertifikat">
+                            <label><span>Status</span><select value={status} onChange={(e) => setStatus(e.target.value)}>
+                                <option value="">Semua status</option>
+                                <option value="tidak_tersedia">Tidak tersedia</option>
+                                <option value="menunggu">Tidak tersedia — Menunggu</option>
+                                <option value="dikirim">Tidak tersedia — Dikirim SSO</option>
+                                <option value="tersedia">Tersedia</option>
+                            </select></label>
+                            <label><span>Kelas</span><select value={courseId} onChange={(e) => setCourseId(e.target.value)}>
+                                <option value="">Semua kelas</option>
+                                {courses.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
+                            </select></label>
+                            <label><span>Selesai dari</span><input type="date" value={dateFrom} max={dateTo || undefined} onChange={(e) => setDateFrom(e.target.value)} /></label>
+                            <label><span>Selesai sampai</span><input type="date" value={dateTo} min={dateFrom || undefined} onChange={(e) => setDateTo(e.target.value)} /></label>
+                            <button type="button" className="certificate-secondary" disabled={!search && !status && !courseId && !dateFrom && !dateTo} onClick={() => { setStatus(''); setCourseId(''); setDateFrom(''); setDateTo(''); setSearch(''); }}>
+                                <i className="bx bx-reset" aria-hidden /> Reset filter
+                            </button>
+                        </div>
+                    </div>}
+                    dataLabel="sertifikat"
                     emptyTitle="Sertifikat tidak ditemukan"
                     emptyDescription="Ubah filter atau sinkronkan data sertifikat dengan SSO."
                 />
             </div>
+            <Modal show={Boolean(preview)} onClose={() => setPreview(null)}>
+                <div className="p-4">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                        <DialogTitle className="font-poppins font-semibold text-[#075D5E]">Pratinjau sertifikat</DialogTitle>
+                        <button type="button" onClick={() => setPreview(null)} className={btnSecondarySm}>Tutup</button>
+                    </div>
+                    <p className="mb-3 text-sm">Jika preview tidak tampil, <a href={preview || '#'} target="_blank" rel="noopener noreferrer" className="underline">buka sertifikat di tab baru</a>.</p>
+                    {preview && <iframe src={preview} title="Preview sertifikat peserta" className="h-[65vh] w-full rounded border" referrerPolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-popups" />}
+                </div>
+            </Modal>
         </AdminLayout>
     );
 }

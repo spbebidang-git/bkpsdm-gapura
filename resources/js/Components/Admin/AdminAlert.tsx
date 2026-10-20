@@ -1,4 +1,3 @@
-import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
 /** Shared flash payload shape (see HandleInertiaRequests::share()). */
@@ -19,9 +18,10 @@ const getAlert = (flash: FlashProp = {}): AlertMessage | null => {
 const AdminAlert = ({ initialFlash = {} }: { initialFlash?: FlashProp }) => {
     const [alert, setAlert] = useState<AlertMessage | null>(() => getAlert(initialFlash));
 
-    useEffect(() => router.on('navigate', (event) => {
-        setAlert(getAlert(event.detail.page.props.flash ?? {}));
-    }), []);
+    // Same-page submissions preserve the layout, so read each new flash payload.
+    useEffect(() => {
+        setAlert(getAlert(initialFlash));
+    }, [initialFlash]);
 
     useEffect(() => {
         if (!alert) return;

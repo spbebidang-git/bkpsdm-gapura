@@ -333,10 +333,11 @@ return new class extends Migration
                 continue;
             }
 
-            try {
-                DB::statement("ALTER TABLE `{$table}` DROP PRIMARY KEY");
-            } catch (\Throwable) {
-            }
+            // The old primary key also supports the Spatie foreign key.
+            // MySQL requires a separate index before it can be dropped.
+            $foreignKeyColumn = $table === 'model_has_roles' ? 'role_id' : 'permission_id';
+            DB::statement("ALTER TABLE `{$table}` ADD INDEX `{$table}_pivot_fk_index` (`{$foreignKeyColumn}`)");
+            DB::statement("ALTER TABLE `{$table}` DROP PRIMARY KEY");
 
             if (! Schema::hasColumn($table, 'model_id_ulid')) {
                 DB::statement("ALTER TABLE `{$table}` ADD COLUMN `model_id_ulid` CHAR(26) NULL");

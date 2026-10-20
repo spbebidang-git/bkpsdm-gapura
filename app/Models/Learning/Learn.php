@@ -19,6 +19,7 @@ class Learn extends Model
 
     protected $casts = [
         'finished_at' => 'datetime',
+        'prestige_certificate_registered_at' => 'datetime',
     ];
 
     public function learnItems()

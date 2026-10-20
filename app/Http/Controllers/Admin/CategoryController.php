@@ -22,6 +22,7 @@ class CategoryController
 
         return Inertia::render('Admin/Category/Index', [
             'lastSyncedAt' => get_setting_meta('categories_last_synced_at') ?: null,
+            'canSync' => request()->user()->hasRole('super_admin') || request()->user()->can('category.manage'),
         ]);
     }
 
@@ -32,7 +33,9 @@ class CategoryController
 
             return back()->with('success', $result['message']);
         } catch (\Throwable $e) {
-            return back()->with('danger', 'Sync gagal: '.$e->getMessage());
+            report($e);
+
+            return back()->with('danger', 'Sinkronisasi kategori dari Prestige gagal. Silakan coba kembali atau hubungi administrator.');
         }
     }
 }

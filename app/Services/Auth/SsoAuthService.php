@@ -99,8 +99,8 @@ class SsoAuthService
             ]);
 
         if (! $response->successful()) {
-            Log::warning('SSO password grant failed', [
-                'nip' => $nip,
+            Log::warning('Autentikasi SSO ditolak.', [
+                'event' => 'auth.sso.denied',
                 'status' => $response->status(),
             ]);
             throw new RuntimeException('Kredensial SSO tidak valid.');
@@ -154,7 +154,7 @@ class SsoAuthService
             ->post(rtrim(config('services.sso.base_url'), '/').'/api/get_nip_data');
 
         if (! $response->successful()) {
-            Log::warning('SSO get_nip_data failed', ['status' => $response->status()]);
+            Log::warning('Data identitas SSO gagal diambil.', ['event' => 'auth.sso.identity_failed','status' => $response->status()]);
             throw new RuntimeException('Gagal mengambil data NIP dari SSO.');
         }
 

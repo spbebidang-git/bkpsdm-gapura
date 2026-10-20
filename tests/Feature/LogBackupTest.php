@@ -253,6 +253,47 @@ class LogBackupTest extends TestCase
         $this->artisan('backup:health')->assertFailed();
     }
 
+    public function test_local_production_backups_pass_health_without_remote_storage(): void
+    {
+        $originalEnvironment = app()->environment();
+        app()->instance('env', 'production');
+        config([
+            'backup.recipients' => ['age1'.str_repeat('q', 58)],
+            'backup.remote_disk' => null,
+            'backup.require_remote' => false,
+            'backup.alert_email' => 'backup@example.test',
+            'mail.default' => 'smtp',
+        ]);
+        // Isolate the configuration/health contract from the external age binary.
+        $service = Mockery::mock(BackupService::class)->makePartial();
+        $service->shouldReceive('run')->once()->with(Mockery::on(fn ($process) => str_contains($process->getCommandLine(), '--version')));
+        app()->instance(BackupService::class, $service);
+        foreach (BackupService::KINDS as $kind) {
+            $dir = config('backup.root').'/'.$kind;
+            File::ensureDirectoryExists($dir, 0700);
+            $name = $kind.'-test.age';
+            File::put($dir.'/'.$name, 'test encrypted archive fixture');
+            File::put($dir.'/'.$name.'.json', json_encode([
+                'kind' => $kind, 'name' => $name, 'created_at' => now()->toIso8601String(),
+                'bytes' => filesize($dir.'/'.$name), 'remote_disk' => null,
+            ], JSON_THROW_ON_ERROR));
+        }
+        try {
+            $this->artisan('backup:health')->assertSuccessful();
+            Mail::assertNothingSent();
+        } finally {
+            app()->instance('env', $originalEnvironment);
+        }
+    }
+
+    public function test_explicit_remote_requirement_still_rejects_missing_disk(): void
+    {
+        config(['backup.recipients' => ['age1'.str_repeat('q', 58)], 'backup.require_remote' => true]);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('An off-site backup disk is required.');
+        app(BackupService::class)->checkConfiguration();
+    }
+
     public function test_failed_database_or_log_command_returns_nonzero(): void
     {
         $this->artisan('db:backup')->assertFailed();

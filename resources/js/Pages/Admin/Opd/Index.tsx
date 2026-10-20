@@ -1,14 +1,10 @@
 import DataTable from '@/Components/Admin/DataTable';
-import { RowActions } from '@/Components/Admin/ActionButtons';
 import { CrudPageHeader, CrudStatusBadge } from '@/Components/Admin/CrudPrimitives';
-import Button from '@/Components/Button';
 import AdminLayout from '@/Layouts/Admin/App';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useMemo, useRef, useState } from 'react';
 import '@/../css/admin-opd.css';
 import '@/../css/admin-course-index.css';
-
-type OpdRow = { id: number; code: string; name: string; is_active: boolean; synced_at: string | null };
 
 export default function Index({ lastSyncedAt, configured }: { lastSyncedAt: string | null; configured: boolean }) {
     const busy = useRef(false);
@@ -23,18 +19,6 @@ export default function Index({ lastSyncedAt, configured }: { lastSyncedAt: stri
         { accessorKey: 'name', header: 'Nama OPD', cell: ({ getValue }) => <span className="opd-name">{getValue()}</span> },
         { accessorKey: 'is_active', header: 'Status', enableGlobalFilter: false, cell: ({ getValue }) => <CrudStatusBadge active={Boolean(getValue())} /> },
         { accessorKey: 'synced_at', header: 'Sumber', cell: ({ getValue }) => getValue() ? <span className="opd-source is-sso"><i className="bx bx-cloud-download" aria-hidden />Kedaton SSO</span> : <span className="opd-source"><i className="bx bx-edit" aria-hidden />Lokal</span> },
-        {
-            id: 'aksi', accessorKey: 'id', header: 'Aksi', enableSorting: false, enableGlobalFilter: false,
-            meta: { align: 'right' },
-            cell: ({ getValue, row }) => <RowActions
-                editHref={route('admin.opd.edit', getValue())}
-                deleteUrl={route('admin.opd.destroy', getValue())}
-                deleteMessage={`OPD “${(row.original as OpdRow).name}” akan dihapus.`}
-                onDeleted={() => setRefreshKey((key) => key + 1)}
-                iconOnly
-                variant="course"
-            />,
-        },
     ], []);
 
     const sync = () => {
@@ -43,7 +27,9 @@ export default function Index({ lastSyncedAt, configured }: { lastSyncedAt: stri
         setSyncing(true);
         router.post(route('admin.opd.sync'), {}, {
             preserveScroll: true,
-            onSuccess: () => setRefreshKey((key) => key + 1),
+            onSuccess: ({ props }) => {
+                if (!props.flash?.danger) setRefreshKey((key) => key + 1);
+            },
             onFinish: () => { busy.current = false; setSyncing(false); },
         });
     };
@@ -51,12 +37,11 @@ export default function Index({ lastSyncedAt, configured }: { lastSyncedAt: stri
     return <AdminLayout title="OPD" hideTitle>
         <Head title="OPD" />
         <div className="opd-admin course-index">
-            <CrudPageHeader title="OPD" description={<>Kelola data organisasi perangkat daerah. Sinkronisasi terakhir: <strong>{formattedSync || 'Belum pernah'}</strong>{!configured && <span className="opd-config-warning"><i className="bx bx-error-circle" aria-hidden /> Endpoint master OPD belum dikonfigurasi.</span>}</>} actions={<>
-                <Link href={route('admin.opd.create')} className="course-index-create"><i className="bx bx-plus" aria-hidden />Tambah OPD</Link>
-                <Button variant="secondary" onClick={sync} disabled={!configured || syncing} aria-live="polite">
-                    <i className={`bx ${syncing ? 'bx-loader-alt bx-spin' : 'bx-refresh'} text-base`} aria-hidden />
-                    {syncing ? 'Menyinkronkan…' : 'Sinkronkan SSO'}
-                </Button>
+            <CrudPageHeader title="OPD" description={<>Data organisasi perangkat daerah dikelola melalui sinkronisasi Kedaton SSO. Sinkronisasi terakhir: <strong>{formattedSync || 'Belum pernah'}</strong>{!configured && <span className="opd-config-warning"><i className="bx bx-error-circle" aria-hidden /> Endpoint atau API key master OPD belum dikonfigurasi.</span>}</>} actions={<>
+                <button type="button" className="course-index-create" onClick={sync} disabled={!configured || syncing} aria-live="polite">
+                    <i className={`bx ${syncing ? 'bx-loader-alt bx-spin' : 'bx-refresh'}`} aria-hidden />
+                    {syncing ? 'Menyinkronkan…' : 'Sinkronkan OPD'}
+                </button>
             </>} />
             <DataTable
                 url={route('admin.opd.index')}
@@ -65,7 +50,7 @@ export default function Index({ lastSyncedAt, configured }: { lastSyncedAt: stri
                 className="course-index-table admin-crud-table opd-admin-table"
                 searchPlaceholder="Cari kode atau nama OPD..."
                 emptyTitle="Belum ada OPD"
-                emptyDescription="Tambahkan OPD lokal atau jalankan sinkronisasi Kedaton."
+                emptyDescription="Jalankan sinkronisasi Kedaton untuk mengambil data OPD."
                 dataLabel="OPD"
             />
         </div>

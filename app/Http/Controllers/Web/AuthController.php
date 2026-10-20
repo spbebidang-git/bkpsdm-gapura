@@ -41,7 +41,7 @@ class AuthController
             try {
                 $user = $this->prestige->loginPrestigeSuperAdmin($identifier, $credentials['password']);
             } catch (\Throwable $exception) {
-                Log::warning('Prestige super admin login failed.', ['exception' => $exception::class]);
+                Log::warning('Login super admin Prestige gagal.', ['event' => 'auth.prestige.failed','exception' => $exception::class]);
                 return back()->withErrors(['email_or_username' => 'Kredensial Prestige tidak valid atau layanan sedang tidak tersedia.'])->onlyInput('email');
             }
 
@@ -117,7 +117,7 @@ class AuthController
 
             $nip = $this->kedaton->verifiedNip($verifiedData);
             if ($nip === null) {
-                Log::warning('Kedaton token check did not include a verified NIP.');
+                Log::warning('Identitas terverifikasi tidak tersedia dari Kedaton.', ['event' => 'auth.kedaton.identity_missing']);
                 return $this->invalidCredentialsResponse();
             }
 
@@ -141,7 +141,7 @@ class AuthController
 
             return to_route($user->hasAnyRole(['administrator', 'trainer']) ? 'admin.dashboard' : 'participant.dashboard');
         } catch (\Throwable $exception) {
-            Log::warning('Kedaton OAuth authentication failed.', [
+            Log::warning('Autentikasi Kedaton gagal.', ['event' => 'auth.kedaton.failed',
                 'exception' => $exception::class,
             ]);
 
@@ -161,7 +161,7 @@ class AuthController
             $user = $userMeta->user;
 
             if (! $user->usesSsoAuthentication()) {
-                Log::warning('Kedaton SSO attempted to link a local account by NIP.', [
+                Log::warning('Penautan akun lokal melalui Kedaton ditolak.', ['event' => 'auth.kedaton.local_link_denied',
                     'user_id' => $user->id,
                 ]);
 
@@ -169,7 +169,7 @@ class AuthController
             }
 
             if (User::where('nip', $nip)->where('id', '!=', $user->id)->exists()) {
-                Log::warning('Kedaton SSO found conflicting accounts for a verified NIP.', [
+                Log::warning('Konflik akun identitas Kedaton ditemukan.', ['event' => 'auth.kedaton.account_conflict',
                     'user_id' => $user->id,
                 ]);
 
@@ -182,7 +182,7 @@ class AuthController
         $userByNip = User::where('nip', $nip)->first();
         if ($userByNip) {
             if (! $userByNip->usesSsoAuthentication()) {
-                Log::warning('Kedaton SSO attempted to link a local account by NIP column.', [
+                Log::warning('Penautan akun lokal melalui identitas Kedaton ditolak.', ['event' => 'auth.kedaton.local_identity_link_denied',
                     'user_id' => $userByNip->id,
                 ]);
 
@@ -201,7 +201,7 @@ class AuthController
         if ($existingUser) {
             if (! $existingUser->usesSsoAuthentication()
                 || (filled($existingUser->nip) && $existingUser->nip !== $nip)) {
-                Log::warning('Kedaton SSO attempted to link a local or mismatched account by email.', [
+                Log::warning('Penautan akun Kedaton dengan identitas berbeda ditolak.', ['event' => 'auth.kedaton.email_link_denied',
                     'user_id' => $existingUser->id,
                 ]);
 

@@ -13,7 +13,7 @@ class PermissionSeeder extends Seeder
         'dashboard.view', 'course.view', 'course.create', 'course.update', 'course.delete',
         'course.activity.manage', 'course.participant.view', 'result.view', 'trainer.manage',
         'participant.view', 'participant.manage', 'certificate.manage', 'import.manage', 'review.manage', 'help.manage',
-        'category.manage', 'opd.manage', 'employee-status.manage', 'user.manage', 'role.manage', 'permission.manage',
+        'category.view', 'category.manage', 'opd.manage', 'employee-status.manage', 'user.manage', 'role.manage', 'permission.manage',
         'setting.manage', 'notification-template.manage', 'log.view', 'backup.download',
     ];
 
@@ -33,13 +33,13 @@ class PermissionSeeder extends Seeder
             'dashboard.view', 'course.view', 'course.create', 'course.update', 'course.delete',
             'course.activity.manage', 'course.participant.view', 'result.view', 'trainer.manage',
             'participant.view', 'participant.manage', 'certificate.manage', 'import.manage', 'review.manage', 'help.manage',
-            'category.manage', 'opd.manage', 'employee-status.manage',
+            'category.view', 'category.manage', 'opd.manage', 'employee-status.manage',
         ]);
 
         Role::firstOrCreate(['name' => 'trainer', 'guard_name' => 'web'])
             ->syncPermissions([
                 'dashboard.view', 'course.view', 'course.create', 'course.update',
-                'course.activity.manage', 'course.participant.view', 'result.view',
+                'course.activity.manage', 'course.participant.view', 'result.view', 'category.view',
             ]);
 
         Role::firstOrCreate(['name' => 'participant', 'guard_name' => 'web'])

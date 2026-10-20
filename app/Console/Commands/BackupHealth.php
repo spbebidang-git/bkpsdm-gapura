@@ -20,7 +20,7 @@ class BackupHealth extends Command
         try {
             $backups->checkConfiguration();
         } catch (\Throwable $e) {
-            $problems[] = 'Backup prerequisites are not ready (age, recipient or off-site storage).';
+            $problems[] = 'Backup prerequisites are not ready (age, recipient or configured storage).';
         }
         if (app()->environment('production') && (! config('backup.alert_email') || in_array(config('mail.default'), ['log', 'array'], true))) {
             $problems[] = 'Production backup alerts require an email recipient and a real mail transport.';

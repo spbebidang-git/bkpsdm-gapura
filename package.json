@@ -4,7 +4,7 @@
     "scripts": {
         "dev": "vite",
         "typecheck": "tsc --noEmit",
-        "build": "vite build && vite build --ssr"
+        "build": "vite build && vite build --ssr && node scripts/copy-static-assets.mjs && node scripts/sync-boxicons.mjs"
     },
     "devDependencies": {
         "@headlessui/react": "^2.0.0",

@@ -13,6 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->prepend(\App\Http\Middleware\RequestLogContext::class);
+
         $trustedProxies = env('TRUSTED_PROXIES', '*');
 
         $middleware->trustProxies(
@@ -43,5 +45,14 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->dontReportDuplicates();
+        $exceptions->context(fn (\Throwable $exception) => app(\App\Logging\LogContext::class)->forException($exception) + array_filter([
+            'request_id' => request()->attributes->get('request_id'),
+        ]));
+        $exceptions->respond(function ($response) {
+            if ($id = request()->attributes->get('request_id')) {
+                $response->headers->set('X-Request-ID', $id);
+            }
+            return $response;
+        });
     })->create();

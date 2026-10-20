@@ -13,6 +13,6 @@ class SyncOpds extends Command
     public function handle(OpdSyncService $sync): int
     {
         try { $this->info($sync->sync()['message']); return self::SUCCESS; }
-        catch (\Throwable $e) { $this->error($e->getMessage()); return self::FAILURE; }
+        catch (\Throwable $e) { report($e); $this->error('Sinkronisasi OPD gagal. Periksa log menggunakan ID proses.'); return self::FAILURE; }
     }
 }

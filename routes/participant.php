@@ -1,42 +1,97 @@
 <?php
 
+use App\Http\Controllers\Participant\CertificateController;
+use App\Http\Controllers\Participant\CourseController;
+use App\Http\Controllers\Participant\DashboardController;
+use App\Http\Controllers\Participant\LearnController;
+use App\Http\Controllers\Participant\NotificationController;
+use App\Http\Controllers\Participant\ProfileController;
+use App\Http\Controllers\Participant\RatingController;
+use App\Http\Controllers\Participant\SurveyController;
 use App\Http\Middleware\CheckRoleAuthMiddleware;
 use App\Http\Middleware\IsFinishedMiddleware;
 use App\Http\Middleware\IsParticipantMiddleware;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Participant\NotificationController;
+
+/*
+|--------------------------------------------------------------------------
+| Participant Routes
+|--------------------------------------------------------------------------
+| Order follows the participant header nav (resources/js/Layouts/Participant/Header.tsx):
+|   Overview    — dashboard
+|   My Courses  — course list + detail
+|   Notifications
+|   Profile
+|   Learning flow — rating, survey, instruction, material, result
+|   Certificate — issued after finishing a course
+|
+| Access: `auth` + CheckRoleAuthMiddleware + IsParticipantMiddleware.
+| Only the `participant` role reaches these routes; other roles are redirected
+| to the admin panel (see IsParticipantMiddleware).
+| Learning routes additionally require an active enrollment via
+| `participant.enrollment:read|write` (CheckParticipantEnrollmentAccess), and
+| rating/survey require the course to be finished (IsFinishedMiddleware).
+*/
 
 Route::middleware(['auth', CheckRoleAuthMiddleware::class, IsParticipantMiddleware::class])
     ->name('participant.')
     ->group(function () {
-        Route::get('notifications/count', [NotificationController::class, 'count'])->name('notifications.count');
-        Route::get('notifications/latest', [NotificationController::class, 'latest'])->name('notifications.latest');
-        Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
-        Route::patch('notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
-        Route::patch('notifications/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
-        # Dashboard
-        Route::get('dashboard', \App\Http\Controllers\Participant\DashboardController::class)->name('dashboard');
-        # My Course 
-        Route::get('my-course', [\App\Http\Controllers\Participant\CourseController::class, 'index'])->name('course.index');
-        Route::get('my-course/{course:slug}', [\App\Http\Controllers\Participant\CourseController::class, 'show'])->name('course.show');
-        # Rating & Submit Score
-        Route::get('learn/{course:slug}/{scheduleId}/rating', [\App\Http\Controllers\Participant\RatingController::class, 'index'])->name('rating.index')->middleware([IsFinishedMiddleware::class, 'participant.enrollment:read']);
-        Route::post('learn/{course:slug}/{scheduleId}/rating', [\App\Http\Controllers\Participant\RatingController::class, 'store'])->name('rating.store')->middleware('participant.enrollment:write');
-        # Survey
-        Route::get('learn/{course:slug}/{scheduleId}/survey', [\App\Http\Controllers\Participant\SurveyController::class, 'index'])->name('survey.index')->middleware([IsFinishedMiddleware::class, 'participant.enrollment:read']);
-        # Learn 
-        # Instruction
-        Route::get('learn/{course:slug}/{schedule}/{activity}/instruction', [\App\Http\Controllers\Participant\LearnController::class, 'instruction'])->name('learn.instruction.index')->middleware('participant.enrollment:read');
-        Route::post('learn/{course:slug}/{schedule}/{activity}/instruction', [\App\Http\Controllers\Participant\LearnController::class, 'storeInstruction'])->name('learn.instruction.store')->middleware('participant.enrollment:write');
-        # Material
-        Route::get('learn/{course:slug}/{schedule}/{activity}', [\App\Http\Controllers\Participant\LearnController::class, 'index'])->name('learn.index')->middleware('participant.enrollment:read');
-        Route::post('learn/{course:slug}/{schedule}/{activity}', [\App\Http\Controllers\Participant\LearnController::class, 'store'])->name('learn.store')->middleware('participant.enrollment:write');
-        # Result
-        Route::get('learn/{course:slug}/{schedule}/{activity}/result', [\App\Http\Controllers\Participant\LearnController::class, 'result'])->name('learn.result.index')->middleware('participant.enrollment:read');
-        Route::post('learn/{course:slug}/{schedule}/{activity}/result', [\App\Http\Controllers\Participant\LearnController::class, 'storeResult'])->name('learn.result.store')->middleware('participant.enrollment:write');
+        // Overview. Access: participant
+        Route::get('dashboard', DashboardController::class)->name('dashboard');
 
-        # Profile
-        Route::get('/profile', [\App\Http\Controllers\Participant\ProfileController::class, 'index'])->name('profile.index');
-        # Certificate
-        Route::post('/certificate', \App\Http\Controllers\Participant\CertificateController::class)->name('certificate');
+        // My Courses. Access: participant
+        Route::controller(CourseController::class)->prefix('my-course')->name('course.')->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/{course:slug}', 'show')->name('show');
+        });
+
+        // Notifications. Access: participant
+        Route::controller(NotificationController::class)->prefix('notifications')->name('notifications.')->group(function () {
+            Route::get('/count', 'count')->name('count');
+            Route::get('/latest', 'latest')->name('latest');
+            Route::get('/', 'index')->name('index');
+            Route::patch('/read-all', 'readAll')->name('read-all');
+            Route::patch('/{notification}/read', 'read')->name('read');
+        });
+
+        // Profile. Access: participant
+        Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+
+        // Certificate. Access: participant
+        Route::post('/certificate', CertificateController::class)->name('certificate');
+
+        // Learning flow — enrollment `read` grants view, `write` grants submit.
+        // Rating + survey require the course to be finished (IsFinishedMiddleware).
+        // Access: participant
+        Route::prefix('learn/{course:slug}')->group(function () {
+            // Rating
+            Route::controller(RatingController::class)->prefix('{scheduleId}/rating')->name('rating.')->group(function () {
+                Route::get('/', 'index')->name('index')->middleware([IsFinishedMiddleware::class, 'participant.enrollment:read']);
+                Route::post('/', 'store')->name('store')->middleware('participant.enrollment:write');
+            });
+
+            // Survey
+            Route::get('{scheduleId}/survey', [SurveyController::class, 'index'])
+                ->name('survey.index')
+                ->middleware([IsFinishedMiddleware::class, 'participant.enrollment:read']);
+
+            // Instruction + Material + Result (per activity)
+            Route::controller(LearnController::class)->prefix('{schedule}/{activity}')->group(function () {
+                // Instruction
+                Route::prefix('instruction')->name('learn.instruction.')->group(function () {
+                    Route::get('/', 'instruction')->name('index')->middleware('participant.enrollment:read');
+                    Route::post('/', 'storeInstruction')->name('store')->middleware('participant.enrollment:write');
+                });
+
+                // Material
+                Route::get('/', 'index')->name('learn.index')->middleware('participant.enrollment:read');
+                Route::post('/', 'store')->name('learn.store')->middleware('participant.enrollment:write');
+
+                // Result
+                Route::prefix('result')->name('learn.result.')->group(function () {
+                    Route::get('/', 'result')->name('index')->middleware('participant.enrollment:read');
+                    Route::post('/', 'storeResult')->name('store')->middleware('participant.enrollment:write');
+                });
+            });
+        });
     });

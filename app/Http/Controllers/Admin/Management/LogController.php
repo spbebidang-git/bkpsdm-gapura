@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Admin\Management;
 
-use App\Logging\Redactor;
+use App\Logging\LogReader;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
@@ -11,11 +11,17 @@ use Symfony\Component\HttpFoundation\Response;
 
 class LogController
 {
-    private const MAX_READ_BYTES = 512_000;
-
     public function index(Request $request)
     {
-        $selected = (string) $request->query('file', 'laravel-'.now()->format('Y-m-d').'.log');
+        $validated = $request->validate([
+            'file' => ['sometimes', 'string', 'max:255'],
+            'level' => ['nullable', 'in:debug,info,notice,warning,error,critical,alert,emergency,legacy,unknown'],
+            'q' => ['nullable', 'string', 'max:200'],
+            'request_id' => ['nullable', 'uuid'],
+        ]);
+        $selected = $validated['file'] ?? 'laravel-'.now()->format('Y-m-d').'.log';
+        $filters = array_replace(['level' => '', 'q' => '', 'request_id' => ''], array_filter(array_intersect_key($validated, array_flip(['level', 'q', 'request_id'])), fn ($value) => $value !== null));
+        $reading = app(LogReader::class)->tail($this->safeFile(storage_path('logs'), $selected, '/^[a-zA-Z0-9_.-]+\\.log$/D'), $filters);
         $mayDownload = $this->mayDownloadBackup($request);
         $backups = [];
         foreach (['logs', 'daily', 'weekly', 'files'] as $kind) {
@@ -30,7 +36,9 @@ class LogController
                 'offsiteConfigured' => (bool) config('backup.remote_disk'),
             ],
             'selected' => $selected,
-            'content' => $this->tailLog($selected),
+            'entries' => $reading['entries'],
+            'reading' => array_diff_key($reading, ['entries' => true]),
+            'filters' => $filters,
             'retention' => [
                 'log_days' => (int) config('logging.channels.daily.days'),
                 'log_backup_keep' => config('backup.log_keep'),
@@ -50,27 +58,7 @@ class LogController
             $this->audit($request, 'log.download', $name);
 
             return response()->streamDownload(function () use ($path) {
-                $fh = fopen($path, 'rb');
-                if ($fh === false) {
-                    return;
-                }
-                try {
-                    $discard = false;
-                    while (($line = fgets($fh, 65537)) !== false) {
-                        $complete = str_ends_with($line, "\n") || feof($fh);
-                        if (! $complete || $discard) {
-                            if (! $discard) {
-                                echo "[Oversized log record omitted]\n";
-                            }
-                            $discard = ! $complete;
-
-                            continue;
-                        }
-                        echo app(Redactor::class)->text(rtrim($line, "\r\n"))."\n";
-                    }
-                } finally {
-                    fclose($fh);
-                }
+                app(LogReader::class)->download($path);
             }, $name, ['Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff', 'Content-Type' => 'text/plain; charset=UTF-8']);
         }
         abort_unless($this->mayDownloadBackup($request), 403);
@@ -96,7 +84,7 @@ class LogController
 
     private function audit(Request $request, string $event, string $name): void
     {
-        Log::channel('audit')->info($event, ['actor_id' => $request->user()?->getAuthIdentifier(), 'file' => $name, 'request_id' => $request->attributes->get('request_id')]);
+        Log::channel('audit')->info('Berkas sistem diunduh.', ['event' => $event, 'actor_id' => $request->user()?->getAuthIdentifier(), 'file' => $name, 'request_id' => $request->attributes->get('request_id')]);
     }
 
     private function safeFile(string $dir, string $name, string $pattern): ?string
@@ -132,30 +120,5 @@ class LogController
         return collect(File::files($dir))->filter(fn ($f) => $this->safeFile($dir, $f->getFilename(), '/^[a-zA-Z0-9_-]+\.age$/D')
             && $this->safeFile($dir, $f->getFilename().'.json', '/^[a-zA-Z0-9_-]+\.age\.json$/D'))
             ->sortByDesc(fn ($f) => $f->getMTime())->take(30)->map(fn ($f) => ['name' => $f->getFilename(), 'size' => $f->getSize(), 'modified' => date('Y-m-d H:i:s', $f->getMTime()), 'type' => $kind])->values()->all();
-    }
-
-    private function tailLog(string $filename): ?string
-    {
-        $path = $this->safeFile(storage_path('logs'), $filename, '/^[a-zA-Z0-9_.-]+\.log$/D');
-        if (! $path) {
-            return null;
-        }
-        $fh = fopen($path, 'rb');
-        if ($fh === false) {
-            return null;
-        }
-        try {
-            $start = max(0, filesize($path) - self::MAX_READ_BYTES);
-            fseek($fh, $start);
-            if ($start > 0) {
-                fgets($fh);
-            }
-            $raw = stream_get_contents($fh, self::MAX_READ_BYTES) ?: '';
-        } finally {
-            fclose($fh);
-        }
-        $lines = array_slice(preg_split('/\r\n|\n|\r/', $raw) ?: [], -200);
-
-        return implode("\n", array_map(fn ($line) => app(Redactor::class)->text($line), $lines));
     }
 }

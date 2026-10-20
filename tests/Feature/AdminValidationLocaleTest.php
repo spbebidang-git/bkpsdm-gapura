@@ -32,17 +32,15 @@ class AdminValidationLocaleTest extends TestCase
         }
     }
 
-    public function test_admin_opd_endpoint_returns_indonesian_field_errors_and_summary(): void
+    public function test_admin_employee_status_endpoint_returns_indonesian_field_errors_and_summary(): void
     {
         $this->withoutMiddleware([IsAdminMiddleware::class, HandleInertiaRequests::class]);
         app()->setLocale('en');
 
-        $this->postJson(route('admin.opd.store'), [])
+        $this->postJson(route('admin.employee-status.store'), [])
             ->assertUnprocessable()
-            ->assertJsonPath('errors.code.0', 'Kode OPD wajib diisi.')
-            ->assertJsonPath('errors.name.0', 'Nama OPD wajib diisi.')
-            ->assertJsonPath('errors.is_active.0', 'Status wajib diisi.')
-            ->assertJsonPath('message', 'Kode OPD wajib diisi. (dan 2 kesalahan lainnya)');
+            ->assertJsonPath('errors.title.0', 'Nama status pegawai wajib diisi.')
+            ->assertJsonPath('message', 'Nama status pegawai wajib diisi.');
 
         $this->assertSame('en', app()->getLocale());
         $this->assertSame('The Alamat email field must be a valid email address.', Validator::make(

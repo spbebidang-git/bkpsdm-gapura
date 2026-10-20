@@ -227,7 +227,7 @@ class TrainerManagementTest extends TestCase
         $this->assertSame('sso', $user->fresh()->auth_source);
     }
 
-    public function test_non_super_admin_cannot_edit_a_user_linked_trainer(): void
+    public function test_administrator_can_edit_a_user_linked_trainer(): void
     {
         $user = $this->ssoUser();
         $user->assignRole('trainer');
@@ -238,11 +238,11 @@ class TrainerManagementTest extends TestCase
         $admin = User::factory()->create(['auth_source' => 'local']);
         $admin->assignRole($role);
 
-        $this->actingAs($admin)->get(route('admin.trainer.edit', $trainer))->assertForbidden();
+        $this->actingAs($admin)->get(route('admin.trainer.edit', $trainer))->assertOk();
         $this->put(route('admin.trainer.update', $trainer), [
-            'source' => 'user', 'name' => 'Tidak boleh', 'jabatan' => '', 'opd_id' => $this->trainerOpd(),
-        ])->assertForbidden();
-        $this->assertNotSame('Tidak boleh', $user->fresh()->name);
+            'source' => 'user', 'name' => 'Diedit admin', 'jabatan' => '', 'opd_id' => $this->trainerOpd(),
+        ])->assertRedirect(route('admin.trainer.index'));
+        $this->assertSame('Diedit admin', $user->fresh()->name);
     }
     public function test_users_with_trainer_role_appear_in_master_and_course_choices_without_duplicates(): void
     {

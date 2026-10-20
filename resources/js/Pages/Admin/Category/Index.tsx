@@ -5,7 +5,7 @@ import { Head, router } from '@inertiajs/react';
 import { useMemo, useRef, useState } from 'react';
 import '@/../css/admin-course-index.css';
 
-export default function Index({ lastSyncedAt }) {
+export default function Index({ lastSyncedAt, canSync = false }) {
     const busy = useRef(false);
     const [tableKey, setTableKey] = useState(0);
 
@@ -66,7 +66,9 @@ export default function Index({ lastSyncedAt }) {
             {},
             {
                 preserveScroll: true,
-                onSuccess: () => setTableKey((k) => k + 1),
+                onSuccess: ({ props }) => {
+                    if (!props.flash?.danger) setTableKey((k) => k + 1);
+                },
                 onFinish: () => {
                     busy.current = false;
                 },
@@ -85,13 +87,13 @@ export default function Index({ lastSyncedAt }) {
                                 {lastSyncedAt || '—'}
                             </span>
                         </>
-                    } actions={<button
+                    } actions={canSync && <button
                         type="button"
                         onClick={sync}
                         className="course-index-create"
                     >
                         <i className="bx bx-refresh" aria-hidden />
-                        Sinkronkan Prestige
+                        Sinkronkan Kategori
                     </button>} />
                 <DataTable
                     url={route('admin.category.index')}
