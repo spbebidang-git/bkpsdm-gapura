@@ -1,7 +1,6 @@
 import { CrudFormSection, CrudPageHeader } from '@/Components/Admin/CrudPrimitives';
 import Button from '@/Components/Button';
 import ErrorMessage from '@/Components/ErrorMessage';
-import FormFile from '@/Components/FormFile';
 import FormInput from '@/Components/FormInput';
 import FormSelect from '@/Components/FormSelect';
 import AdminLayout from '@/Layouts/Admin/App';
@@ -17,6 +16,7 @@ type Profile = {
     photo_src?: string | null;
     opd?: string | null;
     opd_id?: number | null;
+    opd_ids?: number[];
     auth_source?: string;
     source_label?: string;
 };
@@ -25,6 +25,7 @@ type Trainer = Profile & {
     user_id?: string | null;
     opd_id?: number | null;
     auth_source?: string | null;
+    email?: string | null;
 };
 type TrainerForm = {
     source: 'local' | 'user';
@@ -32,7 +33,10 @@ type TrainerForm = {
     name: string;
     jabatan: string;
     photo: File | null;
-    opd_id: string;
+    opd_ids: string[];
+    email: string;
+    password: string;
+    password_confirmation: string;
 };
 
 function ProfilePreview({ profile }: { profile: Profile }) {
@@ -53,14 +57,18 @@ export default function Form({ trainer, users = [], opds = [], mode = 'local' }:
     const isEdit = Boolean(trainer);
     const source = trainer?.source ?? mode;
     const linkedUser = source === 'user';
+    const localAccount = !linkedUser || trainer?.auth_source === 'local';
     const title = isEdit ? 'Edit trainer' : linkedUser ? 'Daftarkan pengguna sebagai trainer' : 'Buat trainer';
     const { data, setData, post, transform, processing, errors } = useForm<TrainerForm>({
-        opd_id: trainer?.opd_id ? String(trainer.opd_id) : '',
+        opd_ids: (trainer?.opd_ids ?? (trainer?.opd_id ? [trainer.opd_id] : [])).map(String),
         source,
         user_id: trainer?.user_id ?? '',
         name: trainer?.name ?? '',
         jabatan: trainer?.jabatan ?? '',
         photo: null,
+        email: trainer?.email ?? '',
+        password: '',
+        password_confirmation: '',
     });
     const [photoPreview, setPhotoPreview] = useState(trainer?.photo_src ?? null);
 
@@ -75,7 +83,6 @@ export default function Form({ trainer, users = [], opds = [], mode = 'local' }:
     }, [data.photo, trainer?.photo_src]);
 
     const selectedUser = users.find((user) => user.id === data.user_id);
-    const selectedLocalUser = selectedUser?.auth_source === 'local';
     const submit = (event: FormEvent) => {
         event.preventDefault();
         if (processing) return;
@@ -83,8 +90,10 @@ export default function Form({ trainer, users = [], opds = [], mode = 'local' }:
         transform((values) => ({
             source: values.source,
             ...(values.source === 'user' && !isEdit
-                ? { user_id: values.user_id, ...(selectedLocalUser ? { opd_id: values.opd_id } : {}) }
-                : { name: values.name, jabatan: values.jabatan, photo: values.photo, opd_id: values.opd_id }),
+                ? { user_id: values.user_id, opd_ids: values.opd_ids }
+                : { name: values.name, jabatan: values.jabatan, photo: values.photo, opd_ids: values.opd_ids,
+                    ...(localAccount ? { email: values.email,
+                        password: values.password, password_confirmation: values.password_confirmation } : {}) }),
             ...(isEdit ? { _method: 'PUT' } : {}),
         }));
         post(isEdit ? route('admin.trainer.update', trainer!.id) : route('admin.trainer.store'), { forceFormData: true });
@@ -112,56 +121,55 @@ export default function Form({ trainer, users = [], opds = [], mode = 'local' }:
             onChange={(event) => {
                 const userId = event.target.value;
                 const user = users.find((candidate) => candidate.id === userId);
-                const userOpdId = user?.auth_source === 'local' && opds.some((opd) => String(opd.id) === String(user.opd_id))
-                    ? String(user.opd_id)
-                    : '';
-                setData((current) => ({ ...current, user_id: userId, opd_id: userOpdId }));
+                const userOpdIds = user?.opd_id && opds.some((opd) => String(opd.id) === String(user.opd_id))
+                    ? [String(user.opd_id)] : [];
+                setData((current) => ({ ...current, user_id: userId, opd_ids: userOpdIds }));
             }}
             small={users.length
                 ? 'Menampilkan akun dari semua sumber dengan OPD aktif yang belum menjadi trainer.'
                 : 'Tidak ada pengguna yang memenuhi syarat.'}
         />}
-        {linkedUser && (isEdit ? trainer : selectedUser) && <ProfilePreview profile={(isEdit ? trainer : selectedUser)!} />}
-        {linkedUser && !isEdit && selectedLocalUser && <FormSelect
-            id="opd_id"
-            label="OPD pengguna"
-            isRequired
-            value={data.opd_id}
-            onChange={(event) => setData('opd_id', event.target.value)}
-            error={errors.opd_id}
-            options={opds.map((opd) => ({ value: opd.id, label: opd.name }))}
-            emptyOption="Pilih OPD"
-            small="OPD ini disimpan ke akun GAPURA lokal dan menjadi asal trainer."
-        />}
-        {(!linkedUser || isEdit) && <>
-            <div className="admin-crud-fields">
-                <FormInput id="name" label="Nama" isRequired value={data.name} onChange={(event) => setData('name', event.target.value)} error={errors.name} />
-                <FormInput id="jabatan" label="Jabatan" value={data.jabatan} onChange={(event) => setData('jabatan', event.target.value)} error={errors.jabatan} small="Opsional." />
+        {linkedUser && !isEdit && selectedUser && <ProfilePreview profile={selectedUser} />}
+        {(!linkedUser || isEdit) && <div className="trainer-details-grid">
+            <FormInput id="name" label="Nama" isRequired value={data.name} onChange={(event) => setData('name', event.target.value)} error={errors.name} />
+            {localAccount &&
+                <FormInput id="email" label="Email" type="email" isRequired value={data.email} onChange={(event) => setData('email', event.target.value)} error={errors.email} />
+            }
+            <FormInput id="jabatan" label="Jabatan" value={data.jabatan} onChange={(event) => setData('jabatan', event.target.value)} error={errors.jabatan} small="Opsional." />
+            {localAccount && <div className="trainer-password-fields">
+                <FormInput id="password" label={linkedUser && isEdit ? 'Password baru' : 'Password'} type="password" isRequired={!linkedUser} value={data.password} onChange={(event) => setData('password', event.target.value)} error={errors.password} small={linkedUser && isEdit ? 'Kosongkan jika tidak ingin mengubah password.' : 'Minimal 8 karakter.'} />
+                <FormInput id="password_confirmation" label="Konfirmasi password" type="password" isRequired={!linkedUser} value={data.password_confirmation} onChange={(event) => setData('password_confirmation', event.target.value)} error={errors.password_confirmation} />
+            </div>}
+            <div className="trainer-photo-field">
+                <label htmlFor="photo" className="trainer-photo-label">Foto</label>
+                <label htmlFor="photo" className={`trainer-photo-upload ${errors.photo ? 'has-error' : ''}`}>
+                    <img src={photoPreview || '/assets/media/images/static/default-profile.jpg'} alt="Pratinjau foto trainer" />
+                    <span className="trainer-photo-copy">
+                        <strong>Klik untuk upload</strong>
+                        <span title={data.photo?.name}>{data.photo?.name || 'PNG/JPG · Maks. 2 MB'}</span>
+                    </span>
+                    <input id="photo" type="file" className="sr-only" accept="image/png,image/jpeg" aria-invalid={Boolean(errors.photo)}
+                        onChange={(event) => setData('photo', event.target.files?.[0] ?? null)} />
+                </label>
+                <ErrorMessage message={errors.photo} />
             </div>
-            <FormSelect
-                id="opd_id"
-                label={linkedUser ? 'OPD pengguna' : 'OPD trainer'}
-                isRequired
-                value={data.opd_id}
-                onChange={(event) => setData('opd_id', event.target.value)}
-                error={errors.opd_id}
-                options={opds.map((opd) => ({ value: opd.id, label: opd.name }))}
-                emptyOption="Pilih OPD"
-                small="Trainer dapat dipilih pada kelas dengan OPD yang sama."
-            />
-            <FormFile
-                title="photo"
-                label="Foto"
-                previewUrl={photoPreview}
-                hasFile={Boolean(data.photo)}
-                error={errors.photo}
-                heading="Foto trainer"
-                helperText="PNG/JPG, maksimal 2 MB. Opsional."
-                buttonLabel="Pilih foto"
-                accept="image/png,image/jpeg"
-                onChange={(event) => setData('photo', event.target.files?.[0] ?? null)}
-            />
-        </>}
+        </div>}
+        {(!linkedUser || isEdit || selectedUser) && <div className="trainer-opd-picker">
+            <div><strong>OPD trainer <span aria-hidden="true">*</span></strong><p>Trainer dapat mengelola kelas dari OPD yang dipilih.</p></div>
+            <div className="trainer-opd-actions">
+                <button type="button" onClick={() => setData('opd_ids', opds.map((opd) => String(opd.id)))} disabled={opds.length === 0 || data.opd_ids.length === opds.length}>Pilih semua</button>
+                <button type="button" onClick={() => setData('opd_ids', [])} disabled={data.opd_ids.length === 0}>Reset</button>
+            </div>
+            <div className="trainer-opd-options">{opds.map((opd) => <label key={opd.id}>
+                <input type="checkbox" value={opd.id} checked={data.opd_ids.includes(String(opd.id))}
+                    onChange={(event) => setData('opd_ids', event.target.checked
+                        ? [...new Set([...data.opd_ids, String(opd.id)])]
+                        : data.opd_ids.filter((id) => id !== String(opd.id)))} />
+                <span>{opd.name}</span>
+            </label>)}</div>
+            {data.opd_ids.length === 0 && !errors.opd_ids && <p className="trainer-opd-hint">Pilih minimal satu OPD agar form dapat disimpan.</p>}
+            {errors.opd_ids && <ErrorMessage message={errors.opd_ids} />}
+        </div>}
     </CrudFormSection>;
 
     return <AdminLayout title={title} hideTitle>
@@ -172,7 +180,7 @@ export default function Form({ trainer, users = [], opds = [], mode = 'local' }:
                 description={linkedUser ? 'Kelola profil dan OPD akun trainer.' : 'Kelola trainer yang dapat dipilih pada kelas.'}
                 actions={<>
                     <Button href={route('admin.trainer.index')} variant="secondary"><i className="bx bx-arrow-back text-base" aria-hidden />Kembali</Button>
-                    <Button type="submit" form="trainer-form" loading={processing} disabled={processing || (linkedUser && !isEdit && (!data.user_id || (selectedLocalUser && !data.opd_id)))}>
+                    <Button type="submit" form="trainer-form" loading={processing} disabled={processing}>
                         {processing ? 'Menyimpan…' : linkedUser && !isEdit ? 'Daftarkan sebagai trainer' : 'Simpan'}
                     </Button>
                 </>}

@@ -3,6 +3,7 @@
 namespace App\Repositories\Course;
 
 use App\Models\Course\Course;
+use App\Models\Course\Trainer;
 use App\Repositories\Course\Contracts\CourseRepositoryInterface;
 use App\Repositories\EloquentRepository;
 use Carbon\Carbon;
@@ -131,10 +132,7 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
 
         if ($instructorId !== null) {
             $query->whereHas('trainers', fn ($trainer) => $trainer->where('user_id', $instructorId));
-            $user = User::find($instructorId);
-            if ($user?->opd_id) {
-                $query->whereNotNull('opd_id')->where('opd_id', $user->opd_id);
-            }
+            $query->whereIn('opd_id', Trainer::activeOpdIdsForUser($instructorId));
         }
 
         return $query->orderByDesc('courses.updated_at')->orderByDesc('courses.id')->get();

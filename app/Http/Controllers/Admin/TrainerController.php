@@ -19,20 +19,24 @@ class TrainerController extends Controller
     public function index()
     {
         if (request()->ajax() && ! request()->header('X-Inertia')) {
+            $activeOpdIds = Opd::where('is_active', true)->pluck('id')->map(fn ($id) => (int) $id)->all();
             $trainers = $this->trainers->getForAdmin();
             if (request()->filled('opd_id')) {
-                $trainers = $trainers->filter(fn ($trainer) => (string) $trainer->organization_id === (string) request('opd_id'))->values();
+                $trainers = $trainers->filter(fn ($trainer) => in_array((int) request('opd_id'), $trainer->organization_ids, true))->values();
             }
             return DataTables::of($trainers)
                 ->addIndexColumn()
                 ->addColumn('photo_url', fn ($row) => $row->photo_src)
                 ->addColumn('opd_name', fn ($row) => $row->organization_name)
-                ->addColumn('source', fn ($row) => $row->user_id ? 'sso' : 'local')
+                ->addColumn('opd_names', fn ($row) => $row->organization_names)
+                ->addColumn('opd_ids', fn ($row) => $row->organization_ids)
+                ->addColumn('all_opds', fn ($row) => count($activeOpdIds) > 0 && count(array_diff($activeOpdIds, $row->organization_ids)) === 0)
+                ->addColumn('source', fn ($row) => $row->user_id ? 'user' : 'local')
                 ->addColumn('source_label', fn ($row) => $row->user_id
-                    ? ($row->user?->usesSsoAuthentication() ? 'Kedaton SSO' : ($row->user?->usesPrestigeAuthentication() ? 'Pengguna Prestige' : 'Pengguna GAPURA'))
+                    ? ($row->user?->usesSsoAuthentication() ? 'Kedaton SSO' : ($row->user?->usesPrestigeAuthentication() ? 'Pengguna Prestige' : 'Akun lokal'))
                     : 'Lokal')
                 ->addColumn('user_auth_source', fn ($row) => $row->user?->auth_source)
-                ->only(['DT_RowIndex', 'id', 'name', 'jabatan', 'photo_url', 'opd_name', 'source', 'source_label', 'user_id', 'user_auth_source', 'updated_at'])
+                ->only(['DT_RowIndex', 'id', 'name', 'jabatan', 'photo_url', 'opd_name', 'opd_names', 'opd_ids', 'all_opds', 'source', 'source_label', 'user_id', 'user_auth_source', 'updated_at'])
                 ->make();
         }
 
@@ -70,11 +74,12 @@ class TrainerController extends Controller
         if ($trainer->user_id) {
             abort_unless(request()->user()?->hasAnyRole(['super_admin', 'administrator']), 403);
 
-            $trainer->loadMissing(['user.opd', 'user.metas']);
+            $trainer->loadMissing(['user.opd', 'user.metas', 'opds']);
             $user = $trainer->user;
+            $activeOpds = Opd::where('is_active', true)->orderBy('name')->get(['id', 'name']);
 
             return Inertia::render('Admin/Trainer/Form', [
-                'opds' => Opd::where('is_active', true)->orWhere('id', $user?->opd_id)->orderBy('name')->get(['id', 'name']),
+                'opds' => $activeOpds,
                 'trainer' => [
                     'id' => $trainer->id,
                     'name' => $user?->name ?? $trainer->name,
@@ -82,15 +87,19 @@ class TrainerController extends Controller
                     'photo_src' => $user?->profile_picture,
                     'source' => 'user',
                     'user_id' => $trainer->user_id,
+                    'email' => $user?->email,
+                    'auth_source' => $user?->auth_source,
                     'nip' => $user?->nip,
                     'opd' => $user?->opd?->name,
                     'opd_id' => $user?->opd_id,
+                    'opd_ids' => array_values(array_intersect($trainer->organization_ids, $activeOpds->pluck('id')->map(fn ($id) => (int) $id)->all())),
                 ],
             ]);
         }
 
+        $activeOpds = Opd::where('is_active', true)->orderBy('name')->get(['id', 'name']);
         return Inertia::render('Admin/Trainer/Form', [
-            'opds' => Opd::where('is_active', true)->orWhere('id', $trainer->organization_id)->orderBy('name')->get(['id', 'name']),
+            'opds' => $activeOpds,
             'trainer' => [
                 'id' => $trainer->id,
                 'name' => $trainer->name,
@@ -98,10 +107,11 @@ class TrainerController extends Controller
                 'photo' => $trainer->photo,
                 'photo_src' => $trainer->photo_src,
                 'source' => $trainer->user_id ? 'sso' : 'local',
-                'user_id' => $trainer->user_id,
+            'user_id' => $trainer->user_id,
                 'nip' => $trainer->user?->nip,
                 'opd' => $trainer->organization_name,
                 'opd_id' => $trainer->organization_id,
+                'opd_ids' => array_values(array_intersect($trainer->organization_ids, $activeOpds->pluck('id')->map(fn ($id) => (int) $id)->all())),
             ],
         ]);
     }
@@ -124,14 +134,17 @@ class TrainerController extends Controller
 
     protected function validateTrainer(Request $request, ?Trainer $trainer = null): array
     {
+        if (! $request->filled('opd_ids') && $request->filled('opd_id')) {
+            $request->merge(['opd_ids' => [(int) $request->input('opd_id')]]);
+        }
         if ($trainer?->user_id) {
             abort_unless($request->user()?->hasAnyRole(['super_admin', 'administrator']), 403);
         }
         $source = $request->input('source');
         $isUser = $source === 'user';
         $isRegistration = $isUser && ! $trainer;
-        $registrationUser = $isRegistration ? User::query()->find($request->input('user_id')) : null;
-        $registrationNeedsOpd = $registrationUser?->usesLocalAuthentication() ?? false;
+        $localAccount = $source === 'local';
+        $editingLocalAccount = $trainer?->user?->usesLocalAuthentication() ?? false;
 
         return $request->validate([
             'source' => ['required', Rule::in($trainer?->user_id ? ['user'] : ($trainer ? ['local'] : ['local', 'user']))],
@@ -139,12 +152,13 @@ class TrainerController extends Controller
                 : ['prohibited'],
             'name' => $isRegistration ? ['prohibited'] : ['required', 'string', 'max:255'],
             'jabatan' => $isRegistration ? ['prohibited'] : ['nullable', 'string', 'max:255'],
-            'opd_id' => $isRegistration
-                ? ($registrationNeedsOpd
-                    ? ['required', 'integer', Rule::exists('opds', 'id')->whereNull('deleted_at')->where('is_active', true)]
-                    : ['prohibited'])
-                : ['required', 'integer', Rule::exists('opds', 'id')->whereNull('deleted_at')->where('is_active', true)],
+            'opd_ids' => ['required', 'array', 'min:1'],
+            'opd_ids.*' => ['required', 'integer', 'distinct', Rule::exists('opds', 'id')->whereNull('deleted_at')->where('is_active', true)],
             'photo' => $isRegistration ? ['prohibited'] : ['nullable', 'image', 'max:2048', 'mimes:png,jpg,jpeg'],
-        ], [], ['source' => 'Sumber trainer', 'user_id' => 'Pengguna', 'name' => 'Nama trainer', 'jabatan' => 'Jabatan', 'photo' => 'Foto trainer', 'opd_id' => 'OPD trainer']);
+            'email' => $localAccount ? ['required', 'email', 'max:255', Rule::unique('users', 'email')]
+                : ($editingLocalAccount ? ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($trainer->user_id)] : ['prohibited']),
+            'password' => $localAccount ? ['required', 'string', 'min:8', 'confirmed']
+                : ($editingLocalAccount ? ['nullable', 'string', 'min:8', 'confirmed'] : ['prohibited']),
+        ], [], ['source' => 'Sumber trainer', 'user_id' => 'Pengguna', 'name' => 'Nama trainer', 'jabatan' => 'Jabatan', 'photo' => 'Foto trainer', 'opd_ids' => 'OPD trainer']);
     }
 }

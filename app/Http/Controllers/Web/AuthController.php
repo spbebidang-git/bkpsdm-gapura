@@ -52,7 +52,7 @@ class AuthController
         }
 
         if (! filter_var($identifier, FILTER_VALIDATE_EMAIL)
-            || ! Auth::attempt(['email' => $identifier, 'password' => $credentials['password']], $request->boolean('remember'))) {
+            || ! Auth::attempt(['email' => $identifier, 'password' => $credentials['password'], 'auth_source' => User::AUTH_SOURCE_LOCAL], $request->boolean('remember'))) {
             return back()->withErrors(['email_or_username' => 'Email/username atau password tidak sesuai.'])->onlyInput('email');
         }
 

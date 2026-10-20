@@ -40,15 +40,20 @@ class TrainerManagementTest extends TestCase
         return User::factory()->create(['auth_source' => 'sso', 'opd_id' => $opd->id]);
     }
 
-    public function test_local_crud_does_not_create_a_user(): void
+    public function test_local_trainer_uses_email_as_login_username(): void
     {
         $count = User::count();
-        $this->post(route('admin.trainer.store'), ['source' => 'local', 'opd_id' => $this->trainerOpd(), 'name' => 'Trainer Lokal', 'jabatan' => 'Dosen'])
+        $this->post(route('admin.trainer.store'), ['source' => 'local', 'opd_id' => $this->trainerOpd(), 'name' => 'Trainer Lokal', 'jabatan' => 'Dosen',
+            'email' => 'trainer@example.test', 'password' => 'secret123', 'password_confirmation' => 'secret123'])
             ->assertRedirect(route('admin.trainer.index'));
         $trainer = Trainer::where('name', 'Trainer Lokal')->firstOrFail();
-        $this->assertNull($trainer->user_id);
-        $this->assertSame($count, User::count());
-        $this->put(route('admin.trainer.update', $trainer), ['source' => 'local', 'opd_id' => $this->trainerOpd(), 'name' => 'Nama baru', 'jabatan' => 'Pelatih'])
+        $this->assertNotNull($trainer->user_id);
+        $this->assertSame($count + 1, User::count());
+        $this->assertTrue($trainer->user->hasRole('trainer'));
+        $this->assertTrue(\Illuminate\Support\Facades\Auth::attempt(['email' => 'trainer@example.test', 'password' => 'secret123', 'auth_source' => 'local']));
+        $this->actingAs(User::role('super_admin')->firstOrFail());
+        $this->put(route('admin.trainer.update', $trainer), ['source' => 'user', 'opd_id' => $this->trainerOpd(), 'name' => 'Nama baru', 'jabatan' => 'Pelatih',
+            'email' => 'trainer@example.test'])
             ->assertRedirect(route('admin.trainer.index'));
         $this->assertSame('Nama baru', $trainer->fresh()->name);
         $this->delete(route('admin.trainer.destroy', $trainer))->assertRedirect(route('admin.trainer.index'));
@@ -62,27 +67,43 @@ class TrainerManagementTest extends TestCase
             ->assertJsonPath('errors.name.0', 'Nama trainer wajib diisi.');
     }
 
+    public function test_existing_local_trainer_can_be_given_login_credentials(): void
+    {
+        $trainer = Trainer::create(['name' => 'Trainer Lama', 'opd_id' => $this->trainerOpd()]);
+        $this->put(route('admin.trainer.update', $trainer), [
+            'source' => 'local', 'name' => 'Trainer Lama', 'opd_id' => $this->trainerOpd(),
+            'email' => 'lama@example.test',
+            'password' => 'secret123', 'password_confirmation' => 'secret123',
+        ])->assertRedirect(route('admin.trainer.index'));
+
+        $this->assertSame($trainer->id, $trainer->fresh()->id);
+        $this->assertSame('lama@example.test', $trainer->fresh()->user->email);
+        $this->assertTrue($trainer->fresh()->user->hasRole('trainer'));
+    }
+
     public function test_local_photo_upload_and_multipart_update(): void
     {
-        $originalDirectory = Trainer::$directoryImage;
+        $originalDirectory = User::$directoryImage;
         $directory = storage_path('framework/testing/trainer-'.uniqid().'/');
-        Trainer::$directoryImage = $directory;
+        User::$directoryImage = $directory;
         try {
             $this->post(route('admin.trainer.store'), [
                 'source' => 'local', 'opd_id' => $this->trainerOpd(), 'name' => 'Foto lokal', 'photo' => UploadedFile::fake()->image('trainer.png'),
+                'email' => 'foto@example.test', 'password' => 'secret123', 'password_confirmation' => 'secret123',
             ])->assertRedirect(route('admin.trainer.index'));
             $trainer = Trainer::where('name', 'Foto lokal')->firstOrFail();
-            $oldPhoto = $trainer->photo;
+            $oldPhoto = $trainer->user->image;
             $this->assertFileExists($directory.$oldPhoto);
             $this->post(route('admin.trainer.update', $trainer), [
-                '_method' => 'PUT', 'source' => 'local', 'opd_id' => $this->trainerOpd(), 'name' => 'Foto baru',
+                '_method' => 'PUT', 'source' => 'user', 'opd_id' => $this->trainerOpd(), 'name' => 'Foto baru',
+                'email' => 'foto@example.test',
                 'photo' => UploadedFile::fake()->image('updated.jpg'),
             ])->assertRedirect(route('admin.trainer.index'));
             $this->assertSame('Foto baru', $trainer->fresh()->name);
-            $this->assertFileExists($directory.$trainer->fresh()->photo);
+            $this->assertFileExists($directory.$trainer->fresh()->user->image);
             $this->assertFileDoesNotExist($directory.$oldPhoto);
         } finally {
-            Trainer::$directoryImage = $originalDirectory;
+            User::$directoryImage = $originalDirectory;
             File::deleteDirectory($directory);
         }
     }
@@ -103,7 +124,7 @@ class TrainerManagementTest extends TestCase
         $this->assertSame($user->fresh()->profile_picture, $trainer->photo_src);
         $this->getJson(route('admin.trainer.index'), ['X-Requested-With' => 'XMLHttpRequest'])
             ->assertOk()->assertJsonPath('data.0.name', 'Profil terbaru')
-            ->assertJsonPath('data.0.jabatan', 'Widyaiswara')->assertJsonPath('data.0.source', 'sso');
+            ->assertJsonPath('data.0.jabatan', 'Widyaiswara')->assertJsonPath('data.0.source', 'user');
         $this->putJson(route('admin.trainer.update', $trainer), ['source' => 'local', 'opd_id' => $this->trainerOpd(), 'name' => 'Override', 'user_id' => $this->ssoUser()->id])
             ->assertUnprocessable()->assertJsonValidationErrors('source');
         $this->assertSame($user->id, $trainer->fresh()->user_id);
@@ -258,7 +279,7 @@ class TrainerManagementTest extends TestCase
         $this->assertSame(2, Trainer::count());
         $this->assertDatabaseMissing('trainers', ['user_id' => $participant->id]);
         $this->getJson(route('admin.trainer.index'), ['X-Requested-With' => 'XMLHttpRequest'])
-            ->assertOk()->assertJsonFragment(['name' => $local->name, 'source_label' => 'Pengguna GAPURA'])
+            ->assertOk()->assertJsonFragment(['name' => $local->name, 'source_label' => 'Akun lokal'])
             ->assertJsonFragment(['name' => $sso->name, 'source_label' => 'Kedaton SSO']);
     }
 
@@ -305,11 +326,12 @@ class TrainerManagementTest extends TestCase
 
     public function test_local_trainer_requires_an_active_opd(): void
     {
-        $this->postJson(route('admin.trainer.store'), ['source' => 'local', 'name' => 'Trainer tanpa OPD'])
-            ->assertUnprocessable()->assertJsonValidationErrors('opd_id');
+        $credentials = ['email' => 'trainer-opd@example.test', 'password' => 'secret123', 'password_confirmation' => 'secret123'];
+        $this->postJson(route('admin.trainer.store'), ['source' => 'local', 'name' => 'Trainer tanpa OPD', ...$credentials])
+            ->assertUnprocessable()->assertJsonValidationErrors('opd_ids');
         $opd = Opd::create(['code' => 'INACTIVE', 'name' => 'Nonaktif', 'is_active' => false]);
-        $this->postJson(route('admin.trainer.store'), ['source' => 'local', 'name' => 'Trainer nonaktif', 'opd_id' => $opd->id])
-            ->assertUnprocessable()->assertJsonValidationErrors('opd_id');
+        $this->postJson(route('admin.trainer.store'), ['source' => 'local', 'name' => 'Trainer nonaktif', 'opd_id' => $opd->id, ...$credentials])
+            ->assertUnprocessable()->assertJsonValidationErrors('opd_ids.0');
     }
 
     public function test_master_opd_filter_covers_local_and_user_linked_trainers(): void

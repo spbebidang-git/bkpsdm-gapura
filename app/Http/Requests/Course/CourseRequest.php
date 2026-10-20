@@ -31,6 +31,7 @@ abstract class CourseRequest extends FormRequest
             'jam_pelajaran' => ['required', 'numeric', 'min:0'],
             'trainers' => [$this->isRestrictedTrainer() ? 'nullable' : 'required', 'array', 'min:1'],
             'trainers.*' => ['string', 'distinct', Rule::exists('trainers', 'id')->whereNull('deleted_at')],
+            'opd_id' => ['nullable', 'integer', Rule::exists('opds', 'id')->whereNull('deleted_at')->where('is_active', true)],
         ];
     }
 
@@ -58,13 +59,20 @@ abstract class CourseRequest extends FormRequest
                 $validator->errors()->add('description', 'Deskripsi lengkap wajib diisi.');
             }
 
-            if ($validator->errors()->isEmpty() && ! $this->isRestrictedTrainer()) {
-                $trainers = Trainer::with(['user.opd', 'opd'])->whereIn('id', $this->input('trainers', []))->get();
-                $opdIds = $trainers->pluck('organization_id')->filter()->unique();
-                if ($trainers->contains(fn ($trainer) => ! $trainer->organization_id || ! $trainer->organization_name)
-                    || $opdIds->count() !== 1
-                    || ! \App\Models\Identity\Opd::whereKey($opdIds->first())->where('is_active', true)->exists()) {
-                    $validator->errors()->add('trainers', 'Pilih trainer dari satu OPD aktif yang sama.');
+            if ($validator->errors()->isEmpty()) {
+                if ($this->isRestrictedTrainer()) {
+                    $allowed = Trainer::activeOpdIdsForUser($this->user()->id);
+                    $opdId = (int) ($this->input('opd_id') ?: ($allowed[0] ?? 0));
+                    if (! in_array($opdId, $allowed, true)) {
+                        $validator->errors()->add('opd_id', 'Pilih OPD yang ditetapkan untuk akun trainer.');
+                    }
+                } else {
+                    $trainers = Trainer::with(['user.opd', 'opd', 'opds'])->whereIn('id', $this->input('trainers', []))->get();
+                    $opdId = (int) ($this->input('opd_id') ?: $trainers->first()?->organization_id);
+                    if ($trainers->isEmpty() || $trainers->contains(fn ($trainer) => ! in_array($opdId, $trainer->organization_ids, true))
+                        || ! \App\Models\Identity\Opd::whereKey($opdId)->where('is_active', true)->exists()) {
+                        $validator->errors()->add('trainers', 'Pilih trainer yang terdaftar pada OPD kelas.');
+                    }
                 }
             }
 

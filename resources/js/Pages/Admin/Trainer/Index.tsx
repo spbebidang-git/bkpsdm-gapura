@@ -33,7 +33,11 @@ export default function Index({ opds = [], canEditLinkedUser = false }) {
                 enableGlobalFilter: false,
                 cell: ({ getValue }) => (
                     <img
-                        src={getValue() || '/assets/media/images/static/default-class.jpg'}
+                        src={getValue() || '/assets/media/images/static/default-profile.jpg'}
+                        onError={(event) => {
+                            event.currentTarget.onerror = null;
+                            event.currentTarget.src = '/assets/media/images/static/default-profile.jpg';
+                        }}
                         alt="Foto trainer"
                         className="h-10 w-10 rounded-full border border-hairline object-cover"
                     />
@@ -59,13 +63,18 @@ export default function Index({ opds = [], canEditLinkedUser = false }) {
             {
                 accessorKey: 'source',
                 header: 'Sumber',
-                cell: ({ getValue, row }) => <span className="admin-crud-status is-inactive">{row.original.source_label || (getValue() === 'sso' ? 'Kedaton SSO' : 'Lokal')}</span>,
+                cell: ({ getValue, row }) => <span className="admin-crud-status is-inactive">{row.original.source_label || (getValue() === 'user' ? 'Akun pengguna' : 'Lokal')}</span>,
             },
             {
                 accessorKey: 'opd_name',
                 header: 'OPD',
                 enableSorting: false,
-                cell: ({ getValue }) => <span>{getValue() || 'Belum terhubung ke OPD'}</span>,
+                cell: ({ row }) => {
+                    const labels = row.original.all_opds ? ['Semua OPD'] : (row.original.opd_names || []);
+                    return labels.length ? <div className="flex flex-wrap gap-1.5">
+                        {labels.map((name) => <span key={name} className="admin-crud-status is-active">{name}</span>)}
+                    </div> : <span>Belum terhubung ke OPD</span>;
+                },
             },
             {
                 id: 'aksi',
@@ -77,7 +86,7 @@ export default function Index({ opds = [], canEditLinkedUser = false }) {
                 cell: ({ getValue, row }) => (
                     <RowActions editHref={row.original.user_id
                         ? (canEditLinkedUser ? route('admin.trainer.edit', getValue()) : undefined)
-                        : route('admin.trainer.edit', getValue())} deleteUrl={route('admin.trainer.destroy', getValue())} deleteMessage={`Trainer “${row.original.name}” akan dihapus.${row.original.source === 'sso' ? ' Role trainer dan akses trainer pengguna akan dicabut.' : ''}`} onDeleted={() => setTableKey((k) => k + 1)} iconOnly variant="course" />
+                        : route('admin.trainer.edit', getValue())} deleteUrl={route('admin.trainer.destroy', getValue())} deleteMessage={`Trainer “${row.original.name}” akan dihapus.${row.original.source === 'user' ? ' Role trainer dan akses trainer pengguna akan dicabut.' : ''}`} onDeleted={() => setTableKey((k) => k + 1)} iconOnly variant="course" />
                 ),
             },
         ],

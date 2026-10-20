@@ -5,7 +5,7 @@ import AdminLayout from '@/Layouts/Admin/App';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
-const Create = ({ categories = [], employee_status = [], trainers = [], is_trainer: isTrainer = false }) => {
+const Create = ({ categories = [], employee_status = [], trainers = [], trainer_opds: trainerOpds = [], selected_opd_id: selectedOpdId = '', is_trainer: isTrainer = false }) => {
     const { errors = {} } = usePage().props;
     const isTrainerAccount = Boolean(isTrainer);
     const [thumbnailPreview, setThumbnailPreview] = useState(null);
@@ -23,6 +23,7 @@ const Create = ({ categories = [], employee_status = [], trainers = [], is_train
         status: '',
         employee_status: [],
         trainers: [],
+        opd_id: selectedOpdId ? String(selectedOpdId) : '',
     });
 
     const handleChange = (e) => {
@@ -62,6 +63,7 @@ const Create = ({ categories = [], employee_status = [], trainers = [], is_train
         formData.append('category', values.category);
         values.employee_status.forEach((id) => formData.append('employee_status[]', id));
         values.trainers.forEach((id) => formData.append('trainers[]', id));
+        if (isTrainerAccount) formData.append('opd_id', values.opd_id);
         formData.append('title', values.title);
         formData.append('short_description', values.short_description);
         formData.append('description', values.description);
@@ -90,7 +92,7 @@ const Create = ({ categories = [], employee_status = [], trainers = [], is_train
                     <CourseFormFields
                         values={values} setValues={setValues} handleChange={handleChange} errors={errors}
                         categories={categories} employeeStatuses={employee_status}
-                        trainers={trainers} isTrainerAccount={isTrainerAccount} thumbnailPreview={thumbnailPreview}
+                        trainers={trainers} trainerOpds={trainerOpds} isTrainerAccount={isTrainerAccount} thumbnailPreview={thumbnailPreview}
 
                     />
                 </form>

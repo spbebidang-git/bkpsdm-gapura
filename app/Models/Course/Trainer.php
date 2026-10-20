@@ -18,11 +18,40 @@ class Trainer extends Model
 
     protected $guarded = [];
 
-    protected $appends = ['organization_id', 'organization_name'];
+    protected $appends = ['organization_id', 'organization_name', 'organization_ids', 'organization_names', 'organization_options'];
 
     public function opd()
     {
         return $this->belongsTo(Opd::class);
+    }
+
+    public function opds()
+    {
+        return $this->belongsToMany(Opd::class, 'trainer_opd', 'trainer_id', 'opd_id');
+    }
+
+    protected function organizationIds(): Attribute
+    {
+        return Attribute::get(function () {
+            $ids = $this->relationLoaded('opds') ? $this->opds->pluck('id') : $this->opds()->pluck('opds.id');
+            if ($this->user_id && $this->user?->opd_id) $ids->push($this->user->opd_id);
+            if (! $this->user_id && $this->opd_id) $ids->push($this->opd_id);
+            return $ids->unique()->values()->all();
+        });
+    }
+
+    protected function organizationNames(): Attribute
+    {
+        return Attribute::get(function () {
+            $ids = $this->organization_ids;
+            return $ids ? Opd::whereIn('id', $ids)->orderBy('name')->pluck('name')->all() : [];
+        });
+    }
+
+    protected function organizationOptions(): Attribute
+    {
+        return Attribute::get(fn () => Opd::whereIn('id', $this->organization_ids)->where('is_active', true)
+            ->orderBy('name')->get(['id', 'name'])->values()->all());
     }
 
     protected function organizationId(): Attribute
@@ -45,13 +74,21 @@ class Trainer extends Model
         return $this->belongsTo(User::class);
     }
 
+    public static function activeOpdIdsForUser(int|string $userId): array
+    {
+        $trainer = static::with(['opds', 'user.opd'])->where('user_id', $userId)->first();
+        return $trainer
+            ? collect($trainer->organization_ids)->filter(fn ($id) => \App\Models\Identity\Opd::whereKey($id)->where('is_active', true)->exists())->values()->all()
+            : [];
+    }
+
     public function photoSrc(): Attribute
     {
         if ($this->user_id) {
             return Attribute::get(fn () => $this->user?->profile_picture ?? asset('assets/media/images/static/default-profile.jpg'));
         }
         if (! $this->photo) {
-            return Attribute::get(fn () => asset('assets/media/images/static/default-class.jpg'));
+            return Attribute::get(fn () => asset('assets/media/images/static/default-profile.jpg'));
         }
 
         return Attribute::get(fn () => asset(self::$directoryImage . $this->photo));

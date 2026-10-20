@@ -17,12 +17,12 @@ class TrainerRepository extends EloquentRepository implements TrainerRepositoryI
 
     public function getLatestForAdmin(): Collection
     {
-        return $this->query()->with(['user.opd', 'user.metas', 'opd'])->orderByDesc('id')->get();
+        return $this->query()->with(['user.opd', 'user.metas', 'opd', 'opds'])->orderByDesc('id')->get();
     }
 
     public function getAllOrderedByName(): Collection
     {
-        return $this->query()->with(['user.opd', 'user.metas', 'opd'])->orderBy('name')->get();
+        return $this->query()->with(['user.opd', 'user.metas', 'opd', 'opds'])->orderBy('name')->get();
     }
 
     public function getOrCreateForUser(User $user): Trainer

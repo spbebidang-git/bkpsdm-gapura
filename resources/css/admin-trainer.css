@@ -5,5 +5,37 @@
 .trainer-profile dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px 24px; min-width:0; flex:1; }
 .trainer-profile dt { margin-bottom:6px; color:#8496b0; font-size:12px; }
 .trainer-profile dd { color:#1a2b3f; font-size:13px; overflow-wrap:anywhere; }
-.trainer-admin .course-thumbnail-field { border-radius:10px; }
-@media(max-width:639px) { .trainer-admin .admin-crud-header { flex-wrap:wrap; } .trainer-profile { flex-direction:column; gap:16px; } .trainer-profile dl { grid-template-columns:minmax(0,1fr); width:100%; } }
+.trainer-details-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); align-items:start; gap:20px 24px; }
+.trainer-password-fields { grid-column:1 / -1; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:20px 24px; }
+.trainer-photo-field { grid-column:1 / -1; }
+.trainer-photo-label { display:block; margin-bottom:8px; color:#1a2b3f; font-size:13px; font-weight:500; }
+.trainer-photo-upload { display:flex; align-items:center; gap:12px; min-height:66px; padding:8px 12px; border:1px solid #d7e1eb; border-radius:10px; background:#fff; cursor:pointer; transition:border-color .18s,background .18s,box-shadow .18s; }
+.trainer-photo-upload:hover { border-color:#018083; background:#f8fcfc; }
+.trainer-photo-upload:focus-within { border-color:#018083; box-shadow:0 0 0 3px rgba(1,128,131,.15); }
+.trainer-photo-upload.has-error { border-color:#dc2626; }
+.trainer-photo-upload > img { width:46px; height:46px; flex:none; border-radius:50%; object-fit:cover; background:#f1f5f9; }
+.trainer-photo-copy { display:grid; gap:3px; min-width:0; }
+.trainer-photo-copy strong { color:#018083; font-size:13px; font-weight:600; }
+.trainer-photo-copy > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#8496b0; font-size:11px; }
+.trainer-opd-picker { display:grid; gap:12px; margin-top:20px; }
+.trainer-opd-picker > div:first-child strong { color:#1a2b3f; font-size:14px; }
+.trainer-opd-picker > div:first-child p { margin-top:4px; font-size:12px; color:#8496b0; }
+.trainer-opd-actions { display:flex; flex-wrap:wrap; gap:8px; }
+.trainer-opd-actions button { padding:7px 11px; border:1px solid #d7e1eb; border-radius:8px; background:#fff; color:#526176; font-size:12px; font-weight:600; transition:background .18s,border-color .18s,color .18s; }
+.trainer-opd-actions button:not(:disabled) { cursor:pointer; }
+.trainer-opd-actions button:hover:not(:disabled) { border-color:#018083; background:#e6f3f3; color:#018083; }
+.trainer-opd-actions button:disabled { opacity:.48; cursor:not-allowed; }
+.trainer-opd-options { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px 16px; }
+.trainer-opd-options label { display:flex; align-items:center; gap:10px; min-width:0; padding:12px 14px; border:1px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; }
+.trainer-opd-options label:has(input:checked) { border-color:#018083; background:#e6f3f3; }
+.trainer-opd-options input { appearance:none; display:grid; width:19px; height:19px; flex:none; place-items:center; margin:0; border:1.5px solid #b8c6d3; border-radius:5px; background:#fff; cursor:pointer; transition:background .16s,border-color .16s,box-shadow .16s; }
+.trainer-opd-options input::before { content:""; width:9px; height:5px; border:solid #fff; border-width:0 0 2px 2px; opacity:0; transform:translateY(-1px) rotate(-45deg) scale(.7); transition:opacity .12s,transform .12s; }
+.trainer-opd-options input:checked { border-color:#018083; background:#018083; }
+.trainer-opd-options input:checked::before { opacity:1; transform:translateY(-1px) rotate(-45deg) scale(1); }
+.trainer-opd-options input:hover { border-color:#018083; }
+.trainer-opd-options input:focus-visible { outline:none; box-shadow:0 0 0 3px rgba(1,128,131,.2); }
+.trainer-opd-options span { overflow-wrap:anywhere; color:#1a2b3f; font-size:13px; }
+.trainer-opd-hint { color:#8496b0; font-size:12px; }
+@media(max-width:1100px) { .trainer-opd-options { grid-template-columns:repeat(3,minmax(0,1fr)); } .trainer-details-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:800px) { .trainer-opd-options { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:639px) { .trainer-admin .admin-crud-header { flex-wrap:wrap; } .trainer-profile { flex-direction:column; gap:16px; } .trainer-profile dl { grid-template-columns:minmax(0,1fr); width:100%; } .trainer-details-grid,.trainer-password-fields { grid-template-columns:minmax(0,1fr); gap:16px; } .trainer-opd-options { grid-template-columns:minmax(0,1fr); } }

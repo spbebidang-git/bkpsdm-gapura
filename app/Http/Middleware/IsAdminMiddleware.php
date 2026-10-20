@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Identity\User;
 use App\Models\Course\Course;
+use App\Models\Course\Trainer;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,7 +34,7 @@ class IsAdminMiddleware
                 return to_route('admin.dashboard');
             }
 
-            if ($this->isRestrictedTrainer($user) && ! $user->opd_id) {
+            if ($this->isRestrictedTrainer($user) && ! Trainer::activeOpdIdsForUser($user->id)) {
                 $message = 'Akun trainer Anda belum memiliki OPD. Hubungi administrator untuk melengkapi data OPD.';
 
                 if (! $request->routeIs('admin.dashboard')) {
@@ -54,7 +55,7 @@ class IsAdminMiddleware
             if ($this->isRestrictedTrainer($user)) {
                 $course = $request->route('course');
                 if ($course instanceof Course) {
-                    abort_unless($user->opd?->is_active && (string) $course->opd_id === (string) $user->opd_id, 403, 'Trainer hanya dapat mengakses kelas pada OPD aktifnya.');
+                    abort_unless(in_array((int) $course->opd_id, Trainer::activeOpdIdsForUser($user->id), true), 403, 'Trainer hanya dapat mengakses kelas pada OPD aktifnya.');
                     abort_unless($course->trainers()->where('user_id', $user->id)->exists(), 403, 'Trainer hanya dapat mengakses kelas yang ditugaskan.');
                 }
             }

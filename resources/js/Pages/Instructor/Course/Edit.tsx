@@ -12,6 +12,8 @@ export default function Edit({
     selected_employee_status: selectedEmployeeStatuses = [],
     trainers = [],
     selected_trainers: selectedTrainers = [],
+    trainer_opds: trainerOpds = [],
+    selected_opd_id: selectedOpdId = '',
     is_trainer: isTrainer = false,
 }) {
     const { errors = {} } = usePage().props;
@@ -40,6 +42,7 @@ export default function Edit({
         status: course.status || '',
         employee_status: selectedEmployeeStatuses,
         trainers: selectedTrainers,
+        opd_id: String(course.opd_id || selectedOpdId || ''),
     });
 
     const handleChange = (e) => {
@@ -79,6 +82,7 @@ export default function Edit({
         formData.append('category', values.category);
         values.employee_status.forEach((id) => formData.append('employee_status[]', id));
         values.trainers.forEach((id) => formData.append('trainers[]', id));
+        if (isTrainerAccount) formData.append('opd_id', values.opd_id);
         formData.append('title', values.title);
         formData.append('short_description', values.short_description);
         formData.append('description', values.description);
@@ -106,7 +110,7 @@ export default function Edit({
                     <CourseFormFields
                         values={values} setValues={setValues} handleChange={handleChange} errors={errors}
                         categories={categories} employeeStatuses={employeeStatuses}
-                        trainers={trainers} isTrainerAccount={isTrainerAccount} thumbnailPreview={thumbnailPreview}
+                        trainers={trainers} trainerOpds={trainerOpds} isTrainerAccount={isTrainerAccount} thumbnailPreview={thumbnailPreview}
                         editing typeLocked={Boolean(course.type || course.access_mode)} hasSchedules={hasSchedules}
 
                     />

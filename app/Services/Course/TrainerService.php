@@ -62,7 +62,9 @@ class TrainerService
 
     public function getOrCreateForUser(User $user): Trainer
     {
-        return $this->trainers->getOrCreateForUser($user);
+        $trainer = $this->trainers->getOrCreateForUser($user);
+        if ($user->opd_id) $trainer->opds()->syncWithoutDetaching([$user->opd_id]);
+        return $trainer;
     }
 
     public function create(array $attributes): mixed
@@ -72,17 +74,39 @@ class TrainerService
         if ($source === 'user') {
             return DB::transaction(function () use ($attributes) {
                 $user = User::whereKey($attributes['user_id'])->lockForUpdate()->first();
-                $opdId = $user?->usesLocalAuthentication() ? ($attributes['opd_id'] ?? $user->opd_id) : $user?->opd_id;
-                $opdIsActive = $opdId && \App\Models\Identity\Opd::query()->whereKey($opdId)->where('is_active', true)->exists();
+                $opdIds = collect($attributes['opd_ids'] ?? [])->map(fn ($id) => (int) $id)->unique();
+                if ($user?->opd_id) $opdIds->push((int) $user->opd_id);
+                $opdIds = $opdIds->unique()->values();
+                $opdIsActive = $opdIds->isNotEmpty() && \App\Models\Identity\Opd::query()->whereIn('id', $opdIds)->where('is_active', true)->count() === $opdIds->count();
                 if (! $user || ! $opdIsActive || $user->hasAnyRole(['trainer', 'super_admin'])
                     || Trainer::where('user_id', $user->id)->exists()) {
                     throw ValidationException::withMessages(['user_id' => 'Pilih pengguna dengan OPD aktif yang belum terdaftar sebagai trainer.']);
                 }
-                if ($user->usesLocalAuthentication() && (string) $user->opd_id !== (string) $opdId) {
-                    $user->update(['opd_id' => $opdId]);
+                if ($user->usesLocalAuthentication() && (string) $user->opd_id !== (string) $opdIds->first()) {
+                    $user->update(['opd_id' => $opdIds->first()]);
                 }
                 $trainer = $this->getOrCreateForUser($user);
                 $user->assignRole('trainer');
+                $trainer->opds()->sync($opdIds->all());
+                return $trainer;
+            });
+        }
+        if (isset($attributes['email'])) {
+            return DB::transaction(function () use ($attributes) {
+                $user = User::create([
+                    'name' => $attributes['name'],
+                    'email' => $attributes['email'],
+                    'password' => $attributes['password'],
+                    'opd_id' => $attributes['opd_ids'][0],
+                    'auth_source' => User::AUTH_SOURCE_LOCAL,
+                ]);
+                $user->assignRole('trainer');
+                $user->metas()->create(['key' => 'nama_jabatan', 'value' => $attributes['jabatan'] ?? '']);
+                if (($attributes['photo'] ?? null) instanceof UploadedFile) {
+                    $user->update(['image' => UploadMedia::file($attributes['photo'], User::$directoryImage)]);
+                }
+                $trainer = $this->getOrCreateForUser($user);
+                $trainer->opds()->sync($attributes['opd_ids']);
                 return $trainer;
             });
         }
@@ -103,13 +127,18 @@ class TrainerService
                 $user = User::whereKey($trainer->user_id)->lockForUpdate()->firstOrFail();
                 $user->update([
                     'name' => $attributes['name'],
-                    'opd_id' => $attributes['opd_id'],
+                    'opd_id' => $attributes['opd_ids'][0],
+                    ...($user->usesLocalAuthentication() ? array_filter([
+                        'email' => $attributes['email'] ?? null,
+                        'password' => $attributes['password'] ?? null,
+                    ], fn ($value) => $value !== null && $value !== '') : []),
                 ]);
 
                 $user->metas()->updateOrCreate(
                     ['key' => 'nama_jabatan'],
                     ['value' => $attributes['jabatan'] ?? ''],
                 );
+                $trainer->opds()->sync($attributes['opd_ids']);
 
                 if (($attributes['photo'] ?? null) instanceof UploadedFile) {
                     if ($user->image && is_file_exists(User::$directoryImage.$user->image)) {
@@ -119,6 +148,31 @@ class TrainerService
                 }
 
                 return $trainer->fresh(['user.opd', 'user.metas']);
+            });
+        }
+
+        if (isset($attributes['email'])) {
+            return DB::transaction(function () use ($trainer, $attributes) {
+                $user = User::create([
+                    'name' => $attributes['name'],
+                    'email' => $attributes['email'],
+                    'password' => $attributes['password'],
+                    'opd_id' => $attributes['opd_ids'][0],
+                    'auth_source' => User::AUTH_SOURCE_LOCAL,
+                ]);
+                $user->assignRole('trainer');
+                $user->metas()->create(['key' => 'nama_jabatan', 'value' => $attributes['jabatan'] ?? '']);
+                if (($attributes['photo'] ?? null) instanceof UploadedFile) {
+                    $user->update(['image' => UploadMedia::file($attributes['photo'], User::$directoryImage)]);
+                } elseif ($trainer->photo && is_file_exists(Trainer::$directoryImage.$trainer->photo)) {
+                    \Illuminate\Support\Facades\File::ensureDirectoryExists(public_path(User::$directoryImage));
+                    $filename = $trainer->getKey().'_'.basename($trainer->photo);
+                    \Illuminate\Support\Facades\File::copy(public_path(Trainer::$directoryImage.$trainer->photo), public_path(User::$directoryImage.$filename));
+                    $user->update(['image' => $filename]);
+                }
+                $trainer->update(['user_id' => $user->id]);
+                $trainer->opds()->sync($attributes['opd_ids']);
+                return $trainer->fresh(['user']);
             });
         }
 

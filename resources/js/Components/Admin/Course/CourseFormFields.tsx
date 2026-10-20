@@ -11,30 +11,39 @@ import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import '@/../css/admin-course-form.css';
 
-export default function CourseFormFields({ values, setValues, handleChange, errors, categories, employeeStatuses, trainers, isTrainerAccount, thumbnailPreview, editing = false, typeLocked = false, hasSchedules = true }: {
-    values: any; setValues: any; handleChange: any; errors: any; categories: any[]; employeeStatuses: any[]; trainers: any[];
+export default function CourseFormFields({ values, setValues, handleChange, errors, categories, employeeStatuses, trainers, trainerOpds = [], isTrainerAccount, thumbnailPreview, editing = false, typeLocked = false, hasSchedules = true }: {
+    values: any; setValues: any; handleChange: any; errors: any; categories: any[]; employeeStatuses: any[]; trainers: any[]; trainerOpds?: any[];
     isTrainerAccount: boolean; thumbnailPreview: string | null; editing?: boolean; typeLocked?: boolean; hasSchedules?: boolean;
 }) {
     const selectedTrainer = trainers.find((trainer) => values.trainers.some((id) => String(id) === String(trainer.id)));
-    const selectedOpdId = selectedTrainer?.organization_id;
     const selectedTrainers = values.trainers.map((id) => trainers.find((trainer) => String(trainer.id) === String(id)) ?? { id, name: 'Trainer tidak tersedia', organization_name: null });
-    const availableTrainers = trainers.filter((trainer) => trainer.organization_id
-        && (!selectedOpdId || String(trainer.organization_id) === String(selectedOpdId))
+    const selectedOpdId = values.opd_id || (isTrainerAccount ? '' : (selectedTrainer?.organization_id ?? ''));
+    const classOpds = isTrainerAccount
+        ? trainerOpds
+        : (() => {
+            const memberships = selectedTrainers.map((trainer) => trainer.organization_ids || [trainer.organization_id]);
+            const commonIds = memberships.length
+                ? memberships[0].filter((id) => memberships.every((ids) => ids.some((candidate) => String(candidate) === String(id))))
+                : [];
+            return (selectedTrainer?.organization_options || []).filter((opd) => commonIds.some((id) => String(id) === String(opd.id)));
+        })();
+    const availableTrainers = trainers.filter((trainer) => (!selectedOpdId || (trainer.organization_ids || [trainer.organization_id]).some((id) => String(id) === String(selectedOpdId)))
         && !values.trainers.some((id) => String(id) === String(trainer.id)));
     const addTrainer = (event) => {
         const trainerId = event.target.value;
         if (!trainerId) return;
         setValues((current) => ({
             ...current,
+            opd_id: current.opd_id || String(trainers.find((trainer) => String(trainer.id) === String(trainerId))?.organization_id || trainers.find((trainer) => String(trainer.id) === String(trainerId))?.organization_ids?.[0] || ''),
             trainers: current.trainers.some((id) => String(id) === String(trainerId))
                 ? current.trainers
                 : [...current.trainers, trainerId],
         }));
     };
-    const removeTrainer = (trainerId) => setValues((current) => ({
-        ...current,
-        trainers: current.trainers.filter((id) => String(id) !== String(trainerId)),
-    }));
+    const removeTrainer = (trainerId) => setValues((current) => {
+        const nextTrainers = current.trainers.filter((id) => String(id) !== String(trainerId));
+        return { ...current, trainers: nextTrainers, opd_id: nextTrainers.length ? current.opd_id : '' };
+    });
     const selectedStatuses = new Set((values.employee_status || []).map(String));
     const statusOptions = employeeStatuses.map((status) => ({ id: status?.id ?? status, title: status?.title ?? String(status) }));
     const { containerRef: descriptionRef, visibleError: descriptionError, dismissError: dismissDescriptionError } = useTransientFieldError(errors.description);
@@ -69,6 +78,7 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
                 </div>
             </CrudFormSection>
             <CrudFormSection title="Pengaturan kelas" description="Tentukan tipe, durasi, dan publikasi." icon="bx-slider-alt">
+                {(isTrainerAccount || selectedTrainer) && <FormSelect id="opd_id" label="OPD kelas" isRequired value={selectedOpdId} onChange={handleChange} error={errors.opd_id} options={classOpds.map((opd) => ({ value: opd.id, label: opd.name }))} emptyOption="Pilih OPD kelas" small="Kelas ini akan tampil untuk peserta dan trainer pada OPD yang dipilih." />}
                 <div className="course-form-fields-grid course-form-settings-grid">
                 <FormSelect id="type" label="Tipe kelas" isRequired value={values.type} onChange={handleChange} error={errors.type} disabled={typeLocked} options={[{ value: 'unschedule', label: 'Mandiri' }, { value: 'schedule', label: 'Terjadwal' }]} emptyOption="Pilih tipe kelas" small={typeLocked ? 'Tipe kelas ditetapkan saat kelas dibuat.' : values.type === 'schedule' ? 'Peserta mengikuti kelas sesuai jadwal kegiatan.' : values.type === 'unschedule' ? 'Peserta belajar sesuai waktu masing-masing.' : null} />
                 <FormInput id="jam_pelajaran" label="Jam pelajaran (JP)" type="number" min="0" isRequired value={values.jam_pelajaran} onChange={handleChange} error={errors.jam_pelajaran} placeholder="Contoh: 8" />
@@ -113,27 +123,28 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
                     <div className="course-trainer-picker-heading">
                         <div>
                             <h3>Trainer <span aria-hidden="true">*</span></h3>
-                            <p>Pilih trainer pengampu. OPD kelas mengikuti OPD trainer yang dipilih.</p>
+                            <p>Pilih trainer pengampu yang terdaftar pada OPD kelas.</p>
                         </div>
                         <span>{selectedTrainers.length} dipilih</span>
                     </div>
                     <FormSelect id="trainer_select" label="Tambahkan trainer" value="" onChange={addTrainer} error={errors.trainers} emptyOption={availableTrainers.length ? 'Pilih trainer' : 'Tidak ada trainer lain yang tersedia'} disabled={availableTrainers.length === 0} wrapperClassName="course-trainer-select">
                         {trainers.map((trainer) => {
                             const alreadySelected = values.trainers.some((id) => String(id) === String(trainer.id));
-                            const differentOpd = selectedOpdId && String(trainer.organization_id) !== String(selectedOpdId);
-                            return <option key={trainer.id} value={trainer.id} disabled={alreadySelected || !trainer.organization_id || differentOpd}>
-                                {trainer.name} — {trainer.organization_name || 'OPD belum tersedia'}{alreadySelected ? ' (dipilih)' : ''}
+                            const trainerOpdIds = trainer.organization_ids || [trainer.organization_id];
+                            const differentOpd = selectedOpdId && !trainerOpdIds.some((id) => String(id) === String(selectedOpdId));
+                            return <option key={trainer.id} value={trainer.id} disabled={alreadySelected || !trainerOpdIds.length || differentOpd}>
+                                {trainer.name} — {(trainer.organization_options || []).map((opd) => opd.name).join(', ') || 'OPD belum tersedia'}{alreadySelected ? ' (dipilih)' : ''}
                             </option>;
                         })}
                     </FormSelect>
                     {selectedTrainers.length > 0 ? <ul className="course-trainer-selected" aria-label="Trainer terpilih">
                         {selectedTrainers.map((trainer) => <li key={trainer.id}>
                             <span className="course-trainer-selected-avatar" aria-hidden="true">{String(trainer.name || '?').charAt(0).toUpperCase()}</span>
-                            <span className="course-trainer-selected-text"><strong>{trainer.name}</strong><small>{trainer.organization_name || 'OPD belum tersedia'}</small></span>
+                            <span className="course-trainer-selected-text"><strong>{trainer.name}</strong><small>{(trainer.organization_options || []).map((opd) => opd.name).join(', ') || trainer.organization_name || 'OPD belum tersedia'}</small></span>
                             <button type="button" onClick={() => removeTrainer(trainer.id)} aria-label={`Hapus ${trainer.name} dari kelas`} title="Hapus trainer"><i className="bx bx-x" aria-hidden="true" /></button>
                         </li>)}
                     </ul> : <p className="course-trainer-empty">Belum ada trainer dipilih.</p>}
-                    {selectedOpdId && <p className="course-trainer-opd-note"><i className="bx bx-buildings" aria-hidden="true" />OPD kelas: <strong>{selectedTrainer.organization_name}</strong>. Lepas semua trainer untuk memilih dari OPD lain.</p>}
+                    {selectedOpdId && <p className="course-trainer-opd-note"><i className="bx bx-buildings" aria-hidden="true" />OPD kelas: <strong>{classOpds.find((opd) => String(opd.id) === String(selectedOpdId))?.name || selectedTrainer.organization_name}</strong>. Trainer tambahan harus terdaftar pada OPD ini.</p>}
                     {trainers.length === 0 && <p className="course-trainer-empty">Tambahkan trainer dengan OPD aktif di Master Trainer.</p>}
                 </div>}
             </CrudFormSection>
