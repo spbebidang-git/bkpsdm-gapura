@@ -22,6 +22,7 @@ Route::prefix('management')
         Route::controller(NotificationMessageController::class)->prefix('notification-messages')->name('notification-messages.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::put('/', 'update')->name('update');
+            Route::post('/test', 'test')->name('test');
         });
 
         // Permission. Access: super_admin (`permission.manage`)

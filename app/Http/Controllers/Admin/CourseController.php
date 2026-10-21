@@ -259,16 +259,23 @@ class CourseController
     protected function trainerFormProps(): array
     {
         $user = request()->user();
+        $isTrainer = $this->isRestrictedTrainer($user);
+        $currentTrainer = null;
+        if ($isTrainer) {
+            abort_unless(Trainer::activeOpdIdsForUser($user->id), 403, 'Pemateri harus memiliki OPD aktif.');
+            $currentTrainer = $this->trainer->getOrCreateForUser($user)->load(['opds', 'user.opd']);
+        }
 
         $props = [
-            'is_trainer' => $this->isRestrictedTrainer($user),
+            'is_trainer' => $isTrainer,
+            'current_trainer' => $currentTrainer ? [
+                'id' => $currentTrainer->id,
+                'name' => $currentTrainer->name,
+                'organization_options' => $currentTrainer->organization_options,
+            ] : null,
             'trainers' => $this->trainer->getForForm()->filter(fn ($trainer) => ! empty($trainer->organization_options))->values(),
             'opds' => Opd::where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ];
-        if ($this->isRestrictedTrainer($user)) {
-            abort_unless(Trainer::activeOpdIdsForUser($user->id), 403, 'Pemateri harus memiliki OPD aktif.');
-            $this->trainer->getOrCreateForUser($user);
-        }
         return $props;
     }
 

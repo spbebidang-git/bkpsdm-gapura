@@ -3,32 +3,27 @@
 namespace App\Http\Controllers\Participant;
 
 use App\Models\Course\Course;
-use App\Models\Course\Activity\Task;
 use App\Models\Learning\Enrollment;
 use App\Models\Learning\Learn;
 use App\Services\Course\CourseService;
-use App\Services\Course\ScheduleUserService;
 use App\Services\Learning\LearnService;
 use App\Services\Learning\ParticipantEnrollmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Inertia\Inertia;
 
 class CourseController
 {
-    protected $course, $participantId, $scheduleUser, $learn;
+    protected $course, $participantId, $learn;
 
     public function __construct(
         CourseService $courseService,
-        ScheduleUserService $scheduleUserService,
         LearnService $learnService
     ) {
         $this->course = $courseService;
         $this->participantId = Auth::user()->id;
-        $this->scheduleUser = $scheduleUserService;
         $this->learn = $learnService;
     }
 
@@ -67,8 +62,12 @@ class CourseController
             } else {
                 $enrollmentService = app(ParticipantEnrollmentService::class);
                 $enrollment = $enrollmentService->forRequest((string) $this->participantId, $course, $firstSchedule);
+                if ($enrollment && $enrollment->trashed()) $enrollment = null;
                 if (config('participant.enrollment_access_enforced', true) && (! $enrollment || ! $enrollmentService->canRead($enrollment))) {
-                    $entryMessage = ! $enrollment ? 'Aktivasi kelas belum tercatat.'
+                    $wasArchived = Enrollment::withTrashed()->where('participant_id', $this->participantId)->where('course_id', $course->id)->whereNotNull('deleted_at')->exists();
+                    $entryMessage = ! $enrollment ? ($wasArchived
+                        ? 'Progres lama telah diarsipkan. Aktifkan ulang kelas melalui halaman informasi kelas untuk memulai dari awal.'
+                        : 'Aktivasi kelas belum tercatat.')
                         : (now()->lt($enrollment->access_starts_at) ? 'Pelatihan belum dimulai sesuai jadwal akses.' : 'Masa akses pelatihan telah berakhir.');
                 } else {
                     $items = $learnModel?->learnItems()->get()->keyBy('activity_id');
@@ -97,8 +96,8 @@ class CourseController
 
             # tgl aktivasi , tgl selesai , nilai post test, jam pelajaran
             $data = [
-                'activation_date' => $firstSchedule
-                    ? $this->scheduleUser->getActivationDate($firstSchedule->id, $this->participantId)
+                'activation_date' => isset($enrollment) && $enrollment?->enrolled_at
+                    ? $enrollment->enrolled_at->format('Y-m-d')
                     : null,
                 'finished_at'   => $this->learn->getFinishedAt($course->id, $this->participantId),
                 'post_test_avg' => $this->learn->getPostTestAvg($course->id, $this->participantId),
@@ -108,8 +107,9 @@ class CourseController
                 'entry_message' => $entryMessage,
                 'can_reset' => (bool) ($learnModel && ($learnModel->learnItems()->exists() || $learnModel->finished_at)
                     && $firstSchedule && isset($enrollment) && $enrollment
-                    && now()->gte($enrollment->access_starts_at)
-                    && (! $enrollment->access_ends_at || now()->lte($enrollment->access_ends_at))),
+                    && in_array($enrollment->status, ['active', 'completed', 'expired'], true)),
+                'needs_activation' => (bool) ($firstSchedule && ! $learnModel?->finished_at
+                    && (! isset($enrollment) || ! $enrollment || ! $enrollment->isAccessActive())),
             ];
 
             $course = $this->course->findBySlug($course->slug, Auth::user());
@@ -173,36 +173,18 @@ class CourseController
             ->where('course_id', $course->id)->first();
         abort_unless($enrollment, 404);
 
-        if (now()->lt($enrollment->access_starts_at) || ($enrollment->access_ends_at && now()->gt($enrollment->access_ends_at))) {
-            return back()->withErrors(['reset' => 'Masa akses kelas tidak aktif. Progres tidak diubah.']);
-        }
-
-        $files = [];
-        DB::transaction(function () use ($course, $participantId, $enrollment, &$files) {
+        DB::transaction(function () use ($course, $participantId, $enrollment) {
             $lockedEnrollment = Enrollment::query()->lockForUpdate()->findOrFail($enrollment->id);
-            abort_unless(in_array($lockedEnrollment->status, ['active', 'completed'], true), 403);
-            $learn = Learn::query()->where('participant_id', $participantId)->where('course_id', $course->id)
+            abort_unless(in_array($lockedEnrollment->status, ['active', 'completed', 'expired'], true), 403);
+            $learn = Learn::query()->where('enrollment_id', $lockedEnrollment->id)->where('participant_id', $participantId)->where('course_id', $course->id)
                 ->lockForUpdate()->first();
             if ($learn) {
-                foreach ($learn->learnItems()->where('type', 'task')->get() as $item) {
-                    $attachment = @unserialize((string) $item->response, ['allowed_classes' => false]);
-                    if (is_string($attachment) && basename($attachment) === $attachment) {
-                        $files[] = public_path(Task::$directoryTask.$attachment);
-                    }
-                }
-                $learn->learnItems()->forceDelete();
-                $learn->update([
-                    'progress' => null,
-                    'finished_at' => null,
-                    'url_certificate' => null,
-                    'is_post_certificate' => false,
-                    'prestige_certificate_registered_at' => null,
-                ]);
+                $learn->learnItems()->delete();
+                $learn->delete();
             }
-            $lockedEnrollment->update(['status' => 'active']);
-            DB::afterCommit(function () use (&$files) { foreach ($files as $file) File::delete($file); });
+            $lockedEnrollment->delete();
         });
 
-        return to_route('participant.course.show', $course->slug)->with('success', 'Progres kelas berhasil direset. Anda dapat memulai lagi dari kegiatan pertama.');
+        return to_route('participant.course.show', $course->slug)->with('success', 'Progres lama diarsipkan. Aktifkan kembali kelas untuk memulai dari kegiatan pertama.');
     }
 }

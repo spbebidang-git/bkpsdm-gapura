@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Admin\Management;
 
 use App\Models\Learning\NotificationMessageTemplate;
+use App\Models\Course\Course;
+use App\Models\Identity\User;
+use App\Services\Learning\ParticipantNotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class NotificationMessageController
@@ -23,7 +27,24 @@ class NotificationMessageController
 
         return Inertia::render('Admin/Management/NotificationMessage/Index', [
             'templates' => $templates,
+            'participants' => User::query()->role('participant')->orderBy('name')->get(['id', 'name', 'nip']),
+            'courses' => Course::query()->where('status', 'publish')->orderBy('title')->get(['id', 'title']),
         ]);
+    }
+
+    public function test(Request $request, ParticipantNotificationService $notifications)
+    {
+        $eventKeys = array_keys(config('notification_messages', []));
+        $data = $request->validate([
+            'participant_id' => ['required', 'string', Rule::exists('users', 'id')->whereNull('deleted_at')],
+            'course_id' => ['required', 'string', Rule::exists('courses', 'id')->where('status', 'publish')->whereNull('deleted_at')],
+            'event_key' => ['required', Rule::in($eventKeys)],
+        ]);
+        abort_unless(User::query()->whereKey($data['participant_id'])->role('participant')->exists(), 422);
+
+        $notifications->sendTest($data['event_key'], $data['participant_id'], $data['course_id']);
+
+        return to_route('admin.management.notification-messages.index')->with('success', 'Notifikasi uji berhasil dikirim ke peserta.');
     }
 
     public function update(Request $request)

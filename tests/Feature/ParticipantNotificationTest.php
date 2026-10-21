@@ -102,6 +102,34 @@ class ParticipantNotificationTest extends TestCase
         }
     }
 
+    public function test_deadline_command_skips_participants_who_completed_the_class(): void
+    {
+        Carbon::setTestNow('2026-10-10 12:00:00');
+        try {
+            $participant = User::factory()->create();
+            $course = Course::factory()->open()->create(['category_id' => Category::factory()->create()->id]);
+            $enrollment = Enrollment::query()->create([
+                'participant_id' => $participant->id,
+                'course_id' => $course->id,
+                'status' => 'completed',
+                'enrolled_at' => now()->subDay(),
+                'access_starts_at' => now()->subDay(),
+                'access_ends_at' => now()->addMinutes(30),
+            ]);
+            Learn::query()->create([
+                'participant_id' => $participant->id,
+                'course_id' => $course->id,
+                'enrollment_id' => $enrollment->id,
+                'finished_at' => now()->subHour(),
+            ]);
+
+            $this->artisan('participant:notify-deadlines')->assertSuccessful();
+            $this->assertSame(0, ParticipantNotification::query()->where('participant_id', $participant->id)->count());
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
     public function test_notification_endpoints_only_expose_the_signed_in_participants_records(): void
     {
         $role = Role::query()->firstOrCreate(['name' => 'participant', 'guard_name' => 'web']);
@@ -119,5 +147,49 @@ class ParticipantNotificationTest extends TestCase
         $this->actingAs($participant)->patchJson('/notifications/'.$notice->id.'/read')->assertOk();
 
         $this->assertNull($notice->fresh()->read_at);
+    }
+
+    public function test_admin_can_send_a_saved_template_as_a_test_to_a_selected_participant(): void
+    {
+        $adminRole = Role::query()->firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        $participantRole = Role::query()->firstOrCreate(['name' => 'participant', 'guard_name' => 'web']);
+        $admin = User::factory()->create();
+        $admin->assignRole($adminRole);
+        $participant = User::factory()->create();
+        $participant->assignRole($participantRole);
+        $course = Course::factory()->open()->create([
+            'category_id' => Category::factory()->create()->id,
+            'status' => 'publish',
+        ]);
+        \App\Models\Learning\NotificationMessageTemplate::query()->updateOrCreate(
+            ['event_key' => 'reminder_1h'],
+            ['title' => 'Uji :course_name', 'message' => 'Pesan uji untuk :course_name'],
+        );
+
+        $this->actingAs($admin)->post(route('admin.management.notification-messages.test'), [
+            'participant_id' => $participant->id,
+            'course_id' => $course->id,
+            'event_key' => 'reminder_1h',
+        ])->assertRedirect(route('admin.management.notification-messages.index'));
+
+        $notice = ParticipantNotification::query()->where('participant_id', $participant->id)->firstOrFail();
+        $this->assertSame('deadline', $notice->type);
+        $this->assertSame('Uji '.$course->title, $notice->data['title']);
+        $this->assertTrue($notice->data['test']);
+    }
+
+    public function test_participant_cannot_send_admin_notification_tests(): void
+    {
+        $participantRole = Role::query()->firstOrCreate(['name' => 'participant', 'guard_name' => 'web']);
+        $participant = User::factory()->create();
+        $participant->assignRole($participantRole);
+
+        $this->actingAs($participant)->post(route('admin.management.notification-messages.test'), [
+            'participant_id' => $participant->id,
+            'course_id' => 'missing',
+            'event_key' => 'completed',
+        ])->assertRedirect(route('participant.dashboard'));
+
+        $this->assertSame(0, ParticipantNotification::query()->count());
     }
 }

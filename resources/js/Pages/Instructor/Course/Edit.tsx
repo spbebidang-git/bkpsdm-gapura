@@ -13,6 +13,7 @@ export default function Edit({
     trainers = [],
     selected_trainers: selectedTrainers = [],
     opds = [],
+    current_trainer: currentTrainer = null,
     is_trainer: isTrainer = false,
 }) {
     const { errors = {} } = usePage().props;
@@ -112,7 +113,7 @@ export default function Edit({
                     <CourseFormFields
                         values={values} setValues={setValues} handleChange={handleChange} errors={errors}
                         categories={categories} employeeStatuses={employeeStatuses}
-                        trainers={trainers} opds={[...opds, ...(course.opds || []).filter((selected) => !opds.some((opd) => String(opd.id) === String(selected.id))).map((opd) => ({ ...opd, is_active: false }))]} isTrainerAccount={isTrainerAccount} thumbnailPreview={thumbnailPreview}
+                        trainers={trainers} opds={[...opds, ...(course.opds || []).filter((selected) => !opds.some((opd) => String(opd.id) === String(selected.id))).map((opd) => ({ ...opd, is_active: false }))]} isTrainerAccount={isTrainerAccount} currentTrainer={currentTrainer} thumbnailPreview={thumbnailPreview}
                         editing typeLocked={Boolean(course.type || course.access_mode)} hasSchedules={hasSchedules}
 
                     />

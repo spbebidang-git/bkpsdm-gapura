@@ -6,14 +6,16 @@ import AdminLayout from '@/Layouts/Admin/App';
 import { Head, useForm } from '@inertiajs/react';
 import '@/../css/admin-notification-message.css';
 
-type Template = { event_key: string; group: string; label: string; title: string; message: string };
+type Template = { event_key: string; group: string; label: string; title: string; message: string; type?: string };
 type TemplateValues = { title: string; message: string };
+type Option = { id: string; name?: string; nip?: string | null; title?: string };
 
-export default function Index({ templates }: { templates: Template[] }) {
+export default function Index({ templates, participants = [], courses = [] }: { templates: Template[]; participants: Option[]; courses: Option[] }) {
     const initialTemplates: Record<string, TemplateValues> = Object.fromEntries(
         templates.map((template) => [template.event_key, { title: template.title, message: template.message }]),
     );
     const { data, setData, put, processing, errors } = useForm({ templates: initialTemplates });
+    const testForm = useForm({ participant_id: '', course_id: '', event_key: templates[0]?.event_key || '' });
     const groups = templates.reduce<Record<string, Template[]>>((result, template) => {
         (result[template.group] ||= []).push(template);
         return result;
@@ -60,6 +62,28 @@ export default function Index({ templates }: { templates: Template[] }) {
                     </div>
                 </CrudFormSection>)}
             </form>
+            <CrudFormSection title="Uji notifikasi peserta" icon="bx-send" description="Kirim salinan pesan yang sudah tersimpan ke kotak notifikasi peserta yang dipilih.">
+                <form noValidate onSubmit={(event) => { event.preventDefault(); testForm.post(route('admin.management.notification-messages.test')); }} className="grid gap-4 md:grid-cols-2">
+                    <label className="grid gap-1.5 text-sm font-medium text-ink">Peserta
+                        <select className="form-control" value={testForm.data.participant_id} onChange={(event) => testForm.setData('participant_id', event.target.value)} required>
+                            <option value="">Pilih peserta</option>{participants.map((participant) => <option key={participant.id} value={participant.id}>{participant.name}{participant.nip ? ` · ${participant.nip}` : ''}</option>)}
+                        </select>{testForm.errors.participant_id && <span className="text-xs text-red-600">{testForm.errors.participant_id}</span>}
+                    </label>
+                    <label className="grid gap-1.5 text-sm font-medium text-ink">Kelas
+                        <select className="form-control" value={testForm.data.course_id} onChange={(event) => testForm.setData('course_id', event.target.value)} required>
+                            <option value="">Pilih kelas</option>{courses.map((course) => <option key={course.id} value={course.id}>{course.title}</option>)}
+                        </select>{testForm.errors.course_id && <span className="text-xs text-red-600">{testForm.errors.course_id}</span>}
+                    </label>
+                    <label className="grid gap-1.5 text-sm font-medium text-ink">Jenis notifikasi
+                        <select className="form-control" value={testForm.data.event_key} onChange={(event) => testForm.setData('event_key', event.target.value)} required>
+                            {templates.map((template) => <option key={template.event_key} value={template.event_key}>{template.label}</option>)}
+                        </select>{testForm.errors.event_key && <span className="text-xs text-red-600">{testForm.errors.event_key}</span>}
+                    </label>
+                    <div className="flex items-end"><Button type="submit" loading={testForm.processing} disabled={!participants.length || !courses.length}>
+                        {testForm.processing ? 'Mengirim…' : 'Kirim notifikasi uji'}
+                    </Button></div>
+                </form>
+            </CrudFormSection>
         </div>
     </AdminLayout>;
 }

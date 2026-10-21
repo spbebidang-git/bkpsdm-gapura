@@ -2,6 +2,7 @@ import StarRating from '@/Components/StarRating';
 import { showCourseActivationToast } from '@/Components/CourseActivationToast';
 import App from '@/Layouts/App';
 import { getBrowserSupportStatus, getUnsupportedBrowserMessage } from '@/Utils/browserSupport';
+import { getYouTubeEmbedUrl } from '@/Utils/youtube';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import DOMPurify from 'dompurify';
@@ -67,6 +68,7 @@ export default function CourseShow({ course, schedules = [], reviews = [], ratin
     const currentReviews = reviews.slice((reviewPage - 1) * reviewsPerPage, reviewPage * reviewsPerPage);
     const ratingValue = Number(rating.value || rating.star || 0).toFixed(1);
     const employeeStatuses = [...new Set((course.employee_status || '').split(',').map((status) => status.trim()).filter(Boolean))];
+    const teaserVideoUrl = getYouTubeEmbedUrl(course.teaser_video);
 
     const scrollToSection = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
@@ -147,7 +149,7 @@ export default function CourseShow({ course, schedules = [], reviews = [], ratin
                         <div>
                             <div className="relative aspect-video overflow-hidden rounded-[10px] bg-[#044849]">
                                 <img src={course.thumbnail} alt={course.title} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = '/assets/media/images/static/default-class.jpg'; }} className="h-full w-full object-cover" />
-                                {course.teaser_video && <button type="button" onClick={() => scrollToSection('course-video')} className="absolute bottom-3 left-3 inline-flex min-h-10 items-center gap-2 rounded-[10px] bg-white px-4 font-poppins text-xs font-semibold text-primary shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><i className="bx bx-play-circle text-lg" aria-hidden="true" />Pratinjau kelas</button>}
+                                {teaserVideoUrl && <button type="button" onClick={() => scrollToSection('course-video')} className="absolute bottom-3 left-3 inline-flex min-h-10 items-center gap-2 rounded-[10px] bg-white px-4 font-poppins text-xs font-semibold text-primary shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"><i className="bx bx-play-circle text-lg" aria-hidden="true" />Pratinjau kelas</button>}
                             </div>
                             <dl className="mt-3 grid grid-cols-2 gap-3 rounded-[10px] bg-[#044849]/75 p-4">
                                 <div className="flex items-start gap-2">
@@ -186,16 +188,24 @@ export default function CourseShow({ course, schedules = [], reviews = [], ratin
                                 ].map(([icon, label, value]) => <div key={label}><dt className="text-xs text-[#66778C]">{label}</dt><dd className="mt-2 flex items-center gap-2 font-poppins text-lg font-semibold text-[#075D5E]"><i className={`bx ${icon === 'star' ? 'bxs-star text-[#F68104]' : `bx-${icon} text-primary`} text-lg`} aria-hidden="true" />{value}</dd></div>)}
                             </dl>
                         </section>
-                        {trainers.length > 0 && <section className="course-detail-panel" aria-labelledby="trainers-heading">
-                            <SectionHeading eyebrow="Belajar bersama" title="Pemateri" id="trainers-heading" />
-                            <div className="mt-4 divide-y divide-[#E8ECF1]">
-                                {trainers.map((trainer) => <article key={trainer.id} className="flex items-start gap-4 py-4 first:pt-0 last:pb-0">
-                                    <img src={trainer.photo} alt="" className="h-14 w-14 shrink-0 rounded-[10px] object-cover" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = '/assets/media/images/static/default-profile.jpg'; }} />
-                                    <div><h3 className="font-poppins text-sm font-semibold text-[#075D5E]">{trainer.name}</h3>{trainer.position && <p className="mt-1 font-inter text-xs leading-5 text-[#66778C]">{trainer.position}</p>}</div>
-                                </article>)}
+                        {teaserVideoUrl && <section id="course-video" className="scroll-mt-24 overflow-hidden rounded-[15px] border border-[#E8ECF1] bg-white shadow-[0_2px_16px_rgba(1,128,131,0.06)]" aria-labelledby="video-heading">
+                            <header className="border-b border-[#E8ECF1] px-5 py-5 sm:px-7">
+                                <SectionHeading eyebrow="Pratinjau" title="Kenali kelas sebelum memulai" id="video-heading" compact />
+                            </header>
+                            <div className="bg-white p-3 sm:p-5">
+                                <div className="aspect-video overflow-hidden rounded-[10px] bg-[#075D5E] shadow-sm">
+                                    <iframe
+                                        src={teaserVideoUrl}
+                                        title={`Video pengantar ${course.title}`}
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                        allowFullScreen
+                                        referrerPolicy="strict-origin-when-cross-origin"
+                                        loading="lazy"
+                                        className="h-full w-full border-0"
+                                    />
+                                </div>
                             </div>
                         </section>}
-                        {course.teaser_video && <section id="course-video" className="scroll-mt-24" aria-labelledby="video-heading"><SectionHeading eyebrow="Pratinjau" title="Kenali kelas sebelum memulai" id="video-heading" /><div className="mt-5 aspect-video overflow-hidden rounded-[15px] border border-[#E8ECF1] bg-[#075D5E] shadow-[0_2px_24px_rgba(1,128,131,0.1)]"><iframe src={course.teaser_video} title={`Video pengantar ${course.title}`} allowFullScreen className="h-full w-full border-0" /></div></section>}
                         <section id="course-reviews" className="scroll-mt-24 overflow-hidden rounded-[15px] border border-[#E8ECF1] bg-white shadow-[0_2px_16px_rgba(1,128,131,0.06)]" aria-labelledby="reviews-heading">
                             <header className="flex flex-col gap-5 border-b border-[#E8ECF1] px-6 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8"><SectionHeading eyebrow="Pengalaman peserta" title="Ulasan kelas" id="reviews-heading" compact /><div className="flex min-w-[210px] items-center gap-4 rounded-[12px] bg-[#F6F9F8] px-4 py-3"><strong className="font-poppins text-3xl font-semibold text-[#018083]">{ratingValue}</strong><div><StarRating value={Number(rating.star || 0)} size="16px" /><p className="mt-1 font-inter text-xs text-[#8496B0]">{formatNumber(rating.total)} ulasan</p></div></div></header>
                             {currentReviews.length > 0 ? <div className="divide-y divide-[#E8ECF1]">{currentReviews.map((review, index) => <article key={`${review.name}-${index}`} className="px-6 py-6 sm:px-8"><div className="flex items-start justify-between gap-4"><div className="flex min-w-0 items-center gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#E6F3F3] font-poppins font-semibold text-[#018083]">{review.name?.charAt(0)?.toUpperCase() || 'P'}</span><div className="min-w-0"><h3 className="truncate font-poppins text-sm font-semibold text-[#075D5E]">{review.name || 'Peserta GAPURA'}</h3><p className="mt-0.5 font-inter text-xs text-[#8496B0]">{review.created_at}</p></div></div><StarRating value={Number(review.star || 0)} size="15px" /></div><p className="mt-4 border-l-2 border-[#018083]/30 pl-4 font-inter text-sm leading-6 text-[#526176]">{review.description || 'Peserta tidak menuliskan komentar.'}</p></article>)}</div> : <div className="px-6 py-12 text-center"><span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#E6F3F3]"><box-icon name="message-rounded-dots" color="#018083" size="25px" /></span><h3 className="mt-4 font-poppins font-semibold text-[#075D5E]">Belum ada ulasan</h3><p className="mt-1 font-inter text-sm text-[#8496B0]">Ulasan peserta akan tampil setelah kelas selesai.</p></div>}
@@ -216,6 +226,15 @@ export default function CourseShow({ course, schedules = [], reviews = [], ratin
                             </div>
                             <div className="flex items-start gap-3 border-t border-[#E8ECF1] bg-[#FAFCFF] px-5 py-4"><box-icon name="shield-quarter" color="#018083" size="20px" /><p className="font-inter text-xs leading-5 text-[#66778C]">Progres belajar tersimpan otomatis dan dapat dilanjutkan kapan saja.</p></div>
                         </div>
+                        {trainers.length > 0 && <section className="course-detail-panel mt-5" aria-labelledby="trainers-heading">
+                            <div className="text-center"><SectionHeading eyebrow="Belajar bersama" title="Pemateri" id="trainers-heading" compact /></div>
+                            <div className="mt-4 divide-y divide-[#E8ECF1]">
+                                {trainers.map((trainer) => <article key={trainer.id} className="flex flex-col items-center gap-2 py-4 text-center first:pt-0 last:pb-0">
+                                    <img src={trainer.photo} alt="" className="h-16 w-16 shrink-0 rounded-full object-cover" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = '/assets/media/images/static/default-profile.jpg'; }} />
+                                    <div><h3 className="font-poppins text-sm font-semibold text-[#075D5E]">{trainer.name}</h3>{trainer.position && <p className="mt-1 font-inter text-xs leading-5 text-[#66778C]">{trainer.position}</p>}</div>
+                                </article>)}
+                            </div>
+                        </section>}
                     </aside>
                 </div>
             </div>

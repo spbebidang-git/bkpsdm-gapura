@@ -20,6 +20,8 @@ class LearningReportRepository implements LearningReportRepositoryInterface
             })
             ->where('learns.course_id', $courseId)
             ->where('learns.participant_id', $participantId)
+            ->whereNull('learns.deleted_at')
+            ->whereNull('learn_items.deleted_at')
             ->whereNotNull('learns.finished_at')
             ->select('activities.type as activity_type', 'learn_items.response')
             ->get();
@@ -39,16 +41,19 @@ class LearningReportRepository implements LearningReportRepositoryInterface
                 'learns.finished_at',
             )
             ->whereIn('learn_items.type', ['pre-test', 'post-test'])
+            ->whereNull('learns.deleted_at')
+            ->whereNull('learn_items.deleted_at')
             ->whereNotNull('learns.finished_at')
             ->get();
     }
 
     public function getParticipantCountsByCourse(): Collection
     {
-        return $this->connection->table('schedule_user')
-            ->join('schedules', 'schedules.id', '=', 'schedule_user.schedule_id')
-            ->selectRaw('schedules.course_id, COUNT(DISTINCT schedule_user.participant_id) as total_peserta')
-            ->groupBy('schedules.course_id')
+        return $this->connection->table('enrollments')
+            ->whereNotNull('schedule_id')
+            ->whereNull('deleted_at')
+            ->selectRaw('course_id, COUNT(DISTINCT participant_id) as total_peserta')
+            ->groupBy('course_id')
             ->get()
             ->keyBy('course_id');
     }

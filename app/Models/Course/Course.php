@@ -136,9 +136,7 @@ class Course extends Model
 
     public function totalParticipant(): Attribute
     {
-        return Attribute::get(fn() => $this->schedules->sum(function ($schedule) {
-            return $schedule->participants()->count();
-        }));
+        return Attribute::get(fn() => $this->enrollments()->whereNotNull('schedule_id')->count());
     }
 
     public function totalPassed(): Attribute

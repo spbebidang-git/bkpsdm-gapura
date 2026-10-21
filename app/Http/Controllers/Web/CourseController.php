@@ -73,6 +73,11 @@ class CourseController extends Controller
                         return true; // unschedule
                     }
 
+                    $previouslyEnrolled = $this->participantId
+                        ? $row->participants()->where('participant_id', $this->participantId)->exists()
+                        : false;
+                    if ($previouslyEnrolled) return true;
+
                     $now  = now();
                     $date = \Carbon\Carbon::parse($dateRaw)->startOfDay();
 
@@ -106,6 +111,15 @@ class CourseController extends Controller
                         ! $date->isFuture()
                         && (! $start || $start->lessThanOrEqualTo($now))
                     );
+                    $previouslyEnrolled = $this->participantId
+                        ? $row->participants()->where('participant_id', $this->participantId)->exists()
+                        : false;
+                    $scheduleId = app(ParticipantEnrollmentService::class)->forRequest(
+                        (string) $this->participantId,
+                        $row->course,
+                        $row,
+                    );
+                    $hasActiveAccess = $scheduleId?->isAccessActive() ?? false;
 
                     $timeFromLabel = $timeFromRaw ? \Carbon\Carbon::parse($timeFromRaw)->format('H:i') : null;
                     $timeToLabel   = $timeToRaw ? \Carbon\Carbon::parse($timeToRaw)->format('H:i') : null;
@@ -117,9 +131,9 @@ class CourseController extends Controller
                         'time'        => ($timeFromLabel && $timeToLabel) ? "{$timeFromLabel}-{$timeToLabel}" : $row->time,
                         'time_from'   => $timeFromLabel,
                         'quota'       => $row->quota,
-                        'can_enter'   => (bool) $canEnter,
+                        'can_enter'   => (bool) ($canEnter || ($previouslyEnrolled && ! $hasActiveAccess)),
                         'start_label' => $timeFromLabel,
-                        'is_active'   => $row->participants()->where('participant_id', $this->participantId)->count() == 1 ? 1 : 0,
+                        'is_active'   => $hasActiveAccess ? 1 : 0,
                     ];
                 })
                 ->values(),

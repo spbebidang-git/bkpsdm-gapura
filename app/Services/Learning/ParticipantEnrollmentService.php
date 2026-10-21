@@ -27,6 +27,14 @@ class ParticipantEnrollmentService
                 ?? ($date ? now()->parse($date.' '.($schedule->getRawOriginal('time_from') ?: '00:00:00')) : $now);
             $endsAt = $schedule->access_to
                 ?? ($date ? now()->parse($date.' '.($schedule->getRawOriginal('time_to') ?: '23:59:59')) : null);
+            $previous = Enrollment::withTrashed()->where('participant_id', $participantId)
+                ->where('course_id', $course->id)->where('schedule_id', $scheduleId)
+                ->whereNotNull('deleted_at')->latest('deleted_at')->first();
+            if ($previous && $previous->access_starts_at && $previous->access_ends_at) {
+                $duration = $previous->access_starts_at->diffInSeconds($previous->access_ends_at);
+                $startsAt = $now->copy();
+                $endsAt = $startsAt->copy()->addSeconds($duration);
+            }
         } elseif ($course->default_access_hours) {
             $endsAt = $now->copy()->addHours((int) $course->default_access_hours);
         }

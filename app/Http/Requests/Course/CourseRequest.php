@@ -61,10 +61,26 @@ abstract class CourseRequest extends FormRequest
                 $validator->errors()->add('description', 'Deskripsi lengkap wajib diisi.');
             }
 
-            if ($validator->errors()->isEmpty() && ! $this->isRestrictedTrainer()) {
-                $trainers = Trainer::with(['user.opd', 'opd', 'opds'])->whereIn('id', $this->input('trainers', []))->get();
+            if ($validator->errors()->isEmpty()) {
+                $trainerIds = $this->input('trainers', []);
+                if ($this->isRestrictedTrainer()) {
+                    $trainerIds = Trainer::where('user_id', $this->user()->id)->pluck('id')->all();
+                    $course = $this->route('course');
+                    if ($course) $trainerIds = array_merge($trainerIds, $course->trainers()->pluck('trainers.id')->all());
+                }
+
+                $trainers = Trainer::with(['user.opd', 'opd', 'opds'])->whereIn('id', $trainerIds)->get();
                 if ($trainers->contains(fn ($trainer) => empty($trainer->organization_options))) {
                     $validator->errors()->add('trainers', 'Pilih pemateri yang memiliki OPD aktif.');
+                }
+
+                if ($this->input('visibility') === 'private') {
+                    $allowedOpdIds = $trainers->flatMap(fn ($trainer) => collect($trainer->organization_options)->pluck('id'))
+                        ->map(fn ($id) => (string) $id)->unique();
+                    $requestedOpdIds = collect($this->input('opd_ids', []))->map(fn ($id) => (string) $id);
+                    if ($requestedOpdIds->diff($allowedOpdIds)->isNotEmpty()) {
+                        $validator->errors()->add('opd_ids', 'OPD sasaran harus berasal dari OPD aktif pemateri yang dipilih.');
+                    }
                 }
             }
 

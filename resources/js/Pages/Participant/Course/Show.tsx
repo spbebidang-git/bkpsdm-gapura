@@ -37,6 +37,7 @@ type LearningSummary = {
     entry_url: string | null;
     entry_message: string | null;
     can_reset: boolean;
+    needs_activation: boolean;
 };
 
 function formatDate(value: string | null) {
@@ -102,7 +103,7 @@ export default function Show({ course, learn }: { course: CourseDetail; learn: L
                 <div className="my-course-hero__content">
                     <div className="my-course-hero__tags">
                         <span className="my-course-category">{course.category || 'Pelatihan ASN'}</span><span className="my-course-category">{scheduled ? 'Terjadwal' : 'Belajar mandiri'}</span>
-                        <span className={`my-course-status ${completed ? 'is-completed' : ''}`}><span aria-hidden="true" />{completed ? 'Selesai' : 'Berjalan'}</span>
+                        <span className={`my-course-status ${completed ? 'is-completed' : ''}`}><span aria-hidden="true" />{completed ? 'Selesai' : learn.needs_activation ? 'Perlu aktivasi' : 'Berjalan'}</span>
                     </div>
                     <h1 id="my-course-title">{course.title}</h1>
                     <p className="my-course-hero__description">{course.short_description || 'Kembangkan kompetensi Anda melalui rangkaian pembelajaran kelas ini.'}</p>
@@ -113,7 +114,7 @@ export default function Show({ course, learn }: { course: CourseDetail; learn: L
                     <div className="my-course-hero__actions">
                         <button type="button" className="my-course-start" onClick={startLearning} disabled={!learn.entry_url} aria-describedby={learn.entry_message ? 'learning-entry-message' : undefined}><Icon name={completed ? 'book-open' : 'play-circle'} size="20px" />{completed ? 'Lihat materi pelatihan' : 'Mulai pelatihan'}<Icon name="right-arrow-alt" size="18px" /></button>
                         {learn.can_reset && <button type="button" className="my-course-reset" onClick={() => setResetOpen(true)}><Icon name="reset" size="18px" />Reset proses belajar</button>}
-                        <a href={route('course.show', { course: course.slug })} target="_blank" rel="noopener noreferrer" className="my-course-public-link">Lihat informasi kelas<Icon name="link-external" size="17px" /><span className="sr-only"> (buka tab baru)</span></a>
+                        <a href={route('course.show', { course: course.slug })} target="_blank" rel="noopener noreferrer" className="my-course-public-link">{learn.needs_activation ? 'Aktifkan ulang kelas' : 'Lihat informasi kelas'}<Icon name="link-external" size="17px" /><span className="sr-only"> (buka tab baru)</span></a>
                     </div>
                     {learn.entry_message && <p id="learning-entry-message" className="my-course-entry-message">{learn.entry_message}</p>}
                 </div>

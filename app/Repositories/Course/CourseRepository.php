@@ -53,11 +53,12 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
             ->withSum('reviews as rating_total', 'star')
             ->select('courses.*')
             ->selectSub(function ($query) {
-                $query->from('schedule_user')
-                    ->join('schedules', 'schedules.id', '=', 'schedule_user.schedule_id')
-                    ->whereColumn('schedules.course_id', 'courses.id')
+                $query->from('enrollments')
+                    ->join('schedules', 'schedules.id', '=', 'enrollments.schedule_id')
+                    ->whereColumn('enrollments.course_id', 'courses.id')
+                    ->whereNull('enrollments.deleted_at')
                     ->whereNull('schedules.deleted_at')
-                    ->selectRaw('count(*)');
+                    ->selectRaw('count(distinct enrollments.participant_id)');
             }, 'total_participant_count')
             ->where('status', 'publish')
             ->where(fn ($query) => $this->applyAudience($query, $user))
@@ -99,11 +100,12 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
             ->withSum('reviews as rating_total', 'star')
             ->select('courses.*')
             ->selectSub(function ($query) {
-                $query->from('schedule_user')
-                    ->join('schedules', 'schedules.id', '=', 'schedule_user.schedule_id')
-                    ->whereColumn('schedules.course_id', 'courses.id')
+                $query->from('enrollments')
+                    ->join('schedules', 'schedules.id', '=', 'enrollments.schedule_id')
+                    ->whereColumn('enrollments.course_id', 'courses.id')
+                    ->whereNull('enrollments.deleted_at')
                     ->whereNull('schedules.deleted_at')
-                    ->selectRaw('count(*)');
+                    ->selectRaw('count(distinct enrollments.participant_id)');
             }, 'total_participant_count')
             ->where('status', 'publish')
             ->where(fn ($query) => $this->applyAudience($query, $user))

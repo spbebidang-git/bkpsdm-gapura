@@ -7,15 +7,31 @@ import FormFile from '@/Components/FormFile';
 import { checkboxGroupErrorClass } from '@/Components/FormCheckboxGroup';
 import ErrorMessage from '@/Components/ErrorMessage';
 import useTransientFieldError from '@/Components/useTransientFieldError';
+import { useEffect } from 'react';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import '@/../css/admin-course-form.css';
 
-export default function CourseFormFields({ values, setValues, handleChange, errors, categories, employeeStatuses, trainers, opds = [], isTrainerAccount, thumbnailPreview, editing = false, typeLocked = false, hasSchedules = true }: {
+export default function CourseFormFields({ values, setValues, handleChange, errors, categories, employeeStatuses, trainers, opds = [], isTrainerAccount, currentTrainer = null, thumbnailPreview, editing = false, typeLocked = false, hasSchedules = true }: {
     values: any; setValues: any; handleChange: any; errors: any; categories: any[]; employeeStatuses: any[]; trainers: any[]; opds?: any[];
-    isTrainerAccount: boolean; thumbnailPreview: string | null; editing?: boolean; typeLocked?: boolean; hasSchedules?: boolean;
+    isTrainerAccount: boolean; currentTrainer?: any; thumbnailPreview: string | null; editing?: boolean; typeLocked?: boolean; hasSchedules?: boolean;
 }) {
     const selectedTrainers = values.trainers.map((id) => trainers.find((trainer) => String(trainer.id) === String(id)) ?? { id, name: 'Pemateri tidak tersedia', organization_name: null });
+    const selectedTrainerOpds = selectedTrainers.flatMap((trainer) => trainer.organization_options || []);
+    const eligibleTrainerOpds = isTrainerAccount && selectedTrainerOpds.length === 0
+        ? (currentTrainer?.organization_options || [])
+        : selectedTrainerOpds;
+    const eligibleOpdIds = new Set(eligibleTrainerOpds.map((opd) => String(opd.id)));
+    const targetOpds = opds.filter((opd) => eligibleOpdIds.has(String(opd.id)));
+    const targetOpdKey = [...eligibleOpdIds].sort().join(',');
+
+    useEffect(() => {
+        if (values.visibility !== 'private') return;
+        setValues((current) => {
+            const nextOpdIds = current.opd_ids.filter((id) => eligibleOpdIds.has(String(id)));
+            return nextOpdIds.length === current.opd_ids.length ? current : { ...current, opd_ids: nextOpdIds };
+        });
+    }, [targetOpdKey, values.visibility]);
     const availableTrainers = trainers.filter((trainer) => !values.trainers.some((id) => String(id) === String(trainer.id)));
     const addTrainer = (event) => {
         const trainerId = event.target.value;
@@ -66,13 +82,20 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
             </CrudFormSection>
             <CrudFormSection title="Pengaturan kelas" description="Tentukan tipe, durasi, dan publikasi." icon="bx-slider-alt">
                 <FormSelect id="visibility" label="Visibilitas kelas" isRequired value={values.visibility} onChange={handleChange} error={errors.visibility} options={[{ value: 'public', label: 'Publik — semua OPD' }, { value: 'private', label: 'Privat — OPD tertentu' }]} small="Informasi kelas publik dapat dilihat tanpa login. Mengikuti kegiatan tetap memerlukan login dan status pegawai yang sesuai." />
-                {values.visibility === 'private' && <fieldset className="my-4 rounded-xl border border-hairline p-4">
-                    <legend className="px-1 text-sm font-semibold">OPD sasaran <span aria-hidden="true">*</span></legend>
-                    <p className="mb-3 text-xs text-steel">Peserta harus berasal dari salah satu OPD berikut dan memenuhi status pegawai kelas.</p>
-                    <div className="grid max-h-64 gap-2 overflow-y-auto sm:grid-cols-2">{opds.map((opd) => <label key={opd.id} className="flex items-center gap-2 text-sm">
-                        <input type="checkbox" disabled={opd.is_active === false && !values.opd_ids.includes(String(opd.id))} checked={values.opd_ids.includes(String(opd.id))} onChange={(event) => setValues((current) => ({ ...current, opd_ids: event.target.checked ? [...current.opd_ids, String(opd.id)] : current.opd_ids.filter((id) => id !== String(opd.id)) }))} />{opd.name}{opd.is_active === false ? ' (tidak aktif — hapus untuk menyimpan)' : ''}
-                    </label>)}</div>
-                    {opds.length === 0 && <p className="text-sm text-steel">Belum ada OPD aktif.</p>}
+                {values.visibility === 'private' && <fieldset className="course-opd-picker">
+                    <legend className="form-label">OPD sasaran <span aria-hidden="true">*</span></legend>
+                    {targetOpds.length > 0 ? <>
+                        <div className="course-opd-picker-grid" role="group" aria-label="Pilih OPD sasaran kelas">
+                            {targetOpds.map((opd) => {
+                                const checked = values.opd_ids.some((id) => String(id) === String(opd.id));
+                                const disabled = opd.is_active === false && !checked;
+                                return <label key={opd.id} className="course-opd-option">
+                                    <input type="checkbox" checked={checked} disabled={disabled} onChange={(event) => setValues((current) => ({ ...current, opd_ids: event.target.checked ? [...current.opd_ids, String(opd.id)] : current.opd_ids.filter((id) => String(id) !== String(opd.id)) }))} />
+                                    <span>{opd.name}</span>
+                                </label>;
+                            })}
+                        </div>
+                    </> : <p className="course-opd-picker-empty">Pilih pemateri dengan OPD aktif untuk menampilkan pilihan sasaran.</p>}
                     <ErrorMessage message={errors.opd_ids || Object.entries(errors).find(([key]) => key.startsWith('opd_ids.'))?.[1] as string} />
                 </fieldset>}
                 <div className="course-form-fields-grid course-form-settings-grid">
@@ -120,7 +143,7 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
                     <div className="course-trainer-picker-heading">
                         <div>
                             <h3>Pemateri <span aria-hidden="true">*</span></h3>
-                            <p>Pilih pemateri berafiliasi OPD aktif dari seluruh OPD.</p>
+                            <p>Pilih pemateri. OPD sasaran kelas privat dibatasi pada OPD aktif pemateri yang dipilih.</p>
                         </div>
                         <span>{selectedTrainers.length} dipilih</span>
                     </div>

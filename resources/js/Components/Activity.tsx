@@ -3,6 +3,7 @@ import DOMPurify from "dompurify";
 import { Link, router, usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 import type { ChangeEvent, Dispatch, SetStateAction } from 'react';
+import { getYouTubeEmbedUrl } from '@/Utils/youtube';
 
 interface AnswerValue { question?: string; option_select?: string; question_id?: number | string; [key: string]: unknown; }
 interface QuestionItem { question?: string; question_id?: number | string; option?: Record<string, string | null>; [key: string]: unknown; }
@@ -403,16 +404,20 @@ const Activity = ({ id, type, data, title, slug, question_result, status, answer
     if (type === 'video' || type === 'literature') {
         const isVideo = type === 'video';
         const materialTitle = title || (isVideo ? 'Materi video' : 'Materi bacaan');
+        const videoUrl = isVideo ? getYouTubeEmbedUrl(data.src_video) : null;
 
         return (
             <article className="learn-media" aria-label={materialTitle}>
                 <div className={isVideo ? 'learn-media__player' : 'learn-media__reader'}>
-                    {isVideo ? <iframe
-                        src={`${data.src_video}${data.src_video?.includes('?') ? '&' : '?'}rel=0`}
+                    {isVideo ? (videoUrl ? <iframe
+                        src={`${videoUrl}?rel=0`}
                         title={materialTitle}
+                        referrerPolicy="strict-origin-when-cross-origin"
                         allowFullScreen
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    /> : <LearnPdfReader src={data.src_pdf} title={materialTitle} />}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    /> : <div className="learn-media__video-unavailable" role="status">
+                        Video tidak dapat dimuat. Periksa kembali tautan video atau hubungi admin.
+                    </div>) : <LearnPdfReader src={data.src_pdf} title={materialTitle} />}
                 </div>
                 <div className="learn-media__copy">
                     <h3>{materialTitle}</h3>

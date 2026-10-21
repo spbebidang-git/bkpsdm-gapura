@@ -101,9 +101,8 @@ class ScheduleController
 
     private function participantIds(Schedule $schedule)
     {
-        $legacy = DB::table('schedule_user')->where('schedule_id', $schedule->id)->select('participant_id');
-        $enrollments = DB::table('enrollments')->where('schedule_id', $schedule->id)->select('participant_id');
-        return $legacy->union($enrollments)->distinct()->pluck('participant_id');
+        return DB::table('enrollments')->where('schedule_id', $schedule->id)
+            ->whereNull('deleted_at')->distinct()->pluck('participant_id');
     }
 
     private function time(?string $value): ?string

@@ -5,7 +5,7 @@ import AdminLayout from '@/Layouts/Admin/App';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
-const Create = ({ categories = [], employee_status = [], trainers = [], opds = [], is_trainer: isTrainer = false }) => {
+const Create = ({ categories = [], employee_status = [], trainers = [], opds = [], current_trainer: currentTrainer = null, is_trainer: isTrainer = false }) => {
     const { errors = {} } = usePage().props;
     const isTrainerAccount = Boolean(isTrainer);
     const [thumbnailPreview, setThumbnailPreview] = useState(null);
@@ -95,7 +95,7 @@ const Create = ({ categories = [], employee_status = [], trainers = [], opds = [
                     <CourseFormFields
                         values={values} setValues={setValues} handleChange={handleChange} errors={errors}
                         categories={categories} employeeStatuses={employee_status}
-                        trainers={trainers} opds={opds} isTrainerAccount={isTrainerAccount} thumbnailPreview={thumbnailPreview}
+                        trainers={trainers} opds={opds} isTrainerAccount={isTrainerAccount} currentTrainer={currentTrainer} thumbnailPreview={thumbnailPreview}
 
                     />
                 </form>

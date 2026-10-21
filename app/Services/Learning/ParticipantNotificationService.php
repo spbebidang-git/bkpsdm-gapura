@@ -7,6 +7,7 @@ use App\Models\Learning\Learn;
 use App\Models\Learning\NotificationMessageTemplate;
 use App\Models\Learning\ParticipantNotification;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ParticipantNotificationService
 {
@@ -23,6 +24,26 @@ class ParticipantNotificationService
             'data' => json_encode($data, JSON_THROW_ON_ERROR),
             'created_at' => now(),
             'updated_at' => now(),
+        ]);
+    }
+
+    public function sendTest(string $eventKey, string $participantId, string $courseId): void
+    {
+        if (! config('participant.notifications_enabled', true)) {
+            throw ValidationException::withMessages(['event_key' => 'Notifikasi peserta sedang dinonaktifkan.']);
+        }
+
+        $course = \App\Models\Course\Course::query()->findOrFail($courseId);
+        $copy = $this->copy($eventKey, $course->title);
+        if (! $copy) throw ValidationException::withMessages(['event_key' => 'Jenis notifikasi tidak tersedia.']);
+
+        $this->create('admin-test:'.Str::ulid(), $copy['type'], $participantId, [
+            'title' => $copy['title'],
+            'message' => $copy['message'],
+            'course_id' => $course->id,
+            'course_slug' => $course->slug,
+            'test' => true,
+            'occurred_at' => now()->toISOString(),
         ]);
     }
 

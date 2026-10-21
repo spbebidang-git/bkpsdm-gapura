@@ -9,7 +9,9 @@ use App\Models\Course\Schedule;
 use App\Models\Identity\User;
 use App\Models\Learning\Learn;
 use App\Models\Learning\LearnItem;
+use App\Models\Learning\Enrollment;
 use App\Services\Learning\ParticipantEnrollmentService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
@@ -110,7 +112,7 @@ class ParticipantCourseEntryTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->where('learn.entry_url', route('participant.learn.instruction.index', [$course->slug, $schedule->id, $next->id])));
     }
 
-    public function test_reset_clears_own_progress_and_keeps_enrollment(): void
+    public function test_reset_soft_deletes_progress_and_enrollment_for_reactivation(): void
     {
         $user = $this->participant();
         $course = Course::factory()->open()->create();
@@ -123,10 +125,73 @@ class ParticipantCourseEntryTest extends TestCase
         LearnItem::create(['learn_id' => $learn->id, 'activity_id' => $activity->id, 'title' => $activity->title, 'type' => 'pre-test', 'status' => 'done', 'response' => serialize([['score' => 80]])]);
 
         $this->actingAs($user)->post(route('participant.course.reset', $course->slug))->assertRedirect(route('participant.course.show', $course->slug));
-        $this->assertSame(0, $learn->learnItems()->count());
-        $this->assertNull($learn->fresh()->finished_at);
-        $this->assertNull($learn->fresh()->url_certificate);
-        $this->assertSame('active', $enrollment->fresh()->status);
+        $this->assertTrue(Learn::withTrashed()->findOrFail($learn->id)->trashed());
+        $this->assertTrue($learn->learnItems()->withTrashed()->first()->trashed());
+        $this->assertTrue(Enrollment::withTrashed()->findOrFail($enrollment->id)->trashed());
+
+        $this->actingAs($user)->get(route('participant.course.show', $course->slug))->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('learn.needs_activation', true)
+                ->where('learn.entry_url', null)
+                ->where('learn.finished_at', null)
+                ->where('learn.url_certificate', null));
+
+        $newEnrollment = app(ParticipantEnrollmentService::class)->activate($course, $schedule, (string) $user->id);
+        $this->assertNotSame($enrollment->id, $newEnrollment->id);
+        $this->assertSame('active', $newEnrollment->status);
+        $this->assertNull($newEnrollment->learn()->first());
+    }
+
+    public function test_reset_is_available_after_access_expired(): void
+    {
+        $user = $this->participant();
+        $course = Course::factory()->open()->create();
+        $schedule = Schedule::create(['course_id' => $course->id]);
+        $schedule->participants()->attach($user->id);
+        $enrollment = app(ParticipantEnrollmentService::class)->activate($course, $schedule, (string) $user->id);
+        $learn = Learn::create(['participant_id' => $user->id, 'course_id' => $course->id, 'enrollment_id' => $enrollment->id]);
+        $activity = Activity::create(['course_id' => $course->id, 'type' => 'video', 'title' => 'Materi', 'sort_order' => 1]);
+        LearnItem::create(['learn_id' => $learn->id, 'activity_id' => $activity->id, 'title' => 'Materi', 'type' => 'video', 'status' => 'in_progress']);
+        $enrollment->update(['status' => 'expired', 'access_ends_at' => now()->subMinute()]);
+
+        $this->actingAs($user)->post(route('participant.course.reset', $course->slug))->assertRedirect(route('participant.course.show', $course->slug));
+        $this->assertNotNull(Enrollment::withTrashed()->find($enrollment->id)->deleted_at);
+        $this->assertNotNull(Learn::withTrashed()->find($learn->id)->deleted_at);
+    }
+
+    public function test_reactivation_of_an_expired_scheduled_class_restarts_its_original_access_duration(): void
+    {
+        Carbon::setTestNow('2026-10-22 08:00:00');
+        try {
+            $user = $this->participant();
+            $course = Course::factory()->scheduled()->create();
+            $schedule = Schedule::create([
+                'course_id' => $course->id,
+                'date' => '2026-10-20',
+                'time_from' => '09:00:00',
+                'time_to' => '11:00:00',
+                'access_from' => '2026-10-20 09:00:00',
+                'access_to' => '2026-10-20 11:00:00',
+            ]);
+            $schedule->participants()->attach($user->id);
+            $old = Enrollment::query()->create([
+                'participant_id' => $user->id,
+                'course_id' => $course->id,
+                'schedule_id' => $schedule->id,
+                'status' => 'expired',
+                'enrolled_at' => '2026-10-20 08:00:00',
+                'access_starts_at' => '2026-10-20 09:00:00',
+                'access_ends_at' => '2026-10-20 11:00:00',
+            ]);
+            $old->delete();
+
+            $new = app(ParticipantEnrollmentService::class)->activate($course, $schedule, (string) $user->id);
+
+            $this->assertTrue($new->access_starts_at->equalTo(now()));
+            $this->assertTrue($new->access_ends_at->equalTo(now()->addHours(2)));
+            $this->assertSame('active', $new->status);
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     public function test_participant_cannot_reset_another_participants_course(): void

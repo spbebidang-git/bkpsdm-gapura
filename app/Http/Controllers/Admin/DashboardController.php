@@ -25,15 +25,16 @@ class DashboardController
 
         $popularCourses = Cache::remember('admin.dashboard.popularCourses.'.($user?->id ?? 'all'), 3600, function () use ($user) {
             $query = Course::select('courses.id', 'courses.title')
-                ->join('schedules', 'schedules.course_id', '=', 'courses.id')
-                ->join('schedule_user', 'schedule_user.schedule_id', '=', 'schedules.id')
+                ->join('enrollments', function ($join) {
+                    $join->on('enrollments.course_id', '=', 'courses.id')->whereNull('enrollments.deleted_at');
+                })
                 ->leftJoin('learns', function ($join) {
-                    $join->on('learns.course_id', '=', 'courses.id')
-                        ->whereNotNull('learns.finished_at');
+                    $join->on('learns.enrollment_id', '=', 'enrollments.id')
+                        ->whereNotNull('learns.finished_at')->whereNull('learns.deleted_at');
                 })
                 ->groupBy('courses.id', 'courses.title')
                 ->selectRaw('
-                    COUNT(DISTINCT schedule_user.participant_id) as participants,
+                    COUNT(DISTINCT enrollments.participant_id) as participants,
                     COUNT(DISTINCT learns.participant_id) as completion
                 ')
                 ->orderByDesc('participants')

@@ -46,21 +46,23 @@ class CourseTrainerOpdTest extends TestCase
         ];
     }
 
-    public function test_private_targets_are_independent_of_trainer_affiliation_and_public_clears_targets(): void
+    public function test_private_targets_are_limited_to_selected_trainer_opds_and_public_clears_targets(): void
     {
         $admin = $this->admin();
         $a = $this->opd('001'); $b = $this->opd('002'); $c = $this->opd('003');
         $first = Trainer::create(['name' => 'Pemateri A', 'opd_id' => $a->id]);
         $second = Trainer::create(['name' => 'Pemateri B', 'opd_id' => $b->id]);
         $course = Course::factory()->open()->draft()->create();
-        $payload = [...$this->payload($course, $first, [$b->id, $c->id]), 'trainers' => [$first->id, $second->id]];
+        $payload = [...$this->payload($course, $first, [$a->id, $b->id]), 'trainers' => [$first->id, $second->id]];
         $this->put(route('admin.course.update', $course->slug), $payload)
             ->assertRedirect(route('admin.course.index'))->assertSessionHasNoErrors();
-        $this->assertEqualsCanonicalizing([$b->id, $c->id], $course->fresh()->opds->pluck('id')->all());
+        $this->assertEqualsCanonicalizing([$a->id, $b->id], $course->fresh()->opds->pluck('id')->all());
         $this->assertSame($admin->id, $course->fresh()->modified_by);
         $this->assertCount(2, $course->fresh()->trainers);
         $this->get(route('admin.course.edit', $course->slug))->assertInertia(fn (Assert $page) => $page
             ->has('opds', 3)->has('course.opds', 2)->has('trainers', 2));
+        $this->putJson(route('admin.course.update', $course->slug), [...$payload, 'opd_ids' => [$c->id]])
+            ->assertUnprocessable()->assertJsonValidationErrors('opd_ids');
         $this->put(route('admin.course.update', $course->slug), [...$payload, 'visibility' => 'public'])
             ->assertSessionHasNoErrors();
         $this->assertSame('public', $course->fresh()->visibility);
@@ -99,10 +101,10 @@ class CourseTrainerOpdTest extends TestCase
         $trainer = Trainer::create(['name' => $user->name, 'user_id' => $user->id]);
         $course = Course::factory()->open()->draft()->create();
         $course->trainers()->attach($trainer->id);
-        $payload = $this->payload($course, $trainer, [$b->id]);
+        $payload = $this->payload($course, $trainer, [$a->id]);
         $this->actingAs($user)->put(route('admin.course.update', $course->slug), $payload)
             ->assertSessionHasNoErrors();
-        $this->assertSame([$b->id], $course->fresh()->opds->pluck('id')->all());
+        $this->assertSame([$a->id], $course->fresh()->opds->pluck('id')->all());
         $this->get(route('admin.course.activities.index', $course->slug))->assertOk();
         $course->update(['access_mode' => 'scheduled']);
         $this->get(route('admin.course.schedules.index', $course->slug))->assertOk();
@@ -121,7 +123,7 @@ class CourseTrainerOpdTest extends TestCase
             foreach (['public', 'private'] as $visibility) {
                 $this->post(route('admin.course.store'), [
                     ...$payload, 'title' => 'Kelas '.$visibility, 'visibility' => $visibility,
-                    'trainers' => [], 'thumbnail' => UploadedFile::fake()->image('kelas.jpg'),
+                    'trainers' => [], 'opd_ids' => [$a->id], 'thumbnail' => UploadedFile::fake()->image('kelas.jpg'),
                 ])->assertRedirect(route('admin.course.index'))->assertSessionHasNoErrors();
                 $created = Course::where('title', 'Kelas '.$visibility)->firstOrFail();
                 $this->assertSame($visibility, $created->visibility);
