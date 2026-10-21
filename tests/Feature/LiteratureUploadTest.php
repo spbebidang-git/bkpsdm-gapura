@@ -65,4 +65,22 @@ class LiteratureUploadTest extends TestCase
 
         $this->assertFileExists(public_path('assets/media/documents/new-folder/'.$filename));
     }
+
+    public function test_invalid_pdf_upload_redirects_with_a_content_validation_error(): void
+    {
+        Role::findOrCreate('super_admin', 'web');
+        $admin = User::factory()->create();
+        $admin->assignRole('super_admin');
+        $course = Course::factory()->open()->create();
+
+        $this->actingAs($admin)->post(route('admin.course.activity.literature.store', $course->slug), [
+            'title' => 'Modul PDF',
+            'sub_title' => 'Pengantar',
+            'value' => 10,
+            'duration' => 1,
+            'content' => UploadedFile::fake()->createWithContent('salah.txt', 'not a PDF'),
+        ])->assertRedirect()->assertSessionHasErrors('content');
+
+        $this->assertSame(0, Literature::query()->count());
+    }
 }
