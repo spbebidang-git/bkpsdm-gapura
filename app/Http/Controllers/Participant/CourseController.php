@@ -50,6 +50,7 @@ class CourseController
 
     public function show(Course $course)
     {
+        abort_unless(Course::query()->whereKey($course->id)->where(fn ($q) => app(\App\Services\Course\CourseAudience::class)->viewable($q, request()->user()))->exists(), 404);
         try {
             $firstSchedule = $course->schedules()
                 ->whereHas('participants', fn ($query) => $query->where('users.id', $this->participantId))
@@ -131,9 +132,7 @@ class CourseController
                     
                     'total_participant'=> $course->total_participant,
                     'status'           => $course->status,
-                    'audience_scope'   => $course->opd_id ? 'opd' : 'all',
-                    'opd_id'           => $course->opd_id,
-                    'opd_name'         => $course->opd?->name,
+                    ...$course->audienceData(),
                     'access_hours'     => $course->default_access_hours,
                     'schedule'         => $firstSchedule ? [
                         'date' => $course->type === 'schedule' ? $firstSchedule->date : null,

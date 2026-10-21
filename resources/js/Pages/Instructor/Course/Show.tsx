@@ -66,7 +66,7 @@ export default function Show({ course, trainers = [], schedules = [] }) {
                                 </div>
                                 <div>
                                     <dt className="text-xs text-steel">Cakupan</dt>
-                                    <dd className="mt-1 text-sm font-medium text-ink">{course.opd_id ? course.opd_name || 'OPD tertentu' : 'Semua OPD'}</dd>
+                                    <dd className="mt-1 text-sm font-medium text-ink">{course.visibility === 'public' ? 'Publik — semua OPD' : `Privat — ${course.opd_name || 'OPD belum ditetapkan'}`}</dd>
                                 </div>
                                 <div>
                                     <dt className="text-xs text-steel">Terakhir diubah oleh</dt>

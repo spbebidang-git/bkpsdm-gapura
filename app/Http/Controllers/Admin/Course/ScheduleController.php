@@ -115,7 +115,7 @@ class ScheduleController
     {
         $user = request()->user();
         if ($user instanceof User && $user->hasRole('trainer') && ! $user->hasAnyRole(['super_admin', 'administrator'])) {
-            abort_unless($user->opd?->is_active && (string) $course->opd_id === (string) $user->opd_id, 403);
+            abort_unless(app(\App\Services\Course\CourseAudience::class)->canManage($course, $user), 403);
             abort_unless($course->trainers()->where('user_id', $user->id)->exists(), 403);
         }
     }

@@ -38,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
+            'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
             'course.lock' => \App\Http\Middleware\CheckCourseLock::class,
             'participant.enrollment' => \App\Http\Middleware\CheckParticipantEnrollmentAccess::class,
         ]);

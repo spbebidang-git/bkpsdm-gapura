@@ -15,7 +15,7 @@ class CourseController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Course::with(['category', 'employeeStatus'])
+        $query = Course::with(['category', 'employeeStatus', 'opds'])
             ->where('status', 'publish');
 
         // Filter by category
@@ -54,7 +54,7 @@ class CourseController extends Controller
      */
     public function show(string $slug)
     {
-        $course = Course::with(['category', 'schedules', 'activities', 'employeeStatus'])
+        $course = Course::with(['category', 'schedules', 'activities', 'employeeStatus', 'opds'])
             ->where('slug', $slug)
             ->where('status', 'publish')
             ->first();

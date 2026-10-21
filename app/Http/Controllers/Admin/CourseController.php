@@ -79,9 +79,8 @@ class CourseController
                 'category' => $course->category?->title,
                 'total_participant' => $course->total_participant,
                 'total_passed' => $course->total_passed,
-                'audience_scope' => $course->opd_id ? 'opd' : 'all',
-                'opd_id' => $course->opd_id,
-                'opd_name' => $course->opd?->name,
+                ...$course->audienceData(),
+                'employee_status' => $course->employeeStatus->pluck('title')->join(', '),
             ],
             'finishedParticipant' => $finishedParticipant,
             'onGoingParticipant' => $onGoingParticipant,
@@ -138,9 +137,7 @@ class CourseController
                 'type' => $course->type,
                 'status' => $course->status,
                 'jam_pelajaran' => $course->jam_pelajaran,
-                'audience_scope' => $course->opd_id ? 'opd' : 'all',
-                'opd_id' => $course->opd_id,
-                'opd_name' => $course->opd?->name,
+                ...$course->audienceData(),
                 'modified_by' => $course->modified_by,
                 'modifier_name' => $course->modifier?->name,
                 'updated_at' => $course->updated_at?->toIso8601String(),
@@ -244,7 +241,7 @@ class CourseController
             return;
         }
 
-        abort_unless(in_array((int) $course->opd_id, Trainer::activeOpdIdsForUser($user->id), true), 403, 'Pemateri hanya dapat mengelola kelas pada OPD yang ditetapkan.');
+        abort_unless(app(\App\Services\Course\CourseAudience::class)->canManage($course, $user), 403);
 
         abort_unless($user?->hasRole('trainer') && $this->course->canBeManagedByTrainer($course, $user->id), 403);
     }
@@ -263,48 +260,28 @@ class CourseController
     {
         $user = request()->user();
 
-        if (! $this->isRestrictedTrainer($user)) {
-            return [
-                'is_trainer' => false,
-                'trainers' => $this->trainer->getForForm(),
-            ];
-        }
-
-        $trainer = $this->trainer->getOrCreateForUser($user);
-
-        return [
-            'is_trainer' => true,
-            'trainers' => [],
-            'selected_trainers' => [$trainer->id],
-            'trainer_opds' => Opd::whereIn('id', Trainer::activeOpdIdsForUser($user->id))->orderBy('name')->get(['id', 'name']),
-            'selected_opd_id' => in_array((int) $trainer->organization_id, Trainer::activeOpdIdsForUser($user->id), true)
-                ? $trainer->organization_id : (Trainer::activeOpdIdsForUser($user->id)[0] ?? null),
+        $props = [
+            'is_trainer' => $this->isRestrictedTrainer($user),
+            'trainers' => $this->trainer->getForForm()->filter(fn ($trainer) => ! empty($trainer->organization_options))->values(),
+            'opds' => Opd::where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ];
+        if ($this->isRestrictedTrainer($user)) {
+            abort_unless(Trainer::activeOpdIdsForUser($user->id), 403, 'Pemateri harus memiliki OPD aktif.');
+            $this->trainer->getOrCreateForUser($user);
+        }
+        return $props;
     }
 
-    /** @param array<string, mixed> $data */
     protected function assignCurrentTrainer(array $data): array
     {
         $user = request()->user();
-
         if ($this->isRestrictedTrainer($user)) {
-            $allowedOpds = Trainer::activeOpdIdsForUser($user->id);
-            abort_unless($allowedOpds, 403, 'Pemateri harus memiliki OPD aktif. Hubungi administrator untuk melengkapi data OPD.');
-            $data['trainers'] = [$this->trainer->getOrCreateForUser($user)->id];
-            $opdId = (int) ($data['opd_id'] ?? $allowedOpds[0]);
-            abort_unless(in_array($opdId, $allowedOpds, true), 403, 'OPD kelas tidak termasuk OPD pemateri.');
-            $data['opd_id'] = $opdId;
-        } else {
-            $trainers = Trainer::with(['user.opd', 'opd', 'opds'])->whereIn('id', $data['trainers'] ?? [])->get();
-            $opdId = (int) ($data['opd_id'] ?? $trainers->first()?->organization_id);
-            if ($trainers->count() !== count($data['trainers'] ?? [])
-                || $trainers->contains(fn ($trainer) => ! in_array($opdId, $trainer->organization_ids, true))
-                || ! Opd::whereKey($opdId)->where('is_active', true)->exists()) {
-                throw ValidationException::withMessages(['trainers' => 'Pilih pemateri yang terdaftar pada OPD kelas.']);
-            }
-            $data['opd_id'] = $opdId;
+            abort_unless(Trainer::activeOpdIdsForUser($user->id), 403, 'Pemateri harus memiliki OPD aktif.');
+            $trainerId = $this->trainer->getOrCreateForUser($user)->id;
+            $course = request()->route('course');
+            $assigned = $course instanceof Course ? $course->trainers()->pluck('trainers.id')->all() : [];
+            $data['trainers'] = array_values(array_unique([...$assigned, $trainerId]));
         }
-
         return $data;
     }
 }

@@ -56,6 +56,8 @@ export default function Show({
                                 {course.total_participant ?? 0} / {course.total_passed ?? 0}
                             </div>
                         </div>
+                        <p className="text-steel">{course.visibility === 'public' ? 'Publik — semua OPD' : `Privat — ${course.opd_name || 'OPD tertentu'}`}</p>
+                        <p className="text-steel">Status pegawai: {course.employee_status || '—'}</p>
                         {course.short_description && (
                             <p className="text-steel pt-2">{course.short_description}</p>
                         )}

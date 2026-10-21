@@ -45,9 +45,7 @@ class CourseService
                     'total_participant' => (int) $row->total_participant_count,
                     'total_passed' => (int) $row->total_passed_count,
                     'status' => $row->status,
-                    'audience_scope' => $row->opd_id ? 'opd' : 'all',
-                    'opd_id' => $row->opd_id,
-                    'opd_name' => $row->opd?->name,
+                    ...$row->audienceData(),
                     'star' => $rating,
                 ];
             });
@@ -111,9 +109,7 @@ class CourseService
                     'total_participant' => (int) $row->total_participant_count,
                     'total_passed' => (int) $row->total_passed_count,
                     'status' => $row->status,
-                    'audience_scope' => $row->opd_id ? 'opd' : 'all',
-                    'opd_id' => $row->opd_id,
-                    'opd_name' => $row->opd?->name,
+                    ...$row->audienceData(),
                     'star' => $rating,
                 ];
             });
@@ -141,11 +137,10 @@ class CourseService
                     'category' => optional($row->course->category)->title,
                     'total_participant' => $row->course->total_participant,
                     'status' => $row->course->status,
-                    'audience_scope' => $row->course->opd_id ? 'opd' : 'all',
-                    'opd_id' => $row->course->opd_id,
-                    'opd_name' => $row->course->opd?->name,
+                    ...$row->course->audienceData(),
                     'schedule_id' => $row->id,
                     'initial_activity' => $row->course->activities->first() ? $row->course->activities->first()->id : 0,
+                    'employee_status' => $row->course->employeeStatus->pluck('title')->join(', '),
                     'finished_at' => $row->course->learns->first()->finished_at ?? null,
                 ];
             })
@@ -166,9 +161,8 @@ class CourseService
                     'category' => optional($row->category)->title,
                     'total_participant' => $row->total_participant,
                     'status' => $row->status,
-                    'audience_scope' => $row->opd_id ? 'opd' : 'all',
-                    'opd_id' => $row->opd_id,
-                    'opd_name' => $row->opd?->name,
+                    ...$row->audienceData(),
+                    'employee_status' => $row->employeeStatus->pluck('title')->join(', '),
                     'schedules_count' => (int) $row->schedules_count,
                     'updated_at' => $row->updated_at,
                     'modified_by' => $row->modified_by,
@@ -179,7 +173,7 @@ class CourseService
 
     public function findBySlug($slug, ?User $user = null)
     {
-        return $this->courses->findVisibleBySlug($slug, $user, ['reviews', 'opd']);
+        return $this->courses->findVisibleBySlug($slug, $user, ['reviews', 'opds', 'employeeStatus']);
     }
 
     public function createCourse($data)
@@ -197,11 +191,14 @@ class CourseService
                 'default_access_hours' => $data['expired'] ?? null,
                 'jam_pelajaran' => $data['jam_pelajaran'],
                 'status' => $data['status'],
-                'opd_id' => $data['opd_id'] ?? null,
+                'visibility' => $data['visibility'] ?? 'private',
+                'opd_id' => null,
+                'updated_at' => now(),
             ]);
 
             $this->courses->syncEmployeeStatuses($course, $data['employee_status']);
             $this->courses->syncTrainers($course, $data['trainers'] ?? []);
+            $course->opds()->sync(($data['visibility'] ?? 'private') === 'private' ? ($data['opd_ids'] ?? []) : []);
 
             $this->ensureOpenCourseSchedule($course);
 
@@ -223,11 +220,14 @@ class CourseService
                 'default_access_hours' => ($data['expired'] ?? null) == 'undefined' ? null : ($data['expired'] ?? null),
                 'jam_pelajaran' => $data['jam_pelajaran'],
                 'status' => $data['status'],
-                'opd_id' => $data['opd_id'] ?? null,
+                'visibility' => $data['visibility'] ?? 'private',
+                'opd_id' => null,
+                'updated_at' => now(),
             ]);
 
             $this->courses->syncEmployeeStatuses($course, $data['employee_status']);
             $this->courses->syncTrainers($course, $data['trainers'] ?? []);
+            $course->opds()->sync(($data['visibility'] ?? 'private') === 'private' ? ($data['opd_ids'] ?? []) : []);
 
             if (isset($data['thumbnail'])) {
                 if (is_file_exists(Course::$directoryImage.$course->thumbnail)) {
@@ -346,22 +346,7 @@ class CourseService
 
     public function checkEmployeeStatusCourse($userId, $course)
     {
-        $employeeStatus = \App\Models\Identity\User::with('employeeStatus')->find($userId)?->employeeStatus?->title
-            ?? get_user_meta($userId, 'status_pegawai');
-        // ponytail: if user has no status_pegawai meta (SSO sync missed),
-        // allow activation. Course restriction is defense-in-depth, not auth.
-        if (! $employeeStatus) {
-            return true;
-        }
-
-        $allowedStatuses = $course->employeeStatus->pluck('title')->toArray();
-        // dd($employeeStatus, $allowedStatuses);
-        // No restrictions configured — allow all.
-        if (empty($allowedStatuses)) {
-            return true;
-        }
-
-        // Case-insensitive + trim — SSO returns " Pns ", DB stores "PNS"
-        return in_array(strtoupper(trim($employeeStatus)), array_map(fn ($s) => strtoupper(trim($s)), $allowedStatuses));
+        $user = \App\Models\Identity\User::find($userId);
+        return $user && app(CourseAudience::class)->matchesStatus($course, $user);
     }
 }

@@ -11,30 +11,17 @@ import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import '@/../css/admin-course-form.css';
 
-export default function CourseFormFields({ values, setValues, handleChange, errors, categories, employeeStatuses, trainers, trainerOpds = [], isTrainerAccount, thumbnailPreview, editing = false, typeLocked = false, hasSchedules = true }: {
-    values: any; setValues: any; handleChange: any; errors: any; categories: any[]; employeeStatuses: any[]; trainers: any[]; trainerOpds?: any[];
+export default function CourseFormFields({ values, setValues, handleChange, errors, categories, employeeStatuses, trainers, opds = [], isTrainerAccount, thumbnailPreview, editing = false, typeLocked = false, hasSchedules = true }: {
+    values: any; setValues: any; handleChange: any; errors: any; categories: any[]; employeeStatuses: any[]; trainers: any[]; opds?: any[];
     isTrainerAccount: boolean; thumbnailPreview: string | null; editing?: boolean; typeLocked?: boolean; hasSchedules?: boolean;
 }) {
-    const selectedTrainer = trainers.find((trainer) => values.trainers.some((id) => String(id) === String(trainer.id)));
     const selectedTrainers = values.trainers.map((id) => trainers.find((trainer) => String(trainer.id) === String(id)) ?? { id, name: 'Pemateri tidak tersedia', organization_name: null });
-    const selectedOpdId = values.opd_id || (isTrainerAccount ? '' : (selectedTrainer?.organization_id ?? ''));
-    const classOpds = isTrainerAccount
-        ? trainerOpds
-        : (() => {
-            const memberships = selectedTrainers.map((trainer) => trainer.organization_ids || [trainer.organization_id]);
-            const commonIds = memberships.length
-                ? memberships[0].filter((id) => memberships.every((ids) => ids.some((candidate) => String(candidate) === String(id))))
-                : [];
-            return (selectedTrainer?.organization_options || []).filter((opd) => commonIds.some((id) => String(id) === String(opd.id)));
-        })();
-    const availableTrainers = trainers.filter((trainer) => (!selectedOpdId || (trainer.organization_ids || [trainer.organization_id]).some((id) => String(id) === String(selectedOpdId)))
-        && !values.trainers.some((id) => String(id) === String(trainer.id)));
+    const availableTrainers = trainers.filter((trainer) => !values.trainers.some((id) => String(id) === String(trainer.id)));
     const addTrainer = (event) => {
         const trainerId = event.target.value;
         if (!trainerId) return;
         setValues((current) => ({
             ...current,
-            opd_id: current.opd_id || String(trainers.find((trainer) => String(trainer.id) === String(trainerId))?.organization_id || trainers.find((trainer) => String(trainer.id) === String(trainerId))?.organization_ids?.[0] || ''),
             trainers: current.trainers.some((id) => String(id) === String(trainerId))
                 ? current.trainers
                 : [...current.trainers, trainerId],
@@ -42,7 +29,7 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
     };
     const removeTrainer = (trainerId) => setValues((current) => {
         const nextTrainers = current.trainers.filter((id) => String(id) !== String(trainerId));
-        return { ...current, trainers: nextTrainers, opd_id: nextTrainers.length ? current.opd_id : '' };
+        return { ...current, trainers: nextTrainers };
     });
     const selectedStatuses = new Set((values.employee_status || []).map(String));
     const statusOptions = employeeStatuses.map((status) => ({ id: status?.id ?? status, title: status?.title ?? String(status) }));
@@ -78,7 +65,16 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
                 </div>
             </CrudFormSection>
             <CrudFormSection title="Pengaturan kelas" description="Tentukan tipe, durasi, dan publikasi." icon="bx-slider-alt">
-                {(isTrainerAccount || selectedTrainer) && <FormSelect id="opd_id" label="OPD kelas" isRequired value={selectedOpdId} onChange={handleChange} error={errors.opd_id} options={classOpds.map((opd) => ({ value: opd.id, label: opd.name }))} emptyOption="Pilih OPD kelas" small="Kelas ini akan tampil untuk peserta dan pemateri pada OPD yang dipilih." />}
+                <FormSelect id="visibility" label="Visibilitas kelas" isRequired value={values.visibility} onChange={handleChange} error={errors.visibility} options={[{ value: 'public', label: 'Publik — semua OPD' }, { value: 'private', label: 'Privat — OPD tertentu' }]} small="Informasi kelas publik dapat dilihat tanpa login. Mengikuti kegiatan tetap memerlukan login dan status pegawai yang sesuai." />
+                {values.visibility === 'private' && <fieldset className="my-4 rounded-xl border border-hairline p-4">
+                    <legend className="px-1 text-sm font-semibold">OPD sasaran <span aria-hidden="true">*</span></legend>
+                    <p className="mb-3 text-xs text-steel">Peserta harus berasal dari salah satu OPD berikut dan memenuhi status pegawai kelas.</p>
+                    <div className="grid max-h-64 gap-2 overflow-y-auto sm:grid-cols-2">{opds.map((opd) => <label key={opd.id} className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" disabled={opd.is_active === false && !values.opd_ids.includes(String(opd.id))} checked={values.opd_ids.includes(String(opd.id))} onChange={(event) => setValues((current) => ({ ...current, opd_ids: event.target.checked ? [...current.opd_ids, String(opd.id)] : current.opd_ids.filter((id) => id !== String(opd.id)) }))} />{opd.name}{opd.is_active === false ? ' (tidak aktif — hapus untuk menyimpan)' : ''}
+                    </label>)}</div>
+                    {opds.length === 0 && <p className="text-sm text-steel">Belum ada OPD aktif.</p>}
+                    <ErrorMessage message={errors.opd_ids || Object.entries(errors).find(([key]) => key.startsWith('opd_ids.'))?.[1] as string} />
+                </fieldset>}
                 <div className="course-form-fields-grid course-form-settings-grid">
                 <FormSelect id="type" label="Tipe kelas" isRequired value={values.type} onChange={handleChange} error={errors.type} disabled={typeLocked} options={[{ value: 'unschedule', label: 'Mandiri' }, { value: 'schedule', label: 'Terjadwal' }]} emptyOption="Pilih tipe kelas" small={typeLocked ? 'Tipe kelas ditetapkan saat kelas dibuat.' : values.type === 'schedule' ? 'Peserta mengikuti kelas sesuai jadwal kegiatan.' : values.type === 'unschedule' ? 'Peserta belajar sesuai waktu masing-masing.' : null} />
                 <FormInput id="jam_pelajaran" label="Jam pelajaran (JP)" type="number" min="0" isRequired value={values.jam_pelajaran} onChange={handleChange} error={errors.jam_pelajaran} placeholder="Contoh: 8" />
@@ -89,7 +85,7 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
                         <option value="draft">Draft</option>
                         <option value="publish" disabled={values.type === 'schedule' && (!editing || !hasSchedules)}>Publikasi</option>
                     </FormSelect>
-                    <p className="course-form-status-note"><i className={`bx ${values.status === 'publish' ? 'bx-show' : 'bx-file'}`} aria-hidden />{values.status === 'publish' ? 'Kelas dipublikasikan untuk peserta sesuai OPD pemateri.' : values.type === 'schedule' && (!editing || !hasSchedules) ? 'Tambahkan jadwal terlebih dahulu sebelum memublikasikan kelas.' : 'Simpan sebagai draft untuk melanjutkan penyusunan kelas.'}</p>
+                    <p className="course-form-status-note"><i className={`bx ${values.status === 'publish' ? 'bx-show' : 'bx-file'}`} aria-hidden />{values.status === 'publish' ? 'Kelas dipublikasikan sesuai visibilitas, OPD sasaran, dan status pegawai.' : values.type === 'schedule' && (!editing || !hasSchedules) ? 'Tambahkan jadwal terlebih dahulu sebelum memublikasikan kelas.' : 'Simpan sebagai draft untuk melanjutkan penyusunan kelas.'}</p>
                 </div>
             </CrudFormSection>
             <CrudFormSection title="Peserta & pemateri" description="Pilih status peserta dan pemateri pengampu kelas." icon="bx-group">
@@ -119,11 +115,12 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
                     </> : <p className="course-employee-status-empty">Belum ada status pegawai. Tambahkan status di Master Status Pegawai.</p>}
                     {statusError && <p role="alert" className={checkboxGroupErrorClass}><i className="bx bx-error-circle text-base" aria-hidden />{statusError}</p>}
                 </div>
+                {isTrainerAccount && <p className="course-form-divider text-sm text-steel">Anda otomatis menjadi pemateri kelas ini. OPD afiliasi Anda tidak membatasi OPD sasaran peserta.</p>}
                 {!isTrainerAccount && <div className="course-form-divider course-trainer-picker">
                     <div className="course-trainer-picker-heading">
                         <div>
                             <h3>Pemateri <span aria-hidden="true">*</span></h3>
-                            <p>Pilih pemateri pengampu yang terdaftar pada OPD kelas.</p>
+                            <p>Pilih pemateri berafiliasi OPD aktif dari seluruh OPD.</p>
                         </div>
                         <span>{selectedTrainers.length} dipilih</span>
                     </div>
@@ -131,8 +128,7 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
                         {trainers.map((trainer) => {
                             const alreadySelected = values.trainers.some((id) => String(id) === String(trainer.id));
                             const trainerOpdIds = trainer.organization_ids || [trainer.organization_id];
-                            const differentOpd = selectedOpdId && !trainerOpdIds.some((id) => String(id) === String(selectedOpdId));
-                            return <option key={trainer.id} value={trainer.id} disabled={alreadySelected || !trainerOpdIds.length || differentOpd}>
+                            return <option key={trainer.id} value={trainer.id} disabled={alreadySelected || !trainerOpdIds.length}>
                                 {trainer.name} — {(trainer.organization_options || []).map((opd) => opd.name).join(', ') || 'OPD belum tersedia'}{alreadySelected ? ' (dipilih)' : ''}
                             </option>;
                         })}
@@ -144,7 +140,6 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
                             <button type="button" onClick={() => removeTrainer(trainer.id)} aria-label={`Hapus ${trainer.name} dari kelas`} title="Hapus pemateri"><i className="bx bx-x" aria-hidden="true" /></button>
                         </li>)}
                     </ul> : <p className="course-trainer-empty">Belum ada pemateri dipilih.</p>}
-                    {selectedOpdId && <p className="course-trainer-opd-note"><i className="bx bx-buildings" aria-hidden="true" />OPD kelas: <strong>{classOpds.find((opd) => String(opd.id) === String(selectedOpdId))?.name || selectedTrainer.organization_name}</strong>. Pemateri tambahan harus terdaftar pada OPD ini.</p>}
                     {trainers.length === 0 && <p className="course-trainer-empty">Tambahkan pemateri dengan OPD aktif di Master Pemateri.</p>}
                 </div>}
             </CrudFormSection>

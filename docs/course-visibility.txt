@@ -1,0 +1,28 @@
+# Kelas publik, privat, dan OPD sasaran
+
+Kelas baru memakai visibilitas privat dan status draft. Visibilitas terpisah dari tipe mandiri/terjadwal dan status publikasi.
+
+- Publik: katalog dan informasi kelas tersedia tanpa login untuk semua OPD. Pendaftaran memerlukan akun peserta dan salah satu status pegawai kelas.
+- Privat: peserta baru harus login, memiliki OPD aktif dalam OPD sasaran, serta salah satu status pegawai kelas. Profil yang belum lengkap tidak mendapat akses.
+- Peserta yang sudah terdaftar tetap dapat mengakses kelas sesuai masa akses, progres, dan penguncian kegiatan sebelumnya. Perubahan profil atau sasaran kelas tidak membatalkan pendaftaran.
+- Pemateri wajib mempunyai OPD aktif. Penugasan kelas menentukan hak pengelolaan, termasuk lintas OPD; afiliasi pemateri tidak membatasi OPD sasaran peserta.
+
+## Data dan antarmuka
+
+`courses.visibility` menyimpan `public` atau `private`. Relasi `course_opd` menyimpan OPD sasaran kelas privat. Form menggunakan `visibility`, `opd_ids[]`, dan `employee_status[]`. Respons kelas menyediakan `visibility`, `opd_ids`, dan `opds` (id dan nama); `opd_name` menjadi nama OPD sasaran yang digabung untuk tampilan lama. API integrasi tetap memerlukan token admin.
+
+Kolom lama `courses.opd_id` dipertahankan untuk transisi, tetapi tidak dipakai sebagai pemeriksaan akses. Migrasi memetakan kelas lama tanpa OPD menjadi publik dan kelas dengan OPD menjadi privat bersasaran satu OPD. Simpan ulang kelas memakai relasi baru.
+
+Pendaftaran lama yang hanya tercatat di `schedule_user` dilengkapi enrollment dengan tanggal asal, bukan waktu migrasi. Enrollment yang sudah ada dan progres tidak diubah. Rollback migrasi tidak menghapus enrollment historis tersebut.
+
+## Penerapan
+
+Jalankan bersama rilis kode dan aset frontend:
+
+```sh
+php artisan migrate --force
+npm run build
+php artisan cache:clear
+```
+
+Periksa katalog tanpa login, detail privat dengan peserta yang sesuai/tidak sesuai, serta satu kelas peserta lama. Kelas privat lama tanpa status pegawai atau OPD sasaran aktif perlu dilengkapi administrator sebelum menerima peserta baru.

@@ -18,6 +18,7 @@ class CategoryController
         return Inertia::render('Category/Show', [
             'courses' => $category->courses()
                 ->where('status', 'publish')
+                ->where(fn ($q) => app(\App\Services\Course\CourseAudience::class)->visible($q, request()->user()))
                 ->where('is_locked', true)
                 ->get()
         ]);

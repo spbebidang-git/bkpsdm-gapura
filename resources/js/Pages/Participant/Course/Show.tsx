@@ -19,6 +19,7 @@ type CourseDetail = {
     quota: string | number | null;
     total_participant: number;
     opd_name: string | null;
+    visibility: 'public' | 'private';
     access_hours: number | null;
     schedule: { date: string | null; time: string | null; quota: string | number | null } | null;
     trainers: { id: string; name: string; position: string | null; photo: string }[];
@@ -147,7 +148,7 @@ export default function Show({ course, learn }: { course: CourseDetail; learn: L
                             </div>
                         </section>
                         <section className="my-course-about"><h2>Apa yang akan Anda pelajari?</h2><p className="my-course-section-intro">Rangkaian materi dan aktivitas dalam kelas ini.</p>{course.activities.length ? <ul className="my-course-checklist">{course.activities.map(activity => <li key={activity.id}><Icon name="check" size="18px" /><span>{activity.title}<small>{({ video: 'Video pembelajaran', literature: 'Bahan bacaan', task: 'Tugas', pre_test: 'Pre-test', post_test: 'Post-test', meeting: 'Pertemuan daring' } as Record<string, string>)[activity.type] || 'Aktivitas pembelajaran'}</small></span></li>)}</ul> : <p className="my-course-section-intro">Materi pelatihan belum tersedia.</p>}</section>
-                        <section className="my-course-about"><h2>Untuk siapa kelas ini?</h2><ul className="my-course-checklist"><li><Icon name="check" size="18px" /><span>{course.employee_status || 'Semua pegawai'}<small>Status kepegawaian peserta yang dapat mengikuti kelas.</small></span></li><li><Icon name="check" size="18px" /><span>{course.opd_name || 'Seluruh perangkat daerah'}<small>Cakupan peserta pelatihan.</small></span></li></ul></section>
+                        <section className="my-course-about"><h2>Untuk siapa kelas ini?</h2><ul className="my-course-checklist"><li><Icon name="check" size="18px" /><span>{course.employee_status || 'Semua pegawai'}<small>Status kepegawaian peserta yang dapat mengikuti kelas.</small></span></li><li><Icon name="check" size="18px" /><span>{course.visibility === 'public' ? 'Publik — semua OPD' : `Privat — ${course.opd_name || 'OPD tertentu'}`}<small>Cakupan peserta pelatihan.</small></span></li></ul></section>
                         <section className="my-course-about"><h2>Detail keikutsertaan</h2><dl className="my-course-facts"><div><dt>Peserta terdaftar</dt><dd>{Number(course.total_participant || 0).toLocaleString('id-ID')} peserta</dd></div><div><dt>Kuota kelas</dt><dd>{course.schedule?.quota ?? course.quota ?? 'Belum ditetapkan'}</dd></div><div><dt>Metode pembelajaran</dt><dd>{scheduled ? 'Mengikuti jadwal pelatihan' : 'Pembelajaran mandiri'}</dd></div><div><dt>Status Anda</dt><dd>{completed ? 'Selesai' : 'Berjalan'}</dd></div></dl></section>
                     </>}
                     {tab === 'guide' && <>

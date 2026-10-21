@@ -21,6 +21,7 @@ class CourseResource extends JsonResource
             'slug' => $this->slug,
             'type' => $this->type,
             'status' => $this->status,
+            ...$this->resource->audienceData(),
             'short_description' => $this->short_description,
             'description' => $this->when($request->routeIs('api.v1.courses.show'), $this->description),
             'thumbnail' => $this->thumbnail_src,

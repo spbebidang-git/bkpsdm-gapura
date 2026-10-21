@@ -58,6 +58,7 @@ class RepositoryTest extends TestCase
         $published = Course::factory()->open()->published()->create([
             'category_id' => $category->id,
             'slug' => 'repository-published-course',
+            'visibility' => 'public',
         ]);
         Course::factory()->draft()->create([
             'category_id' => $category->id,

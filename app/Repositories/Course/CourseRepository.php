@@ -35,11 +35,7 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
     public function findVisibleBySlug(string $slug, ?User $user = null, array $relations = []): ?Course
     {
         return $this->query()->with($relations)->where('slug', $slug)
-            ->where(function ($status) use ($user) {
-                $status->where('status', 'publish');
-                if ($user) $status->orWhereHas('enrollments', fn ($q) => $q->where('participant_id', $user->id));
-            })
-            ->where(fn ($q) => $this->applyAudience($q, $user))->first();
+            ->where(fn ($q) => app(\App\Services\Course\CourseAudience::class)->viewable($q, $user))->first();
     }
 
     public function getPublishedAvailable(?DateTimeInterface $at = null, ?int $limit = null, array $filters = [], ?User $user = null): Collection
@@ -49,7 +45,7 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
         $time = $now->format('H:i:s');
 
         $query = $this->query()
-            ->with(['category', 'employeeStatus', 'opd'])
+            ->with(['category', 'employeeStatus', 'opds'])
             ->withCount([
                 'learns as total_passed_count' => fn ($query) => $query->whereNotNull('finished_at'),
                 'reviews as rating_count',
@@ -95,7 +91,7 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
         $now = Carbon::instance($at);
 
         return $this->query()
-            ->with(['category', 'employeeStatus', 'opd'])
+            ->with(['category', 'employeeStatus', 'opds'])
             ->withCount([
                 'learns as total_passed_count' => fn ($query) => $query->whereNotNull('finished_at'),
                 'reviews as rating_count',
@@ -128,11 +124,11 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
 
     public function getForInstructor(int|string|null $instructorId = null): Collection
     {
-        $query = $this->query()->with(['category', 'employeeStatus', 'opd', 'modifier:id,name'])->withCount('schedules');
+        $query = $this->query()->with(['category', 'employeeStatus', 'opds', 'modifier:id,name'])->withCount('schedules');
 
         if ($instructorId !== null) {
             $query->whereHas('trainers', fn ($trainer) => $trainer->where('user_id', $instructorId));
-            $query->whereIn('opd_id', Trainer::activeOpdIdsForUser($instructorId));
+            if (! Trainer::activeOpdIdsForUser($instructorId)) $query->whereRaw('1 = 0');
         }
 
         return $query->orderByDesc('courses.updated_at')->orderByDesc('courses.id')->get();
@@ -140,16 +136,7 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
 
     private function applyAudience($query, ?User $user): void
     {
-        if ($user?->hasAnyRole(['super_admin', 'administrator'])) return;
-        if (! $user || ! $user->opd_id || ! $user->opd?->is_active) {
-            $query->whereNull('courses.opd_id');
-            return;
-        }
-        $query->where(function ($audience) use ($user) {
-            $audience->whereNull('courses.opd_id')
-                ->orWhere('courses.opd_id', $user->opd_id)
-                ->orWhereHas('enrollments', fn ($enrollments) => $enrollments->where('participant_id', $user->id));
-        });
+        app(\App\Services\Course\CourseAudience::class)->visible($query, $user);
     }
 
     public function getByParticipant(int|string $participantId): Collection
@@ -157,7 +144,7 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
         return $this->query()
             ->whereHas('enrollments', fn ($query) => $query->where('participant_id', $participantId))
             ->with([
-                'category',
+                'category', 'opds', 'employeeStatus',
                 'activities',
                 'enrollments' => fn ($query) => $query->where('participant_id', $participantId),
                 'learns' => fn ($query) => $query->where('participant_id', $participantId),
@@ -167,12 +154,12 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
 
     public function findForManagementOverview(int|string $courseId): ?Course
     {
-        return $this->query()->with(['category', 'schedules'])->find($courseId);
+        return $this->query()->with(['category', 'schedules', 'opds', 'employeeStatus'])->find($courseId);
     }
 
     public function findForManagementDetail(int|string $courseId): ?Course
     {
-        return $this->query()->with(['schedules', 'employeeStatus', 'trainers', 'category', 'modifier:id,name'])->find($courseId);
+        return $this->query()->with(['schedules', 'employeeStatus', 'trainers', 'category', 'opds', 'modifier:id,name'])->find($courseId);
     }
 
     public function isManagedByTrainer(Course $course, int|string $userId): bool

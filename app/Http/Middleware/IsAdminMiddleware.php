@@ -55,7 +55,7 @@ class IsAdminMiddleware
             if ($this->isRestrictedTrainer($user)) {
                 $course = $request->route('course');
                 if ($course instanceof Course) {
-                    abort_unless(in_array((int) $course->opd_id, Trainer::activeOpdIdsForUser($user->id), true), 403, 'Pemateri hanya dapat mengakses kelas pada OPD aktifnya.');
+                    abort_unless(app(\App\Services\Course\CourseAudience::class)->canManage($course, $user), 403);
                     abort_unless($course->trainers()->where('user_id', $user->id)->exists(), 403, 'Pemateri hanya dapat mengakses kelas yang ditugaskan.');
                 }
             }

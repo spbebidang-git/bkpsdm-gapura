@@ -12,8 +12,7 @@ export default function Edit({
     selected_employee_status: selectedEmployeeStatuses = [],
     trainers = [],
     selected_trainers: selectedTrainers = [],
-    trainer_opds: trainerOpds = [],
-    selected_opd_id: selectedOpdId = '',
+    opds = [],
     is_trainer: isTrainer = false,
 }) {
     const { errors = {} } = usePage().props;
@@ -42,7 +41,8 @@ export default function Edit({
         status: course.status || '',
         employee_status: selectedEmployeeStatuses,
         trainers: selectedTrainers,
-        opd_id: String(course.opd_id || selectedOpdId || ''),
+        visibility: course.visibility || 'private',
+        opd_ids: (course.opds || []).map((opd) => String(opd.id)),
     });
 
     const handleChange = (e) => {
@@ -58,6 +58,7 @@ export default function Edit({
         }
         setValues((v) => ({
             ...v,
+            ...(id === 'visibility' && value === 'public' ? { opd_ids: [] } : {}),
             [id]: inputType === 'file' ? files?.[0] ?? null : value,
         }));
     };
@@ -82,7 +83,8 @@ export default function Edit({
         formData.append('category', values.category);
         values.employee_status.forEach((id) => formData.append('employee_status[]', id));
         values.trainers.forEach((id) => formData.append('trainers[]', id));
-        if (isTrainerAccount) formData.append('opd_id', values.opd_id);
+        formData.append('visibility', values.visibility);
+        if (values.visibility === 'private') values.opd_ids.forEach((id) => formData.append('opd_ids[]', id));
         formData.append('title', values.title);
         formData.append('short_description', values.short_description);
         formData.append('description', values.description);
@@ -110,7 +112,7 @@ export default function Edit({
                     <CourseFormFields
                         values={values} setValues={setValues} handleChange={handleChange} errors={errors}
                         categories={categories} employeeStatuses={employeeStatuses}
-                        trainers={trainers} trainerOpds={trainerOpds} isTrainerAccount={isTrainerAccount} thumbnailPreview={thumbnailPreview}
+                        trainers={trainers} opds={[...opds, ...(course.opds || []).filter((selected) => !opds.some((opd) => String(opd.id) === String(selected.id))).map((opd) => ({ ...opd, is_active: false }))]} isTrainerAccount={isTrainerAccount} thumbnailPreview={thumbnailPreview}
                         editing typeLocked={Boolean(course.type || course.access_mode)} hasSchedules={hasSchedules}
 
                     />

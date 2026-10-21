@@ -29,9 +29,11 @@ abstract class CourseRequest extends FormRequest
             'expired' => ['nullable', 'required_if:type,unschedule', 'numeric', 'min:0'],
             'status' => ['required', 'string'],
             'jam_pelajaran' => ['required', 'numeric', 'min:0'],
-            'trainers' => [$this->isRestrictedTrainer() ? 'nullable' : 'required', 'array', 'min:1'],
+            'trainers' => $this->isRestrictedTrainer() ? ['exclude'] : ['required', 'array', 'min:1'],
             'trainers.*' => ['string', 'distinct', Rule::exists('trainers', 'id')->whereNull('deleted_at')],
-            'opd_id' => ['nullable', 'integer', Rule::exists('opds', 'id')->whereNull('deleted_at')->where('is_active', true)],
+            'visibility' => ['required', Rule::in(['public', 'private'])],
+            'opd_ids' => ['exclude_if:visibility,public', 'required_if:visibility,private', 'array', 'min:1'],
+            'opd_ids.*' => ['integer', 'distinct', Rule::exists('opds', 'id')->whereNull('deleted_at')->where('is_active', true)],
         ];
     }
 
@@ -59,20 +61,10 @@ abstract class CourseRequest extends FormRequest
                 $validator->errors()->add('description', 'Deskripsi lengkap wajib diisi.');
             }
 
-            if ($validator->errors()->isEmpty()) {
-                if ($this->isRestrictedTrainer()) {
-                    $allowed = Trainer::activeOpdIdsForUser($this->user()->id);
-                    $opdId = (int) ($this->input('opd_id') ?: ($allowed[0] ?? 0));
-                    if (! in_array($opdId, $allowed, true)) {
-                        $validator->errors()->add('opd_id', 'Pilih OPD yang ditetapkan untuk akun pemateri.');
-                    }
-                } else {
-                    $trainers = Trainer::with(['user.opd', 'opd', 'opds'])->whereIn('id', $this->input('trainers', []))->get();
-                    $opdId = (int) ($this->input('opd_id') ?: $trainers->first()?->organization_id);
-                    if ($trainers->isEmpty() || $trainers->contains(fn ($trainer) => ! in_array($opdId, $trainer->organization_ids, true))
-                        || ! \App\Models\Identity\Opd::whereKey($opdId)->where('is_active', true)->exists()) {
-                        $validator->errors()->add('trainers', 'Pilih pemateri yang terdaftar pada OPD kelas.');
-                    }
+            if ($validator->errors()->isEmpty() && ! $this->isRestrictedTrainer()) {
+                $trainers = Trainer::with(['user.opd', 'opd', 'opds'])->whereIn('id', $this->input('trainers', []))->get();
+                if ($trainers->contains(fn ($trainer) => empty($trainer->organization_options))) {
+                    $validator->errors()->add('trainers', 'Pilih pemateri yang memiliki OPD aktif.');
                 }
             }
 
@@ -100,6 +92,9 @@ abstract class CourseRequest extends FormRequest
             'expired' => 'Masa kedaluwarsa',
             'status' => 'Status publikasi',
             'jam_pelajaran' => 'Jam pelajaran',
+            'visibility' => 'Visibilitas kelas',
+            'opd_ids' => 'OPD sasaran',
+            'opd_ids.*' => 'OPD sasaran',
             'trainers' => 'Pemateri',
             'trainers.*' => 'Pemateri',
         ];

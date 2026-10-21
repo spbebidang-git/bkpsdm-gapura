@@ -5,7 +5,7 @@ import AdminLayout from '@/Layouts/Admin/App';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
-const Create = ({ categories = [], employee_status = [], trainers = [], trainer_opds: trainerOpds = [], selected_opd_id: selectedOpdId = '', is_trainer: isTrainer = false }) => {
+const Create = ({ categories = [], employee_status = [], trainers = [], opds = [], is_trainer: isTrainer = false }) => {
     const { errors = {} } = usePage().props;
     const isTrainerAccount = Boolean(isTrainer);
     const [thumbnailPreview, setThumbnailPreview] = useState(null);
@@ -20,10 +20,11 @@ const Create = ({ categories = [], employee_status = [], trainers = [], trainer_
         teaser_video: '',
         expired: '',
         jam_pelajaran: '',
-        status: '',
+        status: 'draft',
         employee_status: [],
         trainers: [],
-        opd_id: selectedOpdId ? String(selectedOpdId) : '',
+        visibility: 'private',
+        opd_ids: [] as string[],
     });
 
     const handleChange = (e) => {
@@ -40,6 +41,7 @@ const Create = ({ categories = [], employee_status = [], trainers = [], trainer_
         setValues((v) => ({
             ...v,
             ...(id === 'type' && value === 'schedule' ? { status: 'draft' } : {}),
+            ...(id === 'visibility' && value === 'public' ? { opd_ids: [] } : {}),
             [id]: inputType === 'file' ? files?.[0] ?? null : value,
         }));
     };
@@ -63,7 +65,8 @@ const Create = ({ categories = [], employee_status = [], trainers = [], trainer_
         formData.append('category', values.category);
         values.employee_status.forEach((id) => formData.append('employee_status[]', id));
         values.trainers.forEach((id) => formData.append('trainers[]', id));
-        if (isTrainerAccount) formData.append('opd_id', values.opd_id);
+        formData.append('visibility', values.visibility);
+        if (values.visibility === 'private') values.opd_ids.forEach((id) => formData.append('opd_ids[]', id));
         formData.append('title', values.title);
         formData.append('short_description', values.short_description);
         formData.append('description', values.description);
@@ -92,7 +95,7 @@ const Create = ({ categories = [], employee_status = [], trainers = [], trainer_
                     <CourseFormFields
                         values={values} setValues={setValues} handleChange={handleChange} errors={errors}
                         categories={categories} employeeStatuses={employee_status}
-                        trainers={trainers} trainerOpds={trainerOpds} isTrainerAccount={isTrainerAccount} thumbnailPreview={thumbnailPreview}
+                        trainers={trainers} opds={opds} isTrainerAccount={isTrainerAccount} thumbnailPreview={thumbnailPreview}
 
                     />
                 </form>

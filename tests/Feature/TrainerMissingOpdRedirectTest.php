@@ -28,7 +28,7 @@ class TrainerMissingOpdRedirectTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Admin/Dashboard')
-                ->where('flash.danger', 'Akun trainer Anda belum memiliki OPD. Hubungi administrator untuk melengkapi data OPD.')
+                ->where('flash.danger', 'Akun pemateri Anda belum memiliki OPD. Hubungi administrator untuk melengkapi data OPD.')
                 ->etc());
     }
 }

@@ -65,11 +65,13 @@ class CourseSeeder extends Seeder
                     'teaser_video' => null,
                     'outline_topic' => "1. Pendahuluan\n2. Materi inti\n3. Praktik\n4. Evaluasi",
                     'status' => 'publish',
+                    'visibility' => 'public',
                     'is_locked' => false,
                     'deleted_at' => null,
                 ]
             );
 
+            $course->opds()->detach();
             $course->employeeStatus()->sync(
                 $statuses->random(min(4, max(2, $statuses->count())))->pluck('id')->all()
             );

@@ -64,9 +64,7 @@ class CourseController extends Controller
                 'total_participant' => $course->total_participant,
                 'total_passed' => $course->total_passed,
                 'status' => $course->status,
-                'audience_scope' => $course->opd_id ? 'opd' : 'all',
-                'opd_id' => $course->opd_id,
-                'opd_name' => $course->opd?->name,
+                ...$course->audienceData(),
             ],
             'schedules' => $course->schedules
                 ->filter(function ($row) {
@@ -145,17 +143,9 @@ class CourseController extends Controller
 
     public function store(Request $request, Course $course, Schedule $schedule)
     {
-        if (! $this->course->findBySlug($course->slug, Auth::user())) {
-            return response()->json(['status' => 403, 'message' => 'Kelas ini tidak tersedia untuk OPD Anda.', 'data' => false], 403);
-        }
-        // dd($this->course->checkEmployeeStatusCourse(Auth::user()->id, $course));
-        # check valid employee status
-        if (!$this->course->checkEmployeeStatusCourse(Auth::user()->id, $course)) {
-            return response()->json([
-                'status' => 400,
-                'message' => 'Kamu tidak memenuhi syarat untuk mengikuti pelatihan ini.',
-                'data' => false
-            ], 400);
+        abort_unless((string) $schedule->course_id === (string) $course->id, 404);
+        if (! app(\App\Services\Course\CourseAudience::class)->canEnroll($course, $request->user())) {
+            return response()->json(['message' => 'OPD atau status kepegawaian Anda tidak memenuhi syarat kelas ini.'], 403);
         }
 
         try {

@@ -67,14 +67,14 @@ Route::middleware(['auth', CheckRoleAuthMiddleware::class, IsParticipantMiddlewa
         Route::prefix('learn/{course:slug}')->group(function () {
             // Rating
             Route::controller(RatingController::class)->prefix('{scheduleId}/rating')->name('rating.')->group(function () {
-                Route::get('/', 'index')->name('index')->middleware([IsFinishedMiddleware::class, 'participant.enrollment:read']);
+                Route::get('/', 'index')->name('index')->middleware(['participant.enrollment:read', IsFinishedMiddleware::class]);
                 Route::post('/', 'store')->name('store')->middleware('participant.enrollment:write');
             });
 
             // Survey
             Route::get('{scheduleId}/survey', [SurveyController::class, 'index'])
                 ->name('survey.index')
-                ->middleware([IsFinishedMiddleware::class, 'participant.enrollment:read']);
+                ->middleware(['participant.enrollment:read', IsFinishedMiddleware::class]);
 
             // Instruction + Material + Result (per activity)
             Route::controller(LearnController::class)->prefix('{schedule}/{activity}')->group(function () {

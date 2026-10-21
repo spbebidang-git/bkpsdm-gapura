@@ -29,6 +29,25 @@ class Course extends Model
 
     protected $guarded = [];
 
+    protected $attributes = ['visibility' => 'private', 'status' => 'draft'];
+
+    public function opds()
+    {
+        return $this->belongsToMany(Opd::class, 'course_opd');
+    }
+
+    public function audienceData(): array
+    {
+        $opds = $this->visibility === 'public' ? collect() : $this->opds;
+        return [
+            'visibility' => $this->visibility,
+            'opd_ids' => $opds->pluck('id')->all(),
+            'opds' => $opds->map(fn ($opd) => ['id' => $opd->id, 'name' => $opd->name])->values()->all(),
+            'audience_scope' => $this->visibility === 'public' ? 'all' : 'opd',
+            'opd_name' => $opds->pluck('name')->join(', ') ?: null,
+        ];
+    }
+
     public function category()
     {
         return $this->belongsTo(Category::class);

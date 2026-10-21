@@ -3,7 +3,7 @@ export type Id = number | string;
 export type ActivityType = 'pre-test' | 'post-test' | 'task' | 'meeting' | 'video' | 'literature' | 'variant' | 'question-item' | string;
 
 export interface Category { id: Id; name: string; slug?: string; [key: string]: unknown; }
-export interface Course { id: Id; title: string; slug: string; short_description?: string | null; description?: string | null; thumbnail?: string | null; category?: string | Category | null; employee_status?: string | null; star?: number | string | null; total_participant?: number | string | null; total_passed?: number | string | null; [key: string]: unknown; }
+export interface Course { visibility?: 'public' | 'private'; opd_ids?: number[]; opds?: { id: number; name: string }[]; opd_name?: string | null; id: Id; title: string; slug: string; short_description?: string | null; description?: string | null; thumbnail?: string | null; category?: string | Category | null; employee_status?: string | null; star?: number | string | null; total_participant?: number | string | null; total_passed?: number | string | null; [key: string]: unknown; }
 export interface Schedule { id: Id; start_at?: string | null; end_at?: string | null; date?: string | null; [key: string]: unknown; }
 export interface Activity { id: Id; type: ActivityType; title?: string | null; description?: string | null; order?: number; [key: string]: unknown; }
 export interface Question { id: Id; question?: string | null; option?: Record<string, string | null> | null; option1?: string | null; option2?: string | null; option3?: string | null; option4?: string | null; answer?: string | null; is_correct?: boolean | number; score?: number | string | null; [key: string]: unknown; }

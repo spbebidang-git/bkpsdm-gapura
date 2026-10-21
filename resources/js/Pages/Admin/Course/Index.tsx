@@ -63,6 +63,8 @@ export default function Index() {
             header: 'Cakupan OPD',
             cell: ({ row, getValue }) => <span className="course-index-opd">{getValue() || (row.original.audience_scope === 'all' ? 'Semua OPD' : '—')}</span>,
         },
+        { accessorKey: 'visibility', header: 'Visibilitas', cell: ({ getValue }) => getValue() === 'public' ? 'Publik' : 'Privat' },
+        { accessorKey: 'employee_status', header: 'Status pegawai' },
         { accessorKey: 'updated_at', header: 'Diperbarui' },
         { accessorKey: 'modifier_name', header: 'Terakhir diubah oleh', cell: ({ getValue }) => getValue() || '—' },
         {

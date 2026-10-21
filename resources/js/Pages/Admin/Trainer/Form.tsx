@@ -155,7 +155,7 @@ export default function Form({ trainer, users = [], opds = [], mode = 'local' }:
             </div>
         </div>}
         {(!linkedUser || isEdit || selectedUser) && <div className="trainer-opd-picker">
-            <div><strong>OPD pemateri <span aria-hidden="true">*</span></strong><p>Pemateri dapat mengelola kelas dari OPD yang dipilih.</p></div>
+            <div><strong>OPD pemateri <span aria-hidden="true">*</span></strong><p>OPD menunjukkan afiliasi pemateri. Hak mengelola kelas mengikuti penugasan kelas.</p></div>
             <div className="trainer-opd-actions">
                 <button type="button" onClick={() => setData('opd_ids', opds.map((opd) => String(opd.id)))} disabled={opds.length === 0 || data.opd_ids.length === opds.length}>Pilih semua</button>
                 <button type="button" onClick={() => setData('opd_ids', [])} disabled={data.opd_ids.length === 0}>Reset</button>

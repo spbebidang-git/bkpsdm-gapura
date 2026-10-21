@@ -14,14 +14,14 @@ class CheckParticipantEnrollmentAccess
 {
     public function handle(Request $request, Closure $next, string $mode = 'read')
     {
-        if (! config('participant.enrollment_access_enforced', true)) return $next($request);
-
         $course = $request->route('course');
         $schedule = $request->route('schedule') ?? $request->route('scheduleId');
         if (! $schedule instanceof Schedule && $schedule) $schedule = Schedule::query()->find($schedule);
         if (! $course instanceof Course || ! $schedule instanceof Schedule || $schedule->course_id !== $course->id) {
             abort(404);
         }
+        abort_unless(Course::query()->whereKey($course->id)->where(fn ($q) => app(\App\Services\Course\CourseAudience::class)->viewable($q, $request->user()))->exists(), 404);
+        if (! config('participant.enrollment_access_enforced', true)) return $next($request);
         $activity = $request->route('activity');
         if ($activity && (! $activity instanceof Activity || $activity->course_id !== $course->id)) abort(404);
 

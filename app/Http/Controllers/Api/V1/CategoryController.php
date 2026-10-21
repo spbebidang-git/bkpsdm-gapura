@@ -41,7 +41,7 @@ class CategoryController extends Controller
         }
 
         $courses = $category->courses()
-            ->with(['employeeStatus'])
+            ->with(['employeeStatus', 'opds'])
             ->where('status', 'publish')
             ->latest()
             ->paginate($request->get('per_page', 15));

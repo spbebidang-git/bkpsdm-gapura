@@ -24,6 +24,7 @@ type Course = {
     total_participant: number;
     total_passed: number;
     opd_name?: string | null;
+    visibility?: 'public' | 'private';
 };
 
 type Schedule = {
@@ -155,7 +156,7 @@ export default function CourseShow({ course, schedules = [], reviews = [], ratin
                                 </div>
                                 <div className="flex items-start gap-2">
                                     <i className="bx bx-group mt-0.5 text-lg text-[#9AE5D9]" aria-hidden="true" />
-                                    <div><dt className="font-inter text-[11px] text-[#BDE8E2]">Sasaran peserta</dt><dd className="mt-1 font-poppins text-xs leading-5 text-white">{course.opd_name || 'Aparatur sipil negara'}</dd></div>
+                                    <div><dt className="font-inter text-[11px] text-[#BDE8E2]">Sasaran peserta</dt><dd className="mt-1 font-poppins text-xs leading-5 text-white">{course.visibility === 'public' ? 'Publik — semua OPD' : `Privat — ${course.opd_name || 'OPD tertentu'}`}</dd></div>
                                 </div>
                             </dl>
                         </div>

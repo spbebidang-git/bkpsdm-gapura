@@ -21,6 +21,7 @@ export default function PublicCourseCard({ course, variant = 'default', fontFami
                             {category && <span className="absolute left-2 top-2 max-w-[calc(100%-1rem)] rounded-md bg-[#BEAF0D] px-4 py-1 font-poppins text-xs font-semibold leading-5 text-white">{category}</span>}
                         </div>
                         <div className="px-3 py-3">
+                            <p className="mb-1 text-[10px] font-medium text-primary">{course.visibility === 'public' ? 'Publik · Semua OPD' : `Privat · ${course.opd_name || 'OPD tertentu'}`}</p>
                             <h3 className="line-clamp-2 font-poppins text-sm font-semibold leading-5 text-[#075D5E]">{course.title}</h3>
                             {showDescription && <p className={`mt-1 line-clamp-2 text-[11px] leading-[18px] text-[#526176] ${bodyFont}`}>
                                 {course.short_description?.trim() || 'Pelatihan untuk mendukung pengembangan kompetensi ASN.'}
@@ -75,6 +76,7 @@ export default function PublicCourseCard({ course, variant = 'default', fontFami
                 </div>
 
                 <div className="flex flex-1 flex-col p-5">
+                    <p className="mb-2 text-xs text-primary">{course.visibility === 'public' ? 'Publik · Semua OPD' : `Privat · ${course.opd_name || 'OPD tertentu'}`}</p>
                     <h3 className={`line-clamp-2 font-poppins text-base transition group-hover:text-primary ${isHome ? 'font-semibold leading-7 text-[#075D5E]' : 'font-bold leading-snug text-[#173b3a]'}`}>{course.title}</h3>
                     {showDescription ? (
                         <div className="mb-5 mt-2">

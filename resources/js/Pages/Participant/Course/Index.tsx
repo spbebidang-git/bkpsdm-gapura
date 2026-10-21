@@ -7,6 +7,7 @@ import { ParticipantButton, ParticipantEmpty } from '@/Components/Participant/Pr
 import '../../../../css/participant-course-index.css';
 
 type Course = {
+    visibility: 'public' | 'private'; employee_status: string;
     id: string; schedule_id: string; slug: string; title: string; type: string;
     thumbnail: string | null; short_description: string | null; category: string | null;
     finished_at: string | null; initial_activity: string | number; opd_name: string | null;
@@ -52,6 +53,8 @@ export default function Index({ courses = [] }: { courses: Course[] }) {
                         <div className="my-courses-card__body">
                             <div className="my-courses-card__tags"><span className="my-courses-card__category">{item.category || 'Pelatihan ASN'}</span><span className={`my-courses-card__status ${completed ? 'is-completed' : ''}`}><i aria-hidden="true" />{completed ? 'Selesai' : 'Berjalan'}</span></div>
                             <h2><Link href={detailUrl}>{item.title}</Link></h2>
+                            <p className="mt-2 text-xs text-primary">{item.visibility === 'public' ? 'Publik — semua OPD' : `Privat — ${item.opd_name || 'OPD tertentu'}`}</p>
+                            <p className="mt-1 text-xs text-steel">{item.employee_status || 'Semua status pegawai'}</p>
                             <p className="my-courses-card__description">{item.short_description || 'Kembangkan kompetensi Anda melalui rangkaian pembelajaran kelas ini.'}</p>
                             {!completed && <div className="my-courses-card__meta"><Icon name="time-five" size="17px" /><span>{scheduled ? 'Belajar sesuai jadwal kelas' : 'Waktu belajar fleksibel'}</span></div>}
                             <div className="my-courses-card__actions"><Link href={detailUrl} className="my-courses-card__detail">Detail kelas<Icon name="right-arrow-alt" size="17px" /></Link>{!completed && <button type="button" className="my-courses-card__start" onClick={() => join(item)} disabled={!item.initial_activity}><Icon name="play-circle" size="18px" />{item.initial_activity ? 'Lanjut belajar' : 'Materi belum tersedia'}</button>}</div>
