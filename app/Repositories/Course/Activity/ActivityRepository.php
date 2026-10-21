@@ -16,7 +16,7 @@ class ActivityRepository extends EloquentRepository implements ActivityRepositor
 
     public function getByCourse(int|string $courseId, array $relations = []): Collection
     {
-        return $this->query()->with($relations)->where('course_id', $courseId)->orderBy('id')->get();
+        return $this->query()->with($relations)->where('course_id', $courseId)->orderBy('sort_order')->orderBy('id')->get();
     }
 
     public function getByCourseAndTypes(int|string $courseId, array $types): Collection
@@ -24,7 +24,7 @@ class ActivityRepository extends EloquentRepository implements ActivityRepositor
         return $this->query()
             ->where('course_id', $courseId)
             ->whereIn('type', $types)
-            ->orderBy('id')
+            ->orderBy('sort_order')->orderBy('id')
             ->get();
     }
 
@@ -32,17 +32,17 @@ class ActivityRepository extends EloquentRepository implements ActivityRepositor
     {
         return $this->query()
             ->where('course_id', $courseId)
-            ->where('id', '>', $activityId)
-            ->orderBy('id')
-            ->first();
+            ->orderBy('sort_order')->orderBy('id')->get()
+            ->skipUntil(fn (Activity $activity) => (string) $activity->id === (string) $activityId)
+            ->skip(1)->first();
     }
 
     public function getPrevious(int|string $courseId, int|string $activityId): ?Activity
     {
         return $this->query()
             ->where('course_id', $courseId)
-            ->where('id', '<', $activityId)
-            ->orderByDesc('id')
-            ->first();
+            ->orderBy('sort_order')->orderBy('id')->get()
+            ->takeUntil(fn (Activity $activity) => (string) $activity->id === (string) $activityId)
+            ->last();
     }
 }

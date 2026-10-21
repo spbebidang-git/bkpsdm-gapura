@@ -4,12 +4,16 @@ import type { LearnLayoutProps } from '@/types/learn';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
+import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import '../../../css/participant-learn.css';
 
 export default function Learn({ type, course, progress, activity, children, activities = [], timer, displayTimerSeconds, activity_id, formattedAnswers, schedule }: LearnLayoutProps) {
     const { site } = usePage().props;
     const [desktopAgendaOpen, setDesktopAgendaOpen] = useState(true);
     const [mobileAgendaOpen, setMobileAgendaOpen] = useState(false);
+    const [agendaClosing, setAgendaClosing] = useState(false);
+    const [exitOpen, setExitOpen] = useState(false);
+    const agendaCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const dialogRef = useRef<HTMLDialogElement>(null);
     const mobileTriggerRef = useRef<HTMLButtonElement>(null);
     const mobileCloseRef = useRef<HTMLButtonElement>(null);
@@ -20,6 +24,23 @@ export default function Learn({ type, course, progress, activity, children, acti
     const currentActivityId = activity_id ?? activity.activity_id;
     const activeMeeting = activities.find(item => item.type === 'meeting' && item.status === 'in_progress');
     const timeoutSubmittedRef = useRef(false);
+    const completedActivities = activities.filter(item => item.status === 'done').length;
+    const progressDescription = activities.length ? `${completedActivities} dari ${activities.length} kegiatan selesai` : 'Belum ada kegiatan';
+
+    const closeMobileAgenda = useCallback(() => {
+        if (agendaCloseTimer.current) clearTimeout(agendaCloseTimer.current);
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            setMobileAgendaOpen(false);
+            return;
+        }
+        setAgendaClosing(true);
+        agendaCloseTimer.current = setTimeout(() => {
+            setMobileAgendaOpen(false);
+            setAgendaClosing(false);
+        }, 260);
+    }, []);
+
+    useEffect(() => () => { if (agendaCloseTimer.current) clearTimeout(agendaCloseTimer.current); }, []);
 
     // Keep the callback stable when toggling the agenda so the quiz timer stays mounted.
     const handleTimeout = useCallback(() => {
@@ -77,17 +98,17 @@ export default function Learn({ type, course, progress, activity, children, acti
         {activities.length === 0 && <li className="learn-agenda-empty">Kegiatan belum tersedia.</li>}
     </ol></>;
 
-    return <div className={`learn-page${type === 'material' && activity.type !== 'task' && activity.type !== 'meeting' ? ' learn-page--material' : ''}`}>
+    return <div className={`learn-page${type === 'material' && activity.type !== 'task' && activity.type !== 'meeting' ? ' learn-page--material' : ''}${type === 'material' && activity.type === 'video' ? ' learn-page--video' : ''}`}>
         <Head title={`${activity.title} - ${course.title}`} />
         <div className="learn-shell">
             <header className="learn-header">
                 <Link href="/my-course" className="learn-brand" aria-label="Gapura — Kelas Saya"><img src={site.logo} alt="GAPURA" /></Link>
-                <span className="learn-header__label">Ruang belajar</span>
+                <button type="button" className="learn-header__exit" onClick={() => setExitOpen(true)}><i className="bx bx-log-out" aria-hidden="true" />Keluar dari kelas</button>
             </header>
             <div className={`learn-columns${desktopAgendaOpen ? '' : ' is-agenda-collapsed'}`}>
                 <main className="learn-main" id="learn-content">
                     <div className="learn-course-bar">
-                        <Link href="/my-course" className="learn-icon-button" aria-label="Kembali ke Kelas Saya"><i className="bx bx-arrow-back" aria-hidden="true" /></Link>
+                        <button type="button" className="learn-icon-button" aria-label="Kembali ke Kelas Saya" onClick={() => setExitOpen(true)}><i className="bx bx-arrow-back" aria-hidden="true" /></button>
                         <div className="learn-course-bar__title"><span>Kelas Anda</span><h1>{course.title}</h1></div>
                         <button ref={mobileTriggerRef} type="button" className="learn-agenda-toggle is-mobile" aria-haspopup="dialog" aria-expanded={mobileAgendaOpen} aria-controls="learn-mobile-agenda" onClick={() => setMobileAgendaOpen(true)}><i className="bx bx-list-ul" aria-hidden="true" />Agenda</button>
                         {!desktopAgendaOpen && <button ref={desktopTriggerRef} type="button" className="learn-icon-button is-desktop" aria-label="Buka agenda" aria-expanded={false} aria-controls="learn-desktop-agenda" onClick={() => { setDesktopAgendaOpen(true); requestAnimationFrame(() => desktopCloseRef.current?.focus()); }}><i className="bx bx-chevron-left" aria-hidden="true" /></button>}
@@ -108,12 +129,13 @@ export default function Learn({ type, course, progress, activity, children, acti
                 </main>
                 <aside id="learn-desktop-agenda" className="learn-desktop-agenda" aria-label="Agenda kegiatan" aria-hidden={!desktopAgendaOpen} ref={element => { if (element) element.inert = !desktopAgendaOpen; }}>
                     <div className="learn-agenda-heading"><button ref={desktopCloseRef} type="button" className="learn-icon-button" aria-label="Sembunyikan agenda" aria-expanded={true} aria-controls="learn-desktop-agenda" onClick={() => { setDesktopAgendaOpen(false); requestAnimationFrame(() => desktopTriggerRef.current?.focus()); }}><i className="bx bx-chevron-right" aria-hidden="true" /></button><h2>Agenda Kegiatan</h2><span className="learn-progress" aria-label={`Progres belajar ${progress}`}><i className="bx bx-hourglass" aria-hidden="true" />{progress}</span></div>
+                    <p className="learn-progress-description">{progressDescription}</p>
                     {agenda()}
                 </aside>
             </div>
             <footer className="learn-footer">&copy; {new Date().getFullYear()} GAPURA. All Rights Reserved.</footer>
         </div>
-        <dialog ref={dialogRef} id="learn-mobile-agenda" className="learn-mobile-dialog" aria-labelledby="learn-agenda-title" onCancel={(event) => { event.preventDefault(); setMobileAgendaOpen(false); }} onClose={() => setMobileAgendaOpen(false)} onClick={(event) => { if (event.target === event.currentTarget) setMobileAgendaOpen(false); }} onKeyDown={(event) => {
+        <dialog ref={dialogRef} id="learn-mobile-agenda" className={`learn-mobile-dialog${agendaClosing ? ' is-closing' : ''}`} aria-labelledby="learn-agenda-title" onCancel={(event) => { event.preventDefault(); closeMobileAgenda(); }} onClose={() => setMobileAgendaOpen(false)} onClick={(event) => { if (event.target === event.currentTarget) closeMobileAgenda(); }} onKeyDown={(event) => {
             if (event.key !== 'Tab') return;
             const focusable = event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), a[href]');
             const first = focusable[0];
@@ -127,10 +149,19 @@ export default function Learn({ type, course, progress, activity, children, acti
             }
         }}>
             <div className="learn-mobile-panel">
-                <div className="learn-agenda-heading"><h2 id="learn-agenda-title">Agenda Kegiatan</h2><button ref={mobileCloseRef} type="button" className="learn-icon-button" aria-label="Tutup agenda" onClick={() => setMobileAgendaOpen(false)}><i className="bx bx-x" aria-hidden="true" /></button></div>
+                <div className="learn-agenda-heading"><h2 id="learn-agenda-title">Agenda Kegiatan</h2><button ref={mobileCloseRef} type="button" className="learn-icon-button" aria-label="Tutup agenda" onClick={closeMobileAgenda}><i className="bx bx-x" aria-hidden="true" /></button></div>
                 <div className="learn-mobile-summary"><p>{course.title}</p><span className="learn-progress" aria-label={`Progres belajar ${progress}`}><i className="bx bx-hourglass" aria-hidden="true" />{progress}</span></div>
-                {agenda(() => setMobileAgendaOpen(false))}
+                <p className="learn-progress-description">{progressDescription}</p>
+                {agenda(closeMobileAgenda)}
             </div>
         </dialog>
+        <Dialog open={exitOpen} onClose={setExitOpen} className="learn-exit-dialog">
+            <div className="learn-exit-dialog__backdrop" aria-hidden="true" />
+            <div className="learn-exit-dialog__position"><DialogPanel className="learn-exit-dialog__panel">
+                <DialogTitle as="h2">Keluar dari ruang belajar?</DialogTitle>
+                <p>Progres kegiatan yang sudah dikirim tetap tersimpan. Anda dapat melanjutkan kelas nanti.</p>
+                <div><button type="button" onClick={() => setExitOpen(false)}>Tetap belajar</button><Link href="/my-course">Keluar ke Kelas Saya</Link></div>
+            </DialogPanel></div>
+        </Dialog>
     </div>;
 }

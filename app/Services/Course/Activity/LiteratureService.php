@@ -6,6 +6,8 @@ use App\Helper\UploadMedia;
 use App\Models\Course\Activity\Literature;
 use App\Repositories\Course\Activity\Contracts\LiteratureRepositoryInterface;
 use App\Services\Learning\LearnService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 
 class LiteratureService
 {
@@ -16,11 +18,14 @@ class LiteratureService
 
     public function createLiterature($data)
     {
+        $directory = public_path(Literature::$directoryDocument);
+        File::ensureDirectoryExists($directory);
+
         return $this->literatures->create([
             'activity_id' => $data['activity_id'],
             'sub_title' => $data['sub_title'],
             'duration' => $data['duration'],
-            'content' => UploadMedia::file($data['content'], Literature::$directoryDocument),
+            'content' => UploadMedia::file($data['content'], $directory),
         ]);
     }
 
@@ -57,21 +62,18 @@ class LiteratureService
         $literature->sub_title = $request['sub_title'];
         $literature->duration = $request['duration'];
 
-        // Hanya hapus jika ada file baru di-upload
+        // Keep the previous PDF until the replacement has been uploaded and saved.
         if ($request['content']) {
-
-            // Cek file lama ada atau tidak
-            $oldFilePath = Literature::$directoryDocument.$literature->content;
-
-            if ($literature->content && file_exists(public_path($oldFilePath))) {
-                @unlink(public_path($oldFilePath));
-            }
-
-            // Upload file baru
-            $literature->content = UploadMedia::file($request['content'], Literature::$directoryDocument);
+            $oldFilePath = $literature->content ? public_path(Literature::$directoryDocument.$literature->content) : null;
+            $directory = public_path(Literature::$directoryDocument);
+            File::ensureDirectoryExists($directory);
+            $literature->content = UploadMedia::file($request['content'], $directory);
         }
 
         $literature->save();
+        if (isset($oldFilePath) && $oldFilePath) {
+            DB::afterCommit(fn () => File::delete($oldFilePath));
+        }
 
         return true;
     }

@@ -21,13 +21,13 @@ export default function Home({ courses = [], bannerUrl = '/assets/media/images/s
                 </div>
             </section>
 
-            <section className="relative z-10 -mt-12 sm:-mt-16">
-                <div className="mx-auto w-full max-w-[1320px] px-6 sm:px-10 lg:px-14">
+            <section className="relative z-10 -mt-5 sm:-mt-16">
+                <div className="mx-auto w-full max-w-[1320px] px-4 sm:px-10 lg:px-14">
                     <div className="grid overflow-hidden rounded-[15px] border border-[#E8EDF2] bg-white shadow-[0_10px_30px_-20px_rgba(7,93,94,0.35)] md:grid-cols-3">
                         {highlights.map((highlight, index) => (
-                            <div key={highlight.title} className={`flex min-h-28 items-center gap-5 px-5 py-5 sm:px-7 ${index < highlights.length - 1 ? 'border-b border-[#E8EDF2] md:border-b-0 md:border-r' : ''}`}>
-                                <span className="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-[#F0FAF8]">
-                                    <img src={highlight.image} alt="" className="h-12 w-12 object-contain" />
+                            <div key={highlight.title} className={`flex min-h-20 items-center gap-3 px-4 py-3 sm:min-h-28 sm:gap-5 sm:px-7 sm:py-5 ${index < highlights.length - 1 ? 'border-b border-[#E8EDF2] md:border-b-0 md:border-r' : ''}`}>
+                                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#F0FAF8] sm:h-16 sm:w-16">
+                                    <img src={highlight.image} alt="" className="h-8 w-8 object-contain sm:h-12 sm:w-12" />
                                 </span>
                                 <div className="min-w-0 font-poppins">
                                     <h2 className="text-sm font-semibold leading-5 text-[#075D5E]">{highlight.title}</h2>
@@ -39,7 +39,7 @@ export default function Home({ courses = [], bannerUrl = '/assets/media/images/s
                 </div>
             </section>
 
-            <section aria-labelledby="home-courses-title" className="relative -mt-12 bg-gray-100 sm:-mt-16">
+            <section aria-labelledby="home-courses-title" className="relative -mt-5 bg-gray-100 sm:-mt-16">
                 <div className="mx-auto w-full max-w-[1320px] bg-[#F6FAF9] px-6 pb-16 pt-24 font-poppins sm:px-10 sm:pb-20 sm:pt-28 lg:px-14 lg:pb-24">
                     <div className="mx-auto max-w-2xl text-center">
                         <p className="text-sm font-medium italic text-[#019B91]">Pilihan untuk Anda</p>

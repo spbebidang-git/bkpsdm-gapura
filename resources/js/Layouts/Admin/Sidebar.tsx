@@ -79,9 +79,9 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
                     ))}
                 </nav>
                 <div className="admin-sidebar-account lg:hidden">
-                    <span className="admin-avatar" aria-hidden>{(user?.name || 'A').charAt(0).toUpperCase()}</span>
-                    <div className="admin-account-copy"><span>{user?.name || 'Admin'}</span><small>{roleLabel(user?.roles, user?.role)}</small></div>
-                    <Link href={route('logout')} method="post" as="button" aria-label="Keluar" title="Keluar" className="admin-chrome-icon admin-logout"><i className="bx bx-log-out" aria-hidden /></Link>
+                    <div className="admin-sidebar-account-identity"><span className="admin-avatar" aria-hidden>{(user?.name || 'A').charAt(0).toUpperCase()}</span>
+                        <div className="admin-account-copy"><span>{user?.name || 'Admin'}</span><small>{roleLabel(user?.roles, user?.role)}</small></div></div>
+                    <Link href={route('logout')} method="post" as="button" className="admin-sidebar-logout"><i className="bx bx-log-out" aria-hidden />Keluar</Link>
                 </div>
             </aside>
         </>

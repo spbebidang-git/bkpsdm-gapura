@@ -33,6 +33,9 @@ class AuthController
             'email' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
             'captcha' => ['required', 'captcha'],
+        ], [
+            'captcha.required' => 'Kode keamanan wajib diisi.',
+            'captcha.captcha' => 'Kode keamanan tidak sesuai. Silakan coba lagi.',
         ]);
         unset($credentials['captcha']);
 

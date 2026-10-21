@@ -43,6 +43,7 @@ Route::middleware(['auth', CheckRoleAuthMiddleware::class, IsParticipantMiddlewa
         Route::controller(CourseController::class)->prefix('my-course')->name('course.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::get('/{course:slug}', 'show')->name('show');
+            Route::post('/{course:slug}/reset', 'reset')->name('reset');
         });
 
         // Notifications. Access: participant

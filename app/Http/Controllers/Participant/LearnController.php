@@ -44,7 +44,7 @@ class LearnController extends Controller
     {
         if (!$this->learn->isLearned($this->participantId, $course->id)) {
             $initActivity = $this->learn->getInititalActivityId($course->id);
-            if ($initActivity !== intval($activity->id)) {
+            if ((string) $initActivity !== (string) $activity->id) {
                 return to_route('participant.learn.instruction.index', [$course->slug, $schedule->id, $initActivity]);
             }
         } else {

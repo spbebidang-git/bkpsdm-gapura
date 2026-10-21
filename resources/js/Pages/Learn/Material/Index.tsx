@@ -12,6 +12,8 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
     const [file, setFile] = useState(null);
     const [answerValidationAttempted, setAnswerValidationAttempted] = useState(false);
     const [fileValidationAttempted, setFileValidationAttempted] = useState(false);
+    const [submittingTask, setSubmittingTask] = useState(false);
+    const [taskSubmitError, setTaskSubmitError] = useState('');
     const [duration, setDuration] = useState(activity.data?.duration ?? 0);
     const isTimedActivity = activity.type == 'video' || activity.type == 'literature';
     const isSubmitEnabled = !isTimedActivity || duration === 0;
@@ -160,6 +162,8 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
             }
 
             setFileValidationAttempted(false);
+            setTaskSubmitError('');
+            setSubmittingTask(true);
 
             // Membuat FormData
             const formData = new FormData();
@@ -167,6 +171,8 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
 
             router.post(route('participant.learn.store', { course: slug, schedule: schedule.id, activity: activity_id }), formData, {
                 forceFormData: true,
+                onError: (errors) => setTaskSubmitError(errors.file || errors.error || 'Tugas gagal dikirim. Silakan coba lagi.'),
+                onFinish: () => setSubmittingTask(false),
             });
 
         }
@@ -213,14 +219,15 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
                         </div>
                         <span className="learn-answer-validation__count" aria-label={`${unansweredCount} soal belum dijawab`}>{unansweredCount}</span>
                     </div>}
+                    {activity.type === 'task' && taskSubmitError && <div className="learn-task__alert" role="alert"><span className="learn-task__alert-icon" aria-hidden="true"><i className="bx bx-error-circle" /></span><div className="learn-task__alert-copy"><strong>Tugas belum terkirim</strong><span>{taskSubmitError}</span></div></div>}
                     <Activity title={activity.title} question_result={question_result} slug={course.slug} id={activity_id} type={activity.type} data={activity.data} status={activity.status} answers={answers} showAnswerErrors={answerValidationAttempted} showFileErrors={fileValidationAttempted} file={file} setFile={setFile}
                         setAnswers={setAnswers} schedule={schedule} />
                 </div>
             </div>
             {activity.type !== 'meeting' && <div className="learn-section__actions">
                 {isTimedActivity && <Link href={route('participant.learn.instruction.index', { course: course.slug, schedule: schedule.id, activity: activity_id })} className="learn-media__back" aria-label="Kembali ke instruksi"><i className="bx bx-chevron-left" aria-hidden="true" /></Link>}
-                {isSubmitEnabled ? <button onClick={(e) => handleSubmit(e, course.slug)} className="learn-action">
-                    {isTimedActivity ? 'Selanjutnya' : 'Kirim Jawaban'}
+                {isSubmitEnabled ? <button onClick={(e) => handleSubmit(e, course.slug)} className="learn-action" disabled={submittingTask}>
+                    {submittingTask ? 'Mengirim PDF...' : isTimedActivity ? 'Selanjutnya' : activity.type === 'task' ? 'Kirim Tugas PDF' : 'Kirim Jawaban'}
                     <i className={`bx ${isTimedActivity ? 'bx-chevron-right' : 'bx-send'}`} aria-hidden="true" />
                 </button>
                     : <button disabled className="learn-action">

@@ -5,6 +5,7 @@ import { getBrowserSupportStatus, getUnsupportedBrowserMessage } from '@/Utils/b
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import DOMPurify from 'dompurify';
+import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import { useState } from 'react';
 import '../../../css/public-course-detail.css';
 
@@ -59,6 +60,7 @@ export default function CourseShow({ course, schedules = [], reviews = [], ratin
     const [activeSchedules, setActiveSchedules] = useState<string[]>([]);
     const [loadingScheduleId, setLoadingScheduleId] = useState<string | null>(null);
     const [reviewPage, setReviewPage] = useState(1);
+    const [loginDialogOpen, setLoginDialogOpen] = useState(false);
     const reviewsPerPage = 6;
     const totalReviewPages = Math.ceil(reviews.length / reviewsPerPage);
     const currentReviews = reviews.slice((reviewPage - 1) * reviewsPerPage, reviewPage * reviewsPerPage);
@@ -75,7 +77,7 @@ export default function CourseShow({ course, schedules = [], reviews = [], ratin
             return;
         }
         if (!auth.user) {
-            showCourseActivationToast({ tone: 'warning', title: 'Masuk untuk mengaktifkan kelas', message: 'Masuk ke akun peserta agar progres belajar Anda dapat tersimpan.', action: { label: 'Masuk ke akun', href: route('sign-in.index') } }, 'sign-in');
+            setLoginDialogOpen(true);
             return;
         }
         if (!schedule.can_enter) {
@@ -106,6 +108,20 @@ export default function CourseShow({ course, schedules = [], reviews = [], ratin
     return (
         <App>
             <Head title={course.title} />
+            <Dialog open={loginDialogOpen} onClose={setLoginDialogOpen} className="course-activation-dialog">
+                <div className="course-activation-dialog__backdrop" aria-hidden="true" />
+                <div className="course-activation-dialog__position">
+                    <DialogPanel className="course-activation-dialog__panel">
+                        <span className="course-activation-dialog__icon" aria-hidden="true"><i className="bx bx-lock-alt" /></span>
+                        <DialogTitle as="h2">Masuk untuk mengaktifkan kelas</DialogTitle>
+                        <p>Masuk ke akun peserta agar kelas dapat diaktifkan dan progres belajar Anda tersimpan.</p>
+                        <div className="course-activation-dialog__actions">
+                            <button type="button" onClick={() => setLoginDialogOpen(false)}>Batal</button>
+                            <Link href={route('sign-in.index')} className="course-activation-dialog__primary">Masuk ke akun</Link>
+                        </div>
+                    </DialogPanel>
+                </div>
+            </Dialog>
             <div className="public-course-detail">
                 <section className="course-detail-hero">
                     <img src={course.thumbnail} alt="" className="course-detail-hero-background" aria-hidden="true" />

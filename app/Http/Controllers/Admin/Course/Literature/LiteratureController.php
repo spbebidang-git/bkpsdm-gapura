@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use Illuminate\Http\Request;
 use App\Models\Course\Course;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Services\Course\Activity\ActivityService;
 use App\Services\Course\Activity\LiteratureService;
 
@@ -66,6 +67,12 @@ class LiteratureController
             return to_route('admin.course.activities.index', $course->slug)->with('success', 'Literatur berhasil ditambahkan.');
         } catch (\Throwable $th) {
             DB::rollBack();
+            Log::error('Penyimpanan literatur gagal.', [
+                'event' => 'literature.store.failed',
+                'course_id' => $course->id,
+                'request_id' => $request->attributes->get('request_id'),
+                'exception' => $th,
+            ]);
 
             return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }
@@ -115,6 +122,13 @@ class LiteratureController
             return to_route('admin.course.activities.index', $course->slug)->with('success', 'Literatur berhasil diperbarui.');
         } catch (\Throwable $th) {
             DB::rollBack();
+            Log::error('Pembaruan literatur gagal.', [
+                'event' => 'literature.update.failed',
+                'course_id' => $course->id,
+                'activity_id' => $literature->id,
+                'request_id' => $request->attributes->get('request_id'),
+                'exception' => $th,
+            ]);
             return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }
     }

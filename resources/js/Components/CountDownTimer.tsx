@@ -16,7 +16,6 @@ const CountdownTimer = ({
     currentSeconds,
     onTimeout,
     resetTrigger,
-    variant = 'danger',
     display = 'clock'
 }: CountdownTimerProps) => {
     const isControlled = typeof currentSeconds === 'number';
@@ -86,71 +85,13 @@ const CountdownTimer = ({
         return { minutes, seconds };
     };
 
-    const minutesOnly = Math.ceil(timeLeft / 60);
-
-    const variantClasses: Record<string, { wrapper: string; box: string; accent: string; helper?: string }> = {
-        danger: {
-            wrapper: 'text-red-500',
-            box: 'bg-red-500 text-white shadow',
-            accent: 'text-red-500',
-            helper: 'text-red-400'
-        },
-        muted: {
-            wrapper: 'bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-gray-800 shadow-sm',
-            box: 'text-gray-900',
-            accent: 'text-gray-700',
-            helper: 'text-gray-600'
-        }
-    };
-
     const { minutes, seconds } = formatTime(timeLeft);
-    const selectedVariant = variantClasses[variant] ?? variantClasses.danger;
-
-    if (display === 'minutes') {
-        return (
-            <div className={`flex items-center gap-2 ${selectedVariant.wrapper}`}>
-                <div className={`min-w-[56px] h-11 px-4 rounded-md flex items-center justify-center text-xl font-bold ${selectedVariant.box}`}>
-                    {minutesOnly}
-                </div>
-                <div className="leading-tight text-left">
-                    <div className={`text-[11px] font-bold uppercase tracking-[0.18em] ${selectedVariant.accent}`}>
-                        Menit
-                    </div>
-                    <div className={`text-[11px] ${selectedVariant.helper}`}>
-                        tersisa
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    if (variant === 'muted') {
-        return (
-            <div className={`inline-flex items-center ${selectedVariant.wrapper}`}>
-                <div className="flex items-center gap-1.5">
-                    <span className={`min-w-[34px] text-center text-lg font-bold tabular-nums ${selectedVariant.box}`}>
-                        {minutes}
-                    </span>
-                    <span className={`text-lg font-bold tabular-nums ${selectedVariant.accent}`}>:</span>
-                    <span className={`min-w-[34px] text-center text-lg font-bold tabular-nums ${selectedVariant.box}`}>
-                        {seconds}
-                    </span>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div className={`flex gap-2 items-center ${selectedVariant.wrapper}`}>
-            <div className={`w-11 h-11 rounded-md flex items-center justify-center text-2xl font-bold ${selectedVariant.box}`}>
-                {minutes}
-            </div>
-            <span className={`text-2xl font-bold ${selectedVariant.accent}`}>:</span>
-            <div className={`w-11 h-11 rounded-md flex items-center justify-center text-2xl font-bold ${selectedVariant.box}`}>
-                {seconds}
-            </div>
-        </div>
-    );
+    const urgent = timeLeft <= 60 && timeLeft > 0;
+    return <div className={`learn-timer${urgent ? ' is-urgent' : ''}`} role="timer" aria-label={`Sisa waktu ${minutes} menit ${seconds} detik`}>
+        <i className="bx bx-time-five" aria-hidden="true" />
+        <span className="learn-timer__label">Sisa waktu</span>
+        <strong className="learn-timer__value">{display === 'minutes' ? `${Math.ceil(timeLeft / 60)} menit` : `${minutes}:${seconds}`}</strong>
+    </div>;
 };
 
 export default CountdownTimer;

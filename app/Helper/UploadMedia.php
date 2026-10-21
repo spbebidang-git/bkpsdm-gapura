@@ -3,6 +3,8 @@
 namespace App\Helper;
 
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
+use Symfony\Component\Filesystem\Path;
 
 class UploadMedia
 {
@@ -17,7 +19,9 @@ class UploadMedia
                 Self::$file_name = $filename . '.' . $uploadedFile->getClientOriginalExtension();
             }
 
-            $uploadedFile->move($path, Self::$file_name);
+            $directory = Path::isAbsolute($path) ? $path : public_path($path);
+            File::ensureDirectoryExists($directory);
+            $uploadedFile->move($directory, Self::$file_name);
 
             return Self::$file_name;
         }

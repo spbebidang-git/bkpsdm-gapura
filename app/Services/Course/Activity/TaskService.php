@@ -6,6 +6,7 @@ use App\Helper\UploadMedia;
 use App\Models\Course\Activity\Task;
 use App\Repositories\Course\Activity\Contracts\TaskRepositoryInterface;
 use App\Services\Learning\LearnService;
+use Illuminate\Support\Facades\File;
 
 class TaskService
 {
@@ -63,10 +64,12 @@ class TaskService
 
     public function storeTaskParticipant($participantId, $courseId, $activityId, $request)
     {
+        $directory = public_path(Task::$directoryTask);
+        File::ensureDirectoryExists($directory);
         $learnItem = [
             'type' => 'task',
             'status' => 'done',
-            'response' => UploadMedia::file($request['file'], Task::$directoryTask),
+            'response' => UploadMedia::file($request['file'], $directory),
         ];
 
         $this->learn->createLearn($participantId, $courseId, $activityId, $learnItem);

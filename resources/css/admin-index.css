@@ -189,4 +189,7 @@
     .admin-index-table .admin-table-toolbar > label {
         flex-basis: 100%;
     }
+    .admin-index-page .admin-crud-header { flex-direction: column; align-items: stretch; }
+    .admin-index-page .admin-crud-header-actions { width: 100%; }
+    .admin-index-page .admin-crud-header-actions > * { width: 100%; justify-content: center; }
 }

@@ -162,16 +162,18 @@ export default function HelpIndex() {
                                         Masih membutuhkan bantuan?
                                     </h2>
                                     <p className="mt-1 font-inter text-sm leading-6 text-[#66716c]">
-                                        Hubungi BKPSDM Gresik melalui kontak di bagian bawah halaman.
+                                        Hubungi admin GAPURA melalui WhatsApp untuk bantuan lebih lanjut.
                                     </p>
                                 </div>
                             </div>
                             <a
-                                href="#site-contact"
+                                href="https://wa.me/628176746052"
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-[10px] border border-primary/25 bg-white px-4 text-sm font-semibold text-primary shadow-[0_1px_3px_rgba(1,128,131,0.05)] transition duration-200 hover:border-primary/40 hover:bg-white/70 focus:outline-none focus-visible:ring-4 focus-visible:ring-primary/20 sm:self-auto"
                             >
-                                Lihat kontak
-                                <box-icon name="down-arrow-alt" color="#018083" size="19px" aria-hidden="true" />
+                                Hubungi via WhatsApp
+                                <box-icon name="link-external" color="#018083" size="19px" aria-hidden="true" />
                             </a>
                         </aside>
                     </div>

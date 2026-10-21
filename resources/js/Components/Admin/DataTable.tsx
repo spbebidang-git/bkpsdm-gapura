@@ -216,6 +216,7 @@ export default function DataTable({
     return (
         <section className={`admin-table-frame ${className}`} aria-busy={loading}>
             <div className="admin-table-toolbar">
+                <div className="admin-table-toolbar-primary">
                 {!hideSearch && <label className="relative min-w-0 flex-1 sm:max-w-sm">
                     <span className="sr-only">Cari dalam tabel</span>
                     <i className="bx bx-search pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-lg text-stone" aria-hidden />
@@ -238,11 +239,12 @@ export default function DataTable({
                     )}
                 </label>}
 
-                {toolbarFilters}
                 <div className="admin-table-count" aria-live="polite">
                     <span className={`h-1.5 w-1.5 rounded-full ${loading ? 'animate-pulse bg-secondary' : 'bg-primary'}`} />
                     <span>{loading ? 'Memuat' : `${filtered.toLocaleString('id-ID')} ${dataLabel}`}</span>
                 </div>
+                </div>
+                {toolbarFilters && <div className="admin-table-filters">{toolbarFilters}</div>}
             </div>
 
             <div className="admin-table-scroll relative">
@@ -343,6 +345,7 @@ export default function DataTable({
             </div>
 
             <footer className="admin-table-footer">
+                <div className="admin-table-footer-summary">
                 <p className="text-[13px] text-steel">
                     {filtered === 0 ? (
                         '0 entri'
@@ -356,8 +359,6 @@ export default function DataTable({
                         <span className="text-stone"> · {total.toLocaleString('id-ID')} total</span>
                     )}
                 </p>
-
-                <div className="flex w-full flex-wrap items-center justify-between gap-3 sm:w-auto sm:justify-end">
                     <label className="flex items-center gap-2 text-xs font-medium text-steel">
                         Per halaman
                         <select
@@ -372,7 +373,7 @@ export default function DataTable({
                             ))}
                         </select>
                     </label>
-
+                </div>
                     <nav className="flex items-center gap-1" aria-label="Paginasi tabel">
                         <button
                             type="button"
@@ -413,7 +414,6 @@ export default function DataTable({
                             <i className="bx bx-chevron-right text-lg" aria-hidden />
                         </button>
                     </nav>
-                </div>
             </footer>
         </section>
     );

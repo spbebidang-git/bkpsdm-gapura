@@ -174,7 +174,7 @@ class LearnService
 
         $currentActivityId = $activityId; // Ganti dengan activity_id saat ini
 
-        $sortedActivityIds = $activities->pluck('id')->sort()->values()->toArray(); // Mengambil daftar activity_id yang sudah diurutkan
+        $sortedActivityIds = $activities->pluck('id')->values()->toArray(); // Ikuti urutan kegiatan yang ditampilkan.
 
         if (! $learn) {
             // If no learning record, only allow the first activity
