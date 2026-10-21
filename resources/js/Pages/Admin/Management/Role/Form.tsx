@@ -14,7 +14,7 @@ export default function Form({ role, permissions = [] }) {
         permissions: initialPermissions,
     });
     const selectedPermissions = Array.isArray(data.permissions) ? data.permissions : initialPermissions;
-    const roleLabels = { administrator: 'Administrator', trainer: 'Trainer', participant: 'Participant' };
+    const roleLabels = { administrator: 'Administrator', trainer: 'Pemateri', participant: 'Participant' };
 
     const togglePermission = (id, checked) => setData('permissions', checked
         ? [...selectedPermissions, id]

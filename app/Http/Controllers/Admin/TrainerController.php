@@ -65,8 +65,8 @@ class TrainerController extends Controller
         $this->trainers->create($data);
 
         return to_route('admin.trainer.index')->with('success', $data['source'] === 'user'
-            ? 'Pengguna berhasil didaftarkan sebagai trainer.'
-            : 'Trainer berhasil ditambahkan.');
+            ? 'Pengguna berhasil didaftarkan sebagai pemateri.'
+            : 'Pemateri berhasil ditambahkan.');
     }
 
     public function edit(Trainer $trainer)
@@ -122,14 +122,14 @@ class TrainerController extends Controller
 
         $this->trainers->update($trainer, $data);
 
-        return to_route('admin.trainer.index')->with('success', 'Trainer berhasil diperbarui.');
+        return to_route('admin.trainer.index')->with('success', 'Pemateri berhasil diperbarui.');
     }
 
     public function destroy(Trainer $trainer)
     {
         $this->trainers->delete($trainer->id);
 
-        return to_route('admin.trainer.index')->with('success', 'Trainer berhasil dihapus.');
+        return to_route('admin.trainer.index')->with('success', 'Pemateri berhasil dihapus.');
     }
 
     protected function validateTrainer(Request $request, ?Trainer $trainer = null): array
@@ -159,6 +159,6 @@ class TrainerController extends Controller
                 : ($editingLocalAccount ? ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($trainer->user_id)] : ['prohibited']),
             'password' => $localAccount ? ['required', 'string', 'min:8', 'confirmed']
                 : ($editingLocalAccount ? ['nullable', 'string', 'min:8', 'confirmed'] : ['prohibited']),
-        ], [], ['source' => 'Sumber trainer', 'user_id' => 'Pengguna', 'name' => 'Nama trainer', 'jabatan' => 'Jabatan', 'photo' => 'Foto trainer', 'opd_ids' => 'OPD trainer']);
+        ], [], ['source' => 'Sumber pemateri', 'user_id' => 'Pengguna', 'name' => 'Nama pemateri', 'jabatan' => 'Jabatan', 'photo' => 'Foto pemateri', 'opd_ids' => 'OPD pemateri']);
     }
 }

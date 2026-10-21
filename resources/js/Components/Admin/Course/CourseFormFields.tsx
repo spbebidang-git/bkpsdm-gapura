@@ -16,7 +16,7 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
     isTrainerAccount: boolean; thumbnailPreview: string | null; editing?: boolean; typeLocked?: boolean; hasSchedules?: boolean;
 }) {
     const selectedTrainer = trainers.find((trainer) => values.trainers.some((id) => String(id) === String(trainer.id)));
-    const selectedTrainers = values.trainers.map((id) => trainers.find((trainer) => String(trainer.id) === String(id)) ?? { id, name: 'Trainer tidak tersedia', organization_name: null });
+    const selectedTrainers = values.trainers.map((id) => trainers.find((trainer) => String(trainer.id) === String(id)) ?? { id, name: 'Pemateri tidak tersedia', organization_name: null });
     const selectedOpdId = values.opd_id || (isTrainerAccount ? '' : (selectedTrainer?.organization_id ?? ''));
     const classOpds = isTrainerAccount
         ? trainerOpds
@@ -78,7 +78,7 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
                 </div>
             </CrudFormSection>
             <CrudFormSection title="Pengaturan kelas" description="Tentukan tipe, durasi, dan publikasi." icon="bx-slider-alt">
-                {(isTrainerAccount || selectedTrainer) && <FormSelect id="opd_id" label="OPD kelas" isRequired value={selectedOpdId} onChange={handleChange} error={errors.opd_id} options={classOpds.map((opd) => ({ value: opd.id, label: opd.name }))} emptyOption="Pilih OPD kelas" small="Kelas ini akan tampil untuk peserta dan trainer pada OPD yang dipilih." />}
+                {(isTrainerAccount || selectedTrainer) && <FormSelect id="opd_id" label="OPD kelas" isRequired value={selectedOpdId} onChange={handleChange} error={errors.opd_id} options={classOpds.map((opd) => ({ value: opd.id, label: opd.name }))} emptyOption="Pilih OPD kelas" small="Kelas ini akan tampil untuk peserta dan pemateri pada OPD yang dipilih." />}
                 <div className="course-form-fields-grid course-form-settings-grid">
                 <FormSelect id="type" label="Tipe kelas" isRequired value={values.type} onChange={handleChange} error={errors.type} disabled={typeLocked} options={[{ value: 'unschedule', label: 'Mandiri' }, { value: 'schedule', label: 'Terjadwal' }]} emptyOption="Pilih tipe kelas" small={typeLocked ? 'Tipe kelas ditetapkan saat kelas dibuat.' : values.type === 'schedule' ? 'Peserta mengikuti kelas sesuai jadwal kegiatan.' : values.type === 'unschedule' ? 'Peserta belajar sesuai waktu masing-masing.' : null} />
                 <FormInput id="jam_pelajaran" label="Jam pelajaran (JP)" type="number" min="0" isRequired value={values.jam_pelajaran} onChange={handleChange} error={errors.jam_pelajaran} placeholder="Contoh: 8" />
@@ -89,10 +89,10 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
                         <option value="draft">Draft</option>
                         <option value="publish" disabled={values.type === 'schedule' && (!editing || !hasSchedules)}>Publikasi</option>
                     </FormSelect>
-                    <p className="course-form-status-note"><i className={`bx ${values.status === 'publish' ? 'bx-show' : 'bx-file'}`} aria-hidden />{values.status === 'publish' ? 'Kelas dipublikasikan untuk peserta sesuai OPD trainer.' : values.type === 'schedule' && (!editing || !hasSchedules) ? 'Tambahkan jadwal terlebih dahulu sebelum memublikasikan kelas.' : 'Simpan sebagai draft untuk melanjutkan penyusunan kelas.'}</p>
+                    <p className="course-form-status-note"><i className={`bx ${values.status === 'publish' ? 'bx-show' : 'bx-file'}`} aria-hidden />{values.status === 'publish' ? 'Kelas dipublikasikan untuk peserta sesuai OPD pemateri.' : values.type === 'schedule' && (!editing || !hasSchedules) ? 'Tambahkan jadwal terlebih dahulu sebelum memublikasikan kelas.' : 'Simpan sebagai draft untuk melanjutkan penyusunan kelas.'}</p>
                 </div>
             </CrudFormSection>
-            <CrudFormSection title="Peserta & trainer" description="Pilih status peserta dan trainer pengampu kelas." icon="bx-group">
+            <CrudFormSection title="Peserta & pemateri" description="Pilih status peserta dan pemateri pengampu kelas." icon="bx-group">
                 <div ref={statusRef} className={`course-employee-status ${statusError ? 'has-error' : ''}`} role="group" aria-labelledby="employee-status-title" aria-describedby="employee-status-help">
                     <div className="course-employee-status-header">
                         <div>
@@ -122,12 +122,12 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
                 {!isTrainerAccount && <div className="course-form-divider course-trainer-picker">
                     <div className="course-trainer-picker-heading">
                         <div>
-                            <h3>Trainer <span aria-hidden="true">*</span></h3>
-                            <p>Pilih trainer pengampu yang terdaftar pada OPD kelas.</p>
+                            <h3>Pemateri <span aria-hidden="true">*</span></h3>
+                            <p>Pilih pemateri pengampu yang terdaftar pada OPD kelas.</p>
                         </div>
                         <span>{selectedTrainers.length} dipilih</span>
                     </div>
-                    <FormSelect id="trainer_select" label="Tambahkan trainer" value="" onChange={addTrainer} error={errors.trainers} emptyOption={availableTrainers.length ? 'Pilih trainer' : 'Tidak ada trainer lain yang tersedia'} disabled={availableTrainers.length === 0} wrapperClassName="course-trainer-select">
+                    <FormSelect id="trainer_select" label="Tambahkan pemateri" value="" onChange={addTrainer} error={errors.trainers} emptyOption={availableTrainers.length ? 'Pilih pemateri' : 'Tidak ada pemateri lain yang tersedia'} disabled={availableTrainers.length === 0} wrapperClassName="course-trainer-select">
                         {trainers.map((trainer) => {
                             const alreadySelected = values.trainers.some((id) => String(id) === String(trainer.id));
                             const trainerOpdIds = trainer.organization_ids || [trainer.organization_id];
@@ -137,15 +137,15 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
                             </option>;
                         })}
                     </FormSelect>
-                    {selectedTrainers.length > 0 ? <ul className="course-trainer-selected" aria-label="Trainer terpilih">
+                    {selectedTrainers.length > 0 ? <ul className="course-trainer-selected" aria-label="Pemateri terpilih">
                         {selectedTrainers.map((trainer) => <li key={trainer.id}>
                             <span className="course-trainer-selected-avatar" aria-hidden="true">{String(trainer.name || '?').charAt(0).toUpperCase()}</span>
                             <span className="course-trainer-selected-text"><strong>{trainer.name}</strong><small>{(trainer.organization_options || []).map((opd) => opd.name).join(', ') || trainer.organization_name || 'OPD belum tersedia'}</small></span>
-                            <button type="button" onClick={() => removeTrainer(trainer.id)} aria-label={`Hapus ${trainer.name} dari kelas`} title="Hapus trainer"><i className="bx bx-x" aria-hidden="true" /></button>
+                            <button type="button" onClick={() => removeTrainer(trainer.id)} aria-label={`Hapus ${trainer.name} dari kelas`} title="Hapus pemateri"><i className="bx bx-x" aria-hidden="true" /></button>
                         </li>)}
-                    </ul> : <p className="course-trainer-empty">Belum ada trainer dipilih.</p>}
-                    {selectedOpdId && <p className="course-trainer-opd-note"><i className="bx bx-buildings" aria-hidden="true" />OPD kelas: <strong>{classOpds.find((opd) => String(opd.id) === String(selectedOpdId))?.name || selectedTrainer.organization_name}</strong>. Trainer tambahan harus terdaftar pada OPD ini.</p>}
-                    {trainers.length === 0 && <p className="course-trainer-empty">Tambahkan trainer dengan OPD aktif di Master Trainer.</p>}
+                    </ul> : <p className="course-trainer-empty">Belum ada pemateri dipilih.</p>}
+                    {selectedOpdId && <p className="course-trainer-opd-note"><i className="bx bx-buildings" aria-hidden="true" />OPD kelas: <strong>{classOpds.find((opd) => String(opd.id) === String(selectedOpdId))?.name || selectedTrainer.organization_name}</strong>. Pemateri tambahan harus terdaftar pada OPD ini.</p>}
+                    {trainers.length === 0 && <p className="course-trainer-empty">Tambahkan pemateri dengan OPD aktif di Master Pemateri.</p>}
                 </div>}
             </CrudFormSection>
         </div>

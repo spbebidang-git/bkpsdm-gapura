@@ -80,7 +80,7 @@ class TrainerService
                 $opdIsActive = $opdIds->isNotEmpty() && \App\Models\Identity\Opd::query()->whereIn('id', $opdIds)->where('is_active', true)->count() === $opdIds->count();
                 if (! $user || ! $opdIsActive || $user->hasAnyRole(['trainer', 'super_admin'])
                     || Trainer::where('user_id', $user->id)->exists()) {
-                    throw ValidationException::withMessages(['user_id' => 'Pilih pengguna dengan OPD aktif yang belum terdaftar sebagai trainer.']);
+                    throw ValidationException::withMessages(['user_id' => 'Pilih pengguna dengan OPD aktif yang belum terdaftar sebagai pemateri.']);
                 }
                 if ($user->usesLocalAuthentication() && (string) $user->opd_id !== (string) $opdIds->first()) {
                     $user->update(['opd_id' => $opdIds->first()]);

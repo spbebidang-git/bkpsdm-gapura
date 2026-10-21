@@ -64,6 +64,7 @@ Route::prefix('course')
             Route::get('/{course:slug}/edit', 'edit')->name('edit');
             Route::put('/{course:slug}', 'update')->name('update');
             Route::post('/{course:slug}/lock', 'lock')->name('lock');
+            Route::post('/{course:slug}/unlock', 'unlock')->name('unlock');
 
             // Access: super_admin, administrator (`course.delete`)
             Route::delete('/{course:slug}', 'destroy')->name('destroy');

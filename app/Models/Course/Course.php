@@ -7,6 +7,7 @@ use App\Models\Identity\EmployeeStatus;
 use App\Models\Identity\Opd;
 use App\Models\Learning\Enrollment;
 use App\Models\Learning\Learn;
+use App\Models\Concerns\TracksModifier;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Course extends Model
 {
-    use HasFactory, HasUlids, SoftDeletes;
+    use HasFactory, HasUlids, SoftDeletes, TracksModifier;
 
     const EMPLOYEE_STATUS = [
         'PNS',

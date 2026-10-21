@@ -24,7 +24,7 @@ class ActivityService
 
     public function getActivityByCourse($courseId)
     {
-        return $this->activities->getByCourse($courseId)
+        return $this->activities->getByCourse($courseId, ['modifier:id,name'])
             ->map(function ($row) {
                 $endMeeting = null;
                 if ($row->type == 'meeting') {
@@ -59,6 +59,8 @@ class ActivityService
                     'end_meeting' => $endMeeting,
                     'has_imported' => $hasImported,
                     'updated_at' => $row->updated_at?->toIso8601String(),
+                    'modified_by' => $row->modified_by,
+                    'modifier_name' => $row->modifier?->name,
                     'status' => 0,
                 ];
             });
@@ -213,6 +215,7 @@ class ActivityService
             'title' => $request['title'],
             'value' => $request['value'],
             'instruction' => isset($request['instruction']) ? sanitize_html($request['instruction']) : null,
+            'updated_at' => now(),
         ]);
 
         if ($activity->type === 'pre-test' || $activity->type === 'post-test') {

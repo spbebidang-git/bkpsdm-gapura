@@ -64,7 +64,7 @@ class TrainerManagementTest extends TestCase
     {
         $this->postJson(route('admin.trainer.store'), ['source' => 'local', 'opd_id' => $this->trainerOpd(), 'name' => '', 'photo' => UploadedFile::fake()->create('invalid.txt', 2049, 'text/plain')])
             ->assertUnprocessable()->assertJsonValidationErrors(['name', 'photo'])
-            ->assertJsonPath('errors.name.0', 'Nama trainer wajib diisi.');
+            ->assertJsonPath('errors.name.0', 'Nama pemateri wajib diisi.');
     }
 
     public function test_existing_local_trainer_can_be_given_login_credentials(): void

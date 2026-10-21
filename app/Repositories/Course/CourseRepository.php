@@ -128,7 +128,7 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
 
     public function getForInstructor(int|string|null $instructorId = null): Collection
     {
-        $query = $this->query()->with(['category', 'employeeStatus', 'opd'])->withCount('schedules');
+        $query = $this->query()->with(['category', 'employeeStatus', 'opd', 'modifier:id,name'])->withCount('schedules');
 
         if ($instructorId !== null) {
             $query->whereHas('trainers', fn ($trainer) => $trainer->where('user_id', $instructorId));
@@ -172,7 +172,7 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
 
     public function findForManagementDetail(int|string $courseId): ?Course
     {
-        return $this->query()->with(['schedules', 'employeeStatus', 'trainers', 'category'])->find($courseId);
+        return $this->query()->with(['schedules', 'employeeStatus', 'trainers', 'category', 'modifier:id,name'])->find($courseId);
     }
 
     public function isManagedByTrainer(Course $course, int|string $userId): bool

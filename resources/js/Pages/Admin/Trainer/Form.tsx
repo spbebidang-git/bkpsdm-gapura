@@ -41,7 +41,7 @@ type TrainerForm = {
 
 function ProfilePreview({ profile }: { profile: Profile }) {
     return <div className="trainer-profile">
-        <img src={profile.photo_src || '/assets/media/images/static/default-profile.jpg'} alt="Foto trainer" />
+        <img src={profile.photo_src || '/assets/media/images/static/default-profile.jpg'} alt="Foto pemateri" />
         <dl>{[['Nama', profile.name], ['NIP', profile.nip], ['Jabatan', profile.jabatan], ['OPD', profile.opd]].map(([label, value]) =>
             <div key={label}><dt>{label}</dt><dd>{value || '—'}</dd></div>
         )}</dl>
@@ -58,7 +58,7 @@ export default function Form({ trainer, users = [], opds = [], mode = 'local' }:
     const source = trainer?.source ?? mode;
     const linkedUser = source === 'user';
     const localAccount = !linkedUser || trainer?.auth_source === 'local';
-    const title = isEdit ? 'Edit trainer' : linkedUser ? 'Daftarkan pengguna sebagai trainer' : 'Buat trainer';
+    const title = isEdit ? 'Edit pemateri' : linkedUser ? 'Daftarkan pengguna sebagai pemateri' : 'Buat pemateri';
     const { data, setData, post, transform, processing, errors } = useForm<TrainerForm>({
         opd_ids: (trainer?.opd_ids ?? (trainer?.opd_id ? [trainer.opd_id] : [])).map(String),
         source,
@@ -100,11 +100,11 @@ export default function Form({ trainer, users = [], opds = [], mode = 'local' }:
     };
 
     const content = <CrudFormSection
-        title={linkedUser ? (isEdit ? 'Profil pengguna trainer' : 'Pilih pengguna') : 'Informasi trainer'}
+        title={linkedUser ? (isEdit ? 'Profil pengguna pemateri' : 'Pilih pengguna') : 'Informasi pemateri'}
         icon="bx-user"
         description={linkedUser
             ? (isEdit ? 'Perubahan diterapkan pada akun pengguna. Data Kedaton SSO dapat tersinkron kembali.' : 'Pilih akun dengan OPD aktif, atau tetapkan OPD untuk akun GAPURA lokal.')
-            : 'Lengkapi data trainer lokal.'}
+            : 'Lengkapi data pemateri lokal.'}
     >
         <ErrorMessage message={errors.source} />
         {linkedUser && !isEdit && <FormSelect
@@ -143,7 +143,7 @@ export default function Form({ trainer, users = [], opds = [], mode = 'local' }:
             <div className="trainer-photo-field">
                 <label htmlFor="photo" className="trainer-photo-label">Foto</label>
                 <label htmlFor="photo" className={`trainer-photo-upload ${errors.photo ? 'has-error' : ''}`}>
-                    <img src={photoPreview || '/assets/media/images/static/default-profile.jpg'} alt="Pratinjau foto trainer" />
+                    <img src={photoPreview || '/assets/media/images/static/default-profile.jpg'} alt="Pratinjau foto pemateri" />
                     <span className="trainer-photo-copy">
                         <strong>Klik untuk upload</strong>
                         <span title={data.photo?.name}>{data.photo?.name || 'PNG/JPG · Maks. 2 MB'}</span>
@@ -155,7 +155,7 @@ export default function Form({ trainer, users = [], opds = [], mode = 'local' }:
             </div>
         </div>}
         {(!linkedUser || isEdit || selectedUser) && <div className="trainer-opd-picker">
-            <div><strong>OPD trainer <span aria-hidden="true">*</span></strong><p>Trainer dapat mengelola kelas dari OPD yang dipilih.</p></div>
+            <div><strong>OPD pemateri <span aria-hidden="true">*</span></strong><p>Pemateri dapat mengelola kelas dari OPD yang dipilih.</p></div>
             <div className="trainer-opd-actions">
                 <button type="button" onClick={() => setData('opd_ids', opds.map((opd) => String(opd.id)))} disabled={opds.length === 0 || data.opd_ids.length === opds.length}>Pilih semua</button>
                 <button type="button" onClick={() => setData('opd_ids', [])} disabled={data.opd_ids.length === 0}>Reset</button>
@@ -177,11 +177,11 @@ export default function Form({ trainer, users = [], opds = [], mode = 'local' }:
         <div className="trainer-admin admin-crud-form">
             <CrudPageHeader
                 title={title}
-                description={linkedUser ? 'Kelola profil dan OPD akun trainer.' : 'Kelola trainer yang dapat dipilih pada kelas.'}
+                description={linkedUser ? 'Kelola profil dan OPD akun pemateri.' : 'Kelola pemateri yang dapat dipilih pada kelas.'}
                 actions={<>
                     <Button href={route('admin.trainer.index')} variant="secondary"><i className="bx bx-arrow-back text-base" aria-hidden />Kembali</Button>
                     <Button type="submit" form="trainer-form" loading={processing} disabled={processing}>
-                        {processing ? 'Menyimpan…' : linkedUser && !isEdit ? 'Daftarkan sebagai trainer' : 'Simpan'}
+                        {processing ? 'Menyimpan…' : linkedUser && !isEdit ? 'Daftarkan sebagai pemateri' : 'Simpan'}
                     </Button>
                 </>}
             />

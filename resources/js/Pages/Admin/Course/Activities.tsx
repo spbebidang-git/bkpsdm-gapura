@@ -32,7 +32,7 @@ function ActivityAction({ href, onClick, icon, label, title, variant = 'is-activ
     return href ? <Link href={href} {...props}>{content}</Link> : <button type="button" onClick={onClick} {...props}>{content}</button>;
 }
 
-export default function Activities({ course, activities = [] }) {
+export default function Activities({ course, activities = [], canUnlock = false }) {
     const [dataActivities, setDataActivities] = useState(activities);
     const [globalFilter, setGlobalFilter] = useState('');
     const [searchInput, setSearchInput] = useState('');
@@ -64,6 +64,15 @@ export default function Activities({ course, activities = [] }) {
             confirmButtonText: 'Ya, kunci', cancelButtonText: 'Batal',
         }).then((result) => {
             if (result.isConfirmed) router.post(route('admin.course.lock', course.slug), {}, { preserveScroll: true });
+        });
+    };
+    const handleUnlock = () => {
+        Swal.fire({
+            title: 'Buka kunci kegiatan?', text: 'Detail pelatihan dan kegiatan dapat diubah kembali setelah kunci dibuka.', icon: 'warning',
+            showCancelButton: true, confirmButtonColor: '#018083', cancelButtonColor: '#8496B0',
+            confirmButtonText: 'Ya, buka kunci', cancelButtonText: 'Batal',
+        }).then((result) => {
+            if (result.isConfirmed) router.post(route('admin.course.unlock', course.slug), {}, { preserveScroll: true });
         });
     };
     const createHref = route('admin.course.activity.activity', course.slug);
@@ -100,6 +109,11 @@ export default function Activities({ course, activities = [] }) {
             accessorKey: 'updated_at',
             header: 'Terakhir diubah',
             cell: ({ getValue }) => <span className="course-activities-updated">{formatUpdatedAt(getValue() as string)}</span>,
+        },
+        {
+            accessorKey: 'modifier_name',
+            header: 'Terakhir diubah oleh',
+            cell: ({ getValue }) => <span>{getValue() || '—'}</span>,
         },
         {
             id: 'aksi',
@@ -172,7 +186,8 @@ export default function Activities({ course, activities = [] }) {
                     <div className="course-activities-toolbar-actions">
                         <span className="course-activities-count">{filteredCount.toLocaleString('id-ID')} aktivitas</span>
                         {course.is_locked
-                            ? <span className="course-activities-locked"><i className="bx bx-lock-alt" aria-hidden />Kegiatan terkunci</span>
+                            ? <><span className="course-activities-locked"><i className="bx bx-lock-alt" aria-hidden />Kegiatan terkunci</span>
+                                {canUnlock && <button type="button" onClick={handleUnlock} className="course-activities-secondary"><i className="bx bx-lock-open-alt" aria-hidden />Buka kunci kegiatan</button>}</>
                             : <button type="button" onClick={handleLock} className="course-activities-secondary"><i className="bx bx-lock-alt" aria-hidden />Kunci kegiatan</button>}
                     </div>
                 </div>

@@ -68,6 +68,10 @@ export default function Show({ course, trainers = [], schedules = [] }) {
                                     <dt className="text-xs text-steel">Cakupan</dt>
                                     <dd className="mt-1 text-sm font-medium text-ink">{course.opd_id ? course.opd_name || 'OPD tertentu' : 'Semua OPD'}</dd>
                                 </div>
+                                <div>
+                                    <dt className="text-xs text-steel">Terakhir diubah oleh</dt>
+                                    <dd className="mt-1 text-sm font-medium text-ink">{course.modifier_name || '—'}</dd>
+                                </div>
                             </dl>
                             <div className="mt-5 border-t border-hairline pt-4">
                                 <p className="text-xs text-steel">Target status kepegawaian</p>
@@ -123,8 +127,8 @@ export default function Show({ course, trainers = [], schedules = [] }) {
 
                     <section className={`${card} overflow-hidden`} aria-labelledby="trainer-list-title">
                         <div className="border-b border-hairline px-5 py-4 sm:px-6">
-                            <h2 id="trainer-list-title" className="text-base font-semibold text-ink">Trainer</h2>
-                            <p className="mt-0.5 text-xs text-steel">{trainers.length} trainer ditetapkan</p>
+                            <h2 id="trainer-list-title" className="text-base font-semibold text-ink">Pemateri</h2>
+                            <p className="mt-0.5 text-xs text-steel">{trainers.length} pemateri ditetapkan</p>
                         </div>
                         {trainers.length ? (
                             <ul className="divide-y divide-hairline-soft">
@@ -139,7 +143,7 @@ export default function Show({ course, trainers = [], schedules = [] }) {
                                 ))}
                             </ul>
                         ) : (
-                            <p className="px-5 py-8 text-sm text-steel sm:px-6">Belum ada trainer yang ditetapkan.</p>
+                            <p className="px-5 py-8 text-sm text-steel sm:px-6">Belum ada pemateri yang ditetapkan.</p>
                         )}
                     </section>
                 </div>

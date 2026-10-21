@@ -35,7 +35,7 @@ class IsAdminMiddleware
             }
 
             if ($this->isRestrictedTrainer($user) && ! Trainer::activeOpdIdsForUser($user->id)) {
-                $message = 'Akun trainer Anda belum memiliki OPD. Hubungi administrator untuk melengkapi data OPD.';
+                $message = 'Akun pemateri Anda belum memiliki OPD. Hubungi administrator untuk melengkapi data OPD.';
 
                 if (! $request->routeIs('admin.dashboard')) {
                     return to_route('admin.dashboard')->with('danger', $message);
@@ -55,8 +55,8 @@ class IsAdminMiddleware
             if ($this->isRestrictedTrainer($user)) {
                 $course = $request->route('course');
                 if ($course instanceof Course) {
-                    abort_unless(in_array((int) $course->opd_id, Trainer::activeOpdIdsForUser($user->id), true), 403, 'Trainer hanya dapat mengakses kelas pada OPD aktifnya.');
-                    abort_unless($course->trainers()->where('user_id', $user->id)->exists(), 403, 'Trainer hanya dapat mengakses kelas yang ditugaskan.');
+                    abort_unless(in_array((int) $course->opd_id, Trainer::activeOpdIdsForUser($user->id), true), 403, 'Pemateri hanya dapat mengakses kelas pada OPD aktifnya.');
+                    abort_unless($course->trainers()->where('user_id', $user->id)->exists(), 403, 'Pemateri hanya dapat mengakses kelas yang ditugaskan.');
                 }
             }
 
@@ -154,6 +154,7 @@ class IsAdminMiddleware
             'admin.course.update' => 'course.update',
             'admin.course.destroy' => 'course.delete',
             'admin.course.lock' => 'course.update',
+            'admin.course.unlock' => 'course.update',
             'admin.course.overview' => 'course.participant.view',
             'admin.course' => 'course.view',
             'admin.result' => 'result.view',

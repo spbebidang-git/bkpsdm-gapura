@@ -14,6 +14,7 @@ class ActivityController
     {
         return Inertia::render('Admin/Course/Activities', [
             'course' => ['id' => $course->id, 'slug' => $course->slug, 'title' => $course->title, 'type' => $course->type, 'is_locked' => (bool) $course->is_locked],
+            'canUnlock' => $request->user()?->hasRole('super_admin') ?? false,
             'activities' => app(\App\Services\Course\Activity\ActivityService::class)->getActivityByCourse($course->id),
         ]);
     }

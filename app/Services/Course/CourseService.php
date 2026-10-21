@@ -171,6 +171,8 @@ class CourseService
                     'opd_name' => $row->opd?->name,
                     'schedules_count' => (int) $row->schedules_count,
                     'updated_at' => $row->updated_at,
+                    'modified_by' => $row->modified_by,
+                    'modifier_name' => $row->modifier?->name,
                 ];
             });
     }
@@ -281,6 +283,17 @@ class CourseService
         }
 
         $this->courses->update($course, ['is_locked' => true]);
+
+        return true;
+    }
+
+    public function unlockCourse(Course $course): bool
+    {
+        if (! $course->is_locked) {
+            return false;
+        }
+
+        $this->courses->update($course, ['is_locked' => false]);
 
         return true;
     }

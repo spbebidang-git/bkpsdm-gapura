@@ -38,7 +38,7 @@ export default function Index({ opds = [], canEditLinkedUser = false }) {
                             event.currentTarget.onerror = null;
                             event.currentTarget.src = '/assets/media/images/static/default-profile.jpg';
                         }}
-                        alt="Foto trainer"
+                        alt="Foto pemateri"
                         className="h-10 w-10 rounded-full border border-hairline object-cover"
                     />
                 ),
@@ -86,7 +86,7 @@ export default function Index({ opds = [], canEditLinkedUser = false }) {
                 cell: ({ getValue, row }) => (
                     <RowActions editHref={row.original.user_id
                         ? (canEditLinkedUser ? route('admin.trainer.edit', getValue()) : undefined)
-                        : route('admin.trainer.edit', getValue())} deleteUrl={route('admin.trainer.destroy', getValue())} deleteMessage={`Trainer “${row.original.name}” akan dihapus.${row.original.source === 'user' ? ' Role trainer dan akses trainer pengguna akan dicabut.' : ''}`} onDeleted={() => setTableKey((k) => k + 1)} iconOnly variant="course" />
+                        : route('admin.trainer.edit', getValue())} deleteUrl={route('admin.trainer.destroy', getValue())} deleteMessage={`Pemateri “${row.original.name}” akan dihapus.${row.original.source === 'user' ? ' Role pemateri dan akses pemateri pengguna akan dicabut.' : ''}`} onDeleted={() => setTableKey((k) => k + 1)} iconOnly variant="course" />
                 ),
             },
         ],
@@ -94,15 +94,15 @@ export default function Index({ opds = [], canEditLinkedUser = false }) {
     );
 
     return (
-        <AdminLayout title="Trainer" hideTitle>
-            <Head title="Trainer" />
+        <AdminLayout title="Pemateri" hideTitle>
+            <Head title="Pemateri" />
             <div className="course-index">
                 <CrudPageHeader
-                    title="Trainer"
-                    description="Data trainer yang dapat dipilih pada setiap kelas."
+                    title="Pemateri"
+                    description="Data pemateri yang dapat dipilih pada setiap kelas."
                     className="course-index-header"
                     actions={<div className="flex flex-wrap gap-2">
-                        <CreateButton href={route('admin.trainer.create')} label="Trainer baru" className="course-index-create" />
+                        <CreateButton href={route('admin.trainer.create')} label="Pemateri baru" className="course-index-create" />
                         <CreateButton href={route('admin.trainer.create', { mode: 'user' })} label="Daftarkan pengguna" icon="bx-user-plus" className="course-index-create" />
                     </div>}
                 />
@@ -112,11 +112,11 @@ export default function Index({ opds = [], canEditLinkedUser = false }) {
                     columns={columns}
                     toolbarFilters={(
                         <label className="course-trainer-filter">
-                            <span className="sr-only">Filter trainer berdasarkan OPD</span>
+                            <span className="sr-only">Filter pemateri berdasarkan OPD</span>
                             <select
                                 value={opdId}
                                 onChange={(event) => setOpdId(event.target.value)}
-                                aria-label="Filter trainer berdasarkan OPD"
+                                aria-label="Filter pemateri berdasarkan OPD"
                             >
                                 <option value="">Semua OPD</option>
                                 {opds.map((opd) => (
@@ -127,10 +127,10 @@ export default function Index({ opds = [], canEditLinkedUser = false }) {
                     )}
                     refreshKey={tableKey}
                     className="course-index-table admin-crud-table"
-                    dataLabel="trainer"
-                    searchPlaceholder="Cari trainer..."
-                    emptyTitle="Belum ada trainer"
-                    emptyDescription="Tambahkan data trainer terlebih dahulu."
+                    dataLabel="pemateri"
+                    searchPlaceholder="Cari pemateri..."
+                    emptyTitle="Belum ada pemateri"
+                    emptyDescription="Tambahkan data pemateri terlebih dahulu."
                 />
             </div>
         </AdminLayout>

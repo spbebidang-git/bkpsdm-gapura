@@ -60,7 +60,7 @@ export default function Index() {
                 cell: ({ getValue }) => {
                     const value = getValue();
                     const roles = Array.isArray(value) ? value : Object.values(value || {});
-                    const labels = { super_admin: 'Super Admin', administrator: 'Administrator', trainer: 'Trainer', participant: 'Participant' };
+                    const labels = { super_admin: 'Super Admin', administrator: 'Administrator', trainer: 'Pemateri', participant: 'Participant' };
                     const badgeStyles = {
                         super_admin: 'admin-crud-status is-inactive',
                         administrator: 'admin-crud-status is-inactive',

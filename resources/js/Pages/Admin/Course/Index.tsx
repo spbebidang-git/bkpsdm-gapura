@@ -64,6 +64,7 @@ export default function Index() {
             cell: ({ row, getValue }) => <span className="course-index-opd">{getValue() || (row.original.audience_scope === 'all' ? 'Semua OPD' : '—')}</span>,
         },
         { accessorKey: 'updated_at', header: 'Diperbarui' },
+        { accessorKey: 'modifier_name', header: 'Terakhir diubah oleh', cell: ({ getValue }) => getValue() || '—' },
         {
             id: 'aksi',
             accessorKey: 'slug',

@@ -177,7 +177,7 @@ return [
         'thumbnail' => 'Gambar sampul', 'teaser_video' => 'Tautan video teaser', 'expired' => 'Masa akses',
         'jam_pelajaran' => 'Jam pelajaran', 'status' => 'Status', 'opd_id' => 'OPD/Unit Kerja',
         'employee_status' => 'Status peserta', 'employee_status.*' => 'Status peserta',
-        'trainers' => 'Trainer', 'trainers.*' => 'Trainer', 'trainer' => 'Trainer',
+        'trainers' => 'Pemateri', 'trainers.*' => 'Pemateri', 'trainer' => 'Pemateri',
         'date' => 'Tanggal', 'time_from' => 'Waktu mulai', 'time_to' => 'Waktu selesai', 'quota' => 'Kuota peserta',
         'value' => 'Bobot nilai', 'duration' => 'Durasi', 'timer' => 'Batas waktu', 'min_score' => 'Nilai minimal',
         'score' => 'Nilai', 'correct_answer' => 'Jawaban benar', 'options' => 'Pilihan jawaban',

@@ -7,7 +7,7 @@ export const navigation: NavGroup[] = [
         { label: 'Kategori', route: 'admin.category.index', match: 'admin.category.*', icon: 'bx-category', permission: 'category.view' },
         { label: 'OPD', route: 'admin.opd.index', match: 'admin.opd.*', icon: 'bx-buildings', permission: 'opd.manage' },
         { label: 'Status pegawai', route: 'admin.employee-status.index', match: 'admin.employee-status.*', icon: 'bx-id-card', permission: 'employee-status.manage' },
-        { label: 'Trainer', route: 'admin.trainer.index', match: 'admin.trainer.*', icon: 'bx-user-voice', permission: 'trainer.manage' },
+        { label: 'Pemateri', route: 'admin.trainer.index', match: 'admin.trainer.*', icon: 'bx-user-voice', permission: 'trainer.manage' },
         { label: 'Peserta', route: 'admin.participant.index', match: 'admin.participant.*', icon: 'bx-group', permission: 'participant.view' },
         { label: 'Kelas', route: 'admin.course.index', match: 'admin.course.*', icon: 'bx-book-open', permission: 'course.view' },
     ] },
@@ -32,7 +32,7 @@ export const items = navigation.flatMap((section) => section.items);
 export const trainerRoutes = new Set(['admin.dashboard', 'admin.course.index', 'admin.course.create', 'admin.participant.index', 'admin.result.index', 'admin.course-performance.index']);
 
 export function roleLabel(roles?: string[], fallback?: string): string {
-    const labels = { super_admin: 'Super Admin', administrator: 'Administrator', trainer: 'Trainer', participant: 'Peserta' };
+    const labels = { super_admin: 'Super Admin', administrator: 'Administrator', trainer: 'Pemateri', participant: 'Peserta' };
     const role = Object.keys(labels).find((name) => roles?.includes(name));
     return role ? labels[role] : fallback || 'Administrator';
 }

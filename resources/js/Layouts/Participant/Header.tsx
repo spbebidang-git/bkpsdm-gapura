@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import NotificationBell from '@/Components/Participant/NotificationBell';
 
-const ROLE_LABELS: Record<string, string> = { super_admin: 'Super Admin', administrator: 'Administrator', trainer: 'Trainer', participant: 'Peserta' };
+const ROLE_LABELS: Record<string, string> = { super_admin: 'Super Admin', administrator: 'Administrator', trainer: 'Pemateri', participant: 'Peserta' };
 const roleLabel = (roles?: string[], fallback?: string) => roles?.map((role) => ROLE_LABELS[role]).find(Boolean) ?? fallback ?? 'Peserta';
 
 const NAV = [
