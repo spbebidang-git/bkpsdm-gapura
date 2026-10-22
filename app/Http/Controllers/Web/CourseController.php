@@ -45,6 +45,9 @@ class CourseController extends Controller
     {
         $course = $this->course->findBySlug($course, request()->user());
         abort_unless($course, 404);
+        if ($this->participantId) {
+            app(ParticipantEnrollmentService::class)->archiveExpired((string) $this->participantId, (string) $course->id);
+        }
         $course->loadMissing(['trainers.user.metas']);
         $reviews = $course->reviews ? $course->reviews->load('user') : [];
 
@@ -167,7 +170,9 @@ class CourseController extends Controller
 
             $participantId = Auth::user()->id;
 
-            $enrollment = app(ParticipantEnrollmentService::class)->activate($course, $schedule, (string) $participantId);
+            $enrollmentService = app(ParticipantEnrollmentService::class);
+            $enrollmentService->archiveExpired((string) $participantId, (string) $course->id);
+            $enrollment = $enrollmentService->activate($course, $schedule, (string) $participantId);
             $expectedScheduleId = $course->access_mode === 'scheduled' ? $schedule->id : null;
             if ($enrollment->status !== 'active' || $enrollment->schedule_id !== $expectedScheduleId) {
                 DB::rollBack();

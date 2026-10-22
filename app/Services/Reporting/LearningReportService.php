@@ -22,7 +22,9 @@ class LearningReportService
         $query = DB::table('enrollments')
             ->join('users', 'users.id', '=', 'enrollments.participant_id')
             ->join('courses', 'courses.id', '=', 'enrollments.course_id')
-            ->join('activities', 'activities.course_id', '=', 'enrollments.course_id')
+            ->leftJoin('activities', function ($join) {
+                $join->on('activities.course_id', '=', 'enrollments.course_id')->whereNull('activities.deleted_at');
+            })
             ->leftJoin('schedules', 'schedules.id', '=', 'enrollments.schedule_id')
             ->leftJoin('learns', function ($join) {
                 $join->on('learns.enrollment_id', '=', 'enrollments.id')
@@ -88,6 +90,10 @@ class LearningReportService
 
         if (! empty($filters['course_id'])) {
             $query->where('courses.id', $filters['course_id']);
+        }
+
+        if (array_key_exists('course_ids', $filters)) {
+            $query->whereIn('courses.id', $filters['course_ids']);
         }
 
         if (! empty($filters['participant_id'])) {
@@ -160,7 +166,9 @@ class LearningReportService
         }
 
         return [
-            'total_participants' => $total,
+            'total_participants' => $rows->pluck('participant_id')->unique()->count(),
+            'total_courses' => $rows->pluck('course_id')->unique()->count(),
+            'total_enrollments' => $total,
             'not_started' => $notStarted,
             'in_progress' => $inProgress,
             'completed' => $completed,

@@ -122,9 +122,14 @@ class CourseService
 
     public function getByParticipant($participantId)
     {
+        $enrollments = \App\Models\Learning\Enrollment::withTrashed()
+            ->where('participant_id', $participantId)->get()->groupBy('course_id');
         return $this->schedules->getByParticipant($participantId)
             ->filter(fn ($row) => $row->course !== null)
-            ->map(function ($row) {
+            ->map(function ($row) use ($enrollments) {
+                $courseEnrollments = $enrollments->get($row->course->id, collect());
+                $enrollment = $courseEnrollments->first(fn ($item) => ! $item->trashed());
+                $wasArchived = $courseEnrollments->contains(fn ($item) => $item->trashed());
                 return [
                     'id' => $row->course->id,
                     'type' => $row->course->type,
@@ -142,6 +147,7 @@ class CourseService
                     'initial_activity' => $row->course->activities->first() ? $row->course->activities->first()->id : 0,
                     'employee_status' => $row->course->employeeStatus->pluck('title')->join(', '),
                     'finished_at' => $row->course->learns->first()->finished_at ?? null,
+                    'needs_activation' => ! $enrollment && $wasArchived,
                 ];
             })
             ->values();

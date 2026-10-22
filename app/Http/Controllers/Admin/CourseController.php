@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Course\Course;
 use App\Models\Course\Trainer;
+use App\Models\Identity\User;
+use App\Models\Learning\Enrollment;
+use App\Models\Learning\Learn;
 use App\Http\Requests\Course\StoreCourseRequest;
 use App\Http\Requests\Course\UpdateCourseRequest;
 use App\Repositories\Course\Contracts\CategoryRepositoryInterface;
@@ -14,6 +17,7 @@ use App\Services\Course\CourseService;
 use App\Services\Course\TrainerService;
 use App\Models\Identity\Opd;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Yajra\DataTables\Facades\DataTables;
@@ -60,11 +64,12 @@ class CourseController
 
         $finishedParticipant = $this->learns->getCompletedByCourse($course->id)
             ->map(fn ($learn) => [
+                'id' => $learn->participant_id,
                 'name' => $learn->participant?->name,
                 'job_title' => $learn->participant?->metas->first()?->value,
             ]);
         $onGoingParticipant = $this->learns->getOngoingByCourse($course->id)
-            ->map(fn ($learn) => ['name' => $learn->participant?->name]);
+            ->map(fn ($learn) => ['id' => $learn->participant_id, 'name' => $learn->participant?->name]);
 
         return Inertia::render('Admin/Course/Show', [
             'course' => [
@@ -84,7 +89,33 @@ class CourseController
             ],
             'finishedParticipant' => $finishedParticipant,
             'onGoingParticipant' => $onGoingParticipant,
+            'canResetLearning' => request()->user()?->hasRole('super_admin') ?? false,
         ]);
+    }
+
+    public function resetParticipantLearning(Course $course, User $participant)
+    {
+        abort_unless(request()->user()?->hasRole('super_admin'), 403);
+        abort_unless($participant->hasRole('participant'), 404);
+
+        DB::transaction(function () use ($course, $participant): void {
+            $enrollment = Enrollment::query()->where('course_id', $course->id)
+                ->where('participant_id', $participant->id)->lockForUpdate()->firstOrFail();
+            $learn = Learn::query()->where('course_id', $course->id)
+                ->where('participant_id', $participant->id)->lockForUpdate()->firstOrFail();
+            $learn->learnItems()->delete();
+            $learn->delete();
+            $enrollment->delete();
+        });
+        Log::channel('audit')->info('Progres belajar peserta direset oleh superadmin.', [
+            'event' => 'admin.participant_learning.reset',
+            'actor_id' => request()->user()->id,
+            'participant_id' => $participant->id,
+            'course_id' => $course->id,
+        ]);
+
+        return to_route('admin.course.overview', $course->slug)
+            ->with('success', 'Progres peserta diarsipkan. Peserta dapat mengaktifkan ulang kelas dan mulai dari awal.');
     }
 
     public function create()

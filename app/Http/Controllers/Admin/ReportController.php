@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Course\Activity\Activity;
 use App\Models\Course\Course;
 use App\Models\Identity\User;
 use App\Services\Reporting\LearningReportService;
@@ -16,37 +15,33 @@ class ReportController
 
     public function index(Request $request)
     {
-        $filters = $this->filters($request);
+        $filters = $this->filters($request, false);
 
         if ($request->ajax() && ! $request->header('X-Inertia')) {
             return $this->data($request);
         }
 
         return Inertia::render('Report', [
-            'filters' => $filters,
+            'filters' => array_diff_key($filters, ['course_ids' => true]),
+            'view' => $request->query('view') === 'course' ? 'course' : 'participant',
             'summary' => $this->reports->summary($filters),
             'courses' => Course::query()
+                ->when(isset($filters['course_ids']), fn ($query) => $query->whereIn('id', $filters['course_ids']))
                 ->select('id', 'title')
                 ->orderBy('title')
                 ->get(),
             'participants' => User::role('participant')
+                ->when(isset($filters['course_ids']), fn ($query) => $query->whereHas('enrollments', fn ($enrollments) => $enrollments->whereIn('course_id', $filters['course_ids'])))
                 ->select('id', 'name')
                 ->orderBy('name')
                 ->get(),
-            'activityTypes' => LearningReportService::ACTIVITY_TYPES,
-            'statusOptions' => [
-                ['value' => 'not_started', 'label' => 'Belum dimulai'],
-                ['value' => 'available', 'label' => 'Tersedia'],
-                ['value' => 'in_progress', 'label' => 'Sedang berjalan'],
-                ['value' => 'done', 'label' => 'Selesai'],
-            ],
         ]);
     }
 
     public function data(Request $request)
     {
         $filters = $this->filters($request);
-        $query = $this->reports->query($filters);
+        $query = $this->reports->query($filters)->whereNotNull('activities.id');
         $service = $this->reports;
         $decorated = [];
         $decorate = function ($row) use ($service, &$decorated) {
@@ -92,7 +87,7 @@ class ReportController
         $groupBy = $request->string('group_by')->toString();
         abort_unless(in_array($groupBy, ['course', 'participant'], true), 422, 'Group tidak valid.');
 
-        $rows = $this->reports->query($this->filters($request))
+        $rows = $this->reports->query($this->filters($request, false))
             ->get()
             ->map(fn ($row) => $this->reports->decorate($row));
 
@@ -101,9 +96,10 @@ class ReportController
                 $scores = $items->pluck('score')->filter(fn ($score) => $score !== null)->values();
                 $preScores = $items->where('activity_type', 'pre-test')->pluck('score')->filter(fn ($score) => $score !== null)->values();
                 $postScores = $items->where('activity_type', 'post-test')->pluck('score')->filter(fn ($score) => $score !== null)->values();
-                $done = $items->where('status', 'done')->count();
-                $total = $items->count();
+                $done = $items->where('status', 'done')->whereNotNull('activity_id')->count();
+                $total = $items->whereNotNull('activity_id')->count();
                 $first = $items->first();
+                $enrollments = $items->unique('enrollment_id');
 
                 return [
                     'group_id' => $key,
@@ -111,12 +107,13 @@ class ReportController
                     'participant_id' => $first['participant_id'],
                     'label' => $groupBy === 'course' ? $first['course_title'] : $first['participant_name'],
                     'secondary' => $groupBy === 'course'
-                        ? $first['schedule_title']
+                        ? $items->pluck('schedule_title')->unique()->join(', ')
                         : ($first['nip'] !== '-' ? $first['nip'] : $first['jabatan']),
                     'course_count' => $items->pluck('course_id')->unique()->count(),
                     'participant_count' => $items->pluck('participant_id')->unique()->count(),
                     'activity_count' => $total,
                     'done_count' => $done,
+                    'completed_count' => $enrollments->filter(fn ($item) => $item['finished_at'] !== null || $item['enrollment_status'] === 'completed')->count(),
                     'completion' => $total ? round(($done / $total) * 100, 1) : 0,
                     'avg_score' => $scores->isNotEmpty() ? round($scores->avg(), 2) : null,
                     'avg_pre_test' => $preScores->isNotEmpty() ? round($preScores->avg(), 2) : null,
@@ -126,12 +123,60 @@ class ReportController
             })
             ->values();
 
-        return DataTables::of($groups)->addIndexColumn()->make(true);
+        return DataTables::of($groups)->addIndexColumn()
+            ->filter(function ($table) use ($request) {
+                $search = mb_strtolower(trim((string) $request->input('search.value', '')));
+                if ($search !== '') {
+                    $table->collection = $table->collection->filter(fn ($row) => str_contains(mb_strtolower($row['label'].' '.$row['secondary']), $search))->values();
+                }
+            })->make(true);
     }
 
-    private function filters(Request $request): array
+    public function participant(Request $request, User $participant)
     {
-        return array_filter([
+        abort_unless($participant->hasRole('participant'), 404);
+        return $this->detail($request, 'participant', $participant->id, $participant->name);
+    }
+
+    public function course(Request $request, Course $course)
+    {
+        return $this->detail($request, 'course', $course->id, $course->title);
+    }
+
+    private function detail(Request $request, string $type, string $id, string $title)
+    {
+        $filters = $this->filters($request);
+        $fixedKey = $type === 'course' ? 'course_id' : 'participant_id';
+        $filters[$fixedKey] = $id;
+        $scope = [$fixedKey => $id];
+        if (isset($filters['course_ids'])) $scope['course_ids'] = $filters['course_ids'];
+        $rows = $this->reports->query($scope)->get();
+        if ($request->user()->hasRole('trainer') && ! $request->user()->hasAnyRole(['super_admin', 'administrator'])) {
+            abort_unless($rows->isNotEmpty(), 404);
+        }
+        $reportUrl = route('admin.report');
+        $backUrl = $request->string('return_to')->toString();
+        if ($backUrl !== $reportUrl && ! str_starts_with($backUrl, $reportUrl.'?')) {
+            $backUrl = $reportUrl.'?view='.$type;
+        }
+
+        return Inertia::render('Admin/Report/Show', [
+            'backUrl' => $backUrl,
+            'entity' => ['id' => $id, 'title' => $title, 'type' => $type],
+            'filters' => array_diff_key($filters, ['course_ids' => true]),
+            'summary' => $this->reports->summary($filters),
+            'courses' => Course::query()
+                ->whereIn('id', $rows->pluck('course_id')->unique())
+                ->orderBy('title')->get(['id', 'title']),
+            'participants' => User::query()->whereIn('id', $rows->pluck('participant_id')->unique())
+                ->orderBy('name')->get(['id', 'name']),
+            'activityTypes' => LearningReportService::ACTIVITY_TYPES,
+        ]);
+    }
+
+    private function filters(Request $request, bool $details = true): array
+    {
+        $filters = array_filter([
             'course_id' => $request->string('course_id')->toString(),
             'participant_id' => $request->string('participant_id')->toString(),
             'activity_type' => $request->string('activity_type')->toString(),
@@ -141,5 +186,13 @@ class ReportController
             'activity_from' => $request->date('activity_from')?->toDateString(),
             'activity_to' => $request->date('activity_to')?->toDateString(),
         ], fn ($value) => filled($value));
+        if (! $details) {
+            $filters = array_intersect_key($filters, array_flip(['course_id', 'participant_id', 'enrolled_from', 'enrolled_to']));
+        }
+        $user = $request->user();
+        if ($user?->hasRole('trainer') && ! $user->hasAnyRole(['super_admin', 'administrator'])) {
+            $filters['course_ids'] = Course::query()->whereHas('trainers', fn ($query) => $query->where('user_id', $user->id))->pluck('id')->all();
+        }
+        return $filters;
     }
 }

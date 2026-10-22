@@ -11,6 +11,7 @@ type Course = {
     id: string; schedule_id: string; slug: string; title: string; type: string;
     thumbnail: string | null; short_description: string | null; category: string | null;
     finished_at: string | null; initial_activity: string | number; opd_name: string | null;
+    needs_activation: boolean;
 };
 
 function Icon({ name, size = '20px' }: { name: string; size?: string }) {
@@ -20,6 +21,7 @@ function Icon({ name, size = '20px' }: { name: string; size?: string }) {
 export default function Index({ courses = [] }: { courses: Course[] }) {
     const [query, setQuery] = useState('');
     const [filter, setFilter] = useState('all');
+    const [reactivatingId, setReactivatingId] = useState<string | null>(null);
     const ongoing = courses.filter(item => item.finished_at == null).length;
     const completedCount = courses.length - ongoing;
     const tabs = [{ id: 'all', label: 'Kelas diikuti', count: courses.length }, { id: 'ongoing', label: 'Berjalan', count: ongoing }, { id: 'completed', label: 'Selesai', count: completedCount }];
@@ -30,6 +32,12 @@ export default function Index({ courses = [] }: { courses: Course[] }) {
         const support = getBrowserSupportStatus();
         if (!support.supported) { toast.error(getUnsupportedBrowserMessage(support.reason), { toastId: 'unsupported-browser-join-class' }); return; }
         router.visit(`/learn/${item.slug}/${item.schedule_id}/${item.initial_activity}/instruction`);
+    };
+    const reactivate = (item: Course) => {
+        setReactivatingId(item.id);
+        router.post(route('participant.course.reactivate', { course: item.slug }), {}, {
+            onFinish: () => setReactivatingId(null),
+        });
     };
     return <App>
         <Head title="Kelas Saya" />
@@ -51,13 +59,13 @@ export default function Index({ courses = [] }: { courses: Course[] }) {
                     return <article key={`${item.id}-${item.schedule_id}`} className="my-courses-card">
                         <Link href={detailUrl} className="my-courses-card__image" tabIndex={-1} aria-hidden="true"><img src={item.thumbnail || '/assets/media/images/static/default-class.jpg'} alt="" loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/assets/media/images/static/default-class.jpg'; }} /><span className="my-courses-card__mode"><Icon name={scheduled ? 'calendar' : 'book-open'} size="15px" />{scheduled ? 'Terjadwal' : 'Belajar mandiri'}</span></Link>
                         <div className="my-courses-card__body">
-                            <div className="my-courses-card__tags"><span className="my-courses-card__category">{item.category || 'Pelatihan ASN'}</span><span className={`my-courses-card__status ${completed ? 'is-completed' : ''}`}><i aria-hidden="true" />{completed ? 'Selesai' : 'Berjalan'}</span></div>
+                            <div className="my-courses-card__tags"><span className="my-courses-card__category">{item.category || 'Pelatihan ASN'}</span><span className={`my-courses-card__status ${completed ? 'is-completed' : ''}`}><i aria-hidden="true" />{completed ? 'Selesai' : item.needs_activation ? 'Perlu aktivasi' : 'Berjalan'}</span></div>
                             <h2><Link href={detailUrl}>{item.title}</Link></h2>
                             <p className="mt-2 text-xs text-primary">{item.visibility === 'public' ? 'Publik — semua OPD' : `Privat — ${item.opd_name || 'OPD tertentu'}`}</p>
                             <p className="mt-1 text-xs text-steel">{item.employee_status || 'Semua status pegawai'}</p>
                             <p className="my-courses-card__description">{item.short_description || 'Kembangkan kompetensi Anda melalui rangkaian pembelajaran kelas ini.'}</p>
                             {!completed && <div className="my-courses-card__meta"><Icon name="time-five" size="17px" /><span>{scheduled ? 'Belajar sesuai jadwal kelas' : 'Waktu belajar fleksibel'}</span></div>}
-                            <div className="my-courses-card__actions"><Link href={detailUrl} className="my-courses-card__detail">Detail kelas<Icon name="right-arrow-alt" size="17px" /></Link>{!completed && <button type="button" className="my-courses-card__start" onClick={() => join(item)} disabled={!item.initial_activity}><Icon name="play-circle" size="18px" />{item.initial_activity ? 'Lanjut belajar' : 'Materi belum tersedia'}</button>}</div>
+                            <div className="my-courses-card__actions"><Link href={detailUrl} className="my-courses-card__detail">Detail kelas<Icon name="right-arrow-alt" size="17px" /></Link>{item.needs_activation ? <button type="button" className="my-courses-card__start" onClick={() => reactivate(item)} disabled={reactivatingId === item.id}><Icon name="reset" size="18px" />{reactivatingId === item.id ? 'Mengaktifkan...' : 'Aktifkan ulang'}</button> : !completed && <button type="button" className="my-courses-card__start" onClick={() => join(item)} disabled={!item.initial_activity}><Icon name="play-circle" size="18px" />{item.initial_activity ? 'Lanjut belajar' : 'Materi belum tersedia'}</button>}</div>
                         </div>
                     </article>;
                 })}</div>}

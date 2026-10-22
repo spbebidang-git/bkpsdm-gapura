@@ -7,6 +7,14 @@
 .participant-page .participant-button { min-height: 40px; padding: 8px 14px; border-radius: 8px; font-size: 12px; }
 .participant-page-link { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 10px 14px; border: 1px solid #39A9A1; border-radius: 10px; font: 600 12px Poppins,sans-serif; color: var(--page-primary); }
 .participant-page-link:hover { background: #E6F3F3; }
+.overview-expiry-alert { display: flex; align-items: flex-start; gap: 14px; padding: 18px 20px; border: 1px solid #F1C27D; border-radius: 12px; background: #FFF8EA; color: #7A410B; }
+.overview-expiry-alert__icon { flex-shrink: 0; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 9px; background: #FFE9C7; }
+.overview-expiry-alert h2 { font: 600 15px/1.5 Poppins,sans-serif; }
+.overview-expiry-alert p { margin-top: 5px; font-size: 13px; line-height: 1.65; }
+.overview-expiry-alert ul { display: grid; gap: 8px; margin-top: 12px; }
+.overview-expiry-alert li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; font-size: 12px; line-height: 1.5; }
+.overview-expiry-alert li a { font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+.overview-expiry-alert li span { white-space: nowrap; }
 .overview-summary { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; }
 .overview-summary .participant-card { display: flex; align-items: center; gap: 14px; padding: 20px; }
 .overview-summary__icon { display: grid; place-items: center; width: 42px; height: 42px; flex-shrink: 0; border-radius: 10px; background: #E6F3F3; color: var(--page-primary); }

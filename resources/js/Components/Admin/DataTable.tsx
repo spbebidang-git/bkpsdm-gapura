@@ -42,6 +42,7 @@ export default function DataTable({
     className = '',
     dataLabel = 'data',
     refreshKey = 0,
+    showUpdatedAt = true,
 }) {
     const [data, setData] = useState([]);
     const [total, setTotal] = useState(0);
@@ -57,6 +58,7 @@ export default function DataTable({
         setPagination((current) => current.pageIndex === 0 ? current : { ...current, pageIndex: 0 });
     }, [extraKey]);
     const displayColumns = useMemo(() => {
+        if (!showUpdatedAt) return columns;
         const updatedAtColumn = {
             accessorKey: 'updated_at',
             header: 'Terakhir diperbarui',
@@ -83,7 +85,7 @@ export default function DataTable({
             updatedAtColumn,
             ...normalized.slice(insertAt),
         ];
-    }, [columns]);
+    }, [columns, showUpdatedAt]);
 
     useEffect(() => {
         const timer = setTimeout(() => {

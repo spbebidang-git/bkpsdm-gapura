@@ -7,9 +7,33 @@ use App\Models\Course\Schedule;
 use App\Models\Learning\Enrollment;
 use App\Models\Learning\Learn;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\DB;
 
 class ParticipantEnrollmentService
 {
+    public function archiveExpired(string $participantId, ?string $courseId = null): void
+    {
+        Enrollment::query()->where('participant_id', $participantId)
+            ->when($courseId, fn ($query) => $query->where('course_id', $courseId))
+            ->whereIn('status', ['active', 'expired'])
+            ->whereNotNull('access_ends_at')->where('access_ends_at', '<', now())
+            ->whereDoesntHave('learn', fn ($query) => $query->whereNotNull('finished_at'))
+            ->pluck('id')->each(function ($id): void {
+                DB::transaction(function () use ($id): void {
+                    $enrollment = Enrollment::query()->lockForUpdate()->find($id);
+                    if (! $enrollment || ! $enrollment->access_ends_at || ! $enrollment->access_ends_at->isPast()) return;
+                    $learn = $enrollment->learn()->lockForUpdate()->first();
+                    if ($learn?->finished_at) return;
+                    app(ParticipantNotificationService::class)->deadline($enrollment, 'expired');
+                    if ($learn) {
+                        $learn->learnItems()->delete();
+                        $learn->delete();
+                    }
+                    $enrollment->delete();
+                });
+            });
+    }
+
     public function activate(Course $course, Schedule $schedule, string $participantId): Enrollment
     {
         $scheduleId = $course->access_mode === 'scheduled' ? $schedule->id : null;

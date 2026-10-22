@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Participant;
 
+use App\Models\Learning\Enrollment;
+use App\Services\Learning\ParticipantEnrollmentService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -12,12 +14,28 @@ class DashboardController
     public function __invoke(Request $request)
     {
         $user = request()->user();
+        app(ParticipantEnrollmentService::class)->archiveExpired((string) $user->id);
+        $now = now();
+        $expiringCourses = Enrollment::query()->with('course:id,title,slug')
+            ->where('participant_id', $user->id)->where('status', 'active')
+            ->where('access_ends_at', '>', $now)
+            ->where('access_ends_at', '<=', $now->copy()->addDay())
+            ->whereDoesntHave('learn', fn ($query) => $query->whereNotNull('finished_at'))
+            ->orderBy('access_ends_at')->get()
+            ->filter(fn ($enrollment) => $enrollment->course !== null)
+            ->map(fn ($enrollment) => [
+                'id' => $enrollment->id,
+                'title' => $enrollment->course->title,
+                'slug' => $enrollment->course->slug,
+                'ends_at' => $enrollment->access_ends_at->toISOString(),
+            ])->values();
 
         // Ambil semua data learns milik user (single source of truth)
         $learns = DB::table('learns')
             ->join('courses', 'courses.id', '=', 'learns.course_id')
             ->select('learns.*', 'courses.title', 'courses.slug')
             ->where('learns.participant_id', $user->id)
+            ->whereNull('learns.deleted_at')
             ->get();
 
         // completed: finished_at != null
@@ -81,6 +99,7 @@ class DashboardController
             ],
             'ongoingCourses'   => $ongoingCourses,
             'completedCourses' => $completedCourses,
+            'expiringCourses' => $expiringCourses,
         ]);
     }
 }

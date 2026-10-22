@@ -12,7 +12,7 @@ export const navigation: NavGroup[] = [
         { label: 'Kelas', route: 'admin.course.index', match: 'admin.course.*', icon: 'bx-book-open', permission: 'course.view' },
     ] },
     { label: 'Hasil', items: [
-        { label: 'Laporan', route: 'admin.report', match: 'admin.report', icon: 'bx-file', permission: 'result.view' },
+        { label: 'Laporan', route: 'admin.report', match: 'admin.report*', icon: 'bx-file', permission: 'result.view' },
         { label: 'Data sertifikat', route: 'admin.certificate.index', match: 'admin.certificate.*', icon: 'bx-award', permission: 'certificate.manage' },
         { label: 'Ulasan', route: 'admin.review.index', match: 'admin.review.*', icon: 'bx-star', permission: 'review.manage' },
     ] },
@@ -44,6 +44,6 @@ export function isActive(match: string) {
 export function currentItem(): NavItem | null {
     try {
         const name = route().current();
-        return name ? items.find((item) => name.startsWith(item.match.replace('.*', ''))) ?? null : null;
+        return name ? items.find((item) => name.startsWith(item.match.replace(/\.?\*$/, ''))) ?? null : null;
     } catch { return null; }
 }

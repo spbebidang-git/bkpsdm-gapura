@@ -1,13 +1,31 @@
 import { badgeOk, badgePending, btnLink, btnPrimarySm, card, tableClass, tableScroller } from '@/Components/Admin/ui';
 import AdminLayout from '@/Layouts/Admin/App';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import Swal from 'sweetalert2';
 
 export default function Show({
     course,
     schedules = [],
     finishedParticipant = [],
     onGoingParticipant = [],
+    canResetLearning = false,
 }) {
+    const resetLearning = (participant) => {
+        Swal.fire({
+            title: 'Reset proses belajar peserta?',
+            text: `Progres, jawaban, nilai, tugas, dan sertifikat ${participant.name} pada kelas ini akan diarsipkan. Peserta perlu aktivasi ulang dan memulai dari awal. Sertifikat yang sudah tercatat di KEDATON/Prestige tidak dapat ditarik otomatis.`,
+            icon: 'warning',
+            showCancelButton: true,
+            reverseButtons: true,
+            focusCancel: true,
+            confirmButtonColor: '#A43B2F',
+            cancelButtonColor: '#52615D',
+            confirmButtonText: 'Ya, reset belajar',
+            cancelButtonText: 'Batal',
+        }).then((result) => {
+            if (result.isConfirmed) router.post(route('admin.course.participant.reset-learning', [course.slug, participant.id]), {}, { preserveScroll: true });
+        });
+    };
     return (
         <AdminLayout
             title="Detail Kelas"
@@ -104,11 +122,9 @@ export default function Show({
                     </div>
                     <ul className="max-h-64 overflow-y-auto text-sm divide-y divide-hairline-soft">
                         {finishedParticipant.map((p, i) => (
-                            <li key={i} className="px-4 py-2 text-charcoal">
-                                <span className="font-medium text-ink">{p.name}</span>
-                                {p.job_title ? (
-                                    <span className="text-steel text-xs ml-2">{p.job_title}</span>
-                                ) : null}
+                            <li key={p.id ?? i} className="flex items-center justify-between gap-3 px-4 py-2 text-charcoal">
+                                <span><span className="font-medium text-ink">{p.name}</span>{p.job_title ? <span className="text-steel text-xs ml-2">{p.job_title}</span> : null}</span>
+                                {canResetLearning && p.id && <button type="button" onClick={() => resetLearning(p)} className="shrink-0 rounded border border-red-200 px-2 py-1 text-xs font-semibold text-red-700 hover:bg-red-50">Reset belajar</button>}
                             </li>
                         ))}
                         {finishedParticipant.length === 0 && (
@@ -122,8 +138,9 @@ export default function Show({
                     </div>
                     <ul className="max-h-64 overflow-y-auto text-sm divide-y divide-hairline-soft">
                         {onGoingParticipant.map((p, i) => (
-                            <li key={i} className="px-4 py-2 text-charcoal">
-                                {p.name}
+                            <li key={p.id ?? i} className="flex items-center justify-between gap-3 px-4 py-2 text-charcoal">
+                                <span>{p.name}</span>
+                                {canResetLearning && p.id && <button type="button" onClick={() => resetLearning(p)} className="shrink-0 rounded border border-red-200 px-2 py-1 text-xs font-semibold text-red-700 hover:bg-red-50">Reset belajar</button>}
                             </li>
                         ))}
                         {onGoingParticipant.length === 0 && (

@@ -2,9 +2,8 @@ import App from '@/Layouts/Participant/App';
 import { Head, Link, router } from '@inertiajs/react';
 import { getBrowserSupportStatus, getUnsupportedBrowserMessage } from '@/Utils/browserSupport';
 import { showCourseActivationToast } from '@/Components/CourseActivationToast';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import DOMPurify from 'dompurify';
-import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
 import '../../../../css/participant-course-detail.css';
 
 type CourseDetail = {
@@ -36,7 +35,6 @@ type LearningSummary = {
     url_certificate: string | null;
     entry_url: string | null;
     entry_message: string | null;
-    can_reset: boolean;
     needs_activation: boolean;
 };
 
@@ -53,8 +51,7 @@ function Icon({ name, size = '22px' }: { name: string; size?: string }) {
 
 export default function Show({ course, learn }: { course: CourseDetail; learn: LearningSummary }) {
     const [tab, setTab] = useState('information');
-    const [resetOpen, setResetOpen] = useState(false);
-    const [resetting, setResetting] = useState(false);
+    const [reactivating, setReactivating] = useState(false);
     const tabs = [{ id: 'information', label: 'Informasi Program', icon: 'info-circle' }, { id: 'guide', label: 'Panduan Pelatihan', icon: 'book-reader' }, { id: 'certificate', label: 'Sertifikat', icon: 'award' }, { id: 'reviews', label: 'Ulasan', icon: 'star' }];
     const completed = Boolean(learn.finished_at);
     const scheduled = course.type === 'schedule' || course.type === 'scheduled';
@@ -69,18 +66,18 @@ export default function Show({ course, learn }: { course: CourseDetail; learn: L
         }
         router.visit(learn.entry_url);
     };
-    const resetLearning = () => {
-        setResetting(true);
-        router.post(route('participant.course.reset', { course: course.slug }), {}, {
-            onSuccess: () => {
-                course.activities.forEach(({ id }) => {
-                    localStorage.removeItem(`countdownStartTime_${id}`);
-                    Object.keys(localStorage).filter((key) => key.startsWith('materialCountdown_') && key.endsWith(`_${id}`))
-                        .forEach((key) => localStorage.removeItem(key));
-                });
-                setResetOpen(false);
-            },
-            onFinish: () => setResetting(false),
+    useEffect(() => {
+        if (!learn.needs_activation) return;
+        course.activities.forEach(({ id }) => {
+            localStorage.removeItem(`countdownStartTime_${id}`);
+            Object.keys(localStorage).filter((key) => key.startsWith('materialCountdown_') && key.endsWith(`_${id}`))
+                .forEach((key) => localStorage.removeItem(key));
+        });
+    }, [learn.needs_activation, course.activities]);
+    const reactivate = () => {
+        setReactivating(true);
+        router.post(route('participant.course.reactivate', { course: course.slug }), {}, {
+            onFinish: () => setReactivating(false),
         });
     };
     const stats = [
@@ -113,8 +110,8 @@ export default function Show({ course, learn }: { course: CourseDetail; learn: L
                     </div>
                     <div className="my-course-hero__actions">
                         <button type="button" className="my-course-start" onClick={startLearning} disabled={!learn.entry_url} aria-describedby={learn.entry_message ? 'learning-entry-message' : undefined}><Icon name={completed ? 'book-open' : 'play-circle'} size="20px" />{completed ? 'Lihat materi pelatihan' : 'Mulai pelatihan'}<Icon name="right-arrow-alt" size="18px" /></button>
-                        {learn.can_reset && <button type="button" className="my-course-reset" onClick={() => setResetOpen(true)}><Icon name="reset" size="18px" />Reset proses belajar</button>}
-                        <a href={route('course.show', { course: course.slug })} target="_blank" rel="noopener noreferrer" className="my-course-public-link">{learn.needs_activation ? 'Aktifkan ulang kelas' : 'Lihat informasi kelas'}<Icon name="link-external" size="17px" /><span className="sr-only"> (buka tab baru)</span></a>
+                        {learn.needs_activation && <button type="button" className="my-course-reset" onClick={reactivate} disabled={reactivating}><Icon name="reset" size="18px" />{reactivating ? 'Mengaktifkan...' : 'Aktifkan ulang kelas'}</button>}
+                        <a href={route('course.show', { course: course.slug })} target="_blank" rel="noopener noreferrer" className="my-course-public-link">Lihat informasi kelas<Icon name="link-external" size="17px" /><span className="sr-only"> (buka tab baru)</span></a>
                     </div>
                     {learn.entry_message && <p id="learning-entry-message" className="my-course-entry-message">{learn.entry_message}</p>}
                 </div>
@@ -180,13 +177,5 @@ export default function Show({ course, learn }: { course: CourseDetail; learn: L
                 </div>
             </div>
         </div>
-        <Dialog open={resetOpen} onClose={setResetOpen} className="my-course-reset-dialog">
-            <div className="my-course-reset-dialog__backdrop" aria-hidden="true" />
-            <div className="my-course-reset-dialog__position"><DialogPanel className="my-course-reset-dialog__panel">
-                <DialogTitle as="h2">Reset seluruh proses belajar?</DialogTitle>
-                <p>Semua jawaban, nilai, tugas PDF, progres kegiatan, dan sertifikat kelas ini akan dihapus. Pendaftaran kelas tetap ada. Sertifikat yang sudah tercatat di sistem KEDATON/Prestige tidak dapat ditarik otomatis. Tindakan ini tidak dapat dibatalkan.</p>
-                <div className="my-course-reset-dialog__actions"><button type="button" onClick={() => setResetOpen(false)} disabled={resetting}>Batal</button><button type="button" className="is-danger" onClick={resetLearning} disabled={resetting}>{resetting ? 'Mereset...' : 'Ya, reset belajar'}</button></div>
-            </DialogPanel></div>
-        </Dialog>
     </App>;
 }

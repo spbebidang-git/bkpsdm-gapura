@@ -56,6 +56,7 @@ Route::prefix('course')
 
             // Access: super_admin, administrator, trainer (`course.participant.view`)
             Route::get('/{course:slug}/overview', 'overview')->name('overview');
+            Route::post('/{course:slug}/participants/{participant}/reset-learning', 'resetParticipantLearning')->name('participant.reset-learning');
 
             // Access: super_admin, administrator, trainer (`course.view`)
             Route::get('/{course:slug}', 'show')->name('show');

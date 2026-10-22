@@ -30,6 +30,7 @@ class CourseController
     public function index()
     {
         try {
+            app(ParticipantEnrollmentService::class)->archiveExpired((string) $this->participantId);
             return Inertia::render('Participant/Course/Index', [
                 'courses' => $this->course->getByParticipant($this->participantId)
             ]);
@@ -47,12 +48,17 @@ class CourseController
     {
         abort_unless(Course::query()->whereKey($course->id)->where(fn ($q) => app(\App\Services\Course\CourseAudience::class)->viewable($q, request()->user()))->exists(), 404);
         try {
+            $enrollmentService = app(ParticipantEnrollmentService::class);
+            $enrollmentService->archiveExpired((string) $this->participantId, (string) $course->id);
             $firstSchedule = $course->schedules()
                 ->whereHas('participants', fn ($query) => $query->where('users.id', $this->participantId))
                 ->first();
             $orderedActivities = $course->activities()->orderBy('sort_order')->orderBy('id')->get();
             $firstActivity = $orderedActivities->first();
             $learnModel = $this->learn->findLearn($course->id, $this->participantId);
+            $enrollment = $firstSchedule
+                ? $enrollmentService->forRequest((string) $this->participantId, $course, $firstSchedule)
+                : null;
             $entryUrl = null;
             $entryMessage = null;
             if (! $firstSchedule) {
@@ -60,13 +66,10 @@ class CourseController
             } elseif (! $firstActivity) {
                 $entryMessage = 'Materi pelatihan belum tersedia.';
             } else {
-                $enrollmentService = app(ParticipantEnrollmentService::class);
-                $enrollment = $enrollmentService->forRequest((string) $this->participantId, $course, $firstSchedule);
-                if ($enrollment && $enrollment->trashed()) $enrollment = null;
                 if (config('participant.enrollment_access_enforced', true) && (! $enrollment || ! $enrollmentService->canRead($enrollment))) {
                     $wasArchived = Enrollment::withTrashed()->where('participant_id', $this->participantId)->where('course_id', $course->id)->whereNotNull('deleted_at')->exists();
                     $entryMessage = ! $enrollment ? ($wasArchived
-                        ? 'Progres lama telah diarsipkan. Aktifkan ulang kelas melalui halaman informasi kelas untuk memulai dari awal.'
+                        ? 'Masa akses berakhir. Progres lama telah diarsipkan. Aktifkan ulang kelas untuk memulai dari awal.'
                         : 'Aktivasi kelas belum tercatat.')
                         : (now()->lt($enrollment->access_starts_at) ? 'Pelatihan belum dimulai sesuai jadwal akses.' : 'Masa akses pelatihan telah berakhir.');
                 } else {
@@ -105,11 +108,9 @@ class CourseController
                 'url_certificate' => $learnModel ? $learnModel->url_certificate : null,
                 'entry_url' => $entryUrl,
                 'entry_message' => $entryMessage,
-                'can_reset' => (bool) ($learnModel && ($learnModel->learnItems()->exists() || $learnModel->finished_at)
-                    && $firstSchedule && isset($enrollment) && $enrollment
-                    && in_array($enrollment->status, ['active', 'completed', 'expired'], true)),
-                'needs_activation' => (bool) ($firstSchedule && ! $learnModel?->finished_at
-                    && (! isset($enrollment) || ! $enrollment || ! $enrollment->isAccessActive())),
+                'needs_activation' => (bool) ($firstSchedule && ! $enrollment && Enrollment::withTrashed()
+                    ->where('participant_id', $this->participantId)->where('course_id', $course->id)
+                    ->whereNotNull('deleted_at')->exists()),
             ];
 
             $course = $this->course->findBySlug($course->slug, Auth::user());
@@ -164,6 +165,32 @@ class CourseController
             return redirect()->route('participant.course.index')
                 ->with('danger', 'Terjadi kesalahan saat memuat halaman kelas. Silakan coba lagi.');
         }
+    }
+
+    public function reactivate(Course $course)
+    {
+        $participantId = (string) Auth::id();
+        abort_unless(app(\App\Services\Course\CourseAudience::class)->canEnroll($course, request()->user()), 403);
+        $enrollmentService = app(ParticipantEnrollmentService::class);
+        $enrollmentService->archiveExpired($participantId, (string) $course->id);
+        $previous = Enrollment::withTrashed()->where('participant_id', $participantId)
+            ->where('course_id', $course->id)->whereNotNull('deleted_at')
+            ->latest('deleted_at')->firstOrFail();
+        $schedule = $course->access_mode === 'scheduled'
+            ? $course->schedules()->findOrFail($previous->schedule_id)
+            : $course->schedules()->firstOrFail();
+        abort_unless($schedule->participants()->where('users.id', $participantId)->exists(), 403);
+
+        DB::transaction(function () use ($course, $schedule, $participantId, $enrollmentService): void {
+            $enrollment = $enrollmentService->activate($course, $schedule, $participantId);
+            abort_unless($enrollment->status === 'active', 409);
+            if ($enrollment->wasRecentlyCreated) {
+                $this->course->generatePrePostTestVariant($participantId, $course);
+            }
+        });
+
+        return to_route('participant.course.show', $course->slug)
+            ->with('success', 'Kelas berhasil diaktifkan ulang. Silakan mulai belajar dari awal.');
     }
 
     public function reset(Course $course)

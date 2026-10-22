@@ -12,6 +12,8 @@ Route::controller(ReportController::class)->prefix('report')->group(function () 
     Route::get('/', 'index')->name('report');
     Route::get('/data', 'data')->name('report.data');
     Route::get('/groups', 'groups')->name('report.groups');
+    Route::get('/participants/{participant}', 'participant')->name('report.participant');
+    Route::get('/courses/{course}', 'course')->name('report.course');
 });
 
 // Certificate. Access: super_admin, administrator (`certificate.manage`)
