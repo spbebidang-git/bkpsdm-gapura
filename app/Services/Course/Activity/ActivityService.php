@@ -145,11 +145,13 @@ class ActivityService
         }
 
         if ($activity->type === 'task') {
-            return $this->task->getTask();
+            // getTask() mengabaikan argumen pertama; konteks instruktur tidak
+            // punya peserta, jadi dilewatkan null.
+            return $this->task->getTask(null, $activity);
         }
 
         if ($activity->type === 'meeting') {
-            return $this->interactive->getMeeting();
+            return $this->interactive->getMeeting($activity);
         }
 
         if ($activity->type === 'video') {
