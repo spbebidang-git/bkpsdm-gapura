@@ -29,7 +29,7 @@ class ImportController
         return Inertia::render('Instructor/Course/Import', [
             'employee_status' => EmployeeStatus::all(),
             'categories'      => Category::all(),
-            'local_samples'   => $this->devMode()
+            'local_samples'   => $this->serverImportEnabled()
                 ? collect($this->localSamples())
                     ->map(fn ($sample, $key) => [
                         'key'   => $key,
@@ -78,8 +78,8 @@ class ImportController
      */
     public function analyzeLocal(Request $request)
     {
-        if (!$this->devMode()) {
-            abort(403, 'Hanya tersedia di mode pengembangan.');
+        if (!$this->serverImportEnabled()) {
+            abort(403, 'Impor dari folder server tidak diaktifkan.');
         }
 
         $samples = $this->localSamples();
@@ -141,30 +141,26 @@ class ImportController
             }
         }
 
-        // 3) Sampel lama di Downloads (tetap dipertahankan untuk regresi).
-        $downloads = 'C:/Users/bidsp/Downloads';
-        $legacy = [
-            'full'   => $downloads . '/File Moodle Uji Coba ASN Berintegritas (Full).mbz',
-            'modul1' => $downloads . '/[Modul 1] File Moodle Uji Coba.mbz',
-        ];
-
-        foreach ($legacy as $key => $file) {
-            $samples[$key] = [
-                'label' => $this->sampleLabel($file),
-                'paths' => [$file],
-            ];
-        }
-
         return array_filter(
             $samples,
             fn ($sample) => count(array_filter($sample['paths'], 'is_file')) === count($sample['paths'])
         );
     }
 
-    /** Pintasan testing hanya aktif di environment lokal/debug. */
-    protected function devMode(): bool
+    /**
+     * Impor dari folder .mbz milik server aktif bila foldernya dikonfigurasi
+     * dan benar-benar ada. Aksesnya sendiri sudah dibatasi middleware
+     * instruktur pada grup route, jadi tidak lagi bergantung APP_DEBUG.
+     */
+    protected function serverImportEnabled(): bool
     {
-        return app()->isLocal() || config('app.debug');
+        if (!config('mbz.server_import')) {
+            return false;
+        }
+
+        $dir = (string) config('mbz.sample_dir');
+
+        return $dir !== '' && is_dir($dir);
     }
 
     /** Label tombol pintasan: nama file dirapikan + ukuran. */

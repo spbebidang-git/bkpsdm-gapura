@@ -35,6 +35,9 @@ class MbzImportService
 {
     const TMP_DIR = 'mbz_imports';
 
+    /** Akhiran berkas penunjuk ke .mbz milik server (impor tanpa unggah). */
+    const POINTER_SUFFIX = '.path';
+
     protected MbzParser $parser;
     protected H5pService $h5p;
     protected ScormService $scorm;
@@ -93,30 +96,28 @@ class MbzImportService
      */
     public function analyzeLocal(array $localPaths): array
     {
-        $dir = $this->tmpDir();
         $parsedFiles = [];
         $errors = [];
 
         foreach ($localPaths as $src) {
             $originalName = basename($src);
 
-            if (!is_file($src)) {
-                $errors[] = "{$originalName}: file tidak ditemukan di server.";
+            $source = $this->resolveInboxPath($src);
+            if ($source === null) {
+                $errors[] = "{$originalName}: file tidak ditemukan di folder .mbz server.";
                 continue;
             }
 
+            // File sumber TIDAK disalin — paket full bisa ratusan MB dan
+            // salinannya hanya menumpuk di storage. Token cukup menunjuk
+            // ke berkas aslinya lewat file penunjuk kecil.
             $token = Str::uuid()->toString();
-            $target = $dir . DIRECTORY_SEPARATOR . $token . '.mbz';
-
-            if (!@copy($src, $target)) {
-                $errors[] = "{$originalName}: gagal menyalin file.";
-                continue;
-            }
 
             try {
-                $parsed = $this->parser->parse($target);
+                $this->writePointer($token, $source);
+                $parsed = $this->parser->parse($source);
             } catch (\Throwable $e) {
-                @unlink($target);
+                $this->releaseToken($token);
                 $errors[] = "{$originalName}: {$e->getMessage()}";
                 continue;
             }
@@ -190,8 +191,8 @@ class MbzImportService
         // Pastikan semua file masih ada sebelum menyentuh database.
         $mbzPaths = [];
         foreach ($tokens as $token) {
-            $path = $this->tokenPath($token);
-            if (!is_file($path)) {
+            $path = $this->resolveToken($token);
+            if ($path === null) {
                 throw new RuntimeException('Sesi impor kedaluwarsa, unggah ulang file .mbz.');
             }
             $mbzPaths[$token] = $path;
@@ -298,9 +299,10 @@ class MbzImportService
         // Kursus wajib punya minimal satu schedule (lihat CourseService::createCourse).
         Schedule::create(['course_id' => $course->id]);
 
-        // Bersihkan file temporer setelah impor sukses.
-        foreach ($mbzPaths as $path) {
-            @unlink($path);
+        // Bersihkan sesi impor. Untuk token penunjuk, hanya penunjuknya yang
+        // dibuang — berkas .mbz di folder inbox server tetap utuh.
+        foreach (array_keys($mbzPaths) as $token) {
+            $this->releaseToken($token);
         }
 
         return $course;
@@ -690,5 +692,82 @@ class MbzImportService
             throw new RuntimeException('Token file tidak valid.');
         }
         return $this->tmpDir() . DIRECTORY_SEPARATOR . $token . '.mbz';
+    }
+
+    /** Berkas penunjuk untuk token yang memakai .mbz milik server (tanpa salin). */
+    protected function pointerPath(string $token): string
+    {
+        return $this->tokenPath($token) . self::POINTER_SUFFIX;
+    }
+
+    /** Catat token sebagai penunjuk ke file .mbz di folder inbox server. */
+    protected function writePointer(string $token, string $source): void
+    {
+        if (@file_put_contents($this->pointerPath($token), $source) === false) {
+            throw new RuntimeException('Gagal menyiapkan sesi impor di server.');
+        }
+    }
+
+    /**
+     * Berkas .mbz untuk sebuah token: salinan unggahan, atau — bila token
+     * berupa penunjuk — berkas asli di folder inbox server.
+     */
+    protected function resolveToken(string $token): ?string
+    {
+        $uploaded = $this->tokenPath($token);
+        if (is_file($uploaded)) {
+            return $uploaded;
+        }
+
+        $pointer = $this->pointerPath($token);
+        if (!is_file($pointer)) {
+            return null;
+        }
+
+        return $this->resolveInboxPath((string) file_get_contents($pointer));
+    }
+
+    /**
+     * Pastikan sebuah path benar-benar berkas .mbz di dalam folder inbox yang
+     * dikonfigurasi (config/mbz.php). Mengembalikan path kanonis, atau null.
+     */
+    protected function resolveInboxPath(string $path): ?string
+    {
+        $inbox = realpath((string) config('mbz.sample_dir'));
+        $real = realpath($path);
+
+        if ($inbox === false || $real === false || !is_file($real)) {
+            return null;
+        }
+
+        $inbox = rtrim(str_replace('\\', '/', $inbox), '/') . '/';
+        $normalized = str_replace('\\', '/', $real);
+
+        if (!str_starts_with($normalized, $inbox)) {
+            return null;
+        }
+
+        if (strtolower(pathinfo($real, PATHINFO_EXTENSION)) !== 'mbz') {
+            return null;
+        }
+
+        return $real;
+    }
+
+    /**
+     * Lepas sebuah token: salinan unggahan dihapus, penunjuk dihapus — tetapi
+     * berkas .mbz milik server TIDAK pernah ikut terhapus.
+     */
+    protected function releaseToken(string $token): void
+    {
+        $uploaded = $this->tokenPath($token);
+        if (is_file($uploaded)) {
+            @unlink($uploaded);
+        }
+
+        $pointer = $this->pointerPath($token);
+        if (is_file($pointer)) {
+            @unlink($pointer);
+        }
     }
 }
