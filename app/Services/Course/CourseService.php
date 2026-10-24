@@ -8,6 +8,7 @@ use App\Models\Course\Course;
 use App\Models\Course\Question;
 use App\Models\Course\Question\QuestionVariant;
 use App\Models\Course\Schedule;
+use App\Services\Learn\LearnService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -166,7 +167,7 @@ class CourseService
             ])
             ->get()
             ->filter(fn($row) => $row->course !== null)
-            ->map(function ($row) {
+            ->map(function ($row) use ($participantId) {
                 return [
                     'id' => $row->course->id,
                     'type' => $row->course->type,
@@ -181,7 +182,9 @@ class CourseService
                     'total_participant' => $row->course->total_participant,
                     'status' => $row->course->status,
                     'schedule_id' => $row->id,
-                    'initial_activity' => $row->course->activities->first() ? $row->course->activities->first()->id : 0,
+                    // Titik lanjut peserta, bukan selalu kegiatan pertama.
+                    'initial_activity' => app(LearnService::class)
+                        ->getResumeActivityId($participantId, $row->course->id),
                     'finished_at' => $row->course->learns->first()->finished_at ?? null
                 ];
             })

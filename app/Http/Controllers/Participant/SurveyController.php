@@ -24,7 +24,7 @@ class SurveyController
         return Inertia::render('Participant/Survey/Index', [
             'course' => $course,
             'progress' => Learn::where('participant_id', $this->participantId)->first()->progress ?? '0 %',
-            'initial_activity' =>  $course->activities->first() ? $course->activities->first()->id : 0,
+            'initial_activity' =>  app(\App\Services\Learn\LearnService::class)->getResumeActivityId($this->participantId, $course->id),
         ]);
     }
 }

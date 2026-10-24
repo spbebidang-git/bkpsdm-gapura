@@ -28,7 +28,7 @@ class RatingController
         return Inertia::render('Participant/Rating/Index', [
             'course' => $course,
             'progress' => Learn::where('participant_id', $this->participantId)->where('course_id', $course->id)->first()->progress ?? '0 %',
-            'initial_activity' =>  $course->activities->first() ? $course->activities->first()->id : 0,
+            'initial_activity' =>  app(\App\Services\Learn\LearnService::class)->getResumeActivityId($this->participantId, $course->id),
         ]);
     }
 

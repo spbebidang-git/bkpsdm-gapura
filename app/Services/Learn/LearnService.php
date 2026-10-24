@@ -163,6 +163,52 @@ class LearnService
             ->value('id');
     }
 
+    /**
+     * Kegiatan tempat peserta harus melanjutkan ketika membuka kelas lagi.
+     *
+     * Mengikuti aturan gerbang di checkValidOpenActivity(): sebuah kegiatan
+     * baru boleh dibuka bila semua kegiatan sebelumnya sudah tercatat di
+     * learn_items. Jadi titik lanjut = kegiatan pertama yang belum tercatat.
+     * Bila semuanya sudah tersentuh, arahkan ke yang belum berstatus `done`,
+     * dan bila semua sudah selesai, ke kegiatan terakhir.
+     */
+    public function getResumeActivityId($participantId, $courseId)
+    {
+        $activityIds = Activity::where('course_id', $courseId)
+            ->orderBy('position')
+            ->orderBy('id')
+            ->pluck('id');
+
+        if ($activityIds->isEmpty()) {
+            return 0;
+        }
+
+        $learn = Learn::with('learnItems')
+            ->where('participant_id', $participantId)
+            ->where('course_id', $courseId)
+            ->first();
+
+        if (!$learn) {
+            return $activityIds->first();
+        }
+
+        $items = $learn->learnItems->keyBy('activity_id');
+
+        foreach ($activityIds as $id) {
+            if (!$items->has($id)) {
+                return $id;
+            }
+        }
+
+        foreach ($activityIds as $id) {
+            if ($items->get($id)->status !== 'done') {
+                return $id;
+            }
+        }
+
+        return $activityIds->last();
+    }
+
     public function setTrialTotal($learnItem)
     {
         $learnItem->trial_total = $learnItem->trial_total + 1;
