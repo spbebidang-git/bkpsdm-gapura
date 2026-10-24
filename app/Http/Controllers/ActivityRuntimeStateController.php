@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Course\Activity;
 use App\Models\Course\H5p;
 use App\Models\Course\Scorm;
 use App\Models\Learn\ActivityRuntimeState;
@@ -49,6 +50,48 @@ class ActivityRuntimeStateController
                 'state' => ['cmi' => $cmi],
                 'progress_status' => $status,
                 'score_raw' => $score,
+                'last_accessed_at' => now(),
+            ],
+        );
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Simpan posisi tonton video peserta (checkpoint berkala + saat player
+     * ditutup), supaya video bisa dilanjutkan dari titik terakhir.
+     */
+    public function storeVideo(Request $request, Activity $activity): JsonResponse
+    {
+        abort_unless($activity->type === 'video', 404);
+
+        $learn = $this->learnFor($request, (int) $activity->course_id);
+
+        $validated = $request->validate([
+            'position' => 'required|numeric|min:0',
+            'furthest' => 'required|numeric|min:0',
+            'duration' => 'nullable|numeric|min:0',
+        ]);
+
+        $duration = (float) ($validated['duration'] ?? 0);
+        $furthest = (float) $validated['furthest'];
+
+        // Toleransi 1 detik: beberapa browser berhenti sesaat sebelum durasi.
+        $completed = $duration > 0 && $furthest >= ($duration - 1);
+
+        ActivityRuntimeState::updateOrCreate(
+            [
+                'learn_id' => $learn->id,
+                'activity_id' => $activity->id,
+            ],
+            [
+                'type' => 'video',
+                'state' => [
+                    'position' => round((float) $validated['position'], 2),
+                    'furthest' => round($furthest, 2),
+                    'duration' => round($duration, 2),
+                ],
+                'progress_status' => $completed ? 'completed' : 'in_progress',
                 'last_accessed_at' => now(),
             ],
         );

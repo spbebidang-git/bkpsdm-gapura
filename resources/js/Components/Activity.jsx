@@ -1,23 +1,81 @@
 import { router, usePage } from "@inertiajs/react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import H5pPlayer from "@/Components/H5pPlayer";
 import ScormPlayer from "@/Components/ScormPlayer";
 
 const isExternalVideoEmbed = (url = "") => /(?:youtube\.com|youtu\.be|vimeo\.com)/i.test(url);
 
-const ControlledVideo = ({ src, onCompleted }) => {
+// Checkpoint posisi tonton dikirim paling cepat tiap 10 detik agar tidak
+// membanjiri server, plus sekali lagi saat jeda/player ditutup.
+const VIDEO_SAVE_INTERVAL_MS = 10000;
+
+const ControlledVideo = ({ src, onCompleted, activityId, resume }) => {
     const videoRef = useRef(null);
-    const furthestWatchedRef = useRef(0);
+    const furthestWatchedRef = useRef(resume?.furthest ?? 0);
     const completedRef = useRef(false);
+    const lastSavedAtRef = useRef(0);
+    const resumeRef = useRef(resume);
+    // React melepas ref elemen sebelum cleanup efek berjalan, jadi posisi
+    // terakhir disimpan terpisah agar checkpoint saat player ditutup tetap ada.
+    const snapshotRef = useRef({ position: 0, duration: 0 });
+
+    resumeRef.current = resume;
+
+    const rememberSnapshot = (video) => {
+        snapshotRef.current = {
+            position: video.currentTime || 0,
+            duration: Number.isFinite(video.duration) ? video.duration : 0,
+        };
+    };
+
+    const saveProgress = useCallback(() => {
+        if (!activityId) return;
+
+        const { position, duration } = snapshotRef.current;
+        // Jangan menimpa checkpoint yang sudah ada dengan posisi awal.
+        if (position <= 0 && furthestWatchedRef.current <= 0) return;
+
+        lastSavedAtRef.current = Date.now();
+
+        window.axios
+            .post(`/video-runtime/${activityId}`, {
+                position,
+                furthest: furthestWatchedRef.current,
+                duration,
+            })
+            .catch(() => {
+                /* checkpoint bersifat best-effort; kegagalan tidak mengganggu pemutaran */
+            });
+    }, [activityId]);
 
     useEffect(() => {
-        furthestWatchedRef.current = 0;
+        furthestWatchedRef.current = resumeRef.current?.furthest ?? 0;
         completedRef.current = false;
-
-        const video = videoRef.current;
-        if (video) video.currentTime = 0;
+        lastSavedAtRef.current = 0;
+        snapshotRef.current = { position: 0, duration: 0 };
     }, [src]);
+
+    // Simpan posisi terakhir ketika player ditutup (komponen dilepas).
+    useEffect(() => saveProgress, [saveProgress]);
+
+    const handleLoadedMetadata = (event) => {
+        const video = event.currentTarget;
+        const saved = resumeRef.current;
+        const position = saved?.position ?? 0;
+
+        furthestWatchedRef.current = Math.max(
+            furthestWatchedRef.current,
+            saved?.furthest ?? 0
+        );
+
+        // Lanjutkan dari posisi terakhir, kecuali videonya memang sudah habis.
+        if (position > 0 && Number.isFinite(video.duration) && position < video.duration - 1) {
+            video.currentTime = position;
+        }
+
+        rememberSnapshot(video);
+    };
 
     const handleTimeUpdate = (event) => {
         const video = event.currentTarget;
@@ -27,6 +85,16 @@ const ControlledVideo = ({ src, onCompleted }) => {
             furthestWatchedRef.current,
             video.currentTime
         );
+        rememberSnapshot(video);
+
+        if (Date.now() - lastSavedAtRef.current >= VIDEO_SAVE_INTERVAL_MS) {
+            saveProgress();
+        }
+    };
+
+    const handlePause = (event) => {
+        rememberSnapshot(event.currentTarget);
+        saveProgress();
     };
 
     const handleSeeking = (event) => {
@@ -44,7 +112,10 @@ const ControlledVideo = ({ src, onCompleted }) => {
         }
     };
 
-    const handleEnded = () => {
+    const handleEnded = (event) => {
+        rememberSnapshot(event.currentTarget);
+        saveProgress();
+
         if (completedRef.current) return;
 
         completedRef.current = true;
@@ -58,8 +129,10 @@ const ControlledVideo = ({ src, onCompleted }) => {
             controls
             controlsList="nodownload noplaybackrate"
             disablePictureInPicture
+            onLoadedMetadata={handleLoadedMetadata}
             onTimeUpdate={handleTimeUpdate}
             onSeeking={handleSeeking}
+            onPause={handlePause}
             onRateChange={handleRateChange}
             onEnded={handleEnded}
             className="h-full max-h-full w-full max-w-6xl bg-black object-contain shadow"
@@ -383,8 +456,13 @@ const Activity = ({ id, type, data, slug, question_result, status, answer, setAn
         return (
             <div className="h-full p-5 xl:p-8">
                 <div className="flex items-center flex-col">
-                    <div className="mb-5">
-                        <div className="text-gray-600 text-center">{data.description}</div>
+                    {/* Deskripsi bisa panjang (mis. daftar pertanyaan hasil impor
+                        Moodle), jadi dibatasi tingginya agar kotak unggah tetap
+                        terlihat tanpa harus menggulir panel materi. */}
+                    <div className="mb-5 w-full max-w-3xl">
+                        <div className="max-h-60 overflow-y-auto rounded-lg border border-gray-200 bg-white px-4 py-3 text-left text-gray-600 whitespace-pre-line leading-relaxed">
+                            {data.description}
+                        </div>
                     </div>
 
                     <div className="mb-5 w-full max-w-xl">
@@ -521,6 +599,8 @@ const Activity = ({ id, type, data, slug, question_result, status, answer, setAn
                     <ControlledVideo
                         src={videoUrl}
                         onCompleted={onVideoCompleted}
+                        activityId={id}
+                        resume={data.resume}
                     />
                 ) : (
                     <iframe

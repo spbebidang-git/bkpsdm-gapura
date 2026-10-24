@@ -4,6 +4,7 @@ namespace App\Services\Course\Activity;
 
 use App\Models\Course\Activity;
 use App\Models\Course\Interactive;
+use App\Models\Learn\ActivityRuntimeState;
 use App\Models\Learn\Learn;
 use App\Services\Learn\LearnService;
 
@@ -88,8 +89,41 @@ class InteractiveService
             'status' => $status,
             'data' => [
                 'src_video' => $interactive->url,
-                'duration' => $interactive->duration
+                'duration' => $interactive->duration,
+                'resume' => $participantId === null
+                    ? null
+                    : $this->videoResume($participantId, $activity),
             ]
+        ];
+    }
+
+    /**
+     * Posisi tonton terakhir peserta (seperti resume H5P/SCORM) agar video
+     * tidak kembali ke 0 ketika player ditutup lalu dibuka lagi.
+     */
+    protected function videoResume(int $participantId, $activity): ?array
+    {
+        $learn = Learn::where('participant_id', $participantId)
+            ->where('course_id', $activity->course_id)
+            ->first();
+
+        if (!$learn) {
+            return null;
+        }
+
+        $runtime = ActivityRuntimeState::where('learn_id', $learn->id)
+            ->where('activity_id', $activity->id)
+            ->first();
+
+        $state = is_array($runtime?->state) ? $runtime->state : [];
+
+        if (empty($state)) {
+            return null;
+        }
+
+        return [
+            'position' => (float) ($state['position'] ?? 0),
+            'furthest' => (float) ($state['furthest'] ?? 0),
         ];
     }
 

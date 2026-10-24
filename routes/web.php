@@ -24,6 +24,10 @@ Route::get('/scorm-content/{folder}/{path}', [\App\Http\Controllers\ScormViewCon
 Route::post('/scorm-runtime/{folder}', [\App\Http\Controllers\ActivityRuntimeStateController::class, 'storeScorm'])
     ->middleware('auth')->name('scorm.runtime.store');
 
+// Checkpoint posisi tonton video peserta (resume seperti H5P/SCORM).
+Route::post('/video-runtime/{activity}', [\App\Http\Controllers\ActivityRuntimeStateController::class, 'storeVideo'])
+    ->middleware('auth')->name('video.runtime.store');
+
 // Auth::loginUsingId(1);
 Route::get('/manual-book', function () {
     abort_unless(
