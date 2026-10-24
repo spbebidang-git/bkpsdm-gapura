@@ -255,7 +255,56 @@ class H5pService
             throw new RuntimeException('Paket .h5p tidak valid: h5p.json tidak ditemukan setelah ekstrak.');
         }
 
+        $this->enforceNoForwardSkipping($folderName);
+
         return $folderName;
+    }
+
+    /**
+     * Samakan aturan navigasi H5P InteractiveVideo dengan pemutar video biasa:
+     * peserta boleh mengulang mundur, tetapi tidak boleh melompat maju.
+     *
+     * Setelan ini milik paket (content.json -> override.preventSkippingMode),
+     * bukan pemutar, dan paket dari Moodle tidak konsisten — sebagian 'none',
+     * sebagian 'forward'. Jadi nilainya diseragamkan saat paket diekstrak.
+     *
+     * @return bool true bila berkas memang diubah.
+     */
+    public function enforceNoForwardSkipping(string $folderName): bool
+    {
+        $path = public_path(
+            trim(H5p::$directory, '/') . '/' . $folderName . '/content/content.json'
+        );
+
+        if ($folderName === '' || !is_file($path)) {
+            return false;
+        }
+
+        // Didekode sebagai objek, bukan array asosiatif: objek kosong di dalam
+        // content.json harus tetap tertulis sebagai {} saat disimpan ulang.
+        $content = json_decode((string) file_get_contents($path));
+
+        // Hanya InteractiveVideo yang punya konsep navigasi timeline.
+        if (!$content instanceof \stdClass || !isset($content->interactiveVideo)) {
+            return false;
+        }
+
+        if (!isset($content->override) || !$content->override instanceof \stdClass) {
+            $content->override = new \stdClass();
+        }
+
+        if (($content->override->preventSkippingMode ?? null) === 'forward') {
+            return false;
+        }
+
+        $content->override->preventSkippingMode = 'forward';
+
+        $encoded = json_encode($content, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if ($encoded === false) {
+            return false;
+        }
+
+        return file_put_contents($path, $encoded) !== false;
     }
 
     /**

@@ -127,7 +127,18 @@ class H5pViewController
         $response->headers->set('Accept-Ranges', 'bytes');
         // Folder paket selalu unik saat unggahan diganti, sehingga aset aman
         // di-cache lama dan tidak membebani PHP pada kunjungan berikutnya.
-        $response->headers->set('Cache-Control', 'public, max-age=31536000, immutable');
+        // Pengecualian: manifes paket bisa diubah di tempat (mis. mengunci
+        // navigasi maju lewat preventSkippingMode), jadi harus selalu divalidasi
+        // ulang — kalau tidak, peserta memakai setelan lama berbulan-bulan.
+        $isManifest = in_array(strtolower(basename($realFull)), ['content.json', 'h5p.json'], true);
+        $response->headers->set(
+            'Cache-Control',
+            $isManifest ? 'no-cache, must-revalidate' : 'public, max-age=31536000, immutable'
+        );
+        if ($isManifest) {
+            $response->setAutoLastModified();
+            $response->setAutoEtag();
+        }
         // BinaryFileResponse memproses header Range saat prepare() (dipanggil kernel).
 
         return $response;
