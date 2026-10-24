@@ -17,6 +17,7 @@ const TYPE_LABEL = {
     meeting: "Pertemuan",
     literature: "Literatur",
     h5p: "H5P Interaktif",
+    scorm: "SCORM",
 };
 
 const typeBadgeClass = (type) =>
@@ -28,9 +29,10 @@ const typeBadgeClass = (type) =>
         meeting: "bg-teal-100 text-teal-700",
         video: "bg-indigo-100 text-indigo-700",
         h5p: "bg-emerald-100 text-emerald-700",
+        scorm: "bg-rose-100 text-rose-700",
     }[type] || "bg-gray-100 text-gray-600");
 
-const Import = ({ categories, employee_status }) => {
+const Import = ({ categories, employee_status, local_samples = [] }) => {
     const { errors } = usePage().props;
 
     const [step, setStep] = useState(1);
@@ -324,29 +326,35 @@ const Import = ({ categories, employee_status }) => {
                         </div>
 
                         {/* Jalur pintas testing — pakai file contoh di server tanpa unggah */}
-                        <div className="mt-6 pt-6 border-t border-dashed border-gray-200">
-                            <p className="text-xs font-semibold text-gray-400 mb-2">
-                                PINTASAN TESTING (file contoh di server)
-                            </p>
-                            <div className="flex flex-wrap gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => analyzeLocal("full")}
-                                    disabled={analyzing}
-                                    className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                                >
-                                    Pakai Contoh: ASN Berintegritas (Full)
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => analyzeLocal("modul1")}
-                                    disabled={analyzing}
-                                    className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                                >
-                                    Pakai Contoh: Modul 1
-                                </button>
+                        {local_samples.length > 0 && (
+                            <div className="mt-6 pt-6 border-t border-dashed border-gray-200">
+                                <p className="text-xs font-semibold text-gray-400 mb-2">
+                                    PINTASAN TESTING (file contoh di server)
+                                </p>
+                                <div className="flex flex-wrap gap-3">
+                                    {local_samples.map((sample) => (
+                                        <button
+                                            key={sample.key}
+                                            type="button"
+                                            onClick={() => analyzeLocal(sample.key)}
+                                            disabled={analyzing}
+                                            className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                                        >
+                                            {sample.label}
+                                            {sample.files > 1 && (
+                                                <span className="ml-2 text-xs text-gray-400">
+                                                    {sample.files} file
+                                                </span>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                                <p className="text-xs text-gray-400 mt-3">
+                                    File besar disalin lalu dibaca langsung di server — paket
+                                    full bisa butuh satu sampai beberapa menit.
+                                </p>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             )}

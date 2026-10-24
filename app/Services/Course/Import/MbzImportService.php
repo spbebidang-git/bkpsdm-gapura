@@ -13,6 +13,7 @@ use App\Models\Course\Question\QuestionVariant;
 use App\Models\Course\Schedule;
 use App\Models\Course\Task;
 use App\Services\Course\Activity\H5pService;
+use App\Services\Course\Activity\ScormService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -36,11 +37,13 @@ class MbzImportService
 
     protected MbzParser $parser;
     protected H5pService $h5p;
+    protected ScormService $scorm;
 
-    public function __construct(MbzParser $parser, H5pService $h5p)
+    public function __construct(MbzParser $parser, H5pService $h5p, ScormService $scorm)
     {
         $this->parser = $parser;
         $this->h5p = $h5p;
+        $this->scorm = $scorm;
     }
 
     /**
@@ -231,6 +234,7 @@ class MbzImportService
             $pendingLiterature = [];
             $pendingVideo = [];
             $pendingH5p = [];
+            $pendingScorm = [];
 
             foreach ($parsed['activities'] as $activity) {
                 if (!$activity['supported']) {
@@ -267,6 +271,8 @@ class MbzImportService
                     $pendingVideo[] = ['activity' => $created, 'data' => $activity];
                 } elseif ($activity['app_type'] === 'h5p' && !empty($activity['file'])) {
                     $pendingH5p[] = ['activity' => $created, 'data' => $activity];
+                } elseif ($activity['app_type'] === 'scorm' && !empty($activity['file'])) {
+                    $pendingScorm[] = ['activity' => $created, 'data' => $activity];
                 } else {
                     // Buat baris anak: soal kuis bila tersedia, selainnya
                     // placeholder agar halaman edit/detail tidak error.
@@ -274,13 +280,17 @@ class MbzImportService
                 }
             }
 
-            // Ekstrak semua file literature + H5P modul ini dalam SATU pass tar.
-            if (!empty($pendingLiterature) || !empty($pendingVideo) || !empty($pendingH5p)) {
+            // Ekstrak semua file literature + H5P + SCORM modul ini dalam SATU pass tar.
+            if (
+                !empty($pendingLiterature) || !empty($pendingVideo)
+                || !empty($pendingH5p) || !empty($pendingScorm)
+            ) {
                 $this->importModuleContents(
                     $mbzPaths[$token],
                     $pendingLiterature,
                     $pendingVideo,
-                    $pendingH5p
+                    $pendingH5p,
+                    $pendingScorm
                 );
             }
         }
@@ -324,7 +334,7 @@ class MbzImportService
             case 'task':
                 Task::create([
                     'activity_id' => $activity->id,
-                    'description' => $note,
+                    'description' => $this->taskDescription($data, $note),
                 ]);
                 break;
 
@@ -365,7 +375,74 @@ class MbzImportService
                     'duration'    => 0,
                 ]);
                 break;
+
+            case 'scorm':
+                $this->scorm->createPlaceholder([
+                    'activity_id' => $activity->id,
+                    'sub_title'   => Str::limit($data['title'], 250, ''),
+                    'duration'    => 0,
+                ]);
+                break;
         }
+    }
+
+    /** Maksimal panjang deskripsi tugas hasil impor (kolom tasks.description = TEXT). */
+    const TASK_DESCRIPTION_LIMIT = 8000;
+
+    /**
+     * Susun deskripsi Tugas. Untuk kuesioner Moodle, daftar pertanyaannya
+     * ditulis ulang sebagai teks biasa (kolom description bukan HTML) sehingga
+     * peserta tetap tahu apa yang harus dijawab lewat unggahan PDF.
+     */
+    protected function taskDescription(array $data, string $fallback): string
+    {
+        $questions = $data['form_questions'] ?? [];
+
+        if (empty($questions)) {
+            return !empty($data['intro'])
+                ? Str::limit($data['intro'], self::TASK_DESCRIPTION_LIMIT, '')
+                : $fallback;
+        }
+
+        $lines = [];
+
+        if (!empty($data['intro'])) {
+            $lines[] = $data['intro'];
+            $lines[] = '';
+        }
+
+        $lines[] = 'Jawab pertanyaan berikut, lalu unggah jawaban Anda dalam satu file PDF.';
+        $lines[] = '';
+
+        $number = 0;
+        foreach ($questions as $question) {
+            // Teks seksi hanya pengantar di Moodle — tidak ikut dinomori.
+            if ($question['is_section']) {
+                $lines[] = $question['text'];
+                $lines[] = '';
+                continue;
+            }
+
+            $number++;
+            $suffix = $question['required'] ? ' (wajib)' : '';
+            $lines[] = "{$number}. {$question['text']} [{$question['type']}{$suffix}]";
+
+            foreach ($question['choices'] as $choice) {
+                $lines[] = "   - {$choice}";
+            }
+
+            $sisa = ($question['choice_total'] ?? 0) - count($question['choices']);
+            if ($sisa > 0) {
+                $lines[] = "   - … dan {$sisa} pilihan lainnya";
+            }
+
+            $lines[] = '';
+        }
+
+        $lines[] = 'Catatan instruktur: kuesioner ini diimpor dari Moodle sebagai Tugas — '
+            . 'sesuaikan instruksinya bila perlu.';
+
+        return Str::limit(implode("\n", $lines), self::TASK_DESCRIPTION_LIMIT, "\n…");
     }
 
     /**
@@ -418,7 +495,8 @@ class MbzImportService
         string $mbzPath,
         array $pendingLiterature,
         array $pendingVideo,
-        array $pendingH5p
+        array $pendingH5p,
+        array $pendingScorm = []
     ): void
     {
         $dir = public_path(trim(Literature::$directoryDocument, '/'));
@@ -426,7 +504,7 @@ class MbzImportService
             @mkdir($dir, 0775, true);
         }
 
-        $allPending = array_merge($pendingLiterature, $pendingVideo, $pendingH5p);
+        $allPending = array_merge($pendingLiterature, $pendingVideo, $pendingH5p, $pendingScorm);
         $hashes = array_map(fn($p) => $p['data']['file']['contenthash'], $allPending);
         $extractDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'mbz_content_' . bin2hex(random_bytes(6));
 
@@ -506,6 +584,36 @@ class MbzImportService
                     'error'       => $e->getMessage(),
                 ]);
                 $this->h5p->createPlaceholder($placeholder);
+            }
+        }
+
+        foreach ($pendingScorm as $p) {
+            $file = $p['data']['file'];
+            $hash = $file['contenthash'];
+            $placeholder = [
+                'activity_id' => $p['activity']->id,
+                'sub_title'   => Str::limit($p['data']['title'], 250, ''),
+                'duration'    => 0,
+            ];
+
+            if (!isset($extracted[$hash])) {
+                $this->scorm->createPlaceholder($placeholder);
+                continue;
+            }
+
+            try {
+                $this->scorm->createScormFromPath($placeholder + [
+                    'package_path' => $extracted[$hash],
+                ]);
+            } catch (\Throwable $e) {
+                // Paket rusak / bukan SCORM yang valid: aktivitas tetap ada
+                // sehingga instruktur cukup unggah ulang lewat tombol Edit.
+                Log::warning('MBZ SCORM package import failed; placeholder created.', [
+                    'activity_id' => $p['activity']->id,
+                    'filename'    => $file['filename'] ?? null,
+                    'error'       => $e->getMessage(),
+                ]);
+                $this->scorm->createPlaceholder($placeholder);
             }
         }
 

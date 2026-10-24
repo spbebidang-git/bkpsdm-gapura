@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class ImportController
@@ -28,6 +29,15 @@ class ImportController
         return Inertia::render('Instructor/Course/Import', [
             'employee_status' => EmployeeStatus::all(),
             'categories'      => Category::all(),
+            'local_samples'   => $this->devMode()
+                ? collect($this->localSamples())
+                    ->map(fn ($sample, $key) => [
+                        'key'   => $key,
+                        'label' => $sample['label'],
+                        'files' => count($sample['paths']),
+                    ])
+                    ->values()
+                : [],
         ]);
     }
 
@@ -68,7 +78,7 @@ class ImportController
      */
     public function analyzeLocal(Request $request)
     {
-        if (!app()->isLocal() && !config('app.debug')) {
+        if (!$this->devMode()) {
             abort(403, 'Hanya tersedia di mode pengembangan.');
         }
 
@@ -80,7 +90,7 @@ class ImportController
         }
 
         try {
-            $result = $this->import->analyzeLocal($samples[$key]);
+            $result = $this->import->analyzeLocal($samples[$key]['paths']);
         } catch (\Throwable $th) {
             Log::error('MBZ analyzeLocal failed: ' . $th->getMessage(), ['trace' => $th->getTraceAsString()]);
             return response()->json(['message' => 'Gagal menganalisis file contoh: ' . $th->getMessage()], 500);
@@ -89,15 +99,103 @@ class ImportController
         return response()->json($result);
     }
 
-    /** Daftar file .mbz contoh di disk (untuk jalur pintas testing). */
+    /**
+     * Daftar file .mbz contoh di disk (untuk jalur pintas testing).
+     * Hanya file yang benar-benar ada yang dikembalikan, jadi pintasan tidak
+     * pernah menampilkan file yang sudah dihapus/pindah.
+     *
+     * @return array<string, array{label: string, paths: string[]}>
+     */
     protected function localSamples(): array
     {
-        $downloads = 'C:/Users/bidsp/Downloads';
+        $samples = [];
 
-        return [
-            'full'   => [$downloads . '/File Moodle Uji Coba ASN Berintegritas (Full).mbz'],
-            'modul1' => [$downloads . '/[Modul 1] File Moodle Uji Coba.mbz'],
+        $aset = rtrim(config('mbz.sample_dir') ?: '', '/\\');
+
+        if ($aset !== '') {
+            // 1) Paket full (satu file berisi seluruh modul).
+            foreach (glob($aset . '/*.mbz') ?: [] as $file) {
+                $samples['aset-' . Str::slug(pathinfo($file, PATHINFO_FILENAME))] = [
+                    'label' => $this->sampleLabel($file),
+                    'paths' => [$file],
+                ];
+            }
+
+            // 2) Versi parsial per modul: satu tombol gabungan + per file.
+            $perModul = glob($aset . '/Versi Per Modul/*.mbz') ?: [];
+            sort($perModul);
+
+            if (count($perModul) > 1) {
+                $samples['aset-per-modul'] = [
+                    'label' => 'Versi Per Modul — gabung semua (' . count($perModul) . ' file, '
+                        . $this->humanSize(array_sum(array_map('filesize', $perModul))) . ')',
+                    'paths' => $perModul,
+                ];
+            }
+
+            foreach ($perModul as $file) {
+                $samples['aset-modul-' . Str::slug(pathinfo($file, PATHINFO_FILENAME))] = [
+                    'label' => $this->sampleLabel($file),
+                    'paths' => [$file],
+                ];
+            }
+        }
+
+        // 3) Sampel lama di Downloads (tetap dipertahankan untuk regresi).
+        $downloads = 'C:/Users/bidsp/Downloads';
+        $legacy = [
+            'full'   => $downloads . '/File Moodle Uji Coba ASN Berintegritas (Full).mbz',
+            'modul1' => $downloads . '/[Modul 1] File Moodle Uji Coba.mbz',
         ];
+
+        foreach ($legacy as $key => $file) {
+            $samples[$key] = [
+                'label' => $this->sampleLabel($file),
+                'paths' => [$file],
+            ];
+        }
+
+        return array_filter(
+            $samples,
+            fn ($sample) => count(array_filter($sample['paths'], 'is_file')) === count($sample['paths'])
+        );
+    }
+
+    /** Pintasan testing hanya aktif di environment lokal/debug. */
+    protected function devMode(): bool
+    {
+        return app()->isLocal() || config('app.debug');
+    }
+
+    /** Label tombol pintasan: nama file dirapikan + ukuran. */
+    protected function sampleLabel(string $file): string
+    {
+        $name = pathinfo($file, PATHINFO_FILENAME);
+
+        // Rapikan pola nama ekspor Moodle, mis.
+        // "cadangan-asn_berintegritas_2026-Modul_1-28072026-1027" → "Modul 1".
+        if (Str::startsWith(strtolower($name), 'cadangan-')) {
+            $name = preg_replace('/^cadangan-(moodle2-course-\d+-)?/i', '', $name);
+            $name = preg_replace('/-\d{8}-\d{4}.*$/', '', $name);
+
+            // Sisa format "<shortname kursus>-<judul bagian>": ambil judulnya saja.
+            if (str_contains($name, '-')) {
+                $name = Str::after($name, '-');
+            }
+        }
+
+        $name = trim(str_replace('_', ' ', $name));
+
+        $size = is_file($file) ? ' (' . $this->humanSize(filesize($file)) . ')' : '';
+
+        return ($name !== '' ? $name : basename($file)) . $size;
+    }
+
+    protected function humanSize(int $bytes): string
+    {
+        return $bytes >= 1073741824
+            ? round($bytes / 1073741824, 1) . ' GB'
+            : round($bytes / 1048576) . ' MB';
     }
 
     /** Langkah akhir: buat kursus dari token + konfigurasi instruktur. */

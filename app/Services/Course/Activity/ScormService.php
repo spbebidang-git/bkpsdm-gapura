@@ -46,7 +46,38 @@ class ScormService
 
     public function createScorm(array $data): Scorm
     {
-        $folder = $this->extractPackage($data['package']);
+        return $this->createRecord($data, $this->extractPackage($data['package']));
+    }
+
+    /**
+     * Buat aktivitas SCORM dari paket .zip yang sudah ada di disk (dipakai
+     * impor .mbz, di mana paket diekstrak dari arsip Moodle lebih dulu).
+     */
+    public function createScormFromPath(array $data): Scorm
+    {
+        return $this->createRecord($data, $this->extractPackage($data['package_path']));
+    }
+
+    /**
+     * Buat baris SCORM tanpa paket. Dipakai ketika metadata aktivitas ada di
+     * Moodle tetapi file .zip tidak disertakan dalam backup.
+     */
+    public function createPlaceholder(array $data): Scorm
+    {
+        return Scorm::updateOrCreate(
+            ['activity_id' => $data['activity_id']],
+            [
+                'sub_title'  => $data['sub_title'] ?? null,
+                'folder'     => '',
+                'launch_url' => '',
+                'version'    => null,
+                'duration'   => $data['duration'] ?? 0,
+            ]
+        );
+    }
+
+    protected function createRecord(array $data, string $folder): Scorm
+    {
         $meta = $this->readManifest($folder);
 
         return Scorm::create([
@@ -62,6 +93,7 @@ class ScormService
     public function getScorm($activity): array
     {
         $scorm = Scorm::where('activity_id', $activity->id)->first();
+        $ready = $this->folderIsReady($scorm?->folder);
 
         return [
             'activity_id' => $activity->id,
@@ -69,11 +101,26 @@ class ScormService
             'type'        => 'scorm',
             'data'        => [
                 'duration'   => $scorm->duration ?? 0,
-                'scorm_path' => '/' . trim(Scorm::$directory, '/') . '/' . $scorm->folder,
-                'launch_url' => $scorm->launch_url,
-                'version'    => $scorm->version,
+                'scorm_path' => $ready
+                    ? '/' . trim(Scorm::$directory, '/') . '/' . $scorm->folder
+                    : null,
+                'launch_url' => $scorm->launch_url ?? null,
+                'version'    => $scorm->version ?? null,
+                'ready'      => $ready,
             ],
         ];
+    }
+
+    /** Paket dianggap siap bila folder hasil ekstrak punya imsmanifest.xml. */
+    protected function folderIsReady(?string $folderName): bool
+    {
+        if ($folderName === '' || $folderName === null) {
+            return false;
+        }
+
+        return is_file(
+            public_path(trim(Scorm::$directory, '/') . '/' . $folderName . '/imsmanifest.xml')
+        );
     }
 
     public function getScormForEdit($activity): array
@@ -118,7 +165,7 @@ class ScormService
     /**
      * Ekstrak paket SCORM ke folder unik. Mengembalikan nama folder.
      */
-    protected function extractPackage(UploadedFile $package): string
+    protected function extractPackage(UploadedFile|string $package): string
     {
         $folderName = 'scorm_' . bin2hex(random_bytes(8));
         $baseDir = public_path(trim(Scorm::$directory, '/'));
@@ -131,8 +178,14 @@ class ScormService
             throw new RuntimeException('Gagal membuat folder SCORM.');
         }
 
+        $packagePath = $package instanceof UploadedFile ? $package->getRealPath() : $package;
+        if (!$packagePath || !is_file($packagePath)) {
+            $this->deleteFolder($folderName);
+            throw new RuntimeException('File paket SCORM tidak ditemukan.');
+        }
+
         $zip = new ZipArchive();
-        if ($zip->open($package->getRealPath()) !== true) {
+        if ($zip->open($packagePath) !== true) {
             $this->deleteFolder($folderName);
             throw new RuntimeException('File SCORM tidak dapat dibuka (bukan arsip ZIP yang valid).');
         }

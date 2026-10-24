@@ -30,10 +30,11 @@ class MbzParser
         'quiz'            => 'pre-test',
         'assign'          => 'task',
         'assignment'      => 'task',
+        'questionnaire'   => 'task',
         'bigbluebuttonbn' => 'meeting',
         'zoom'            => 'meeting',
         'h5pactivity'     => 'h5p',
-        'scorm'           => null,
+        'scorm'           => 'scorm',
         'forum'           => null,
         'choice'          => null,
         'feedback'        => null,
@@ -47,7 +48,6 @@ class MbzParser
 
     /** Alasan singkat kenapa sebuah modul belum didukung. */
     const UNSUPPORTED_REASON = [
-        'scorm'       => 'Paket SCORM belum didukung. Unggah terpisah sebagai paket SCORM.',
         'forum'       => 'Forum diskusi tidak dipakai di aplikasi ini.',
         'choice'      => 'Aktivitas pilihan (choice) tidak dipakai.',
         'feedback'    => 'Aktivitas feedback tidak dipakai.',
@@ -58,6 +58,37 @@ class MbzParser
         'data'        => 'Database activity tidak dipakai.',
         'lti'         => 'Tautan LTI eksternal belum didukung.',
     ];
+
+    /**
+     * Tipe pertanyaan mod_questionnaire (type_id) -> label untuk instruktur.
+     * 99 = page break & 100 = teks seksi, keduanya bukan pertanyaan.
+     */
+    const QUESTIONNAIRE_PAGEBREAK = 99;
+    const QUESTIONNAIRE_SECTION   = 100;
+    const QUESTIONNAIRE_TYPE = [
+        1 => 'Ya/Tidak',
+        2 => 'Isian singkat',
+        3 => 'Esai',
+        4 => 'Pilihan ganda',
+        5 => 'Pilihan jamak',
+        6 => 'Dropdown',
+        7 => 'Skala penilaian',
+        8 => 'Tanggal',
+        9 => 'Angka',
+    ];
+
+    /** Maksimal pilihan jawaban yang ikut ditulis ke deskripsi tugas. */
+    const QUESTIONNAIRE_MAX_CHOICES = 8;
+
+    /**
+     * Modul yang bukan aktivitas peserta sehingga tidak perlu muncul di daftar
+     * impor sama sekali. `qbank` (Moodle 4.3+) hanya wadah bank soal; isinya
+     * sudah terbaca lewat questions.xml saat kuis diproses.
+     */
+    const HIDDEN_MODULES = ['qbank'];
+
+    /** Pola judul kuis yang menandakan post-test. */
+    const POST_TEST_PATTERN = '/\b(post[\s\-_]*test|pasca[\s\-_]*test|tes(?:t)?[\s\-_]*akhir|evaluasi[\s\-_]*akhir|ujian[\s\-_]*akhir)\b/iu';
 
     protected string $tarBin;
 
@@ -123,11 +154,23 @@ class MbzParser
                 $sectionId  = (string) $activity->sectionid;
                 $directory  = (string) $activity->directory;
 
+                // Bank soal bukan aktivitas peserta — soalnya sudah ikut
+                // terbaca lewat kuis yang merujuknya, jadi tidak perlu
+                // ditampilkan sebagai aktivitas yang "dilewati".
+                if (in_array($moduleName, self::HIDDEN_MODULES, true)) {
+                    continue;
+                }
+
                 $supported = array_key_exists($moduleName, self::TYPE_MAP)
                     ? self::TYPE_MAP[$moduleName] !== null
                     : false;
 
                 $appType = self::TYPE_MAP[$moduleName] ?? null;
+
+                // Kuis Moodle default ke pre-test; post-test dikenali dari judul.
+                if ($appType === 'pre-test' && $this->looksLikePostTest($title)) {
+                    $appType = 'post-test';
+                }
 
                 $note = null;
                 if (!$supported) {
@@ -145,6 +188,14 @@ class MbzParser
                         $appType = 'video';
                         $note = 'File video ditemukan — akan diimpor sebagai Presentasi Video.';
                     }
+                } elseif ($supported && $appType === 'scorm') {
+                    $fileRef = $this->resolveActivityFile($work, $directory, $files, 'zip');
+                    if ($fileRef !== null) {
+                        $note = 'Paket SCORM ditemukan — akan diekstrak otomatis.';
+                    } else {
+                        $note = 'Paket SCORM tidak ada di backup — aktivitas tetap dibuat agar file .zip dapat langsung diunggah lewat Edit.';
+                        $warnings[] = "Paket SCORM tidak ditemukan: \"{$title}\" — aktivitas upload akan tetap dibuat.";
+                    }
                 } elseif ($supported && $appType === 'h5p') {
                     $fileRef = $this->resolveActivityFile($work, $directory, $files, 'h5p');
                     if ($fileRef !== null) {
@@ -161,8 +212,20 @@ class MbzParser
                 if ($supported && $moduleName === 'quiz') {
                     [$questions, $intro] = $this->resolveQuizQuestions($work, $directory, $questionBank);
                     if (!empty($questions)) {
-                        $note = count($questions) . ' soal terbaca — akan mengisi pre-test otomatis.';
+                        $label = $appType === 'post-test' ? 'post-test' : 'pre-test';
+                        $note = count($questions) . " soal terbaca — akan mengisi {$label} otomatis.";
                     }
+                }
+
+                // Kuesioner Moodle tidak punya padanan di aplikasi; pertanyaannya
+                // dituangkan ke deskripsi Tugas agar peserta tetap menjawabnya.
+                $formQuestions = [];
+                if ($supported && $moduleName === 'questionnaire') {
+                    [$formQuestions, $intro] = $this->resolveQuestionnaire($work, $directory);
+                    $count = count(array_filter($formQuestions, fn ($q) => !$q['is_section']));
+                    $note = $count > 0
+                        ? "{$count} pertanyaan kuesioner terbaca — dibuat sebagai Tugas (jawaban diunggah peserta)."
+                        : 'Kuesioner diimpor sebagai Tugas — lengkapi instruksinya.';
                 }
 
                 $activities[] = [
@@ -179,6 +242,7 @@ class MbzParser
                     'intro'          => $intro,
                     'question_count' => count($questions),
                     'questions'      => $questions,
+                    'form_questions' => $formQuestions,
                 ];
             }
 
@@ -491,6 +555,88 @@ class MbzParser
         }
 
         return [$questions, $intro];
+    }
+
+    /**
+     * Moodle tidak menandai kuis sebagai pre/post, jadi judulnya yang dibaca:
+     * "Post Test", "Tes Akhir", "Evaluasi Akhir", dst.
+     */
+    protected function looksLikePostTest(string $title): bool
+    {
+        return (bool) preg_match(self::POST_TEST_PATTERN, $title);
+    }
+
+    /**
+     * Baca questionnaire.xml sebuah aktivitas kuesioner Moodle.
+     * Aplikasi tidak punya tipe survei, jadi yang diambil hanya daftar
+     * pertanyaannya untuk ditulis ulang sebagai instruksi Tugas.
+     *
+     * @return array{0: array, 1: ?string}  [questions, intro]
+     */
+    protected function resolveQuestionnaire(string $workDir, string $directory): array
+    {
+        $path = $workDir . DIRECTORY_SEPARATOR
+            . str_replace('/', DIRECTORY_SEPARATOR, $directory)
+            . DIRECTORY_SEPARATOR . 'questionnaire.xml';
+
+        if (!is_file($path)) {
+            return [[], null];
+        }
+
+        $doc = @simplexml_load_file($path);
+        if ($doc === false || !isset($doc->questionnaire)) {
+            return [[], null];
+        }
+
+        $intro = $this->cleanText((string) $doc->questionnaire->intro) ?: null;
+
+        $questions = [];
+        foreach ($doc->questionnaire->surveys->survey->questions->question ?? [] as $question) {
+            $typeId = (int) $question->type_id;
+
+            if ($typeId === self::QUESTIONNAIRE_PAGEBREAK) {
+                continue;
+            }
+
+            $name = $this->questionnaireValue((string) $question->name);
+            $text = $this->cleanText((string) $question->content);
+
+            if ($text === '' && $name === '') {
+                continue;
+            }
+
+            $choices = [];
+            foreach ($question->quest_choices->quest_choice ?? [] as $choice) {
+                $value = $this->cleanText((string) $choice->content);
+                if ($value !== '') {
+                    $choices[] = $value;
+                }
+            }
+
+            $questions[] = [
+                'position'   => (int) $question->position,
+                'name'       => $name,
+                'text'       => $text !== '' ? $text : $name,
+                'type'       => self::QUESTIONNAIRE_TYPE[$typeId] ?? 'Isian',
+                'required'   => strtolower($this->questionnaireValue((string) $question->required)) === 'y',
+                'is_section' => $typeId === self::QUESTIONNAIRE_SECTION,
+                'choices'    => array_slice($choices, 0, self::QUESTIONNAIRE_MAX_CHOICES),
+                'choice_total' => count($choices),
+            ];
+        }
+
+        // Urutan di XML acak; tampilan Moodle mengikuti <position>.
+        usort($questions, fn ($a, $b) => $a['position'] <=> $b['position']);
+
+        return [$questions, $intro];
+    }
+
+    /** Moodle menulis nilai kosong sebagai "$@NULL@$". */
+    protected function questionnaireValue(string $value): string
+    {
+        $value = trim($value);
+
+        return $value === '$@NULL@$' ? '' : $value;
     }
 
     /**
