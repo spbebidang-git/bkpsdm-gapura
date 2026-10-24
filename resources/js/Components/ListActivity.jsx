@@ -50,14 +50,16 @@ const ListActivity = ({
                 setDescription("Membaca Materi");
                 setIcon("book"); // Misalnya ikon untuk materi adalah 'book'
                 break;
+            // Istilah teknis (H5P/SCORM) tidak ditampilkan ke peserta —
+            // keduanya sama-sama disebut "Modul Interaktif".
             case "h5p":
-                setTitle("H5P Interaktif");
-                setDescription("Mengerjakan Konten Interaktif");
+                setTitle("Modul Interaktif");
+                setDescription("Mengerjakan Modul Interaktif");
                 setIcon("joystick");
                 break;
             case "scorm":
-                setTitle("SCORM");
-                setDescription("Mempelajari Modul SCORM");
+                setTitle("Modul Interaktif");
+                setDescription("Mengerjakan Modul Interaktif");
                 setIcon("book-open");
                 break;
             default:

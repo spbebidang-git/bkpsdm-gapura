@@ -57,7 +57,7 @@ const H5pPlayer = ({ path }) => {
     if (!src) {
         return (
             <div className="flex items-center justify-center h-32 text-red-500 text-sm">
-                Konten H5P tidak tersedia.
+                Modul interaktif tidak tersedia.
             </div>
         );
     }
@@ -76,7 +76,7 @@ const H5pPlayer = ({ path }) => {
             <iframe
                 ref={iframeRef}
                 src={src}
-                title="Konten H5P"
+                title="Modul Interaktif"
                 className="absolute left-0 top-0 block w-full rounded-xl border border-gray-100"
                 style={{
                     height: `${contentHeight}px`,

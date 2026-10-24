@@ -17,7 +17,7 @@ const ScormPlayer = ({ path }) => {
     if (!src) {
         return (
             <div className="flex items-center justify-center h-32 text-red-500 text-sm">
-                Konten SCORM tidak tersedia.
+                Modul interaktif tidak tersedia.
             </div>
         );
     }
@@ -29,7 +29,7 @@ const ScormPlayer = ({ path }) => {
             <div className="relative h-full min-h-0 w-full overflow-hidden rounded-xl border border-gray-100 bg-black">
                 <iframe
                     src={src}
-                    title="Konten SCORM"
+                    title="Modul Interaktif"
                     className="absolute inset-0 block h-full w-full"
                     allow="autoplay; fullscreen; encrypted-media; microphone; camera"
                     allowFullScreen

@@ -20,9 +20,8 @@ const InteractiveContentLauncher = ({
         activity.status === "done" || activity.status === 1
     );
     const playerBodyRef = useRef(null);
-    const label = activity.type === "h5p"
-        ? "H5P"
-        : (activity.type === "scorm" ? "SCORM" : "VIDEO");
+    // Peserta tidak perlu tahu format teknis paketnya (H5P/SCORM).
+    const label = activity.type === "video" ? "Video" : "Modul Interaktif";
     const contentPath = activity.type === "h5p"
         ? activity.data?.h5p_path
         : (activity.type === "scorm"
@@ -135,10 +134,10 @@ const InteractiveContentLauncher = ({
                         <path d="M8 5.6v12.8c0 .8.9 1.3 1.6.8l9.1-6.4a1 1 0 0 0 0-1.6L9.6 4.8A1 1 0 0 0 8 5.6Z" />
                     </svg>
                 </div>
-                <h3 className="text-lg font-bold text-gray-800">Konten {label}</h3>
+                <h3 className="text-lg font-bold text-gray-800">{label}</h3>
                 <p className="mt-2 max-w-md text-sm leading-6 text-gray-500">
-                    Player baru dimuat setelah tombol Jalankan diklik agar halaman lebih ringan.
-                    Progres terakhir tetap disimpan ketika player ditutup.
+                    Materi baru dimuat setelah tombol Jalankan diklik agar halaman lebih ringan.
+                    Progres terakhir tetap disimpan ketika materi ditutup.
                 </p>
                 <button
                     type="button"
@@ -150,7 +149,7 @@ const InteractiveContentLauncher = ({
                 </button>
                 {!contentPath && (
                     <p className="mt-3 text-xs font-medium text-red-500">
-                        Paket {label} belum tersedia.
+                        {label} belum tersedia.
                     </p>
                 )}
             </div>
@@ -160,7 +159,7 @@ const InteractiveContentLauncher = ({
                     className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-slate-950/75 p-2 backdrop-blur-sm sm:p-5"
                     role="dialog"
                     aria-modal="true"
-                    aria-label={"Player " + label}
+                    aria-label={"Pemutar " + label}
                 >
                     <div className="flex h-full max-h-[900px] w-full max-w-[1440px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
                         <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-6">
@@ -177,7 +176,7 @@ const InteractiveContentLauncher = ({
                                 onClick={closePlayer}
                                 disabled={isFinishing}
                                 className="ml-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-2xl text-gray-500 transition hover:bg-gray-100 hover:text-gray-800 disabled:opacity-50"
-                                aria-label="Tutup player"
+                                aria-label="Tutup pemutar"
                             >
                                 ×
                             </button>
@@ -205,8 +204,8 @@ const InteractiveContentLauncher = ({
                                 isContentCompleted ? "text-green-600" : "text-gray-500"
                             }`}>
                                 {isContentCompleted
-                                    ? `Konten ${label} telah selesai.`
-                                    : `Selesaikan konten ${label} agar tombol Selesai muncul.`}
+                                    ? `${label} telah selesai.`
+                                    : `Selesaikan ${label} agar tombol Selesai muncul.`}
                             </p>
                             <div className="flex flex-col-reverse gap-2 sm:flex-row">
                                 <button
