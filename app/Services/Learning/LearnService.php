@@ -130,39 +130,39 @@ class LearnService
         $learn = $this->learns->findByParticipantAndCourse($participantId, $courseId, ['learnItems']);
 
         if ($learn) {
+            $learn->learnItems()->delete();
             $this->learns->delete($learn);
         }
     }
 
-    public function checkValidNextActivity($activityId) {}
-
-    public function checkTrial($participantId, $courseId, $activityId)
+    public function shouldResetAfterPostTest($participantId, $courseId, $activityId): bool
     {
-        $learn = $this->learns->findByParticipantAndCourse($participantId, $courseId, [
-            'learnItems' => fn ($query) => $query->where('activity_id', $activityId),
-        ]);
-
-        if (! $learn || ! $learn->learnItems->first()) {
+        if ($this->isPassedMinimumScore($participantId, $courseId, $activityId)) {
             return false;
         }
 
-        if ($learn->learnItems->first()->trial_total == 2) {
-            return 2;
+        $question = $this->questions->findByActivity($activityId);
+        if (! (bool) ($question?->is_loop ?? false)) {
+            return true;
         }
 
-        return $learn;
+        $learn = $this->learns->findByParticipantAndCourse($participantId, $courseId);
+        $learnItem = $learn ? $this->learnItems->findByLearnAndActivity($learn->id, $activityId) : null;
+        if (! $learnItem) {
+            return false;
+        }
+
+        $attempts = (int) $learnItem->trial_total + 1;
+        $this->learnItems->update($learnItem, ['trial_total' => $attempts]);
+
+        return $attempts >= 3;
     }
+
+    public function checkValidNextActivity($activityId) {}
 
     public function getInititalActivityId($courseId)
     {
         return $this->activities->getByCourse($courseId)->first()?->id;
-    }
-
-    public function setTrialTotal($learnItem)
-    {
-        $this->learnItems->update($learnItem, [
-            'trial_total' => $learnItem->trial_total + 1,
-        ]);
     }
 
     public function checkValidOpenActivity($participantId, $courseId, $activityId)

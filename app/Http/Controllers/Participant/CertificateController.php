@@ -34,7 +34,7 @@ class CertificateController
             return redirect()->back()->with('redirect_url', $learns->url_certificate);
 
         } catch (\Throwable $e) {
-            Log::error('Sertifikat peserta gagal dimuat.', ['event' => 'participant.certificate.failed',
+            Log::error('Sertifikat pengguna gagal dimuat.', ['event' => 'participant.certificate.failed',
                 'exception' => $e,
                 'actor_id' => Auth::id(),
                 'course' => $request->course ?? null,

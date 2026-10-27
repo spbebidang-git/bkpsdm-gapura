@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\Course\Activity\Assessment\QuestionVariant;
+use App\Repositories\Course\Activity\Assessment\Contracts\QuestionVariantRepositoryInterface;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Concerns\ToCollection;
@@ -28,7 +29,7 @@ class VariantSheetImport implements ToModel, WithHeadingRow, SkipsEmptyRows
             'variant' => ['required', 'integer', 'min:1', Rule::unique('question_variants', 'variant')->where('question_id', $this->questionId)],
             'mix' => 'required|boolean',
         ])->validate();
-        $variant = QuestionVariant::create([
+        $variant = app(QuestionVariantRepositoryInterface::class)->create([
             'code' => $row['code'],
             'question_id' => $this->questionId,
             'variant' => $row['variant'],

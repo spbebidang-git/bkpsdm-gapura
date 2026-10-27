@@ -30,7 +30,7 @@ class ParticipantNotificationService
     public function sendTest(string $eventKey, string $participantId, string $courseId): void
     {
         if (! config('participant.notifications_enabled', true)) {
-            throw ValidationException::withMessages(['event_key' => 'Notifikasi peserta sedang dinonaktifkan.']);
+            throw ValidationException::withMessages(['event_key' => 'Notifikasi pengguna sedang dinonaktifkan.']);
         }
 
         $course = \App\Models\Course\Course::query()->findOrFail($courseId);

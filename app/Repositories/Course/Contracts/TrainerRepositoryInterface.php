@@ -14,4 +14,10 @@ interface TrainerRepositoryInterface extends BaseRepositoryInterface
     public function getAllOrderedByName(): Collection;
 
     public function getOrCreateForUser(User $user): Trainer;
+
+    public function existsByUser(int|string $userId): bool;
+
+    public function lock(int|string $id): Trainer;
+
+    public function syncOpds(Trainer $trainer, array $ids, bool $detach = true): void;
 }

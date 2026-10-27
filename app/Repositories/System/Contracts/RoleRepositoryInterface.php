@@ -15,4 +15,6 @@ interface RoleRepositoryInterface extends BaseRepositoryInterface
     public function assignablePermissions(): Collection;
 
     public function syncPermissions(Role $role, array $permissionIds): Role;
+
+    public function getAdministrators(): Collection;
 }

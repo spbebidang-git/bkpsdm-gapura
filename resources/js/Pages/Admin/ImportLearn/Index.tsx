@@ -38,7 +38,7 @@ export default function Index({ courses = [], importResults, importCourse }) {
                 <div className="min-w-0">
                     <p className={pageEyebrow}>Operasional</p>
                     <h1 className={pageTitle}>Import data belajar</h1>
-                    <p className={pageDescription}>Masukkan riwayat penyelesaian peserta dari file Excel atau CSV.</p>
+                    <p className={pageDescription}>Masukkan riwayat penyelesaian pengguna dari file Excel atau CSV.</p>
                 </div>
             </div>
 
@@ -84,7 +84,7 @@ export default function Index({ courses = [], importResults, importCourse }) {
                         checked={data.create_missing_users}
                         onChange={(e) => setData('create_missing_users', e.target.checked)}
                     />
-                    Buat akun peserta jika NIP belum terdaftar
+                    Buat akun pengguna jika NIP belum terdaftar
                 </label>
                 <button type="submit" disabled={processing} className={btnPrimary}>
                     {processing ? 'Mengimpor...' : 'Import data'}

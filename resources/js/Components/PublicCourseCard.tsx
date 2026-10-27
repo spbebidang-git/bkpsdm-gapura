@@ -36,7 +36,7 @@ export default function PublicCourseCard({ course, variant = 'default', fontFami
                     <div className="mt-auto px-3 pb-2 pt-3">
                         <dl className={`grid grid-cols-3 divide-x divide-[#E8ECF1] border-y border-[#E8ECF1] py-3 text-center ${metaFont}`}>
                             <div className="flex min-w-0 flex-col gap-1 px-1">
-                                <dt className="order-2 text-[10px] leading-4 text-[#66778C]">Peserta</dt>
+                                <dt className="order-2 text-[10px] leading-4 text-[#66778C]">Pengguna</dt>
                                 <dd className="flex flex-wrap items-center justify-center gap-1 text-sm font-semibold leading-5 tabular-nums text-[#075D5E]">
                                     <i className="bx bx-group text-base font-normal text-primary" aria-hidden="true" />
                                     <span className="break-all">{totalParticipant}</span>
@@ -94,7 +94,7 @@ export default function PublicCourseCard({ course, variant = 'default', fontFami
                     <div className={`mt-auto grid grid-cols-3 gap-2 border-t border-[#e6efee] pt-4 text-xs text-[#66716c] ${metaFont}`}>
                         <div className="flex items-center gap-2">
                             <span className="grid h-7 w-7 place-items-center rounded-[10px] bg-primary-mist" aria-hidden="true"><box-icon name="group" size="15px" color="#018083" /></span>
-                            <span className="min-w-0"><strong className="block text-sm text-[#173b3a]">{totalParticipant}</strong>Peserta</span>
+                            <span className="min-w-0"><strong className="block text-sm text-[#173b3a]">{totalParticipant}</strong>Pengguna</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <span className="grid h-7 w-7 place-items-center rounded-[10px] bg-[#eaf7ee]" aria-hidden="true"><box-icon name="check-circle" size="15px" color="#246a3c" /></span>

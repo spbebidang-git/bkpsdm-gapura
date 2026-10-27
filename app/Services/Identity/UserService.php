@@ -4,6 +4,7 @@ namespace App\Services\Identity;
 
 use App\Repositories\Identity\Contracts\UserMetaRepositoryInterface;
 use App\Repositories\Identity\Contracts\UserRepositoryInterface;
+use App\Repositories\Identity\Contracts\OpdRepositoryInterface;
 use App\Models\Identity\Opd;
 use Illuminate\Support\Facades\Log;
 
@@ -12,6 +13,7 @@ class UserService
     public function __construct(
         private readonly UserRepositoryInterface $users,
         private readonly UserMetaRepositoryInterface $userMetas,
+        private readonly OpdRepositoryInterface $opds,
     ) {}
 
     public function getParticipant()
@@ -89,13 +91,11 @@ class UserService
         $code = $this->firstScalar($data, config('services.kedaton.employee_opd_code_fields', []));
         $name = $this->firstScalar($data, config('services.kedaton.employee_opd_name_fields', []));
         if (! $code) return null;
-        $opd = Opd::withTrashed()->firstOrCreate(
-            ['code' => trim($code)],
-            ['name' => trim($name ?: $code), 'is_active' => true, 'synced_at' => now()],
-        );
-        if ($opd->trashed()) $opd->restore();
-        if ($name) $opd->update(['name' => trim($name), 'is_active' => true, 'synced_at' => now()]);
-        \App\Models\Identity\User::whereKey($userId)->update(['opd_id' => $opd->id]);
+        $opd = $this->opds->firstOrCreateByCode(trim($code),
+            ['name' => trim($name ?: $code), 'is_active' => true, 'synced_at' => now()]);
+        if ($opd->trashed()) $this->opds->restore($opd);
+        if ($name) $this->opds->update($opd, ['name' => trim($name), 'is_active' => true, 'synced_at' => now()]);
+        $this->users->update($userId, ['opd_id' => $opd->id]);
         return $opd;
     }
 

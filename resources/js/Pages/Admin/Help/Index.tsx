@@ -70,7 +70,7 @@ export default function Index() {
         <AdminLayout title="Bantuan" hideTitle>
             <Head title="Bantuan" />
             <div className="admin-index-page">
-                <CrudPageHeader title="Bantuan" description="Pertanyaan dan jawaban yang tampil di portal peserta." actions={
+                <CrudPageHeader title="Bantuan" description="Pertanyaan dan jawaban yang tampil di portal pengguna." actions={
                     <Link href={route('admin.help.create')} className="admin-index-create">
                         <i className="bx bx-plus text-base" />
                         Pertanyaan baru
@@ -83,7 +83,7 @@ export default function Index() {
                     className="admin-crud-table admin-index-table"
                     searchPlaceholder="Cari pertanyaan..."
                     emptyTitle="Belum ada bantuan"
-                    emptyDescription="Tambahkan pertanyaan yang sering diajukan peserta."
+                    emptyDescription="Tambahkan pertanyaan yang sering diajukan pengguna."
                 />
             </div>
         </AdminLayout>

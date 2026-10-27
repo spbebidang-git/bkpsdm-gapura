@@ -53,7 +53,7 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
     const { containerRef: statusRef, visibleError: statusError, dismissError: dismissStatusError } = useTransientFieldError(errors.employee_status);
     return <div className="course-form-grid">
         <div className="course-form-main">
-            <CrudFormSection title="Informasi kelas" description="Bantu peserta mengenal tujuan dan manfaat kelas." icon="bx-book-open">
+            <CrudFormSection title="Informasi kelas" description="Bantu pengguna mengenal tujuan dan manfaat kelas." icon="bx-book-open">
                 <div className="course-form-fields-grid">
                     <FormInput id="title" label="Judul kelas" isRequired value={values.title} onChange={handleChange} error={errors.title} placeholder="Contoh: Dasar Manajemen Risiko" />
                     <FormSelect id="category" label="Kategori" isRequired value={values.category} onChange={handleChange} error={errors.category} disabled={editing} options={categories.map((c) => ({ value: c.id, label: c.title }))} emptyOption="Pilih kategori" small={editing ? 'Kategori ditetapkan saat kelas dibuat.' : null} />
@@ -67,15 +67,15 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
                     <ErrorMessage message={descriptionError} />
                 </div>
             </CrudFormSection>
-            <CrudFormSection title="Media kelas" description="Tambahkan sampul dan video pengantar untuk peserta." icon="bx-image-alt">
+            <CrudFormSection title="Media kelas" description="Tambahkan sampul dan video pengantar untuk pengguna." icon="bx-image-alt">
                 <div className="course-form-fields-grid course-form-media-grid">
                     <FormFile title="thumbnail" label="Gambar sampul" isRequired={!editing} error={errors.thumbnail} previewUrl={thumbnailPreview} hasFile={Boolean(values.thumbnail)} previewBadge={values.thumbnail ? 'Pratinjau baru' : 'Sampul saat ini'} heading={values.thumbnail ? 'Sampul baru siap disimpan' : thumbnailPreview ? 'Sampul kelas saat ini' : 'Belum ada sampul'} helperText="Gambar lanskap 16:9 tampil lebih rapi pada daftar dan detail kelas. PNG atau JPG, maksimal 10 MB." buttonLabel={thumbnailPreview ? 'Ganti sampul' : 'Pilih sampul'} selectedFileName={values.thumbnail?.name} variant="course" accept="image/png,image/jpeg" onChange={handleChange} />
                     <div className="course-media-video">
                         <div className="course-media-video-intro">
                             <span className="course-media-video-icon"><i className="bx bx-play-circle" aria-hidden /></span>
-                            <div><strong>Video pengantar</strong><p>Berikan gambaran singkat sebelum peserta memulai kelas.</p></div>
+                            <div><strong>Video pengantar</strong><p>Berikan gambaran singkat sebelum pengguna memulai kelas.</p></div>
                         </div>
-                        <FormInput id="teaser_video" label="Tautan video" type="url" value={values.teaser_video} onChange={handleChange} error={errors.teaser_video} placeholder="https://www.youtube.com/embed/VIDEO_ID" small="Opsional. Gunakan tautan video yang dapat diakses peserta." />
+                        <FormInput id="teaser_video" label="Tautan video" type="url" value={values.teaser_video} onChange={handleChange} error={errors.teaser_video} placeholder="https://www.youtube.com/embed/VIDEO_ID" small="Opsional. Gunakan tautan video yang dapat diakses pengguna." />
                         {/^https?:\/\//i.test(values.teaser_video || '') ? <a className="course-media-video-link" href={values.teaser_video} target="_blank" rel="noopener noreferrer"><i className="bx bx-link-external" aria-hidden />Buka tautan video</a> : <div className="course-media-video-empty"><i className="bx bx-info-circle" aria-hidden />Tautan video dapat ditambahkan kapan saja.</div>}
                     </div>
                 </div>
@@ -99,9 +99,9 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
                     <ErrorMessage message={errors.opd_ids || Object.entries(errors).find(([key]) => key.startsWith('opd_ids.'))?.[1] as string} />
                 </fieldset>}
                 <div className="course-form-fields-grid course-form-settings-grid">
-                <FormSelect id="type" label="Tipe kelas" isRequired value={values.type} onChange={handleChange} error={errors.type} disabled={typeLocked} options={[{ value: 'unschedule', label: 'Mandiri' }, { value: 'schedule', label: 'Terjadwal' }]} emptyOption="Pilih tipe kelas" small={typeLocked ? 'Tipe kelas ditetapkan saat kelas dibuat.' : values.type === 'schedule' ? 'Peserta mengikuti kelas sesuai jadwal kegiatan.' : values.type === 'unschedule' ? 'Peserta belajar sesuai waktu masing-masing.' : null} />
+                <FormSelect id="type" label="Tipe kelas" isRequired value={values.type} onChange={handleChange} error={errors.type} disabled={typeLocked} options={[{ value: 'unschedule', label: 'Mandiri' }, { value: 'schedule', label: 'Terjadwal' }]} emptyOption="Pilih tipe kelas" small={typeLocked ? 'Tipe kelas ditetapkan saat kelas dibuat.' : values.type === 'schedule' ? 'Pengguna mengikuti kelas sesuai jadwal kegiatan.' : values.type === 'unschedule' ? 'Pengguna belajar sesuai waktu masing-masing.' : null} />
                 <FormInput id="jam_pelajaran" label="Jam pelajaran (JP)" type="number" min="0" isRequired value={values.jam_pelajaran} onChange={handleChange} error={errors.jam_pelajaran} placeholder="Contoh: 8" />
-                {values.type !== 'schedule' && <FormInput id="expired" label="Masa akses (jam)" type="number" min="0" isRequired value={values.expired} onChange={handleChange} error={errors.expired} placeholder="Contoh: 72" small="Dihitung sejak peserta memulai kelas." />}
+                {values.type !== 'schedule' && <FormInput id="expired" label="Masa akses (jam)" type="number" min="0" isRequired value={values.expired} onChange={handleChange} error={errors.expired} placeholder="Contoh: 72" small="Dihitung sejak pengguna memulai kelas." />}
                 </div>
                 <div className="course-form-divider">
                     <FormSelect id="status" label="Status publikasi" isRequired value={values.status} onChange={handleChange} error={errors.status} emptyOption="Pilih status">
@@ -111,7 +111,7 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
                     <p className="course-form-status-note"><i className={`bx ${values.status === 'publish' ? 'bx-show' : 'bx-file'}`} aria-hidden />{values.status === 'publish' ? 'Kelas dipublikasikan sesuai visibilitas, OPD sasaran, dan status pegawai.' : values.type === 'schedule' && (!editing || !hasSchedules) ? 'Tambahkan jadwal terlebih dahulu sebelum memublikasikan kelas.' : 'Simpan sebagai draft untuk melanjutkan penyusunan kelas.'}</p>
                 </div>
             </CrudFormSection>
-            <CrudFormSection title="Peserta & pemateri" description="Pilih status peserta dan pemateri pengampu kelas." icon="bx-group">
+            <CrudFormSection title="Pengguna & pemateri" description="Pilih status pengguna dan pemateri pengampu kelas." icon="bx-group">
                 <div ref={statusRef} className={`course-employee-status ${statusError ? 'has-error' : ''}`} role="group" aria-labelledby="employee-status-title" aria-describedby="employee-status-help">
                     <div className="course-employee-status-header">
                         <div>
@@ -138,7 +138,7 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
                     </> : <p className="course-employee-status-empty">Belum ada status pegawai. Tambahkan status di Master Status Pegawai.</p>}
                     {statusError && <p role="alert" className={checkboxGroupErrorClass}><i className="bx bx-error-circle text-base" aria-hidden />{statusError}</p>}
                 </div>
-                {isTrainerAccount && <p className="course-form-divider text-sm text-steel">Anda otomatis menjadi pemateri kelas ini. OPD afiliasi Anda tidak membatasi OPD sasaran peserta.</p>}
+                {isTrainerAccount && <p className="course-form-divider text-sm text-steel">Anda otomatis menjadi pemateri kelas ini. OPD afiliasi Anda tidak membatasi OPD sasaran pengguna.</p>}
                 {!isTrainerAccount && <div className="course-form-divider course-trainer-picker">
                     <div className="course-trainer-picker-heading">
                         <div>

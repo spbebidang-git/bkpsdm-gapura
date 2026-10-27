@@ -6,7 +6,7 @@ use App\Http\Controllers\Admin\ResultController;
 use App\Jobs\BulkCertificateJob;
 use Illuminate\Support\Facades\Route;
 
-// 5. Extras — no sidebar entry
+// 5. Extras — additional routes
 
 // Result detail. Access: super_admin, administrator, trainer (`result.view`)
 Route::controller(ResultController::class)->prefix('result')->name('result.')->group(function () {

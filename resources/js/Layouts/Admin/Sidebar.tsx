@@ -18,7 +18,7 @@ export default function Sidebar({ open, onClose }: { open: boolean; onClose: () 
         media.addEventListener('change', update);
         return () => media.removeEventListener('change', update);
     }, []);
-    const canSee = (item: any) => user?.is_super_admin || user?.permissions?.includes(item.permission) || (!item.permission && trainerRoutes.has(item.route));
+    const canSee = (item: any) => user?.is_super_admin || (!item.superAdminOnly && (user?.permissions?.includes(item.permission) || (!item.permission && trainerRoutes.has(item.route))));
     const groups = navigation.map((group) => ({ ...group, items: group.items.filter(canSee) })).filter((group) => group.items.length > 0);
 
     const activeRoute = groups.flatMap((group) => group.items).find((item) => isActive(item.match))?.route;

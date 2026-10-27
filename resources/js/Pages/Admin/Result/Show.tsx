@@ -84,7 +84,7 @@ export default function Show({ course, names = [], activities = [], filters = {}
                     <div className="min-w-0">
                         <p className={pageEyebrow}>Hasil belajar</p>
                         <h1 className={pageTitle}>{course.title}</h1>
-                        <p className={pageDescription}>Nilai setiap peserta berdasarkan kegiatan yang diikuti.</p>
+                        <p className={pageDescription}>Nilai setiap pengguna berdasarkan kegiatan yang diikuti.</p>
                     </div>
                     <Link href={route('admin.result.index')} className={`${btnLink} shrink-0`}>
                         ← Kembali
@@ -103,7 +103,7 @@ export default function Show({ course, names = [], activities = [], filters = {}
                         onChange={(e) => setNama(e.target.value)}
                         className="form-control max-w-xs"
                     >
-                        <option value="">Semua peserta</option>
+                        <option value="">Semua pengguna</option>
                         {names.map((n) => (
                             <option key={n.id} value={n.id}>
                                 {n.name}
@@ -132,9 +132,9 @@ export default function Show({ course, names = [], activities = [], filters = {}
                     url={route('admin.result.show', course.slug)}
                     columns={columns}
                     params={filterParams}
-                    searchPlaceholder="Cari NIP, peserta, atau kegiatan..."
+                    searchPlaceholder="Cari NIP, pengguna, atau kegiatan..."
                     emptyTitle="Hasil tidak ditemukan"
-                    emptyDescription="Ubah filter atau tunggu peserta menyelesaikan kegiatan."
+                    emptyDescription="Ubah filter atau tunggu pengguna menyelesaikan kegiatan."
                 />
             </div>
         </AdminLayout>

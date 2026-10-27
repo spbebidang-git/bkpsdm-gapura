@@ -34,6 +34,10 @@ class IsAdminMiddleware
                 return to_route('admin.dashboard');
             }
 
+            if ($request->routeIs('admin.management.permission.*', 'admin.management.log.*')) {
+                abort_unless($user->hasRole('super_admin'), 403, 'Halaman ini hanya dapat diakses Super Admin.');
+            }
+
             if ($this->isRestrictedTrainer($user) && ! Trainer::activeOpdIdsForUser($user->id)) {
                 $message = 'Akun pemateri Anda belum memiliki OPD. Hubungi administrator untuk melengkapi data OPD.';
 

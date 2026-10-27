@@ -40,7 +40,7 @@ const Dashboard = ({ courses }) => {
                                 <th className="px-6 py-4 font-semibold whitespace-nowrap">Tipe</th>
                                 <th className="px-6 py-4 font-semibold whitespace-nowrap min-w-[200px]">Judul</th>
                                 <th className="px-6 py-4 font-semibold text-center whitespace-nowrap">Kuota</th>
-                                <th className="px-6 py-4 font-semibold text-center whitespace-nowrap">Total Peserta</th>
+                                <th className="px-6 py-4 font-semibold text-center whitespace-nowrap">Total Pengguna</th>
                                 <th className="px-6 py-4 font-semibold text-center whitespace-nowrap">Status</th>
                                 <th className="px-6 py-4 font-semibold text-center whitespace-nowrap min-w-[200px]">Aksi</th>
                             </tr>

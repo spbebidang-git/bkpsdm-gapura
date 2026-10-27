@@ -74,7 +74,7 @@ class CourseController extends Controller
     }
 
     /**
-     * Daftar peserta per pelatihan
+     * Daftar pengguna per pelatihan
      */
     public function participants(string $slug, Request $request)
     {
@@ -109,7 +109,7 @@ class CourseController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Daftar peserta berhasil diambil.',
+            'message' => 'Daftar pengguna berhasil diambil.',
             'data' => $learns,
         ]);
     }

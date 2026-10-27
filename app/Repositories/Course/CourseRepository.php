@@ -18,6 +18,33 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
         parent::__construct($model);
     }
 
+    public function lock(int|string $id): Course
+    {
+        return $this->query()->whereKey($id)->lockForUpdate()->firstOrFail();
+    }
+
+    public function scheduleCount(int|string $courseId): int
+    {
+        return $this->query()->findOrFail($courseId)->schedules()->count();
+    }
+
+    public function getPublishedOptions(): Collection
+    {
+        return $this->query()->where('status', 'publish')->orderBy('title')->get(['id', 'title']);
+    }
+
+    public function findMany(array $ids): Collection
+    {
+        return $this->query()->whereIn('id', $ids)->get();
+    }
+
+    public function isVisible(Course $course, ?User $user): bool
+    {
+        return $this->query()->whereKey($course->id)
+            ->where(fn ($query) => app(\App\Services\Course\CourseAudience::class)->viewable($query, $user))
+            ->exists();
+    }
+
     public function findBySlug(string $slug, array $relations = []): ?Course
     {
         return $this->query()->with($relations)->where('slug', $slug)->first();

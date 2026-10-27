@@ -103,7 +103,7 @@ export default function Index() {
                 cell: ({ getValue, row }) => row.original.can_manage ? <RowActions
                     editHref={route('admin.participant.edit', getValue())}
                     deleteUrl={route('admin.participant.destroy', getValue())}
-                    deleteMessage={`Peserta “${row.original.name}” akan dihapus dari Master Peserta.`}
+                    deleteMessage={`Pengguna “${row.original.name}” akan dihapus dari Master Pengguna.`}
                     onDeleted={() => setRefreshKey((key) => key + 1)}
                     iconOnly
                     variant="course"
@@ -114,19 +114,19 @@ export default function Index() {
     );
 
     return (
-        <AdminLayout title="Peserta" hideTitle>
-            <Head title="Peserta" />
+        <AdminLayout title="Pengguna" hideTitle>
+            <Head title="Pengguna" />
             <div className="course-index">
-                <CrudPageHeader title="Peserta" description="Data peserta dari akun terhubung dan akun lokal GAPURA." className="course-index-header" actions={<CreateButton href={route('admin.participant.create')} label="Tambah peserta lokal" />} />
+                <CrudPageHeader title="Pengguna" description="Data pengguna dari akun terhubung dan akun lokal GAPURA." className="course-index-header" actions={<CreateButton href={route('admin.participant.create')} label="Tambah pengguna lokal" />} />
                 <DataTable
                     url={route('admin.participant.index')}
                     columns={columns}
                     refreshKey={refreshKey}
                     className="course-index-table admin-crud-table participant-index-table"
-                    dataLabel="peserta"
-                    searchPlaceholder="Cari NIP atau nama peserta..."
-                    emptyTitle="Belum ada peserta"
-                    emptyDescription="Data peserta akan tampil setelah tersedia di sistem."
+                    dataLabel="pengguna"
+                    searchPlaceholder="Cari NIP atau nama pengguna..."
+                    emptyTitle="Belum ada pengguna"
+                    emptyDescription="Data pengguna akan tampil setelah tersedia di sistem."
                 />
             </div>
         </AdminLayout>

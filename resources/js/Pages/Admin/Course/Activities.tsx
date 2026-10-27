@@ -75,7 +75,6 @@ export default function Activities({ course, activities = [], canUnlock = false 
             if (result.isConfirmed) router.post(route('admin.course.unlock', course.slug), {}, { preserveScroll: true });
         });
     };
-    const createHref = route('admin.course.activity.activity', course.slug);
 
     const columns = useMemo(() => [
         {
@@ -163,7 +162,6 @@ export default function Activities({ course, activities = [], canUnlock = false 
             <CrudPageHeader title={course.title} description="Kelola aktivitas pembelajaran dan evaluasi kelas." className="course-index-header" actions={<>
                 <Link href={route('admin.course.index')} className="course-activities-secondary"><i className="bx bx-left-arrow-alt" aria-hidden />Kembali</Link>
                 <Link href={route('admin.course.edit', course.slug)} className="course-activities-secondary"><i className="bx bx-edit-alt" aria-hidden />Edit kelas</Link>
-                {!course.is_locked && <Link href={createHref} className="course-index-create"><i className="bx bx-plus" aria-hidden />Tambah aktivitas</Link>}
             </>} />
             <section className="admin-table-frame course-index-table admin-crud-table course-activities-table" aria-labelledby="activity-list-title">
                 <div className="admin-table-toolbar course-activities-toolbar">
@@ -229,9 +227,8 @@ export default function Activities({ course, activities = [], canUnlock = false 
                                     <p className="max-w-sm text-sm text-steel">
                                         {globalFilter
                                             ? `Tidak ada aktivitas yang cocok dengan “${globalFilter}”.`
-                                            : course.is_locked ? 'Kelas ini belum memiliki aktivitas dan kegiatan sudah terkunci.' : 'Tambahkan materi, pertemuan, tugas, atau evaluasi untuk menyusun pembelajaran kelas.'}
+                                            : course.is_locked ? 'Kelas ini belum memiliki aktivitas dan kegiatan sudah terkunci.' : 'Kegiatan yang disusun pemateri akan ditampilkan di sini.'}
                                     </p>
-                                    {!globalFilter && !course.is_locked && <Link href={createHref} className="course-index-create mt-2"><i className="bx bx-plus" aria-hidden />Tambah aktivitas</Link>}
                                 </td>
                             </tr>}
                         </tbody>

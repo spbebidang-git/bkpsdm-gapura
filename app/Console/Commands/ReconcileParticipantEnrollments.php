@@ -23,10 +23,10 @@ class ReconcileParticipantEnrollments extends Command
                     if ($this->option('apply')) Learn::query()->whereKey($learn->id)->whereNull('enrollment_id')->update(['enrollment_id' => $ids->first()]);
                 } elseif ($ids->isEmpty()) {
                     $missing++;
-                    $this->warn("Tidak ada enrollment: learn {$learn->id}, peserta {$learn->participant_id}, kelas {$learn->course_id}");
+                    $this->warn("Tidak ada enrollment: learn {$learn->id}, pengguna {$learn->participant_id}, kelas {$learn->course_id}");
                 } else {
                     $ambiguous++;
-                    $this->warn("Enrollment ambigu: learn {$learn->id}, peserta {$learn->participant_id}, kelas {$learn->course_id}");
+                    $this->warn("Enrollment ambigu: learn {$learn->id}, pengguna {$learn->participant_id}, kelas {$learn->course_id}");
                 }
             }
         });

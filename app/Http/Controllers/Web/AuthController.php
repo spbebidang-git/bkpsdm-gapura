@@ -5,17 +5,16 @@ namespace App\Http\Controllers\Web;
 use App\Models\Identity\User;
 use App\Services\Auth\KedatonOAuthService;
 use App\Services\Auth\SsoAuthService;
-use App\Services\Identity\UserService;
+use App\Services\Auth\KedatonUserProvisionService;
+use App\Http\Requests\Auth\LocalLoginRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class AuthController
 {
     public function __construct(
-        private readonly UserService $userService,
+        private readonly KedatonUserProvisionService $provision,
         private readonly KedatonOAuthService $kedaton,
         private readonly SsoAuthService $prestige,
     )
@@ -27,16 +26,9 @@ class AuthController
         return \Inertia\Inertia::render('Auth/Login');
     }
 
-    public function login(Request $request)
+    public function login(LocalLoginRequest $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'string', 'max:255'],
-            'password' => ['required', 'string'],
-            'captcha' => ['required', 'captcha'],
-        ], [
-            'captcha.required' => 'Kode keamanan wajib diisi.',
-            'captcha.captcha' => 'Kode keamanan tidak sesuai. Silakan coba lagi.',
-        ]);
+        $credentials = $request->validated();
         unset($credentials['captcha']);
 
         $identifier = trim($credentials['email']);
@@ -130,14 +122,12 @@ class AuthController
                 return $this->invalidCredentialsResponse();
             }
 
-            $user = $this->provisionOrSyncKedatonUser($nip, $employeeData + $verifiedData);
+            $user = $this->provision->provisionOrSync($nip, $employeeData + $verifiedData);
             if (! $user) {
                 return $this->invalidCredentialsResponse();
             }
 
-            if (! $user->hasAnyRole(['administrator', 'trainer', 'participant'])) {
-                $user->assignRole('participant');
-            }
+            $this->provision->ensureRole($user);
 
             Auth::login($user);
             $request->session()->regenerate();
@@ -150,110 +140,6 @@ class AuthController
 
             return $this->invalidCredentialsResponse();
         }
-    }
-
-    /**
-     * NIP is the primary immutable SSO identity. A Kedaton-verified email can
-     * link a pre-existing local Admin during migration when its NIP is absent.
-     */
-    private function provisionOrSyncKedatonUser(string $nip, array $data): ?User
-    {
-        $userMeta = find_user_by_nip($nip);
-
-        if ($userMeta?->user) {
-            $user = $userMeta->user;
-
-            if (! $user->usesSsoAuthentication()) {
-                Log::warning('Penautan akun lokal melalui Kedaton ditolak.', ['event' => 'auth.kedaton.local_link_denied',
-                    'user_id' => $user->id,
-                ]);
-
-                return null;
-            }
-
-            if (User::where('nip', $nip)->where('id', '!=', $user->id)->exists()) {
-                Log::warning('Konflik akun identitas Kedaton ditemukan.', ['event' => 'auth.kedaton.account_conflict',
-                    'user_id' => $user->id,
-                ]);
-
-                return null;
-            }
-
-            return $this->syncKedatonUser($user, $nip, $data);
-        }
-
-        $userByNip = User::where('nip', $nip)->first();
-        if ($userByNip) {
-            if (! $userByNip->usesSsoAuthentication()) {
-                Log::warning('Penautan akun lokal melalui identitas Kedaton ditolak.', ['event' => 'auth.kedaton.local_identity_link_denied',
-                    'user_id' => $userByNip->id,
-                ]);
-
-                return null;
-            }
-
-            return $this->syncKedatonUser($userByNip, $nip, $data);
-        }
-
-        $email = trim((string) ($data['fv_email'] ?? ''));
-        if ($email === '') {
-            $email = $nip . '@kedaton.invalid';
-        }
-
-        $existingUser = User::where('email', $email)->first();
-        if ($existingUser) {
-            if (! $existingUser->usesSsoAuthentication()
-                || (filled($existingUser->nip) && $existingUser->nip !== $nip)) {
-                Log::warning('Penautan akun Kedaton dengan identitas berbeda ditolak.', ['event' => 'auth.kedaton.email_link_denied',
-                    'user_id' => $existingUser->id,
-                ]);
-
-                return null;
-            }
-
-            return $this->syncKedatonUser($existingUser, $nip, $data);
-        }
-
-        return DB::transaction(function () use ($data, $nip, $email) {
-            $user = User::create([
-                'name' => $data['fv_nama'] ?? 'Peserta Kedaton',
-                'email' => $email,
-                'nip' => $nip,
-                'auth_source' => User::AUTH_SOURCE_SSO,
-                // Authentication is exclusively owned by Kedaton. This random
-                // value only satisfies the local user schema.
-                'password' => Str::password(64),
-            ]);
-
-            $user->assignRole('participant');
-            $this->userService->storeUserMeta($user->id, $data, $nip);
-
-            return $user;
-        });
-    }
-
-    /**
-     * Synchronize data from the provider only after the account has been
-     * confirmed as an SSO identity. Local accounts are never mutated here.
-     */
-    private function syncKedatonUser(User $user, string $nip, array $data): User
-    {
-        return DB::transaction(function () use ($user, $data, $nip) {
-            $attributes = [
-                'name' => $data['fv_nama'] ?? $user->name,
-                'nip' => $nip,
-            ];
-
-            $email = trim((string) ($data['fv_email'] ?? ''));
-            if ($email !== '' && ! User::where('email', $email)->where('id', '!=', $user->id)->exists()) {
-                $attributes['email'] = $email;
-            }
-
-            $user->update($attributes);
-            $this->userService->storeUserMeta($user->id, $data, $nip);
-
-            return $user->fresh();
-        });
     }
 
     private function invalidCredentialsResponse()
@@ -271,11 +157,7 @@ class AuthController
         // not persist its token, but older local accounts may still have these
         // encrypted fields from the previous integration.
         if ($user instanceof User && ! $user->usesPrestigeAuthentication()) {
-            $user->forceFill([
-                'access_token' => null,
-                'refresh_token' => null,
-                'token_expires_at' => null,
-            ])->save();
+            $this->provision->clearLegacyTokens($user);
         }
 
         Auth::logout();

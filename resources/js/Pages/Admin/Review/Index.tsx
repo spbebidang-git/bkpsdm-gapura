@@ -52,7 +52,7 @@ export default function Index({
             },
             {
                 accessorKey: 'user',
-                header: 'Peserta',
+                header: 'Pengguna',
                 cell: ({ getValue }) => <span className="review-participant">{getValue() || '—'}</span>,
             },
             {
@@ -133,7 +133,7 @@ export default function Index({
         <AdminLayout title="Ulasan" hideTitle>
             <Head title="Ulasan" />
             <div className="review-admin">
-                <CrudPageHeader title="Ulasan" description="Nilai bintang dan komentar peserta untuk setiap kelas." />
+                <CrudPageHeader title="Ulasan" description="Nilai bintang dan komentar pengguna untuk setiap kelas." />
                 <DataTable
                     key={tableKey}
                     url={route('admin.review.index')}
@@ -141,9 +141,9 @@ export default function Index({
                     params={filters}
                     toolbarFilters={toolbarFilters}
                     className="admin-crud-table review-index-table"
-                    searchPlaceholder="Cari kelas atau peserta..."
+                    searchPlaceholder="Cari kelas atau pengguna..."
                     emptyTitle="Belum ada ulasan"
-                    emptyDescription="Ulasan peserta akan tampil di sini."
+                    emptyDescription="Ulasan pengguna akan tampil di sini."
                     dataLabel="ulasan"
                 />
             </div>

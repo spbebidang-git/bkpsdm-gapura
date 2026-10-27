@@ -33,4 +33,14 @@ interface CourseRepositoryInterface extends BaseRepositoryInterface
     public function syncEmployeeStatuses(Course $course, array $employeeStatusIds): void;
 
     public function syncTrainers(Course $course, array $trainerIds): void;
+
+    public function lock(int|string $id): Course;
+
+    public function scheduleCount(int|string $courseId): int;
+
+    public function getPublishedOptions(): Collection;
+
+    public function findMany(array $ids): Collection;
+
+    public function isVisible(Course $course, ?User $user): bool;
 }

@@ -23,6 +23,21 @@ class CourseService
         private readonly QuestionVariantRepositoryInterface $variants,
     ) {}
 
+    public function isVisible(Course $course, ?User $user): bool
+    {
+        return $this->courses->isVisible($course, $user);
+    }
+
+    public function participantSchedule(Course $course, int|string $participantId): ?\App\Models\Course\Schedule
+    {
+        return $this->schedules->firstForParticipantAndCourse($course->id, $participantId);
+    }
+
+    public function orderedActivities(Course $course): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->activities->getByCourse($course->id);
+    }
+
     public function getFeaturedCourses(int $limit = 6, ?User $user = null)
     {
         return $this->courses->getFeaturedPublishedCourses(Carbon::now(), $limit, $user)

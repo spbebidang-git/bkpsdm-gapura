@@ -20,6 +20,12 @@ class RoleRepository extends EloquentRepository implements RoleRepositoryInterfa
         return $this->query()->get();
     }
 
+    public function getAdministrators(): Collection
+    {
+        return $this->query()->where('guard_name', 'web')->where('name', 'administrator')
+            ->orderBy('id')->get(['id', 'name']);
+    }
+
     public function assignablePermissions(): Collection
     {
         return Permission::query()

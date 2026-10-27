@@ -22,7 +22,7 @@ export default function Activity({ slug, type }: { slug: string; type: string })
     const [activeSection, setActiveSection] = useState<Section>(null);
     const nested = activeSection !== null;
     const sectionTitle = activeSection === 'question' ? 'Jenis evaluasi' : activeSection === 'interactive' ? 'Jenis interaktif' : 'Jenis aktivitas';
-    const description = activeSection === 'question' ? 'Pilih evaluasi untuk mengukur pemahaman peserta.'
+    const description = activeSection === 'question' ? 'Pilih evaluasi untuk mengukur pemahaman pengguna.'
         : activeSection === 'interactive' ? 'Pilih metode interaktif untuk menyampaikan pembelajaran.'
             : 'Pilih salah satu jenis aktivitas untuk melanjutkan.';
     const createHref = (activityType: string) => `/admin/course/${slug}/activity/${activityType}/create`;
@@ -39,18 +39,18 @@ export default function Activity({ slug, type }: { slug: string; type: string })
                 </ol>
                 <div className="activity-picker-choices" key={activeSection || 'all'}>
                     {!activeSection && <>
-                        <ActivityChoice title="Pertanyaan" description="Buat pre-test, kuis, atau post-test untuk mengukur pemahaman peserta." icon="bx-list-check" onClick={() => setActiveSection('question')} />
-                        <ActivityChoice title="Tugas" description="Tetapkan instruksi dan bobot tugas untuk peserta." icon="bx-task" href={createHref('task')} />
+                        <ActivityChoice title="Pertanyaan" description="Buat pre-test, kuis, atau post-test untuk mengukur pemahaman pengguna." icon="bx-list-check" onClick={() => setActiveSection('question')} />
+                        <ActivityChoice title="Tugas" description="Tetapkan instruksi dan bobot tugas untuk pengguna." icon="bx-task" href={createHref('task')} />
                         <ActivityChoice title="Interaktif" description="Tambahkan pertemuan daring atau presentasi video." icon="bx-video" onClick={() => setActiveSection('interactive')} />
-                        <ActivityChoice title="Literatur" description="Unggah materi PDF yang dapat dibaca peserta." icon="bx-book-open" href={createHref('literature')} />
+                        <ActivityChoice title="Literatur" description="Unggah materi PDF yang dapat dibaca pengguna." icon="bx-book-open" href={createHref('literature')} />
                     </>}
                     {activeSection === 'question' && <>
-                        <ActivityChoice title="Pre-Test / Kuis" description="Ukur pemahaman awal peserta sebelum materi dimulai." icon="bx-list-check" href={createHref('pre-test')} />
+                        <ActivityChoice title="Pre-Test / Kuis" description="Ukur pemahaman awal pengguna sebelum materi dimulai." icon="bx-list-check" href={createHref('pre-test')} />
                         <ActivityChoice title="Post-Test" description="Nilai pemahaman akhir dan tetapkan batas kelulusan." icon="bx-check-square" href={createHref('post-test')} />
                     </>}
                     {activeSection === 'interactive' && <>
                         {type !== 'unschedule' && <ActivityChoice title="Pertemuan daring" description="Atur jadwal dan tautan pertemuan daring." icon="bx-calendar" href={createHref('meeting')} />}
-                        <ActivityChoice title="Presentasi video" description="Unggah video dan atur durasi belajar peserta." icon="bx-play-circle" href={createHref('video')} />
+                        <ActivityChoice title="Presentasi video" description="Unggah video dan atur durasi belajar pengguna." icon="bx-play-circle" href={createHref('video')} />
                     </>}
                 </div>
                 {nested && <div className="activity-picker-footer"><button type="button" className="activity-picker-back" onClick={() => setActiveSection(null)}><i className="bx bx-left-arrow-alt" aria-hidden />Kembali ke jenis aktivitas</button></div>}

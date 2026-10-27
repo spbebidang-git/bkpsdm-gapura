@@ -31,7 +31,7 @@ export default function Index() {
     return <AdminLayout title="Status pegawai" hideTitle>
         <Head title="Status pegawai" />
         <div className="employee-status-admin course-index">
-            <CrudPageHeader title="Status pegawai" description="Kelola daftar status kepegawaian yang dapat dipilih pada kelas dan peserta." actions={
+            <CrudPageHeader title="Status pegawai" description="Kelola daftar status kepegawaian yang dapat dipilih pada kelas dan pengguna." actions={
                 <Link href={route('admin.employee-status.create')} className="course-index-create"><i className="bx bx-plus" aria-hidden />Tambah status</Link>
             } />
             <DataTable
@@ -41,7 +41,7 @@ export default function Index() {
                 className="course-index-table admin-crud-table employee-status-table"
                 searchPlaceholder="Cari status pegawai..."
                 emptyTitle="Belum ada status pegawai"
-                emptyDescription="Tambahkan status kepegawaian untuk digunakan pada kelas dan peserta."
+                emptyDescription="Tambahkan status kepegawaian untuk digunakan pada kelas dan pengguna."
                 dataLabel="Status pegawai"
             />
         </div>

@@ -70,6 +70,10 @@ export default function Form({ trainer, users = [], opds = [], mode = 'local' }:
         password: '',
         password_confirmation: '',
     });
+    const [userSearch, setUserSearch] = useState('');
+    const searchTerm = userSearch.trim().toLocaleLowerCase('id-ID');
+    const filteredUsers = users.filter((user) => user.id === data.user_id ||
+        [user.name, user.nip, user.opd, user.source_label].some((value) => value?.toLocaleLowerCase('id-ID').includes(searchTerm)));
     const [photoPreview, setPhotoPreview] = useState(trainer?.photo_src ?? null);
 
     useEffect(() => {
@@ -107,15 +111,21 @@ export default function Form({ trainer, users = [], opds = [], mode = 'local' }:
             : 'Lengkapi data pemateri lokal.'}
     >
         <ErrorMessage message={errors.source} />
-        {linkedUser && !isEdit && <FormSelect
+        {linkedUser && !isEdit && <>
+        <FormInput id="user_search" label="Cari pengguna" type="search" value={userSearch}
+            onChange={(event) => setUserSearch(event.target.value)}
+            placeholder="Cari nama, NIP, OPD, atau sumber akun..." />
+        {searchTerm && filteredUsers.length === 0 &&
+            <p role="status" className="text-sm text-steel">Tidak ada pengguna yang sesuai dengan pencarian.</p>}
+        <FormSelect
             id="user_id"
             label="Pengguna"
             isRequired
             value={data.user_id}
             error={errors.user_id}
-            options={users.map((user) => ({
+            options={filteredUsers.map((user) => ({
                 value: user.id,
-                label: `${user.name} — ${user.source_label || 'Pengguna'} — ${user.opd || 'OPD belum tersedia'}`,
+                label: `${user.name}${user.nip ? ` (${user.nip})` : ''} — ${user.source_label || 'Pengguna'} — ${user.opd || 'OPD belum tersedia'}`,
             }))}
             emptyOption="Pilih pengguna"
             onChange={(event) => {
@@ -128,7 +138,7 @@ export default function Form({ trainer, users = [], opds = [], mode = 'local' }:
             small={users.length
                 ? 'Menampilkan akun dari semua sumber dengan OPD aktif yang belum menjadi trainer.'
                 : 'Tidak ada pengguna yang memenuhi syarat.'}
-        />}
+        /></>}
         {linkedUser && !isEdit && selectedUser && <ProfilePreview profile={selectedUser} />}
         {(!linkedUser || isEdit) && <div className="trainer-details-grid">
             <FormInput id="name" label="Nama" isRequired value={data.name} onChange={(event) => setData('name', event.target.value)} error={errors.name} />

@@ -43,7 +43,7 @@ export default function LiteratureForm({ slug, activity = null }: { slug: string
 
     return <ActivityCrudFormLayout slug={slug} formId={formId} processing={processing}
         title={isEdit ? 'Ubah Literatur' : 'Literatur'}
-        description="Upload file PDF literatur yang dapat diakses dan dibaca oleh peserta.">
+        description="Upload file PDF literatur yang dapat diakses dan dibaca oleh pengguna.">
         <form id={formId} noValidate onSubmit={handleSubmit} encType="multipart/form-data" className="course-test-form w-full">
             <CrudFormSection title="Informasi literatur" icon="bx-book-open" description="Tambahkan judul dan subjudul agar materi mudah dikenali.">
                 <div className="course-test-fields course-test-score-fields">
@@ -61,14 +61,14 @@ export default function LiteratureForm({ slug, activity = null }: { slug: string
                         placeholder="Contoh: 5 atau 0,5" small="Masukkan durasi dalam menit. Contoh: 0,5 untuk 30 detik atau 5 untuk 5 menit." />
                 </div>
             </CrudFormSection>
-            <CrudFormSection title="Instruksi tambahan" icon="bx-message-detail" description="Berikan catatan penting atau arahan sebelum peserta membaca materi.">
+            <CrudFormSection title="Instruksi tambahan" icon="bx-message-detail" description="Berikan catatan penting atau arahan sebelum pengguna membaca materi.">
                 <div ref={instructionRef} className={`course-test-editor ${instructionError ? 'is-invalid' : ''}`}>
                     <FormLabel title="Instruksi Tambahan" id="instruction" />
-                    <ReactQuill value={data.instruction} onChange={(value) => { dismissInstructionError(); setData('instruction', value); }} placeholder="Tulis catatan penting atau arahan untuk peserta." />
+                    <ReactQuill value={data.instruction} onChange={(value) => { dismissInstructionError(); setData('instruction', value); }} placeholder="Tulis catatan penting atau arahan untuk pengguna." />
                     {instructionError && <small className="mt-1 block text-red-500">{instructionError}</small>}
                 </div>
             </CrudFormSection>
-            <CrudFormSection title="Berkas literatur" icon="bx-cloud-upload" description="Unggah materi PDF yang akan dapat diakses oleh peserta.">
+            <CrudFormSection title="Berkas literatur" icon="bx-cloud-upload" description="Unggah materi PDF yang akan dapat diakses oleh pengguna.">
                 <LiteratureFileField
                     file={data.content}
                     error={contentError}

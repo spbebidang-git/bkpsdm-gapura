@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="p-6">
-    <h1 class="text-2xl font-bold mb-6">Laporan Peserta</h1>
+    <h1 class="text-2xl font-bold mb-6">Laporan Pengguna</h1>
     @php
     $query = \App\Models\Learning\Learn::with('participant', 'learnItems')->get();
     $a = $query->map(function ($row) {

@@ -60,7 +60,7 @@ export default function Index() {
                     <div className="min-w-0">
                         <p className={pageEyebrow}>Pembelajaran</p>
                         <h1 className={pageTitle}>Hasil belajar</h1>
-                        <p className={pageDescription}>Nilai peserta dan ringkasan post-test untuk setiap kelas.</p>
+                        <p className={pageDescription}>Nilai pengguna dan ringkasan post-test untuk setiap kelas.</p>
                     </div>
                 </div>
                 <DataTable
@@ -68,7 +68,7 @@ export default function Index() {
                     columns={columns}
                     searchPlaceholder="Cari kelas..."
                     emptyTitle="Belum ada hasil belajar"
-                    emptyDescription="Hasil akan tersedia setelah peserta mengikuti kegiatan."
+                    emptyDescription="Hasil akan tersedia setelah pengguna mengikuti kegiatan."
                 />
             </div>
         </AdminLayout>

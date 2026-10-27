@@ -55,8 +55,8 @@ export default function TestForm({ slug, kind, activity = null }: { slug: string
         setData(id, type === 'checkbox' ? checked : value);
     };
     const instructions = isPreTest
-        ? 'Atur soal pilihan ganda untuk menilai pemahaman awal peserta.'
-        : 'Atur evaluasi akhir sebagai salah satu syarat penerbitan sertifikat digital peserta.';
+        ? 'Atur soal pilihan ganda untuk menilai pemahaman awal pengguna.'
+        : 'Atur evaluasi akhir sebagai salah satu syarat penerbitan sertifikat digital pengguna.';
 
     return <AdminLayout title={title} hideTitle breadcrumbs={[
         { label: 'Kegiatan', href: route('admin.course.activities.index', slug) },
@@ -73,7 +73,7 @@ export default function TestForm({ slug, kind, activity = null }: { slug: string
             </>} />
             <form id="course-test-form" noValidate onSubmit={handleSubmit} className="course-test-form">
                 <CrudFormSection title={`Informasi ${isPreTest ? 'pre-test' : 'post-test'}`} icon="bx-detail"
-                    description="Berikan nama dan ringkasan agar peserta memahami tujuan evaluasi ini.">
+                    description="Berikan nama dan ringkasan agar pengguna memahami tujuan evaluasi ini.">
                     <div className="course-test-fields">
                         <FormInput id="title" label={`Judul ${isPreTest ? 'Pre-Test / Kuis' : 'Post-Test / Kuis'}`} isRequired value={data.title} onChange={handleChange} error={errors.title}
                             small={isPreTest ? 'Gunakan judul singkat dan spesifik, misalnya “Tes Bab 1” atau “Kuis Pengantar”.' : 'Gunakan judul singkat dan spesifik, misalnya “Tes Akhir Bab” atau “Kuis Evaluasi”.'} />
@@ -81,24 +81,24 @@ export default function TestForm({ slug, kind, activity = null }: { slug: string
                             small={`Berikan gambaran singkat mengenai ${isPreTest ? 'tujuan atau isi pre-test' : 'isi atau tujuan post-test'}.`} />
                     </div>
                 </CrudFormSection>
-                <CrudFormSection title="Pengaturan penilaian" icon="bx-slider-alt" description="Tentukan bobot, batas kelulusan, dan waktu pengerjaan peserta.">
+                <CrudFormSection title="Pengaturan penilaian" icon="bx-slider-alt" description="Tentukan bobot, batas kelulusan, dan waktu pengerjaan pengguna.">
                     <div className="course-test-fields course-test-score-fields">
                         <FormInput id="value" label="Bobot Nilai" isRequired type="number" value={data.value} onChange={handleChange} error={errors.value} small="Contoh: 10, 20, atau 100." />
-                        <FormInput id="min_score" label="Nilai Minimum Kelulusan" isRequired type="number" value={data.min_score} onChange={handleChange} error={errors.min_score} small="Nilai minimal agar peserta dinyatakan lulus." />
+                        <FormInput id="min_score" label="Nilai Minimum Kelulusan" isRequired type="number" value={data.min_score} onChange={handleChange} error={errors.min_score} small="Nilai minimal agar pengguna dinyatakan lulus." />
                         <FormInput id="timer" label="Durasi Waktu (Menit)" isRequired type="number" min={1} value={data.timer} onChange={handleChange} error={errors.timer} placeholder="Contoh: 30" small="Masukkan durasi pengerjaan dalam menit. Contoh: 30 untuk 30 menit." />
                     </div>
                 </CrudFormSection>
-                <CrudFormSection title="Instruksi untuk peserta" icon="bx-message-detail" description="Tambahkan aturan menjawab atau petunjuk teknis sebelum peserta memulai.">
+                <CrudFormSection title="Instruksi untuk pengguna" icon="bx-message-detail" description="Tambahkan aturan menjawab atau petunjuk teknis sebelum pengguna memulai.">
                     <div className={`course-test-editor ${errors.instruction ? 'is-invalid' : ''}`}>
                         <FormLabel title="Instruksi soal" id="instruction" isRequired={isPreTest} />
-                        <ReactQuill theme="snow" value={data.instruction} onChange={(value) => setData('instruction', value)} placeholder="Tulis aturan menjawab atau petunjuk teknis untuk peserta." />
+                        <ReactQuill theme="snow" value={data.instruction} onChange={(value) => setData('instruction', value)} placeholder="Tulis aturan menjawab atau petunjuk teknis untuk pengguna." />
                         <ErrorMessage message={errors.instruction} />
                     </div>
                 </CrudFormSection>
-                <CrudFormSection title="Opsi pengerjaan" icon="bx-refresh" description="Atur apakah peserta dapat mencoba evaluasi lebih dari sekali.">
+                <CrudFormSection title="Opsi pengerjaan" icon="bx-refresh" description="Atur apakah pengguna dapat mencoba evaluasi lebih dari sekali.">
                     <div className="course-test-repeat-option">
-                        <FormCheckbox id={repeatField} title={`Izinkan peserta mengulang ${isPreTest ? 'pre-test' : 'post-test'}`} checked={data[repeatField]} onChange={handleChange} />
-                        <p>{isPreTest ? 'Aktifkan bila peserta dapat mencoba kembali setelah menyelesaikan pre-test.' : 'Post-test dapat diulang maksimal tiga kali oleh peserta.'}</p>
+                        <FormCheckbox id={repeatField} title={`Izinkan pengguna mengulang ${isPreTest ? 'pre-test' : 'post-test'}`} checked={data[repeatField]} onChange={handleChange} />
+                        <p>{isPreTest ? 'Aktifkan bila pengguna dapat mencoba kembali setelah menyelesaikan pre-test.' : 'Jika diaktifkan, pengguna mendapat maksimal tiga percobaan. Jika tidak, progres kelas langsung direset saat pengguna gagal.'}</p>
                     </div>
                 </CrudFormSection>
             </form>

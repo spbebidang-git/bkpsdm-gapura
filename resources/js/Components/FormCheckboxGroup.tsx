@@ -29,7 +29,7 @@ export interface FormCheckboxGroupProps {
     columns?: 2 | 3;
 }
 
-/** Shared checkbox-grid group (used for multi-select toggles like Status Peserta). */
+/** Shared checkbox-grid group (used for multi-select toggles like Status Pengguna). */
 export default function FormCheckboxGroup({
     label,
     name,

@@ -6,6 +6,8 @@ use App\Helper\UploadMedia;
 use App\Models\Course\Trainer;
 use App\Models\Identity\User;
 use App\Repositories\Course\Contracts\TrainerRepositoryInterface;
+use App\Repositories\Identity\Contracts\UserRepositoryInterface;
+use App\Repositories\Identity\Contracts\OpdRepositoryInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +15,11 @@ use Illuminate\Validation\ValidationException;
 
 class TrainerService
 {
-    public function __construct(private readonly TrainerRepositoryInterface $trainers) {}
+    public function __construct(
+        private readonly TrainerRepositoryInterface $trainers,
+        private readonly UserRepositoryInterface $users,
+        private readonly OpdRepositoryInterface $opds,
+    ) {}
 
     public function getForAdmin(): Collection
     {
@@ -30,21 +36,14 @@ class TrainerService
 
     private function syncUsersWithTrainerRole(): void
     {
-        User::role('trainer')->whereNotIn('id', Trainer::query()->whereNotNull('user_id')->select('user_id'))
-            ->each(function (User $user) {
+        $this->users->trainersWithoutProfile()->each(function (User $user) {
                 $this->getOrCreateForUser($user);
             });
     }
 
     public function getEligibleUsers(): Collection
     {
-        return User::query()
-            ->where(fn ($query) => $query
-                ->where('auth_source', User::AUTH_SOURCE_LOCAL)
-                ->orWhereHas('opd', fn ($opd) => $opd->where('is_active', true)))
-            ->whereNotIn('id', Trainer::query()->whereNotNull('user_id')->select('user_id'))
-            ->whereDoesntHave('roles', fn ($query) => $query->whereIn('name', ['trainer', 'super_admin']))
-            ->with(['opd', 'metas'])->orderBy('name')->get()
+        return $this->users->eligibleTrainerUsers()
             ->map(fn (User $user) => $this->userProfile($user));
     }
 
@@ -63,7 +62,7 @@ class TrainerService
     public function getOrCreateForUser(User $user): Trainer
     {
         $trainer = $this->trainers->getOrCreateForUser($user);
-        if ($user->opd_id) $trainer->opds()->syncWithoutDetaching([$user->opd_id]);
+        if ($user->opd_id) $this->trainers->syncOpds($trainer, [$user->opd_id], false);
         return $trainer;
     }
 
@@ -73,40 +72,40 @@ class TrainerService
         unset($attributes['source']);
         if ($source === 'user') {
             return DB::transaction(function () use ($attributes) {
-                $user = User::whereKey($attributes['user_id'])->lockForUpdate()->first();
+                $user = $this->users->lock($attributes['user_id']);
                 $opdIds = collect($attributes['opd_ids'] ?? [])->map(fn ($id) => (int) $id)->unique();
                 if ($user?->opd_id) $opdIds->push((int) $user->opd_id);
                 $opdIds = $opdIds->unique()->values();
-                $opdIsActive = $opdIds->isNotEmpty() && \App\Models\Identity\Opd::query()->whereIn('id', $opdIds)->where('is_active', true)->count() === $opdIds->count();
+                $opdIsActive = $opdIds->isNotEmpty() && $this->opds->countActiveByIds($opdIds->all()) === $opdIds->count();
                 if (! $user || ! $opdIsActive || $user->hasAnyRole(['trainer', 'super_admin'])
-                    || Trainer::where('user_id', $user->id)->exists()) {
+                    || $this->trainers->existsByUser($user->id)) {
                     throw ValidationException::withMessages(['user_id' => 'Pilih pengguna dengan OPD aktif yang belum terdaftar sebagai pemateri.']);
                 }
                 if ($user->usesLocalAuthentication() && (string) $user->opd_id !== (string) $opdIds->first()) {
-                    $user->update(['opd_id' => $opdIds->first()]);
+                    $this->users->update($user, ['opd_id' => $opdIds->first()]);
                 }
                 $trainer = $this->getOrCreateForUser($user);
-                $user->assignRole('trainer');
-                $trainer->opds()->sync($opdIds->all());
+                $this->users->assignRole($user, 'trainer');
+                $this->trainers->syncOpds($trainer, $opdIds->all());
                 return $trainer;
             });
         }
         if (isset($attributes['email'])) {
             return DB::transaction(function () use ($attributes) {
-                $user = User::create([
+                $user = $this->users->create([
                     'name' => $attributes['name'],
                     'email' => $attributes['email'],
                     'password' => $attributes['password'],
                     'opd_id' => $attributes['opd_ids'][0],
                     'auth_source' => User::AUTH_SOURCE_LOCAL,
                 ]);
-                $user->assignRole('trainer');
-                $user->metas()->create(['key' => 'nama_jabatan', 'value' => $attributes['jabatan'] ?? '']);
+                $this->users->assignRole($user, 'trainer');
+                $this->users->putMeta($user, 'nama_jabatan', $attributes['jabatan'] ?? '');
                 if (($attributes['photo'] ?? null) instanceof UploadedFile) {
-                    $user->update(['image' => UploadMedia::file($attributes['photo'], User::$directoryImage)]);
+                    $this->users->update($user, ['image' => UploadMedia::file($attributes['photo'], User::$directoryImage)]);
                 }
                 $trainer = $this->getOrCreateForUser($user);
-                $trainer->opds()->sync($attributes['opd_ids']);
+                $this->trainers->syncOpds($trainer, $attributes['opd_ids']);
                 return $trainer;
             });
         }
@@ -124,8 +123,8 @@ class TrainerService
     {
         if ($trainer->user_id) {
             return DB::transaction(function () use ($trainer, $attributes) {
-                $user = User::whereKey($trainer->user_id)->lockForUpdate()->firstOrFail();
-                $user->update([
+                $user = $this->users->lock($trainer->user_id) ?? abort(404);
+                $this->users->update($user, [
                     'name' => $attributes['name'],
                     'opd_id' => $attributes['opd_ids'][0],
                     ...($user->usesLocalAuthentication() ? array_filter([
@@ -134,17 +133,14 @@ class TrainerService
                     ], fn ($value) => $value !== null && $value !== '') : []),
                 ]);
 
-                $user->metas()->updateOrCreate(
-                    ['key' => 'nama_jabatan'],
-                    ['value' => $attributes['jabatan'] ?? ''],
-                );
-                $trainer->opds()->sync($attributes['opd_ids']);
+                $this->users->putMeta($user, 'nama_jabatan', $attributes['jabatan'] ?? '');
+                $this->trainers->syncOpds($trainer, $attributes['opd_ids']);
 
                 if (($attributes['photo'] ?? null) instanceof UploadedFile) {
                     if ($user->image && is_file_exists(User::$directoryImage.$user->image)) {
                         remove_file(User::$directoryImage.$user->image);
                     }
-                    $user->update(['image' => UploadMedia::file($attributes['photo'], User::$directoryImage)]);
+                    $this->users->update($user, ['image' => UploadMedia::file($attributes['photo'], User::$directoryImage)]);
                 }
 
                 return $trainer->fresh(['user.opd', 'user.metas']);
@@ -153,25 +149,25 @@ class TrainerService
 
         if (isset($attributes['email'])) {
             return DB::transaction(function () use ($trainer, $attributes) {
-                $user = User::create([
+                $user = $this->users->create([
                     'name' => $attributes['name'],
                     'email' => $attributes['email'],
                     'password' => $attributes['password'],
                     'opd_id' => $attributes['opd_ids'][0],
                     'auth_source' => User::AUTH_SOURCE_LOCAL,
                 ]);
-                $user->assignRole('trainer');
-                $user->metas()->create(['key' => 'nama_jabatan', 'value' => $attributes['jabatan'] ?? '']);
+                $this->users->assignRole($user, 'trainer');
+                $this->users->putMeta($user, 'nama_jabatan', $attributes['jabatan'] ?? '');
                 if (($attributes['photo'] ?? null) instanceof UploadedFile) {
-                    $user->update(['image' => UploadMedia::file($attributes['photo'], User::$directoryImage)]);
+                    $this->users->update($user, ['image' => UploadMedia::file($attributes['photo'], User::$directoryImage)]);
                 } elseif ($trainer->photo && is_file_exists(Trainer::$directoryImage.$trainer->photo)) {
                     \Illuminate\Support\Facades\File::ensureDirectoryExists(public_path(User::$directoryImage));
                     $filename = $trainer->getKey().'_'.basename($trainer->photo);
                     \Illuminate\Support\Facades\File::copy(public_path(Trainer::$directoryImage.$trainer->photo), public_path(User::$directoryImage.$filename));
-                    $user->update(['image' => $filename]);
+                    $this->users->update($user, ['image' => $filename]);
                 }
-                $trainer->update(['user_id' => $user->id]);
-                $trainer->opds()->sync($attributes['opd_ids']);
+                $this->trainers->update($trainer, ['user_id' => $user->id]);
+                $this->trainers->syncOpds($trainer, $attributes['opd_ids']);
                 return $trainer->fresh(['user']);
             });
         }
@@ -193,10 +189,10 @@ class TrainerService
     public function delete($id): bool
     {
         return DB::transaction(function () use ($id) {
-            $trainer = Trainer::whereKey($id)->lockForUpdate()->firstOrFail();
+            $trainer = $this->trainers->lock($id);
             if ($trainer->user_id) {
-                $user = User::whereKey($trainer->user_id)->lockForUpdate()->first();
-                $user?->removeRole('trainer');
+                $user = $this->users->lock($trainer->user_id);
+                if ($user) $this->users->removeRole($user, 'trainer');
             }
             return $this->trainers->delete($trainer);
         });

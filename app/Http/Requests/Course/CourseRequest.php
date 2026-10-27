@@ -98,8 +98,8 @@ abstract class CourseRequest extends FormRequest
         return [
             'type' => 'Jenis kelas',
             'category' => 'Kategori',
-            'employee_status' => 'Status peserta',
-            'employee_status.*' => 'Status peserta',
+            'employee_status' => 'Status pengguna',
+            'employee_status.*' => 'Status pengguna',
             'title' => 'Judul kelas',
             'short_description' => 'Deskripsi singkat',
             'description' => 'Deskripsi lengkap',

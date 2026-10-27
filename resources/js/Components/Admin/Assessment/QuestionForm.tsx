@@ -28,7 +28,7 @@ export default function QuestionForm({ slug, activityId, questionId, question = 
                 <Button className="min-w-28" type="submit" form="question-form" loading={processing}>{processing ? 'Menyimpan…' : 'Simpan'}</Button>
             </>} />
             <form id="question-form" noValidate onSubmit={submit} aria-busy={processing} className="admin-crud-form">
-                <CrudFormSection title="Informasi soal" description="Skor diberikan saat peserta memilih jawaban yang benar." icon="bx-help-circle">
+                <CrudFormSection title="Informasi soal" description="Skor diberikan saat pengguna memilih jawaban yang benar." icon="bx-help-circle">
                     <FormTextArea id="description" label="Pertanyaan" value={data.description} onChange={(e) => setData('description', e.target.value)} error={errors.description} rows={5} isRequired placeholder="Tulis pertanyaan di sini" />
                     <div><FormInput id="score" label="Skor jawaban benar" type="number" min={1} value={data.score} onChange={(e) => setData('score', e.target.value)} error={errors.score} small="Masukkan skor antara 1–100." isRequired /></div>
                 </CrudFormSection>

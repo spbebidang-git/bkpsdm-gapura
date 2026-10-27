@@ -43,7 +43,7 @@ export default function TaskForm({ slug, activity = null }: { slug: string; acti
         title={isEdit ? 'Ubah Tugas' : 'Pengaturan Tugas'}
         description="Atur penugasan yang hasilnya akan dikirim ke email instruktur.">
         <form id={formId} noValidate onSubmit={handleSubmit} className="course-test-form w-full">
-            <CrudFormSection title="Informasi tugas" icon="bx-task" description="Gunakan judul yang memudahkan peserta mengenali penugasan.">
+            <CrudFormSection title="Informasi tugas" icon="bx-task" description="Gunakan judul yang memudahkan pengguna mengenali penugasan.">
                 <div className="course-test-fields">
                     <FormInput id="title" label="Judul Tugas" isRequired value={data.title} onChange={handleChange} error={errors.title}
                         placeholder="Contoh: Tugas Bab 1" small="Judul harus singkat dan jelas. Contoh: 'Tugas Bab 1' atau 'Analisis Studi Kasus'." />
@@ -66,7 +66,7 @@ export default function TaskForm({ slug, activity = null }: { slug: string; acti
             <CrudFormSection title="Soal atau deskripsi tugas" icon="bx-detail" description="Jelaskan keluaran yang harus dikumpulkan dan standar pengerjaannya.">
                 <div className="course-test-fields">
                     <FormTextArea id="description" label="Deskripsi Tugas" isRequired rows={4} value={data.description} onChange={handleChange} error={errors.description}
-                        placeholder="Masukkan soal, penjelasan tugas, atau panduan yang harus dikerjakan peserta." />
+                        placeholder="Masukkan soal, penjelasan tugas, atau panduan yang harus dikerjakan pengguna." />
                 </div>
             </CrudFormSection>
         </form>

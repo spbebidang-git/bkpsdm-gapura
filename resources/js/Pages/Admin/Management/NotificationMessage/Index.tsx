@@ -36,7 +36,7 @@ export default function Index({ templates, participants = [], courses = [] }: { 
     return <AdminLayout title="Pesan notifikasi" hideTitle>
         <Head title="Pesan notifikasi" />
         <div className="notification-message-admin">
-            <CrudPageHeader title="Pesan notifikasi" description="Atur pesan otomatis yang diterima peserta." actions={
+            <CrudPageHeader title="Pesan notifikasi" description="Atur pesan otomatis yang diterima pengguna." actions={
                 <Button type="submit" form="notification-message-form" loading={processing} className="min-w-28">
                     {processing ? 'Menyimpan…' : 'Simpan'}
                 </Button>
@@ -62,11 +62,11 @@ export default function Index({ templates, participants = [], courses = [] }: { 
                     </div>
                 </CrudFormSection>)}
             </form>
-            <CrudFormSection title="Uji notifikasi peserta" icon="bx-send" description="Kirim salinan pesan yang sudah tersimpan ke kotak notifikasi peserta yang dipilih.">
+            <CrudFormSection title="Uji notifikasi pengguna" icon="bx-send" description="Kirim salinan pesan yang sudah tersimpan ke kotak notifikasi pengguna yang dipilih.">
                 <form noValidate onSubmit={(event) => { event.preventDefault(); testForm.post(route('admin.management.notification-messages.test')); }} className="grid gap-4 md:grid-cols-2">
-                    <label className="grid gap-1.5 text-sm font-medium text-ink">Peserta
+                    <label className="grid gap-1.5 text-sm font-medium text-ink">Pengguna
                         <select className="form-control" value={testForm.data.participant_id} onChange={(event) => testForm.setData('participant_id', event.target.value)} required>
-                            <option value="">Pilih peserta</option>{participants.map((participant) => <option key={participant.id} value={participant.id}>{participant.name}{participant.nip ? ` · ${participant.nip}` : ''}</option>)}
+                            <option value="">Pilih pengguna</option>{participants.map((participant) => <option key={participant.id} value={participant.id}>{participant.name}{participant.nip ? ` · ${participant.nip}` : ''}</option>)}
                         </select>{testForm.errors.participant_id && <span className="text-xs text-red-600">{testForm.errors.participant_id}</span>}
                     </label>
                     <label className="grid gap-1.5 text-sm font-medium text-ink">Kelas

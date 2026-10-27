@@ -87,7 +87,7 @@ export default function Show({ course, trainers = [], schedules = [] }) {
 
                 <section className="grid gap-4 sm:grid-cols-3" aria-label="Ringkasan kelas">
                     <div className={`${card} px-5 py-4 sm:px-6`}>
-                        <p className="text-xs font-medium text-steel">Peserta</p>
+                        <p className="text-xs font-medium text-steel">Pengguna</p>
                         <p className="mt-2 text-2xl font-semibold tabular-nums text-[#075D5E]">{course.total_participant ?? 0}</p>
                     </div>
                     <div className={`${card} px-5 py-4 sm:px-6`}>

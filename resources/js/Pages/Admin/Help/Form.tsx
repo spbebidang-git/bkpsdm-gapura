@@ -35,7 +35,7 @@ export default function Form({ help }) {
             <div className="admin-managed-form">
                 <CrudPageHeader
                     title={isEdit ? 'Edit pertanyaan' : 'Buat pertanyaan'}
-                    description={isEdit ? 'Perbarui isi dan status tampilan untuk pertanyaan ini.' : 'Susun pertanyaan yang sering diajukan peserta beserta jawabannya.'}
+                    description={isEdit ? 'Perbarui isi dan status tampilan untuk pertanyaan ini.' : 'Susun pertanyaan yang sering diajukan pengguna beserta jawabannya.'}
                     actions={<div className="admin-form-header-actions">
                         <Link href={route('admin.help.index')} className="admin-form-back">
                             <i className="bx bx-left-arrow-alt text-lg" aria-hidden />
@@ -67,7 +67,7 @@ export default function Form({ help }) {
                                     value={data.answer}
                                     onChange={(value) => setData('answer', value)}
                                     className="rounded-lg overflow-hidden help-quill"
-                                    placeholder="Jelaskan langkah penyelesaian secara runtut dan mudah dipahami peserta."
+                                    placeholder="Jelaskan langkah penyelesaian secara runtut dan mudah dipahami pengguna."
                                 />
                                 <style>{`.help-quill .ql-editor { min-height: 320px; }`}</style>
                             </div>

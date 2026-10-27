@@ -38,4 +38,20 @@ class TrainerRepository extends EloquentRepository implements TrainerRepositoryI
 
         return $trainer;
     }
+
+    public function existsByUser(int|string $userId): bool
+    {
+        return $this->query()->where('user_id', $userId)->exists();
+    }
+
+    public function lock(int|string $id): Trainer
+    {
+        return $this->query()->whereKey($id)->lockForUpdate()->firstOrFail();
+    }
+
+    public function syncOpds(Trainer $trainer, array $ids, bool $detach = true): void
+    {
+        if ($detach) $trainer->opds()->sync($ids);
+        else $trainer->opds()->syncWithoutDetaching($ids);
+    }
 }

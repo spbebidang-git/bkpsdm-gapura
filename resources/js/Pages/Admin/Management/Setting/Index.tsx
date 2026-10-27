@@ -101,10 +101,11 @@ export default function Index({ settings }) {
                                     className="sr-only"
                                     disabled={processing}
                                     aria-invalid={Boolean(bannerError)}
+                                    aria-describedby="home_banner_help"
                                     onChange={(event) => { dismissBannerError(); setData('home_banner', event.target.files?.[0] ?? null); }}
                                 />
                             </label>
-                            <p className="mt-1.5 text-xs text-[#8496B0]">Gunakan gambar landscape. Kosongkan jika banner tidak ingin diubah.</p>
+                            <p id="home_banner_help" className="mt-1.5 text-xs text-[#8496B0]">Dimensi yang disarankan: 1320 × 458 piksel (landscape). Dimensi lain tetap diizinkan. Kosongkan jika banner tidak ingin diubah.</p>
                             <ErrorMessage message={bannerError} />
                         </div>
                     </CrudFormSection>

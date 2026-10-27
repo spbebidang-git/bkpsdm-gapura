@@ -81,7 +81,7 @@ class CertificateSyncService
                 }
                 foreach ($row['peserta'] as $participant) {
                     if (! is_array($participant)) {
-                        throw new RuntimeException('Format peserta sertifikat Prestige tidak valid.');
+                        throw new RuntimeException('Format pengguna sertifikat Prestige tidak valid.');
                     }
                     $nip = normalize_nip($participant['nip'] ?? null);
                     $certificate = $participant['sertifikat'] ?? null;
@@ -91,7 +91,7 @@ class CertificateSyncService
                     $matches = $byNip->get($nip, collect());
                     if ($matches->count() !== 1) {
                         if ($matches->count() > 1) {
-                            Log::warning('Peserta kegiatan ambigu; pembaruan dilewati.', ['event' => 'certificate.pull.ambiguous','kode' => $code]);
+                            Log::warning('Pengguna kegiatan ambigu; pembaruan dilewati.', ['event' => 'certificate.pull.ambiguous','kode' => $code]);
                         }
 
                         continue;

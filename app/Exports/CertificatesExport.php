@@ -20,7 +20,7 @@ class CertificatesExport extends StringValueBinder implements FromQuery, WithCus
 
     public function headings(): array
     {
-        return ['Nama peserta', 'Kelas', 'Tanggal selesai', 'Ketersediaan sertifikat', 'Status pengiriman SSO', 'URL sertifikat'];
+        return ['Nama pengguna', 'Kelas', 'Tanggal selesai', 'Ketersediaan sertifikat', 'Status pengiriman SSO', 'URL sertifikat'];
     }
 
     public function map($row): array

@@ -6,6 +6,7 @@ use App\Models\Course\Schedule;
 use App\Repositories\Course\Contracts\ScheduleRepositoryInterface;
 use App\Repositories\EloquentRepository;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class ScheduleRepository extends EloquentRepository implements ScheduleRepositoryInterface
 {
@@ -39,5 +40,33 @@ class ScheduleRepository extends EloquentRepository implements ScheduleRepositor
     public function deleteMissingForCourse(int|string $courseId, array $scheduleIds): int
     {
         return $this->query()->where('course_id', $courseId)->whereNotIn('id', $scheduleIds)->delete();
+    }
+
+    public function lock(int|string $id): Schedule
+    {
+        return $this->query()->whereKey($id)->lockForUpdate()->firstOrFail();
+    }
+
+    public function participantCount(int|string $scheduleId): int
+    {
+        return DB::table('enrollments')->where('schedule_id', $scheduleId)
+            ->whereNull('deleted_at')->distinct()->count('participant_id');
+    }
+
+    public function firstForParticipantAndCourse(int|string $courseId, int|string $participantId): ?Schedule
+    {
+        return $this->query()->where('course_id', $courseId)
+            ->whereHas('participants', fn ($query) => $query->where('users.id', $participantId))->first();
+    }
+
+    public function firstForCourse(int|string $courseId): ?Schedule
+    {
+        return $this->query()->where('course_id', $courseId)->first();
+    }
+
+    public function participantHasSchedule(int|string $scheduleId, int|string $participantId): bool
+    {
+        return $this->query()->whereKey($scheduleId)
+            ->whereHas('participants', fn ($query) => $query->where('users.id', $participantId))->exists();
     }
 }

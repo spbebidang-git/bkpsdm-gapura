@@ -6,6 +6,7 @@ use App\Models\Identity\Opd;
 use App\Repositories\EloquentRepository;
 use App\Repositories\Identity\Contracts\OpdRepositoryInterface;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 class OpdRepository extends EloquentRepository implements OpdRepositoryInterface
 {
@@ -42,5 +43,20 @@ class OpdRepository extends EloquentRepository implements OpdRepositoryInterface
 
         return $this->query()->whereNotNull('synced_at')->whereNotIn('code', $codes)
             ->where('is_active', true)->update(['is_active' => false]);
+    }
+
+    public function getActive(): Collection
+    {
+        return $this->query()->where('is_active', true)->orderBy('name')->get(['id', 'name']);
+    }
+
+    public function firstOrCreateByCode(string $code, array $attributes): Opd
+    {
+        return $this->query()->withTrashed()->firstOrCreate(['code' => $code], $attributes);
+    }
+
+    public function countActiveByIds(array $ids): int
+    {
+        return $this->query()->whereIn('id', $ids)->where('is_active', true)->count();
     }
 }

@@ -2,8 +2,7 @@
 
 namespace App\Imports;
 
-use App\Models\Course\Activity\Assessment\QuestionItem;
-use App\Models\Course\Activity\Assessment\QuestionOption;
+use App\Services\Course\Activity\Question\QuestionItemService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -29,19 +28,15 @@ class VariantDetailImport implements ToCollection, WithHeadingRow, SkipsEmptyRow
             if (count(array_keys($options, (string) $data['correct'], true)) !== 1) {
                 throw ValidationException::withMessages(['content' => 'Kunci jawaban harus cocok dengan tepat satu pilihan pada setiap soal.']);
             }
-            $item = QuestionItem::create([
-                'question_variant_id' => $this->variantId,
-                'description' => sanitize_plain_text($data['description']),
+            app(QuestionItemService::class)->createQuestionItem($this->variantId, [
+                'description' => $data['description'],
                 'score' => $data['score'],
+                'options' => [
+                    'option1' => $options[0], 'option2' => $options[1],
+                    'option3' => $options[2], 'option4' => $options[3],
+                ],
+                'correct_answer' => (string) (array_search((string) $data['correct'], $options, true) + 1),
             ]);
-            foreach ($options as $index => $option) {
-                QuestionOption::create([
-                    'question_item_id' => $item->id,
-                    'option' => $option,
-                    'sort_order' => $index + 1,
-                    'is_correct' => $option === (string) $data['correct'],
-                ]);
-            }
         }
     }
 }

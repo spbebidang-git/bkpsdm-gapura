@@ -2,55 +2,50 @@
 
 namespace App\Http\Controllers\Participant;
 
-use App\Models\Course\Course;
 use App\Models\Learning\ParticipantNotification;
 use Illuminate\Http\Request;
+use App\Http\Requests\Participant\NotificationIndexRequest;
+use App\Services\Learning\NotificationInboxService;
 use Inertia\Inertia;
 
 class NotificationController
 {
+    public function __construct(private readonly NotificationInboxService $inbox) {}
+
     public function count(Request $request)
     {
-        return response()->json(['unread_count' => config('participant.notifications_enabled', true) ? $this->query($request)->whereNull('read_at')->count() : 0]);
+        return response()->json(['unread_count' => $this->inbox->unreadCount((string) $request->user()->id)]);
     }
 
     public function latest(Request $request)
     {
         return response()->json([
-            'notifications' => $this->presentMany($this->query($request)->latest()->limit(10)->get()),
-            'unread_count' => config('participant.notifications_enabled', true) ? $this->query($request)->whereNull('read_at')->count() : 0,
+            'notifications' => $this->presentMany($this->inbox->latest((string) $request->user()->id)),
+            'unread_count' => $this->inbox->unreadCount((string) $request->user()->id),
         ]);
     }
 
-    public function index(Request $request)
+    public function index(NotificationIndexRequest $request)
     {
-        $filters = $request->validate(['filter' => ['nullable', 'in:all,unread']]);
-        $query = $this->query($request)->latest();
-        if (! config('participant.notifications_enabled', true)) $query->whereRaw('1 = 0');
-        if (($filters['filter'] ?? 'all') === 'unread') $query->whereNull('read_at');
+        $filters = $request->validated();
 
         return Inertia::render('Participant/Notifications/Index', [
-            'notifications' => $this->presentPage($query->paginate(20)->withQueryString()),
+            'notifications' => $this->presentPage($this->inbox->page((string) $request->user()->id, ($filters['filter'] ?? 'all') === 'unread')),
             'filter' => $filters['filter'] ?? 'all',
-            'unreadCount' => $this->query($request)->whereNull('read_at')->count(),
+            'unreadCount' => $this->inbox->unreadCount((string) $request->user()->id),
         ]);
     }
 
     public function read(Request $request, string $notification)
     {
-        $this->query($request)->whereKey($notification)->whereNull('read_at')->update(['read_at' => now()]);
+        $this->inbox->markRead((string) $request->user()->id, $notification);
         return response()->json(['ok' => true]);
     }
 
     public function readAll(Request $request)
     {
-        $this->query($request)->whereNull('read_at')->update(['read_at' => now()]);
+        $this->inbox->markRead((string) $request->user()->id);
         return response()->json(['ok' => true]);
-    }
-
-    private function query(Request $request)
-    {
-        return ParticipantNotification::query()->where('participant_id', $request->user()->id);
     }
 
     private function present(ParticipantNotification $item): array
@@ -84,28 +79,13 @@ class NotificationController
 
     private function presentMany($items)
     {
-        $this->loadEnrollments($items);
         return $items->map(fn ($item) => $this->present($item));
     }
 
     private function presentPage($page)
     {
-        $this->loadEnrollments($page->getCollection());
         $page->setCollection($page->getCollection()->map(fn ($item) => $this->present($item)));
         return $page;
     }
 
-    private function loadEnrollments($items): void
-    {
-        $ids = $items->map(fn ($item) => $item->data['enrollment_id'] ?? null)->filter()->unique();
-        $enrollments = $ids->isNotEmpty()
-            ? \App\Models\Learning\Enrollment::query()->with('learn')->whereIn('id', $ids)->get()->keyBy('id')
-            : collect();
-        $courseIds = $items->map(fn ($item) => $item->data['course_id'] ?? null)->filter()->unique();
-        $courses = $courseIds->isNotEmpty() ? Course::query()->whereIn('id', $courseIds)->get()->keyBy('id') : collect();
-        $items->each(function ($item) use ($enrollments, $courses) {
-            $item->setRelation('notification_enrollment', $enrollments->get($item->data['enrollment_id'] ?? ''));
-            $item->setRelation('notification_course', $courses->get($item->data['course_id'] ?? ''));
-        });
-    }
 }

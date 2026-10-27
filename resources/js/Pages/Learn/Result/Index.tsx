@@ -59,7 +59,7 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
     const minScore = Number(activity.data?.min_score ?? 70);
     const passed = isTest && score >= minScore;
     const testName = activity.type === "pre-test" ? "pre-test" : "post-test";
-    const canRetry = isTest && Number(activity.data?.is_loop) === 1;
+    const canRetry = isTest && Number(activity.data?.is_loop) === 1 && (activity.type !== 'post-test' || !passed);
     const activityWeight = activities.find(item => String(item.id) === String(activity_id))?.value;
 
     useEffect(() => {
@@ -78,7 +78,6 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
         course: course.slug,
         schedule: schedule.id,
         activity: activity_id,
-        loop: 1,
     }));
 
     return (
@@ -103,7 +102,9 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
                     <p id="learn-result-description">{passed
                         ? `Terima kasih telah menyelesaikan tes. Anda dapat melanjutkan ke ${isLastActivity ? 'penilaian kelas' : 'kegiatan berikutnya'}.`
                         : canRetry
-                            ? 'Nilai Anda belum mencapai batas kelulusan. Silakan ulangi tes saat Anda siap.'
+                            ? activity.type === 'post-test'
+                                ? 'Nilai Anda belum mencapai batas kelulusan. Silakan ulangi tes. Setelah tiga kali gagal, progres kelas dimulai kembali dari awal.'
+                                : 'Nilai Anda belum mencapai batas kelulusan. Silakan ulangi tes saat Anda siap.'
                             : 'Nilai Anda belum mencapai batas kelulusan. Hubungi penyelenggara untuk mengetahui langkah berikutnya.'}</p>
                 </section>}
 

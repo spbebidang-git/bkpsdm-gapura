@@ -12,25 +12,25 @@ class CoursePerformanceService
     protected function getPreTestNote($avg)
     {
         if ($avg <= 50) {
-            return 'Pada awal pelaksanaan pelatihan, rata - rata peserta kurang memahami materi.';
+            return 'Pada awal pelaksanaan pelatihan, rata - rata pengguna kurang memahami materi.';
         }
         if ($avg <= 70) {
-            return 'Pada awal pelaksanaan pelatihan, rata - rata peserta cukup memahami materi.';
+            return 'Pada awal pelaksanaan pelatihan, rata - rata pengguna cukup memahami materi.';
         }
 
-        return 'Pada awal pelaksanaan pelatihan, rata - rata peserta sudah memahami materi.';
+        return 'Pada awal pelaksanaan pelatihan, rata - rata pengguna sudah memahami materi.';
     }
 
     protected function getPostTestNote($avg)
     {
         if ($avg <= 50) {
-            return 'Setelah mengikuti pelatihan, rata - rata peserta masih kurang memahami materi.';
+            return 'Setelah mengikuti pelatihan, rata - rata pengguna masih kurang memahami materi.';
         }
         if ($avg <= 70) {
-            return 'Setelah mengikuti pelatihan, rata - rata peserta cukup memahami materi.';
+            return 'Setelah mengikuti pelatihan, rata - rata pengguna cukup memahami materi.';
         }
 
-        return 'Setelah mengikuti pelatihan, rata - rata peserta sudah memahami materi.';
+        return 'Setelah mengikuti pelatihan, rata - rata pengguna sudah memahami materi.';
     }
 
     public function getPerformance()

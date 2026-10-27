@@ -71,17 +71,6 @@ class LearnController extends Controller
 
     public function index(Course $course, Schedule $schedule, Activity $activity)
     {
-        // Handle Post-Test Trial Loop
-        if ($activity->type === 'post-test' && request()->loop) {
-            $checkTrial = $this->learn->checkTrial($this->participantId, $course->id, $activity->id);
-            if ($checkTrial) {
-                if ($checkTrial === 2) {
-                    return to_route('participant.learn.instruction.index', [$course->slug, $schedule->id, $this->learn->getInititalActivityId($course->id)]);
-                }
-                $this->learn->setTrialTotal($checkTrial->learnItems->first());
-            }
-        }
-
         $course = $this->course->findBySlug($course->slug, Auth::user());
         abort_unless($course, 404);
 
@@ -139,7 +128,19 @@ class LearnController extends Controller
                 }
             }
 
+            $resetPostTest = $activity->type === 'post-test'
+                && $this->learn->shouldResetAfterPostTest($this->participantId, $course->id, $activity->id);
+            if ($resetPostTest) {
+                $this->learn->resetFromPostTest($this->participantId, $course->id);
+            }
+
             DB::commit();
+
+            if ($resetPostTest) {
+                return to_route('participant.learn.instruction.index', [
+                    $course->slug, $schedule->id, $this->learn->getInititalActivityId($course->id),
+                ])->with('danger', 'Nilai post-test belum mencapai batas kelulusan. Progres kelas direset; mulai kembali dari kegiatan pertama.');
+            }
 
             if (!empty($request->all()) && $activity->type == 'meeting') {
                 return to_route($request->input('status') === 'done' ? 'participant.learn.result.index' : 'participant.learn.index', [$course->slug, $schedule->id, $activity->id]);

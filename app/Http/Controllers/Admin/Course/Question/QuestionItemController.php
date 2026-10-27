@@ -3,17 +3,11 @@
 namespace App\Http\Controllers\Admin\Course\Question;
 
 use App\Models\Course\Course;
-use App\Models\Course\Activity\Activity;
-use App\Models\Course\Activity\Assessment\Question;
-use App\Models\Course\Activity\Assessment\QuestionVariant;
 use App\Models\Course\Activity\Assessment\QuestionItem;
-use App\Models\Course\Activity\Assessment\QuestionOption;
 use App\Services\Course\Activity\Question\QuestionItemService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Http\Requests\Course\QuestionItemRequest;
 use Inertia\Inertia;
 use Yajra\DataTables\Facades\DataTables;
-use PhpParser\Node\Stmt\TryCatch;
 
 class QuestionItemController
 {
@@ -56,49 +50,14 @@ class QuestionItemController
         ]);
     }
 
-    public function store(Course $course, $activityId, $variantId, Request $request)
+    public function store(Course $course, $activityId, $variantId, QuestionItemRequest $request)
     {
         $this->assertVariant($course, $activityId, $variantId);
-        $request->validate([
-            'description' => 'required|string',
-            'options' => 'required|array:option1,option2,option3,option4',
-            'options.option1' => 'required|string',
-            'options.option2' => 'required|string',
-            'options.option3' => 'required|string',
-            'options.option4' => 'required|string',
-            'correct_answer' => 'required|in:1,2,3,4',
-            'score' => 'required|integer|min:1|max:100',
-        ], [], ['description' => 'Pertanyaan']);
-
         try {
-            DB::beginTransaction();
-
-            $questionItem = QuestionItem::create([
-                'question_variant_id' => $variantId,
-                'description' => sanitize_plain_text($request->description),
-                'score' => $request->score
-            ]);
-
-            $option = [];
-            for ($i = 1; $i <= count($request->options); $i++) {
-                $option[] = [
-                    'question_item_id' => $questionItem->id,
-                    'sort_order' => $i,
-                    'option' => $request->options['option' . $i],
-                    'is_correct' => $i == $request->correct_answer ? true : false
-                ];
-            }
-
-            foreach ($option as $attributes) {
-                QuestionOption::create($attributes);
-            }
-
-            DB::commit();
+            $this->questionItem->createQuestionItem((string) $variantId, $request->validated());
 
             return to_route('admin.course.activity.variant.question-item.index', [$course->slug, $activityId, $variantId])->with('success', 'Soal berhasil ditambahkan.');
         } catch (\Throwable $th) {
-            DB::rollBack();
-
             return to_route('admin.course.activity.variant.question-item.index', [$course->slug, $activityId, $variantId])->with('danger', 'Gagal menambahkan soal.');
         }
     }
@@ -124,37 +83,12 @@ class QuestionItemController
         ]);
     }
 
-    public function update(Course $course, $activityId, $variantId, QuestionItem $question_item, Request $request)
+    public function update(Course $course, $activityId, $variantId, QuestionItem $question_item, QuestionItemRequest $request)
     {
         $this->assertVariant($course, $activityId, $variantId);
         abort_unless($question_item->question_variant_id === $variantId, 404);
-        $request->validate([
-            'description' => 'required|string',
-            'options' => 'required|array:option1,option2,option3,option4',
-            'options.option1' => 'required|string',
-            'options.option2' => 'required|string',
-            'options.option3' => 'required|string',
-            'options.option4' => 'required|string',
-            'correct_answer' => 'required|in:1,2,3,4',
-            'score' => 'required|integer|min:1|max:100',
-        ], [], ['description' => 'Pertanyaan']);
-
         try {
-            DB::beginTransaction();
-            $question_item->update([
-                'description' => sanitize_plain_text($request->description),
-                'score' => $request->score
-            ]);
-
-            foreach ($question_item->questionOptions as $index => $existingOption) {
-                $existingOption->update([
-                    'option' => $request->options['option'.($index + 1)],
-                    'sort_order' => $index + 1,
-                    'is_correct' => (string) ($index + 1) === (string) $request->correct_answer,
-                ]);
-            }
-
-            DB::commit();
+            $this->questionItem->updateQuestionItem($question_item, $request->validated());
 
             return to_route('admin.course.activity.variant.question-item.index', [
                 $course->slug,
@@ -162,8 +96,6 @@ class QuestionItemController
                 $variantId
             ])->with('success', 'Soal berhasil diubah.');
         } catch (\Throwable $th) {
-            DB::rollBack();
-
             return to_route('admin.course.activity.variant.question-item.index', [
                 $course->slug,
                 $activityId,
@@ -177,11 +109,7 @@ class QuestionItemController
         $this->assertVariant($course, $activityId, $variantId);
         abort_unless($question_item->question_variant_id === $variantId, 404);
         try {
-            DB::beginTransaction();
-
-            $question_item->delete();
-
-            DB::commit();
+            $this->questionItem->deleteQuestionItem($question_item);
 
             return to_route('admin.course.activity.variant.question-item.index', [
                 $course->slug,
@@ -189,8 +117,6 @@ class QuestionItemController
                 $variantId
             ])->with('success', 'Soal berhasil dihapus.');
         } catch (\Throwable $th) {
-            DB::rollBack();
-
             return to_route('admin.course.activity.variant.question-item.index', [
                 $course->slug,
                 $activityId,
@@ -200,10 +126,7 @@ class QuestionItemController
     }
     private function assertVariant(Course $course, string $activityId, string $variantId): void
     {
-        abort_unless(Activity::whereKey($activityId)->where('course_id', $course->id)
-            ->whereIn('type', ['pre-test', 'post-test'])->exists(), 404);
-        $question = Question::where('activity_id', $activityId)->firstOrFail();
-        abort_unless(QuestionVariant::whereKey($variantId)->where('question_id', $question->id)->exists(), 404);
+        $this->questionItem->assertVariant((string) $course->id, $activityId, $variantId);
     }
 
 }

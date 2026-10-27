@@ -7,29 +7,14 @@ use Illuminate\Support\Str;
 if (!function_exists('get_setting_meta')) {
     function get_setting_meta($key)
     {
-        $setting = \App\Models\System\Setting::where('key', $key)->first();
-        return $setting ? $setting->value : false;
+        return app(\App\Services\System\SettingService::class)->get((string) $key);
     }
 }
 
 if (!function_exists('update_setting_meta')) {
     function update_setting_meta($key, $value)
     {
-        $setting = \App\Models\System\Setting::withTrashed()->where('key', $key)->first();
-        if ($setting) {
-            if (method_exists($setting, 'trashed') && $setting->trashed()) {
-                $setting->restore();
-            }
-            $setting->value = $value;
-            $setting->save();
-
-            return $setting;
-        }
-
-        return \App\Models\System\Setting::create([
-            'key' => $key,
-            'value' => $value,
-        ]);
+        return app(\App\Services\System\SettingService::class)->put((string) $key, $value);
     }
 }
 
@@ -38,18 +23,7 @@ if (!function_exists('update_setting_meta')) {
 if (!function_exists('get_user_meta')) {
     function get_user_meta($user_id, $key)
     {
-        $setting = \App\Models\Identity\UserMeta::where('user_id', $user_id)->where('key', $key)->first();
-        if ($setting) {
-            if ($key === 'nip') {
-                try {
-                    return \Illuminate\Support\Facades\Crypt::decryptString($setting->value);
-                } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
-                    return $setting->value;
-                }
-            }
-            return $setting->value;
-        }
-        return false;
+        return app(\App\Services\Identity\UserMetaService::class)->get((string) $user_id, (string) $key);
     }
 }
 
@@ -80,68 +54,14 @@ if (!function_exists('normalize_nip')) {
 if (!function_exists('find_user_by_nip')) {
     function find_user_by_nip($nip)
     {
-        $nipHash = hash_hmac('sha256', $nip, config('app.key'));
-        $metaHash = \App\Models\Identity\UserMeta::with('user')->where('key', 'nip_hash')->where('value', $nipHash)->first();
-
-        // Jika hash ditemukan di database, tarik item orisinil (yang key-nya nip) sebagai return
-        if ($metaHash) {
-            $metaNip = \App\Models\Identity\UserMeta::with('user')
-                ->where('user_id', $metaHash->user_id)
-                ->where('key', 'nip')
-                ->first();
-            return $metaNip ?? $metaHash;
-        }
-
-        // --- FALLBACK UNTUK NIP YANG BELUM TER-MIGRATE ---
-        $metas = \App\Models\Identity\UserMeta::with('user')->where('key', 'nip')->get();
-        foreach ($metas as $meta) {
-            try {
-                if (\Illuminate\Support\Facades\Crypt::decryptString($meta->value) === $nip) {
-                    return $meta;
-                }
-            } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
-                if ($meta->value === $nip) {
-                    return $meta;
-                }
-            }
-        }
-        return null;
+        return app(\App\Services\Identity\UserMetaService::class)->findUserByNip((string) $nip);
     }
 }
 
 if (!function_exists('update_user_meta')) {
     function update_user_meta($user_id, $key, $value)
     {
-        if ($key === 'nip') {
-            // Save the hash implementation 
-            $hashValue = hash_hmac('sha256', $value, config('app.key'));
-            $metaHash = \App\Models\Identity\UserMeta::where('user_id', $user_id)->where('key', 'nip_hash')->first();
-            if ($metaHash) {
-                $metaHash->value = $hashValue;
-                $metaHash->save();
-            } else {
-                $newMetaHash = new \App\Models\Identity\UserMeta();
-                $newMetaHash->user_id = $user_id;
-                $newMetaHash->key = 'nip_hash';
-                $newMetaHash->value = $hashValue;
-                $newMetaHash->save();
-            }
-
-            $value = \Illuminate\Support\Facades\Crypt::encryptString($value);
-        }
-
-        $meta = \App\Models\Identity\UserMeta::where('user_id', $user_id)->where('key', $key)->first();
-        if ($meta) {
-            $meta->value = $value;
-            $meta->save();
-        } else {
-            $meta = new \App\Models\Identity\UserMeta();
-            $meta->user_id  = $user_id;
-            $meta->key      = $key;
-            $meta->value    = $value;
-            $meta->save();
-        }
-        return $meta ?? false;
+        return app(\App\Services\Identity\UserMetaService::class)->put((string) $user_id, (string) $key, (string) $value);
     }
 }
 

@@ -21,7 +21,7 @@ export default function Result({ slug, activity, tasks = [] }) {
                         <p className={pageEyebrow}>Kelas · Tugas</p>
                         <h1 className={pageTitle}>Hasil tugas</h1>
                         <p className={pageDescription}>
-                            Berkas yang dikumpulkan peserta{activity?.title ? ` untuk ${activity.title}` : ''}.
+                            Berkas yang dikumpulkan pengguna{activity?.title ? ` untuk ${activity.title}` : ''}.
                         </p>
                     </div>
                     <Link href={route('admin.course.activities.index', { course: slug })} className={btnSecondarySm}>Kembali</Link>
@@ -32,7 +32,7 @@ export default function Result({ slug, activity, tasks = [] }) {
                         <table className={`${tableClass} min-w-[620px]`}>
                             <thead>
                                 <tr>
-                                    <th className="admin-sticky-cell text-left">Nama peserta</th>
+                                    <th className="admin-sticky-cell text-left">Nama pengguna</th>
                                     <th className="text-left">NIP</th>
                                     <th className="text-left">Berkas</th>
                                 </tr>
@@ -53,7 +53,7 @@ export default function Result({ slug, activity, tasks = [] }) {
                                         <td colSpan={3} className="admin-table-state">
                                             <i className="bx bx-file-blank text-2xl text-stone" aria-hidden />
                                             <p className="font-semibold text-ink">Belum ada hasil tugas</p>
-                                            <p className="text-sm text-steel">Berkas peserta akan tampil setelah dikumpulkan.</p>
+                                            <p className="text-sm text-steel">Berkas pengguna akan tampil setelah dikumpulkan.</p>
                                         </td>
                                     </tr>
                                 )}

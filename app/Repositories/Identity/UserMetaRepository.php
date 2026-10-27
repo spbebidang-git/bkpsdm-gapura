@@ -23,4 +23,24 @@ class UserMetaRepository extends EloquentRepository implements UserMetaRepositor
     {
         return $this->query()->where('user_id', $userId)->get();
     }
+
+    public function findWithUserByKeyAndValue(string $key, string $value): ?UserMeta
+    {
+        return $this->query()->with('user')->where('key', $key)->where('value', $value)->first();
+    }
+
+    public function findWithUserByUserAndKey(int|string $userId, string $key): ?UserMeta
+    {
+        return $this->query()->with('user')->where('user_id', $userId)->where('key', $key)->first();
+    }
+
+    public function getWithUserByKey(string $key): Collection
+    {
+        return $this->query()->with('user')->where('key', $key)->get();
+    }
+
+    public function put(int|string $userId, string $key, string $value): UserMeta
+    {
+        return $this->query()->updateOrCreate(['user_id' => $userId, 'key' => $key], ['value' => $value]);
+    }
 }

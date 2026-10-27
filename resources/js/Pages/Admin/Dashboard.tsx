@@ -23,7 +23,7 @@ interface Performance {
 
 const quickActions = [
     { label: 'Kelola kelas', description: 'Materi dan jadwal pelatihan', route: 'admin.course.index', icon: 'bx-book-open' },
-    { label: 'Data peserta', description: 'Peserta pengembangan kompetensi', route: 'admin.participant.index', icon: 'bx-group' },
+    { label: 'Data pengguna', description: 'Pengguna pengembangan kompetensi', route: 'admin.participant.index', icon: 'bx-group' },
     { label: 'Hasil belajar', description: 'Rekap hasil dan penyelesaian', route: 'admin.result.index', icon: 'bx-bar-chart-alt-2' },
     { label: 'Performa kelas', description: 'Evaluasi pre-test dan post-test', route: 'admin.course-performance.index', icon: 'bx-line-chart' },
 ];
@@ -77,7 +77,7 @@ export default function Dashboard({
     });
     const metrics = [
         { label: 'Total kelas', value: totalCourses, note: 'Kelas pelatihan terdaftar', icon: 'bx-book-open', route: 'admin.course.index' },
-        { label: 'Total peserta', value: totalParticipants, note: 'Akun peserta terdaftar', icon: 'bx-group', route: 'admin.participant.index' },
+        { label: 'Total pengguna', value: totalParticipants, note: 'Akun pengguna terdaftar', icon: 'bx-group', route: 'admin.participant.index' },
         { label: 'Pelatihan selesai', value: totalFinished, note: 'Total penyelesaian kelas', icon: 'bx-check-shield', route: 'admin.result.index', accent: true },
         { label: 'Kelas dievaluasi', value: evaluations.length, note: 'Memiliki hasil evaluasi', icon: 'bx-line-chart', route: 'admin.course-performance.index', featured: true },
     ];
@@ -99,7 +99,7 @@ export default function Dashboard({
                     <div className="dashboard-welcome-copy">
                         <span className="dashboard-welcome-label"><span aria-hidden="true" />GAPURA · SMART ASN</span>
                         <h2 id="welcome-title">Selamat datang kembali, {firstName}.</h2>
-                        <p>Dukung ASN terus bertumbuh. Kelola pelatihan dan pantau perkembangan belajar peserta dari sini.</p>
+                        <p>Dukung ASN terus bertumbuh. Kelola pelatihan dan pantau perkembangan belajar pengguna dari sini.</p>
                     </div>
                     <Link href={route('admin.course.create')} className="dashboard-create">
                         <i className="bx bx-plus" aria-hidden="true" />Buat kelas baru<i className="bx bx-right-arrow-alt" aria-hidden="true" />
@@ -142,11 +142,11 @@ export default function Dashboard({
                 <div className="dashboard-details">
                     <section className="dashboard-card" aria-labelledby="popular-title">
                         <header className="dashboard-card-header">
-                            <div><h2 id="popular-title">Kelas terpopuler</h2><p>Pelatihan dengan jumlah peserta terbanyak.</p></div>
+                            <div><h2 id="popular-title">Kelas terpopuler</h2><p>Pelatihan dengan jumlah pengguna terbanyak.</p></div>
                             <Link href={route('admin.course.index')} className="dashboard-text-link">Lihat semua<i className="bx bx-right-arrow-alt" aria-hidden="true" /></Link>
                         </header>
                         {courses.length === 0 ? (
-                            <div className="dashboard-empty"><i className="bx bx-book-open" aria-hidden="true" /><h3>Belum ada kelas dengan peserta</h3><p>Ringkasan akan tampil setelah peserta bergabung ke kelas.</p></div>
+                            <div className="dashboard-empty"><i className="bx bx-book-open" aria-hidden="true" /><h3>Belum ada kelas dengan pengguna</h3><p>Ringkasan akan tampil setelah pengguna bergabung ke kelas.</p></div>
                         ) : (
                             <ol className="dashboard-course-list">
                                 {courses.map((course, index) => {
@@ -155,7 +155,7 @@ export default function Dashboard({
                                         <li key={`${course.name}-${index}`} className="dashboard-course">
                                             <span className={`dashboard-course-rank ${index === 0 ? 'is-first' : ''}`}>{String(index + 1).padStart(2, '0')}</span>
                                             <div className="dashboard-course-body">
-                                                <div className="dashboard-course-top"><h3>{course.name}</h3><span className="dashboard-course-count"><i className="bx bx-user" aria-hidden="true" />{formatNumber(course.participants)}<span>peserta</span></span></div>
+                                                <div className="dashboard-course-top"><h3>{course.name}</h3><span className="dashboard-course-count"><i className="bx bx-user" aria-hidden="true" />{formatNumber(course.participants)}<span>pengguna</span></span></div>
                                                 <div className="dashboard-course-progress">
                                                     <div className="dashboard-progress-track" role="progressbar" aria-label={`Ketuntasan ${course.name}`} aria-valuenow={completion} aria-valuemin={0} aria-valuemax={100}>
                                                         <span style={{ width: `${completion}%` }} />
@@ -168,7 +168,7 @@ export default function Dashboard({
                                 })}
                             </ol>
                         )}
-                        <footer className="dashboard-card-footer"><i className="bx bx-info-circle" aria-hidden="true" />Ketuntasan dihitung dari peserta yang menyelesaikan kelas.</footer>
+                        <footer className="dashboard-card-footer"><i className="bx bx-info-circle" aria-hidden="true" />Ketuntasan dihitung dari pengguna yang menyelesaikan kelas.</footer>
                     </section>
 
                     <section className="dashboard-card" aria-labelledby="performance-title">

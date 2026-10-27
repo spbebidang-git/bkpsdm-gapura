@@ -34,8 +34,5 @@ yarn-error.log
 /storage/logs/*.zip
 
 
-# Keep the deployment and recovery runbook with the application.
-!/docs/logging-backup-security.md
-
 # Offline backup recovery identities must never enter Git.
 *.agekey

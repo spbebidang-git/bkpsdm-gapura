@@ -36,6 +36,17 @@ class LearnRepository extends EloquentRepository implements LearnRepositoryInter
         return $this->query()->with('learnItems')->where('enrollment_id', $enrollmentId)->first();
     }
 
+    public function lockByEnrollment(int|string $enrollmentId): ?Learn
+    {
+        return $this->query()->where('enrollment_id', $enrollmentId)->lockForUpdate()->first();
+    }
+
+    public function deleteWithItems(Learn $learn): void
+    {
+        $learn->learnItems()->delete();
+        $learn->delete();
+    }
+
     public function getByCourse(int|string $courseId): Collection
     {
         return $this->query()->with(['participant', 'learnItems'])->where('course_id', $courseId)->get();

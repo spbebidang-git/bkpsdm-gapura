@@ -39,21 +39,21 @@ export default function Form({ participant, employeeStatuses = [], opds = [] }: 
         else post(route('admin.participant.store'));
     };
 
-    const title = isEdit ? 'Edit peserta lokal' : 'Tambah peserta lokal';
+    const title = isEdit ? 'Edit pengguna lokal' : 'Tambah pengguna lokal';
 
     return <AdminLayout title={title} hideTitle>
         <Head title={title} />
         <div className="course-index admin-crud-form">
             <CrudPageHeader
                 title={title}
-                description="Akun lokal GAPURA dapat digunakan peserta untuk masuk dengan email dan kata sandi."
+                description="Akun lokal GAPURA dapat digunakan pengguna untuk masuk dengan email dan kata sandi."
                 actions={<>
                     <Button variant="secondary" href={route('admin.participant.index')} className="min-w-28"><i className="bx bx-arrow-back text-base" aria-hidden />Kembali</Button>
                     <Button type="submit" form="participant-form" loading={processing} disabled={processing} className="min-w-28">{processing ? 'Menyimpan…' : 'Simpan'}</Button>
                 </>}
             />
             <form noValidate id="participant-form" onSubmit={submit} aria-busy={processing}>
-                <CrudFormSection title="Informasi peserta" description="Lengkapi identitas peserta dan informasi kepegawaiannya." icon="bx-user">
+                <CrudFormSection title="Informasi pengguna" description="Lengkapi identitas pengguna dan informasi kepegawaiannya." icon="bx-user">
                     <div className="admin-crud-fields">
                         <FormInput id="name" label="Nama lengkap" isRequired value={data.name} onChange={(event) => setData('name', event.target.value)} error={errors.name} />
                         <FormInput id="email" label="Email" type="email" isRequired value={data.email} onChange={(event) => setData('email', event.target.value)} error={errors.email} autoComplete="email" />

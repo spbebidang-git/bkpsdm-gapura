@@ -16,7 +16,7 @@ class PostCertificateCommand extends Command
 {
     protected $signature = 'app:post-certificate-command {--course= : Filter by specific course ID} {--learn= : Filter by specific learn ID}';
 
-    protected $description = 'Mengirim data sertifikat peserta dari pelatihan yang selesai ke SSO (chunk per batch).';
+    protected $description = 'Mengirim data sertifikat pengguna dari pelatihan yang selesai ke SSO (chunk per batch).';
 
     /** Max NIP per request ke SSO — hindari 500 body/timeout. */
     protected int $chunkSize = 50;
@@ -53,7 +53,7 @@ class PostCertificateCommand extends Command
             $learnId = $this->option('learn');
 
             if ($learnId) {
-                // Filter satu peserta tetap menghormati status kirim dan kelulusan.
+                // Filter satu pengguna tetap menghormati status kirim dan kelulusan.
                 $query->where('id', $learnId)->whereNotNull('finished_at');
                 $this->info('[PostCertificate] Filter aktif: learn_id = '.$learnId);
             } elseif ($courseId) {
@@ -67,7 +67,7 @@ class PostCertificateCommand extends Command
             $allLearns = $query->get();
 
             $this->info('[PostCertificate] Data learns ditemukan: '.$allLearns->count().' record yang belum dikirim.');
-            Log::info('Peserta siap dikirim.', ['event' => 'certificate.push.targets', 'count' => $allLearns->count()]);
+            Log::info('Pengguna siap dikirim.', ['event' => 'certificate.push.targets', 'count' => $allLearns->count()]);
 
             if ($allLearns->isEmpty()) {
                 Log::info('Tidak ada sertifikat yang perlu dikirim.', ['event' => 'certificate.push.completed', 'success_count' => 0, 'failed_count' => 0, 'skipped_count' => 0]);
@@ -123,8 +123,8 @@ class PostCertificateCommand extends Command
                     $nip = normalize_nip($rawNip);
                     if (! $nip) {
                         $failedParticipants++;
-                        $this->warn("Peserta ID {$learn->participant_id} NIP invalid/kosong, dilewati.");
-                        Log::warning('Identitas peserta belum valid.', [
+                        $this->warn("Pengguna ID {$learn->participant_id} NIP invalid/kosong, dilewati.");
+                        Log::warning('Identitas pengguna belum valid.', [
                             'event' => 'certificate.participant.invalid', 'participant_id' => $learn->participant_id,
                             'participant_exists' => $learn->participant !== null,
                         ]);
@@ -141,10 +141,10 @@ class PostCertificateCommand extends Command
                 }
 
                 if (empty($entries)) {
-                    $msg = 'Kelas ID '.$courseIdKey.' tidak memiliki peserta dengan identitas valid.';
+                    $msg = 'Kelas ID '.$courseIdKey.' tidak memiliki pengguna dengan identitas valid.';
                     $this->error($msg);
                     $this->rememberError($msg);
-                    Log::warning('Kelas tidak memiliki peserta valid.', ['event' => 'certificate.push.no_valid_participants', 'course_id' => $courseIdKey]);
+                    Log::warning('Kelas tidak memiliki pengguna valid.', ['event' => 'certificate.push.no_valid_participants', 'course_id' => $courseIdKey]);
 
                     continue;
                 }
@@ -153,7 +153,7 @@ class PostCertificateCommand extends Command
                 $chunks = array_chunk($entries, $this->chunkSize);
                 $totalChunks = count($chunks);
 
-                $this->info('Kelas ID '.$courseIdKey.': '.count($entries).' peserta → '.$totalChunks.' batch.');
+                $this->info('Kelas ID '.$courseIdKey.': '.count($entries).' pengguna → '.$totalChunks.' batch.');
 
                 $code = $courseItem->course->prestige_certificate_code;
                 $missing = [];
@@ -202,11 +202,11 @@ class PostCertificateCommand extends Command
                         }
                         Learn::whereKey($entry['learn_id'])->update(['is_post_certificate' => 1, 'prestige_certificate_registered_at' => now()]);
                         $pushedParticipants++;
-                        Log::info('Sertifikat peserta terdaftar.', ['event' => 'certificate.employee.registered', 'kode' => $code, 'learn_id' => $entry['learn_id']]);
+                        Log::info('Sertifikat pengguna terdaftar.', ['event' => 'certificate.employee.registered', 'kode' => $code, 'learn_id' => $entry['learn_id']]);
                     } catch (\Throwable $e) {
                         $failedParticipants++;
                         $this->rememberError($e->getMessage());
-                        Log::warning('Pendaftaran sertifikat peserta gagal.', ['event' => 'certificate.employee.failed', 'kode' => $code, 'learn_id' => $entry['learn_id'], 'exception' => $e]);
+                        Log::warning('Pendaftaran sertifikat pengguna gagal.', ['event' => 'certificate.employee.failed', 'kode' => $code, 'learn_id' => $entry['learn_id'], 'exception' => $e]);
                     }
                 }
 
@@ -246,7 +246,7 @@ class PostCertificateCommand extends Command
     }
 
     /**
-     * tgl dari jadwal course, fallback min/max finished_at peserta.
+     * tgl dari jadwal course, fallback min/max finished_at pengguna.
      */
     private function resolveDates($courseItem, $learnRecords): array
     {

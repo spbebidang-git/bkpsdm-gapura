@@ -12,8 +12,8 @@ export default function Show({
 }) {
     const resetLearning = (participant) => {
         Swal.fire({
-            title: 'Reset proses belajar peserta?',
-            text: `Progres, jawaban, nilai, tugas, dan sertifikat ${participant.name} pada kelas ini akan diarsipkan. Peserta perlu aktivasi ulang dan memulai dari awal. Sertifikat yang sudah tercatat di KEDATON/Prestige tidak dapat ditarik otomatis.`,
+            title: 'Reset proses belajar pengguna?',
+            text: `Progres, jawaban, nilai, tugas, dan sertifikat ${participant.name} pada kelas ini akan diarsipkan. Pengguna perlu aktivasi ulang dan memulai dari awal. Sertifikat yang sudah tercatat di KEDATON/Prestige tidak dapat ditarik otomatis.`,
             icon: 'warning',
             showCancelButton: true,
             reverseButtons: true,
@@ -70,7 +70,7 @@ export default function Show({
                                 <span className="text-steel">JP:</span> {course.jam_pelajaran ?? '-'}
                             </div>
                             <div>
-                                <span className="text-steel">Peserta / Selesai:</span>{' '}
+                                <span className="text-steel">Pengguna / Selesai:</span>{' '}
                                 {course.total_participant ?? 0} / {course.total_passed ?? 0}
                             </div>
                         </div>
@@ -128,7 +128,7 @@ export default function Show({
                             </li>
                         ))}
                         {finishedParticipant.length === 0 && (
-                            <li className="px-4 py-6 text-center text-stone">Belum ada peserta selesai</li>
+                            <li className="px-4 py-6 text-center text-stone">Belum ada pengguna selesai</li>
                         )}
                     </ul>
                 </div>
@@ -144,7 +144,7 @@ export default function Show({
                             </li>
                         ))}
                         {onGoingParticipant.length === 0 && (
-                            <li className="px-4 py-6 text-center text-stone">Belum ada peserta aktif</li>
+                            <li className="px-4 py-6 text-center text-stone">Belum ada pengguna aktif</li>
                         )}
                     </ul>
                 </div>

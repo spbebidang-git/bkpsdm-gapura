@@ -13,9 +13,9 @@ use Illuminate\Support\Facades\Route;
 | Order follows the sidebar (resources/js/Layouts/Admin/navigation.ts):
 |   1. Summary  — dashboard
 |   2. Master   — category, opd, employee-status, trainer, participant, course
-|   3. Results  — report, certificate, review
+|   3. Results  — report, course-performance, certificate, review
 |   4. Management — help, notification-messages, permission, role, user, setting, log
-|   5. Extras   — routes without a sidebar entry (result, course-performance, import-learn)
+|   5. Extras   — additional routes (result, course-performance, import-learn)
 |
 | Role access follows PermissionSeeder::ALL + syncPermissions:
 |   super_admin   : all permissions
@@ -42,6 +42,6 @@ Route::prefix('/admin')
         // 4. Management
         require __DIR__ . '/admin/management.php';
 
-        // 5. Extras — no sidebar entry
+        // 5. Extras — additional routes
         require __DIR__ . '/admin/extras.php';
     });

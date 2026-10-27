@@ -42,10 +42,18 @@ use App\Repositories\Learning\Contracts\LearnRepositoryInterface;
 use App\Repositories\Learning\EnrollmentRepository;
 use App\Repositories\Learning\LearnItemRepository;
 use App\Repositories\Learning\LearnRepository;
+use App\Repositories\Learning\Contracts\NotificationMessageTemplateRepositoryInterface;
+use App\Repositories\Learning\NotificationMessageTemplateRepository;
+use App\Repositories\Learning\Contracts\ParticipantNotificationRepositoryInterface;
+use App\Repositories\Learning\ParticipantNotificationRepository;
+use App\Repositories\Learning\Contracts\LearnBulkImportRepositoryInterface;
+use App\Repositories\Learning\LearnBulkImportRepository;
 use App\Repositories\Reporting\Contracts\LearningReportRepositoryInterface;
 use App\Repositories\Reporting\Contracts\ResultRepositoryInterface;
 use App\Repositories\Reporting\LearningReportRepository;
 use App\Repositories\Reporting\ResultRepository;
+use App\Repositories\Reporting\Contracts\PlatformStatisticRepositoryInterface;
+use App\Repositories\Reporting\PlatformStatisticRepository;
 use App\Repositories\Support\Contracts\HelpRepositoryInterface;
 use App\Repositories\Support\HelpRepository;
 use App\Repositories\System\Contracts\SettingRepositoryInterface;
@@ -79,11 +87,15 @@ class RepositoryServiceProvider extends ServiceProvider
         EnrollmentRepositoryInterface::class => EnrollmentRepository::class,
         LearnRepositoryInterface::class => LearnRepository::class,
         LearnItemRepositoryInterface::class => LearnItemRepository::class,
+        NotificationMessageTemplateRepositoryInterface::class => NotificationMessageTemplateRepository::class,
+        ParticipantNotificationRepositoryInterface::class => ParticipantNotificationRepository::class,
+        LearnBulkImportRepositoryInterface::class => LearnBulkImportRepository::class,
         HelpRepositoryInterface::class => HelpRepository::class,
         SettingRepositoryInterface::class => SettingRepository::class,
         RoleRepositoryInterface::class => RoleRepository::class,
         PermissionRepositoryInterface::class => PermissionRepository::class,
         LearningReportRepositoryInterface::class => LearningReportRepository::class,
         ResultRepositoryInterface::class => ResultRepository::class,
+        PlatformStatisticRepositoryInterface::class => PlatformStatisticRepository::class,
     ];
 }

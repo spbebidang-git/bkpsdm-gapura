@@ -141,7 +141,7 @@ export default function Index({ courses = [] }) {
             <div className="certificate-admin course-index">
                 <CrudPageHeader
                     title="Sertifikat"
-                    description="Kelola sertifikat peserta yang telah menyelesaikan kelas dan sinkronkan dengan Kedaton SSO."
+                    description="Kelola sertifikat pengguna yang telah menyelesaikan kelas dan sinkronkan dengan Kedaton SSO."
                     actions={<>
                         <a href={`${route('admin.certificate.export')}?${new URLSearchParams(filterParams)}`} className="course-index-create">
                             <i className="bx bx-download" aria-hidden /> Ekspor Excel
@@ -165,9 +165,9 @@ export default function Index({ courses = [] }) {
                     hideSearch
                     toolbarFilters={<div className="certificate-toolbar">
                         <label className="certificate-search">
-                            <span className="sr-only">Cari peserta atau kelas</span>
+                            <span className="sr-only">Cari pengguna atau kelas</span>
                             <i className="bx bx-search" aria-hidden />
-                            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} className="admin-search-input" placeholder="Cari peserta atau kelas..." />
+                            <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} className="admin-search-input" placeholder="Cari pengguna atau kelas..." />
                         </label>
                         <div className="certificate-filters" aria-label="Filter sertifikat">
                             <label><span>Status</span><select value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -200,7 +200,7 @@ export default function Index({ courses = [] }) {
                         <button type="button" onClick={() => setPreview(null)} className={btnSecondarySm}>Tutup</button>
                     </div>
                     <p className="mb-3 text-sm">Jika preview tidak tampil, <a href={preview || '#'} target="_blank" rel="noopener noreferrer" className="underline">buka sertifikat di tab baru</a>.</p>
-                    {preview && <iframe src={preview} title="Preview sertifikat peserta" className="h-[65vh] w-full rounded border" referrerPolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-popups" />}
+                    {preview && <iframe src={preview} title="Preview sertifikat pengguna" className="h-[65vh] w-full rounded border" referrerPolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-popups" />}
                 </div>
             </Modal>
         </AdminLayout>

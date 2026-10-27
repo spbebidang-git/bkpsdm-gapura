@@ -38,9 +38,9 @@ export default function MeetingForm({ slug, activity = null }: { slug: string; a
 
     return <ActivityCrudFormLayout slug={slug} formId={formId} processing={processing}
         title={isEdit ? 'Ubah Pertemuan Daring' : 'Pertemuan Daring'}
-        description="Buat sesi pertemuan online beserta URL yang digunakan peserta untuk bergabung.">
+        description="Buat sesi pertemuan online beserta URL yang digunakan pengguna untuk bergabung.">
         <form id={formId} noValidate onSubmit={handleSubmit} className="course-test-form w-full">
-            <CrudFormSection title="Informasi pertemuan" icon="bx-video" description="Jelaskan tujuan dan isi sesi yang akan diikuti peserta.">
+            <CrudFormSection title="Informasi pertemuan" icon="bx-video" description="Jelaskan tujuan dan isi sesi yang akan diikuti pengguna.">
                 <div className="course-test-fields">
                     <FormInput id="title" label="Judul Pertemuan" isRequired value={data.title} onChange={handleChange} error={errors.title}
                         small="Minimal 3 karakter. Isikan judul pertemuan yang jelas dan mudah dipahami." />
@@ -55,10 +55,10 @@ export default function MeetingForm({ slug, activity = null }: { slug: string; a
                     <FormInput id="url" label="Tautan Meeting (URL)" isRequired type="url" value={data.url} onChange={handleChange} error={errors.url} placeholder="https://meet.google.com/xxx-xxxx-xxx" small="Masukkan URL meeting yang valid (Zoom, Google Meet, atau platform lainnya)." />
                 </div>
             </CrudFormSection>
-            <CrudFormSection title="Instruksi untuk peserta" icon="bx-message-detail" description="Tambahkan panduan lengkap yang harus diikuti sebelum pertemuan berlangsung.">
+            <CrudFormSection title="Instruksi untuk pengguna" icon="bx-message-detail" description="Tambahkan panduan lengkap yang harus diikuti sebelum pertemuan berlangsung.">
                 <div ref={instructionRef} className={`course-test-editor ${instructionError ? 'is-invalid' : ''}`}>
                     <FormLabel title="Instruksi" id="instruction" />
-                    <ReactQuill value={data.instruction} onChange={(value) => { dismissInstructionError(); setData('instruction', value); }} placeholder="Tuliskan instruksi atau panduan yang harus diikuti peserta." />
+                    <ReactQuill value={data.instruction} onChange={(value) => { dismissInstructionError(); setData('instruction', value); }} placeholder="Tuliskan instruksi atau panduan yang harus diikuti pengguna." />
                     {instructionError && <small className="mt-1 block text-red-500">{instructionError}</small>}
                 </div>
             </CrudFormSection>

@@ -58,7 +58,7 @@ class CourseSeeder extends Seeder
                     'short_description' => "Pelatihan {$row['title']} untuk meningkatkan kompetensi ASN. Durasi {$row['jp']} JP.",
                     'description' => '<p>Materi mencakup konsep, praktik, dan studi kasus terkait <strong>'
                         .e($row['title'])
-                        .'</strong>. Peserta diharapkan mampu menerapkan ilmu di unit kerja masing-masing.</p>'
+                        .'</strong>. Pengguna diharapkan mampu menerapkan ilmu di unit kerja masing-masing.</p>'
                         .'<ul><li>Pemahaman konsep</li><li>Praktik terapan</li><li>Evaluasi pre/post test</li></ul>',
                     'thumbnail' => '',
                     'jam_pelajaran' => $row['jp'],

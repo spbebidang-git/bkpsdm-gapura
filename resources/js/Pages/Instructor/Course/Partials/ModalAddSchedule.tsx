@@ -20,7 +20,7 @@ export default function ModalAddSchedule({ isOpen, onClose, onScheduleAdded }) {
                 <DialogPanel className="course-form course-schedule-modal w-full max-w-lg overflow-hidden rounded-[18px] bg-white shadow-xl">
                     <header className="course-form-section-header">
                         <span className="course-form-section-icon"><i className="bx bx-calendar-plus" aria-hidden /></span>
-                        <div className="flex-1"><DialogTitle as="h2">Tambah jadwal</DialogTitle><p>Atur tanggal, waktu, dan kuota peserta.</p></div>
+                        <div className="flex-1"><DialogTitle as="h2">Tambah jadwal</DialogTitle><p>Atur tanggal, waktu, dan kuota pengguna.</p></div>
                         <button type="button" onClick={onClose} aria-label="Tutup dialog" className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0F4FF] text-lg text-[#526176] hover:bg-[#E0E8F5]"><i className="bx bx-x" aria-hidden /></button>
                     </header>
                     <form onSubmit={handleSubmit}>
@@ -30,7 +30,7 @@ export default function ModalAddSchedule({ isOpen, onClose, onScheduleAdded }) {
                                 <FormInput id="time_from" label="Waktu mulai" type="time" isRequired required value={values.time_from} onChange={handleChange} />
                                 <FormInput id="time_to" label="Waktu selesai" type="time" isRequired required min={values.time_from || undefined} value={values.time_to} onChange={handleChange} />
                             </div>
-                            <FormInput id="quota" label="Kuota peserta" type="number" min="1" step="1" isRequired required value={values.quota} onChange={handleChange} placeholder="Contoh: 30" />
+                            <FormInput id="quota" label="Kuota pengguna" type="number" min="1" step="1" isRequired required value={values.quota} onChange={handleChange} placeholder="Contoh: 30" />
                         </div>
                         <div className="course-form-actions justify-end border-t border-[#E8ECF1] p-5">
                             <button type="button" className="course-form-button" onClick={onClose}>Batal</button>

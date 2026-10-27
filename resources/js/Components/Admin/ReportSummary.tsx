@@ -14,13 +14,13 @@ export function ReportProgress({ value = 0 }: { value?: number }) {
 
 export default function ReportSummary({ summary, detail = false, course = false }: { summary: ReportSummaryData; detail?: boolean; course?: boolean }) {
     const cards = detail ? [
-        { label: course ? 'Peserta' : 'Kelas diikuti', value: course ? summary.total_participants : summary.total_courses, icon: 'bx-book-reader', note: 'Keikutsertaan terpilih' },
-        { label: course ? 'Peserta selesai' : 'Kelas selesai', value: summary.completed, icon: 'bx-check-circle', note: 'Pembelajaran dituntaskan' },
+        { label: course ? 'Pengguna' : 'Kelas diikuti', value: course ? summary.total_participants : summary.total_courses, icon: 'bx-book-reader', note: 'Keikutsertaan terpilih' },
+        { label: course ? 'Pengguna selesai' : 'Kelas selesai', value: summary.completed, icon: 'bx-check-circle', note: 'Pembelajaran dituntaskan' },
         { label: 'Rata-rata pre-test', value: summary.avg_pre_test, icon: 'bx-bar-chart-alt-2', note: 'Dari nilai yang tersedia' },
         { label: 'Rata-rata post-test', value: summary.avg_post_test, icon: 'bx-line-chart', note: 'Dari nilai yang tersedia' },
     ] : [
-        { label: 'Peserta', value: summary.total_participants, icon: 'bx-group', note: 'Peserta terdaftar' },
-        { label: 'Kelas', value: summary.total_courses, icon: 'bx-book-open', note: 'Kelas dengan peserta' },
+        { label: 'Pengguna', value: summary.total_participants, icon: 'bx-group', note: 'Pengguna terdaftar' },
+        { label: 'Kelas', value: summary.total_courses, icon: 'bx-book-open', note: 'Kelas dengan pengguna' },
         { label: 'Keikutsertaan selesai', value: summary.completed, icon: 'bx-check-circle', note: 'Pembelajaran dituntaskan' },
         { label: 'Rata-rata post-test', value: summary.avg_post_test, icon: 'bx-line-chart', note: 'Dari nilai yang tersedia' },
     ];

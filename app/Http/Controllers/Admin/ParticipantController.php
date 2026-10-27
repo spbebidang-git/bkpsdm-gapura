@@ -76,7 +76,7 @@ class ParticipantController
         $participant->assignRole('participant');
         $this->saveProfileMeta($participant, $data);
 
-        return to_route('admin.participant.index')->with('success', 'Peserta lokal berhasil ditambahkan.');
+        return to_route('admin.participant.index')->with('success', 'Pengguna lokal berhasil ditambahkan.');
     }
 
     public function edit(User $participant)
@@ -124,7 +124,7 @@ class ParticipantController
         $participant->save();
         $this->saveProfileMeta($participant, $data);
 
-        return to_route('admin.participant.index')->with('success', 'Data peserta berhasil diperbarui.');
+        return to_route('admin.participant.index')->with('success', 'Data pengguna berhasil diperbarui.');
     }
 
     public function destroy(User $participant)
@@ -138,7 +138,7 @@ class ParticipantController
             }
         });
 
-        return to_route('admin.participant.index')->with('success', 'Peserta lokal berhasil dihapus.');
+        return to_route('admin.participant.index')->with('success', 'Pengguna lokal berhasil dihapus.');
     }
 
     private function ensureLocalParticipant(User $participant): void

@@ -24,7 +24,7 @@ export default function Form({ employeeStatus }: { employeeStatus: EmployeeStatu
         <div className="employee-status-admin employee-status-admin-form">
             <CrudPageHeader
                 title={isEdit ? 'Ubah status pegawai' : 'Tambah status pegawai'}
-                description="Status kepegawaian digunakan untuk mengelompokkan peserta dan syarat kelas."
+                description="Status kepegawaian digunakan untuk mengelompokkan pengguna dan syarat kelas."
                 actions={<>
                     <Button variant="secondary" href={route('admin.employee-status.index')} className="min-w-28"><i className="bx bx-arrow-back text-base" aria-hidden />Kembali</Button>
                     <Button type="submit" form="employee-status-form" loading={processing} disabled={processing} className="min-w-28">

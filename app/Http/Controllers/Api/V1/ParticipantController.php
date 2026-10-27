@@ -11,7 +11,7 @@ use Illuminate\Support\Str;
 class ParticipantController extends Controller
 {
     /**
-     * Daftar peserta (filter by status kepegawaian)
+     * Daftar pengguna (filter by status kepegawaian)
      */
     public function index(Request $request)
     {
@@ -39,12 +39,12 @@ class ParticipantController extends Controller
 
         return ParticipantResource::collection($participants)->additional([
             'success' => true,
-            'message' => 'Data peserta berhasil diambil.',
+            'message' => 'Data pengguna berhasil diambil.',
         ]);
     }
 
     /**
-     * Detail peserta + riwayat pelatihan
+     * Detail pengguna + riwayat pelatihan
      */
     public function show(int $id)
     {
@@ -53,7 +53,7 @@ class ParticipantController extends Controller
         if (!$participant) {
             return response()->json([
                 'success' => false,
-                'message' => 'Peserta tidak ditemukan.',
+                'message' => 'Pengguna tidak ditemukan.',
             ], 404);
         }
 
@@ -80,7 +80,7 @@ class ParticipantController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Detail peserta berhasil diambil.',
+            'message' => 'Detail pengguna berhasil diambil.',
             'data' => [
                 'custom_unique_id' => Str::random(4),
                 'data_date' => now()->format('Y-m-d H:i:s'),

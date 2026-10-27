@@ -18,6 +18,10 @@ interface LearnRepositoryInterface extends BaseRepositoryInterface
 
     public function findByEnrollment(int|string $enrollmentId): ?Learn;
 
+    public function lockByEnrollment(int|string $enrollmentId): ?Learn;
+
+    public function deleteWithItems(Learn $learn): void;
+
     public function getByCourse(int|string $courseId): Collection;
 
     public function getCompletedByCourse(int|string $courseId): Collection;

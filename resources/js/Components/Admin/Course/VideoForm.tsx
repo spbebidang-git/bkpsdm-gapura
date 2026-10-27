@@ -36,14 +36,14 @@ export default function VideoForm({ slug, activity = null }: { slug: string; act
 
     return <ActivityCrudFormLayout slug={slug} formId={formId} processing={processing}
         title={isEdit ? 'Ubah Presentasi Video' : 'Presentasi Video'}
-        description="Tambahkan video pembelajaran beserta URL yang dapat diakses peserta.">
+        description="Tambahkan video pembelajaran beserta URL yang dapat diakses pengguna.">
         <form id={formId} noValidate onSubmit={handleSubmit} className="course-test-form w-full">
-            <CrudFormSection title="Informasi video" icon="bx-play-circle" description="Berikan judul dan gambaran materi yang akan ditonton peserta.">
+            <CrudFormSection title="Informasi video" icon="bx-play-circle" description="Berikan judul dan gambaran materi yang akan ditonton pengguna.">
                 <div className="course-test-fields">
                     <FormInput id="title" label="Judul Video" isRequired value={data.title} onChange={handleChange} error={errors.title}
                         placeholder="Contoh: Pengenalan Materi Bab 1" small="Judul harus singkat dan jelas, misalnya 'Pengenalan Materi Bab 1'." />
                     <FormTextArea id="description" label="Deskripsi Video" isRequired rows={3} value={data.description} onChange={handleChange} error={errors.description}
-                        placeholder="Tuliskan gambaran singkat isi video atau poin pembelajaran penting." small="Deskripsi membantu peserta memahami tujuan pembelajaran dari video tersebut." />
+                        placeholder="Tuliskan gambaran singkat isi video atau poin pembelajaran penting." small="Deskripsi membantu pengguna memahami tujuan pembelajaran dari video tersebut." />
                 </div>
             </CrudFormSection>
             <CrudFormSection title="Akses dan penilaian" icon="bx-link" description="Masukkan tautan video, durasi, dan bobot aktivitas.">
@@ -57,10 +57,10 @@ export default function VideoForm({ slug, activity = null }: { slug: string; act
                     </div>
                 </div>
             </CrudFormSection>
-            <CrudFormSection title="Instruksi tambahan" icon="bx-message-detail" description="Tambahkan catatan penting atau arahan saat peserta menonton video.">
+            <CrudFormSection title="Instruksi tambahan" icon="bx-message-detail" description="Tambahkan catatan penting atau arahan saat pengguna menonton video.">
                 <div className={`course-test-editor ${errors.instruction ? 'is-invalid' : ''}`}>
                     <FormLabel title="Instruksi Tambahan" id="instruction" />
-                    <ReactQuill value={data.instruction} onChange={(value) => setData('instruction', value)} placeholder="Tulis catatan penting atau arahan untuk peserta." />
+                    <ReactQuill value={data.instruction} onChange={(value) => setData('instruction', value)} placeholder="Tulis catatan penting atau arahan untuk pengguna." />
                 </div>
             </CrudFormSection>
         </form>

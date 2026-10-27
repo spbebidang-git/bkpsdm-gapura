@@ -18,6 +18,11 @@ class QuestionRepository extends EloquentRepository implements QuestionRepositor
         return $this->query()->with($relations)->where('activity_id', $activityId)->first();
     }
 
+    public function lockByActivity(int|string $activityId): Question
+    {
+        return $this->query()->where('activity_id', $activityId)->lockForUpdate()->firstOrFail();
+    }
+
     public function findActivityVariant(int|string $activityId, int|string $variantId): ?object
     {
         return $this->query()

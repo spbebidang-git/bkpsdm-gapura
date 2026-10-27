@@ -107,7 +107,7 @@ class CourseController
             $learn->delete();
             $enrollment->delete();
         });
-        Log::channel('audit')->info('Progres belajar peserta direset oleh superadmin.', [
+        Log::channel('audit')->info('Progres belajar pengguna direset oleh superadmin.', [
             'event' => 'admin.participant_learning.reset',
             'actor_id' => request()->user()->id,
             'participant_id' => $participant->id,
@@ -115,7 +115,7 @@ class CourseController
         ]);
 
         return to_route('admin.course.overview', $course->slug)
-            ->with('success', 'Progres peserta diarsipkan. Peserta dapat mengaktifkan ulang kelas dan mulai dari awal.');
+            ->with('success', 'Progres pengguna diarsipkan. Pengguna dapat mengaktifkan ulang kelas dan mulai dari awal.');
     }
 
     public function create()

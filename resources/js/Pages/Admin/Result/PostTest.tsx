@@ -63,7 +63,7 @@ export default function PostTest({ course }) {
                     <div className="min-w-0">
                         <p className={pageEyebrow}>Post-test</p>
                         <h1 className={pageTitle}>{course.title}</h1>
-                        <p className={pageDescription}>Rata-rata nilai post-test setiap peserta.</p>
+                        <p className={pageDescription}>Rata-rata nilai post-test setiap pengguna.</p>
                     </div>
                     <Link href={route('admin.result.index')} className={`${btnLink} shrink-0`}>
                         ← Kembali
@@ -72,9 +72,9 @@ export default function PostTest({ course }) {
                 <DataTable
                     url={route('admin.result.post-test', course.slug)}
                     columns={columns}
-                    searchPlaceholder="Cari NIP atau nama peserta..."
+                    searchPlaceholder="Cari NIP atau nama pengguna..."
                     emptyTitle="Belum ada hasil post-test"
-                    emptyDescription="Nilai akan tampil setelah peserta menyelesaikan post-test."
+                    emptyDescription="Nilai akan tampil setelah pengguna menyelesaikan post-test."
                 />
             </div>
         </AdminLayout>
