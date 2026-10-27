@@ -1,5 +1,7 @@
 import Activity from '@/Components/Activity';
 import InteractiveContentLauncher from '@/Components/InteractiveContentLauncher';
+import QuestionnaireModal from '@/Components/QuestionnaireModal';
+import TestStepperModal from '@/Components/TestStepperModal';
 import Learn from '@/Layouts/Participant/Learn';
 import { router } from '@inertiajs/react';
 import { useCallback, useEffect, useState } from 'react';
@@ -45,6 +47,24 @@ const readRemainingCountdown = (storageKey, initialDuration) => {
     }
 };
 
+const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
+
+/**
+ * Siapkan urutan soal satu kali di halaman, bukan di dalam Activity.
+ *
+ * `answers` dikunci oleh indeks soal, jadi hanya boleh ada satu urutan:
+ * mengacak ulang saat komponennya dipasang kembali akan menautkan jawaban
+ * yang sudah ada ke soal yang berbeda tanpa terlihat.
+ */
+const prepareTestQuestions = (items = [], mix) => {
+    if (mix !== 1) return items;
+
+    return shuffle(items).map((item) => ({
+        ...item,
+        option: Object.fromEntries(shuffle(Object.entries(item.option))),
+    }));
+};
+
 const writeRemainingCountdown = (storageKey, remaining, initialDuration) => {
     try {
         localStorage.setItem(storageKey, JSON.stringify({ remaining, initialDuration }));
@@ -63,6 +83,11 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
         || activity.type == 'video'
         || activity.type == 'literature';
     const isTimedActivity = activity.type == 'literature';
+    const isQuestionnaire = activity.type == 'questionnaire';
+    const isTest = activity.type == 'pre-test' || activity.type == 'post-test';
+    const isExpandable = isQuestionnaire || isTest;
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [testQuestions, setTestQuestions] = useState([]);
     const [isCompletingContent, setIsCompletingContent] = useState(false);
     const [isPlayerOpen, setIsPlayerOpen] = useState(false);
     const isSubmitEnabled = !isTimedActivity || duration === 0;
@@ -219,7 +244,7 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
 
         // store kuesioner
         if (activity.type == 'questionnaire') {
-            // Dikirim utuh sebagai objek berkunci id pertanyaan — bentuknya
+            // Dikirim utuh sebagai objek berkunci id pertanyaan - bentuknya
             // bersarang (pilihan jamak & skala), bukan daftar rata.
             router.post(
                 route('participant.learn.store', { course: slug, schedule: schedule.id, activity: activity_id }),
@@ -254,6 +279,18 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
         // });
     };
 
+    useEffect(() => {
+        setIsExpanded(false);
+    }, [activity_id]);
+
+    // Identitas question_items berubah tiap kunjungan Inertia, jadi mengulang
+    // tes tetap mengacak ulang, sementara render biasa tidak.
+    useEffect(() => {
+        setTestQuestions(isTest
+            ? prepareTestQuestions(activity.data?.question_items ?? [], activity.data?.mix)
+            : []);
+    }, [activity.data?.question_items, activity.data?.mix, isTest]);
+
     const handlePlayerOpenChange = useCallback((open) => setIsPlayerOpen(open), []);
 
     const handleInteractiveFinish = () => {
@@ -280,6 +317,14 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
         );
     };
 
+    // Hanya satu salinan yang boleh ter-mount: pilihan ganda dikelompokkan
+    // lewat atribut `name` per pertanyaan, jadi dua salinan yang hidup
+    // bersamaan akan saling menghapus pilihan.
+    const activityNode = (
+        <Activity question_result={question_result} slug={course.slug} id={activity_id} type={activity.type} data={activity.data} status={activity.status} answers={answers} file={file} setFile={setFile}
+            setAnswers={setAnswers} schedule={schedule} questionItems={testQuestions} />
+    );
+
     return <Learn type="material" course={course} progress={progress} activities={activities} activity={activity} timer={activity.timer} displayTimerSeconds={duration} formattedAnswers={formattedAnswers} activity_id={activity_id} schedule={schedule}>
         <div className="flex flex-col h-full bg-white">
             <div className="flex-1 rounded-xl bg-gray-50 p-3 lg:p-4 mb-4 shadow-inner border border-gray-100 flex flex-col min-h-0">
@@ -301,28 +346,65 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
                     />
                 ) : (
                     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pr-2">
-                        <Activity question_result={question_result} slug={course.slug} id={activity_id} type={activity.type} data={activity.data} status={activity.status} answers={answers} file={file} setFile={setFile}
-                            setAnswers={setAnswers} schedule={schedule} />
+                        {isExpanded ? (
+                            <div className="flex flex-1 items-center justify-center p-8 text-center text-sm text-gray-500">
+                                Sedang dibuka di jendela besar.
+                            </div>
+                        ) : activityNode}
                     </div>
                 )}
             </div>
-            <div className="w-full sm:w-64 mx-auto shrink-0 pb-1">
+            <div className={`mx-auto shrink-0 pb-1 w-full ${isExpandable ? 'sm:w-[34rem]' : 'sm:w-64'}`}>
                 {isCompletionGated ? (
                     <p className="text-center text-xs text-gray-400">
                         Tombol Selesai muncul setelah konten dituntaskan
                     </p>
-                ) : isSubmitEnabled ? (
-                    <button onClick={(e) => handleSubmit(e, course.slug)} className="w-full px-6 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5 flex justify-center items-center gap-2">
-                        Kirim Jawaban
-                        <box-icon name="send" color="white" size="20px"></box-icon>
-                    </button>
                 ) : (
-                    <button className="w-full px-6 py-3.5 bg-gray-300 text-gray-500 font-bold rounded-xl shadow-sm cursor-not-allowed flex justify-center items-center gap-2">
-                        Selanjutnya
-                        <box-icon name="time" color="#6b7280" size="20px"></box-icon>
-                    </button>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                        {isExpandable && (
+                            <button type="button" onClick={() => setIsExpanded(true)} className="w-full px-6 py-3.5 border-2 border-primary text-primary hover:bg-primary/5 font-bold rounded-xl transition-all flex justify-center items-center gap-2">
+                                Buka di Jendela Besar
+                                <box-icon name="expand" color="#018083" size="20px"></box-icon>
+                            </button>
+                        )}
+                        {isSubmitEnabled ? (
+                            <button onClick={(e) => handleSubmit(e, course.slug)} className="w-full px-6 py-3.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-md transition-all hover:-translate-y-0.5 flex justify-center items-center gap-2">
+                                Kirim Jawaban
+                                <box-icon name="send" color="white" size="20px"></box-icon>
+                            </button>
+                        ) : (
+                            <button className="w-full px-6 py-3.5 bg-gray-300 text-gray-500 font-bold rounded-xl shadow-sm cursor-not-allowed flex justify-center items-center gap-2">
+                                Selanjutnya
+                                <box-icon name="time" color="#6b7280" size="20px"></box-icon>
+                            </button>
+                        )}
+                    </div>
                 )}
             </div>
+
+            {isQuestionnaire && (
+                <QuestionnaireModal
+                    isOpen={isExpanded}
+                    onClose={() => setIsExpanded(false)}
+                    title={activity.title}
+                    onSubmit={(e) => handleSubmit(e, course.slug)}
+                >
+                    {activityNode}
+                </QuestionnaireModal>
+            )}
+
+            {isTest && (
+                <TestStepperModal
+                    isOpen={isExpanded}
+                    onClose={() => setIsExpanded(false)}
+                    eyebrow={activity.type == 'pre-test' ? 'Pre-Test' : 'Post-Test'}
+                    title={activity.title}
+                    questions={testQuestions}
+                    answers={answers}
+                    setAnswers={setAnswers}
+                    onSubmit={(e) => handleSubmit(e, course.slug)}
+                />
+            )}
         </div>
     </Learn>
 }

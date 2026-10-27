@@ -144,7 +144,7 @@ const ControlledVideo = ({ src, onCompleted, activityId, resume }) => {
     );
 };
 
-const Activity = ({ id, type, data, slug, question_result, status, answer, answers, setAnswers, file, setFile, schedule, onVideoCompleted }) => {
+const Activity = ({ id, type, data, slug, question_result, status, answer, answers, setAnswers, file, setFile, schedule, onVideoCompleted, questionItems }) => {
     const [submitted, setSubmitted] = useState(status);
 
     console.log(123 + status)
@@ -159,7 +159,14 @@ const Activity = ({ id, type, data, slug, question_result, status, answer, answe
     useEffect(() => {
 
         if (type === 'pre-test' || type === 'post-test') {
-            if (data.mix === 1) {
+            // Halaman dapat menyiapkan urutannya sendiri supaya tampilan panel
+            // dan tampilan modal memakai urutan yang sama. `answers` dikunci
+            // oleh indeks, jadi dua urutan berbeda akan menautkan jawaban ke
+            // soal yang salah.
+            if (questionItems && questionItems.length > 0) {
+                setQuestions(questionItems);
+            }
+            else if (data.mix === 1) {
                 // Fungsi untuk mengacak array
                 const shuffleArray = (array) => {
                     return array.sort(() => Math.random() - 0.5);
@@ -206,14 +213,17 @@ const Activity = ({ id, type, data, slug, question_result, status, answer, answe
             // Bersihkan interval ketika komponen unmount
             return () => clearInterval(interval);
         }
-    }, [data, duration]);
+    }, [data, duration, questionItems]);
 
     if (type === 'pre-test') {
         const handleAnswerChange = (index, answer, questionId) => {
             setAnswers(prevAnswers => ({
                 ...prevAnswers,
                 [index]: {
-                    question: data.question_items[index].question,
+                    // Soal yang ditampilkan, bukan urutan asli: saat diacak
+                    // keduanya berbeda dan halaman hasil akan menampilkan teks
+                    // soal yang tidak cocok dengan jawaban peserta.
+                    question: questions[index]?.question ?? data.question_items[index].question,
                     option_select: answer,
                     question_id: questionId
                 }
@@ -233,6 +243,7 @@ const Activity = ({ id, type, data, slug, question_result, status, answer, answe
                                     value={key}
                                     className="hidden peer"
                                     required
+                                    checked={answers?.[index]?.option_select === value}
                                     onChange={() => handleAnswerChange(index, value, item.question_id)}
                                 />
                                 {/* <label
@@ -279,7 +290,10 @@ const Activity = ({ id, type, data, slug, question_result, status, answer, answe
             setAnswers(prevAnswers => ({
                 ...prevAnswers,
                 [index]: {
-                    question: data.question_items[index].question,
+                    // Soal yang ditampilkan, bukan urutan asli: saat diacak
+                    // keduanya berbeda dan halaman hasil akan menampilkan teks
+                    // soal yang tidak cocok dengan jawaban peserta.
+                    question: questions[index]?.question ?? data.question_items[index].question,
                     option_select: answer,
                     question_id: questionId
                 }
@@ -391,6 +405,7 @@ const Activity = ({ id, type, data, slug, question_result, status, answer, answe
                                     value={key}
                                     className="hidden peer"
                                     required
+                                    checked={answers?.[index]?.option_select === value}
                                     onChange={() => handleAnswerChange(index, value, item.question_id)}
                                 />
                                 <label
