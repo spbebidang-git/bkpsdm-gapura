@@ -308,6 +308,71 @@ class H5pService
     }
 
     /**
+     * Turunkan titik terjauh yang tercatat (maxTimeReached) ke posisi tonton
+     * saat ini (progress) pada state InteractiveVideo milik peserta.
+     *
+     * preventSkippingMode=forward hanya melarang lompatan melampaui
+     * maxTimeReached, dan nilai itu ikut tersimpan di state. State yang
+     * terbentuk sebelum aturan ini berlaku membawa maxTimeReached jauh di
+     * depan progress, sehingga peserta tetap bisa melompat maju sampai titik
+     * tersebut. State-nya tidak disimpan di sini; itu tugas pemanggil.
+     *
+     * @return array<int, array{sub: string, from: float, to: float}>
+     *         Daftar perubahan; kosong bila tidak ada yang perlu diubah.
+     */
+    public function clampSkipHighWaterMark(ActivityRuntimeState $runtime): array
+    {
+        $state = is_array($runtime->state) ? $runtime->state : [];
+        $contentUserData = $state['content_user_data'] ?? null;
+
+        if (!is_array($contentUserData)) {
+            return [];
+        }
+
+        $changes = [];
+
+        foreach ($contentUserData as $subContentId => $dataTypes) {
+            if (!is_array($dataTypes) || !is_string($dataTypes['state'] ?? null)) {
+                continue;
+            }
+
+            $inner = json_decode($dataTypes['state'], true);
+
+            // Hanya InteractiveVideo yang menyimpan kedua kunci ini.
+            if (!is_array($inner)
+                || !is_numeric($inner['progress'] ?? null)
+                || !is_numeric($inner['maxTimeReached'] ?? null)) {
+                continue;
+            }
+
+            $from = (float) $inner['maxTimeReached'];
+            $to = (float) $inner['progress'];
+
+            if ($from <= $to) {
+                continue;
+            }
+
+            $inner['maxTimeReached'] = $to;
+            $encoded = json_encode($inner, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+            if ($encoded === false) {
+                continue;
+            }
+
+            $contentUserData[$subContentId]['state'] = $encoded;
+            $changes[] = ['sub' => (string) $subContentId, 'from' => $from, 'to' => $to];
+        }
+
+        if ($changes === []) {
+            return [];
+        }
+
+        $runtime->state = ['content_user_data' => $contentUserData];
+
+        return $changes;
+    }
+
+    /**
      * Baca h5p.json untuk judul & pustaka utama.
      */
     protected function readManifest(string $folderName): array
