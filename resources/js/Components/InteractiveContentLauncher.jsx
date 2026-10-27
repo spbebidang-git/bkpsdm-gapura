@@ -2,6 +2,12 @@ import Activity from "@/Components/Activity";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
+// Peserta tidak perlu tahu format teknis paketnya (H5P/SCORM).
+const LABELS = {
+    video: "Video",
+    literature: "Literatur",
+};
+
 const InteractiveContentLauncher = ({
     activity,
     activityId,
@@ -14,19 +20,24 @@ const InteractiveContentLauncher = ({
     setFile,
     onFinish,
     isFinishing = false,
+    // Sinyal selesai dari luar, dipakai literature: penyelesaiannya ditentukan
+    // hitung mundur di halaman, bukan pesan dari dalam iframe.
+    isCompletedExternally = false,
+    onOpenChange,
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [isContentCompleted, setIsContentCompleted] = useState(
         activity.status === "done" || activity.status === 1
     );
     const playerBodyRef = useRef(null);
-    // Peserta tidak perlu tahu format teknis paketnya (H5P/SCORM).
-    const label = activity.type === "video" ? "Video" : "Modul Interaktif";
+    const label = LABELS[activity.type] ?? "Modul Interaktif";
     const contentPath = activity.type === "h5p"
         ? activity.data?.h5p_path
         : (activity.type === "scorm"
             ? activity.data?.scorm_path
-            : activity.data?.src_video);
+            : (activity.type === "literature"
+                ? activity.data?.src_pdf
+                : activity.data?.src_video));
 
     useEffect(() => {
         setIsOpen(false);
@@ -34,7 +45,19 @@ const InteractiveContentLauncher = ({
     }, [activity.status, activityId]);
 
     useEffect(() => {
-        if (activity.type === "video") return;
+        if (!isCompletedExternally) return;
+
+        setIsContentCompleted(true);
+    }, [isCompletedExternally]);
+
+    // Beri tahu halaman saat pemutar dibuka/ditutup. Hitung mundur literature
+    // hanya boleh berjalan selama dokumennya benar-benar terbuka.
+    useEffect(() => {
+        onOpenChange?.(isOpen);
+    }, [isOpen, onOpenChange]);
+
+    useEffect(() => {
+        if (activity.type !== "h5p" && activity.type !== "scorm") return;
 
         const expectedMessage = activity.type === "h5p"
             ? "h5p-completed"
@@ -60,7 +83,7 @@ const InteractiveContentLauncher = ({
             ?.querySelector("iframe")
             ?.contentWindow;
 
-        if (!target || activity.type === "video") {
+        if (!target || activity.type === "video" || activity.type === "literature") {
             resolve();
             return;
         }
@@ -136,8 +159,9 @@ const InteractiveContentLauncher = ({
                 </div>
                 <h3 className="text-lg font-bold text-gray-800">{label}</h3>
                 <p className="mt-2 max-w-md text-sm leading-6 text-gray-500">
-                    Materi baru dimuat setelah tombol Jalankan diklik agar halaman lebih ringan.
-                    Progres terakhir tetap disimpan ketika materi ditutup.
+                    {activity.type === "literature"
+                        ? "Dokumen dibuka di jendela tersendiri agar lebih lega dibaca. Hitung mundur hanya berjalan selama dokumen terbuka, dan sisa waktunya tersimpan saat ditutup."
+                        : "Materi baru dimuat setelah tombol Jalankan diklik agar halaman lebih ringan. Progres terakhir tetap disimpan ketika materi ditutup."}
                 </p>
                 <button
                     type="button"
@@ -205,7 +229,9 @@ const InteractiveContentLauncher = ({
                             }`}>
                                 {isContentCompleted
                                     ? `${label} telah selesai.`
-                                    : `Selesaikan ${label} agar tombol Selesai muncul.`}
+                                    : (activity.type === "literature"
+                                        ? "Tombol Selesai muncul setelah hitung mundur habis."
+                                        : `Selesaikan ${label} agar tombol Selesai muncul.`)}
                             </p>
                             <div className="flex flex-col-reverse gap-2 sm:flex-row">
                                 <button

@@ -2,10 +2,56 @@ import Activity from '@/Components/Activity';
 import InteractiveContentLauncher from '@/Components/InteractiveContentLauncher';
 import Learn from '@/Layouts/Participant/Learn';
 import { router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from "react-toastify";
 
 const buildTimedActivityStorageKey = (scheduleId, activityId) => `materialCountdown_${scheduleId}_${activityId}`;
+
+/**
+ * Baca sisa hitung mundur yang tersimpan.
+ *
+ * Format lama menyimpan `startedAt` dan menghitung memakai jam dinding, jadi
+ * waktu tetap berjalan walau materinya tidak dibuka. Nilai lama dikonversi
+ * sekali ke sisa waktu supaya peserta yang sedang berjalan tidak kehilangan
+ * waktu yang sudah mereka lalui.
+ */
+const readRemainingCountdown = (storageKey, initialDuration) => {
+    if (initialDuration <= 0) return 0;
+
+    let stored = null;
+
+    try {
+        stored = localStorage.getItem(storageKey);
+    } catch {
+        return initialDuration;
+    }
+
+    if (!stored) return initialDuration;
+
+    const clamp = (value) => Math.min(Math.max(value, 0), initialDuration);
+
+    try {
+        const parsed = JSON.parse(stored);
+
+        if (parsed?.initialDuration !== initialDuration) return initialDuration;
+        if (typeof parsed.remaining === 'number') return clamp(parsed.remaining);
+        if (typeof parsed.startedAt === 'number') {
+            return clamp(initialDuration - (Math.floor(Date.now() / 1000) - parsed.startedAt));
+        }
+
+        return initialDuration;
+    } catch {
+        return initialDuration;
+    }
+};
+
+const writeRemainingCountdown = (storageKey, remaining, initialDuration) => {
+    try {
+        localStorage.setItem(storageKey, JSON.stringify({ remaining, initialDuration }));
+    } catch {
+        // Penyimpanan penuh atau diblokir: hitung mundur tetap jalan di memori.
+    }
+};
 
 
 const Index = ({ course, progress, activities, activity, activity_id, question_result, schedule }) => {
@@ -14,9 +60,11 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
     const [duration, setDuration] = useState(activity.data?.duration ?? 0);
     const isCompletionGated = activity.type == 'h5p'
         || activity.type == 'scorm'
-        || activity.type == 'video';
+        || activity.type == 'video'
+        || activity.type == 'literature';
     const isTimedActivity = activity.type == 'literature';
     const [isCompletingContent, setIsCompletingContent] = useState(false);
+    const [isPlayerOpen, setIsPlayerOpen] = useState(false);
     const isSubmitEnabled = !isTimedActivity || duration === 0;
     const timedActivityStorageKey = buildTimedActivityStorageKey(schedule.id, activity_id);
 
@@ -25,84 +73,32 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
     useEffect(() => {
         const initialDuration = activity.data?.duration ?? 0;
 
-        if (!isTimedActivity) {
-            setDuration(initialDuration);
-            return;
-        }
-
-        const now = Math.floor(Date.now() / 1000);
-        const storedCountdown = localStorage.getItem(timedActivityStorageKey);
-
-        if (!storedCountdown) {
-            if (initialDuration > 0) {
-                localStorage.setItem(timedActivityStorageKey, JSON.stringify({
-                    startedAt: now,
-                    initialDuration,
-                }));
-            }
-
-            setDuration(initialDuration);
-            return;
-        }
-
-        try {
-            const parsedCountdown = JSON.parse(storedCountdown);
-            const hasChangedDuration = parsedCountdown.initialDuration !== initialDuration;
-
-            if (hasChangedDuration) {
-                if (initialDuration > 0) {
-                    localStorage.setItem(timedActivityStorageKey, JSON.stringify({
-                        startedAt: now,
-                        initialDuration,
-                    }));
-                } else {
-                    localStorage.removeItem(timedActivityStorageKey);
-                }
-
-                setDuration(initialDuration);
-                return;
-            }
-
-            const elapsed = now - parsedCountdown.startedAt;
-            const remainingDuration = Math.max(initialDuration - elapsed, 0);
-
-            setDuration(remainingDuration);
-        } catch {
-            localStorage.removeItem(timedActivityStorageKey);
-
-            if (initialDuration > 0) {
-                localStorage.setItem(timedActivityStorageKey, JSON.stringify({
-                    startedAt: now,
-                    initialDuration,
-                }));
-            }
-
-            setDuration(initialDuration);
-        }
+        setDuration(isTimedActivity
+            ? readRemainingCountdown(timedActivityStorageKey, initialDuration)
+            : initialDuration);
     }, [activity.data?.duration, activity.type, activity_id, isTimedActivity, timedActivityStorageKey]);
 
+    // Hitung mundur hanya berjalan selama modal terbuka, dan sisa waktunya
+    // disimpan tiap detik. Menutup modal atau meninggalkan tab benar-benar
+    // menjeda, bukan sekadar menunda pembacaan jam dinding seperti sebelumnya.
+    // Penulisan dibatasi pada keadaan terbuka supaya berpindah aktivitas tidak
+    // sempat menimpa sisa waktu milik aktivitas lain.
     useEffect(() => {
-        if (!isTimedActivity) {
-            return;
-        }
+        if (!isTimedActivity || !isPlayerOpen) return;
 
-        if (duration === 0) {
-            return;
-        }
+        const initialDuration = activity.data?.duration ?? 0;
+        if (initialDuration <= 0) return;
 
-        const interval = setInterval(() => {
-            setDuration(prevDuration => {
-                if (prevDuration > 1) {
-                    return prevDuration - 1;
-                }
+        writeRemainingCountdown(timedActivityStorageKey, duration, initialDuration);
 
-                clearInterval(interval);
-                return 0;
-            });
+        if (duration === 0) return;
+
+        const timer = setTimeout(() => {
+            setDuration(prevDuration => (prevDuration > 1 ? prevDuration - 1 : 0));
         }, 1000);
 
-        return () => clearInterval(interval);
-    }, [duration, isTimedActivity, timedActivityStorageKey]);
+        return () => clearTimeout(timer);
+    }, [activity.data?.duration, duration, isPlayerOpen, isTimedActivity, timedActivityStorageKey]);
 
     const handleSubmit = (e, slug) => {
         e.preventDefault();
@@ -258,6 +254,8 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
         // });
     };
 
+    const handlePlayerOpenChange = useCallback((open) => setIsPlayerOpen(open), []);
+
     const handleInteractiveFinish = () => {
         if (isCompletingContent) return;
 
@@ -271,6 +269,7 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
             }),
             {},
             {
+                onSuccess: () => localStorage.removeItem(timedActivityStorageKey),
                 onError: () => {
                     toast.error("Gagal menyelesaikan konten. Silakan coba lagi.", {
                         position: "top-center",
@@ -297,6 +296,8 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
                         setFile={setFile}
                         onFinish={handleInteractiveFinish}
                         isFinishing={isCompletingContent}
+                        isCompletedExternally={isTimedActivity && duration === 0}
+                        onOpenChange={handlePlayerOpenChange}
                     />
                 ) : (
                     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pr-2">

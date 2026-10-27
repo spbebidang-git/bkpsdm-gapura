@@ -625,11 +625,10 @@ const Activity = ({ id, type, data, slug, question_result, status, answer, answe
             router.post(`/learn/${slug}/1/${id}`)
         }
         return (
-            <div className="pdf-container">
+            <div className="pdf-container h-full min-h-0">
                 <iframe
                     src={`${data.src_pdf}`}
-                    width="100%"
-                    height="600px"
+                    className="block h-full w-full rounded-xl border border-gray-100"
                     title="PDF Viewer"
                 ></iframe>
                 {/* <div className="w-full flex justify-center mt-6">
