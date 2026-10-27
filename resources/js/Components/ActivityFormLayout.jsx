@@ -8,13 +8,14 @@ const TYPE_CONFIG = {
     'meeting': { label: 'Pertemuan Daring', icon: 'video', bg: 'bg-blue-50', border: 'border-blue-100', color: '#3b82f6', text: 'text-blue-700' },
     'video': { label: 'Presentasi Video', icon: 'play-circle', bg: 'bg-amber-50', border: 'border-amber-100', color: '#f59e0b', text: 'text-amber-700' },
     'literature': { label: 'Literatur', icon: 'book-open', bg: 'bg-sky-50', border: 'border-sky-100', color: '#0ea5e9', text: 'text-sky-700' },
+    'questionnaire': { label: 'Kuesioner', icon: 'clipboard', bg: 'bg-cyan-50', border: 'border-cyan-100', color: '#06b6d4', text: 'text-cyan-700' },
     'variant': { label: 'Variasi Soal', icon: 'layer', bg: 'bg-fuchsia-50', border: 'border-fuchsia-100', color: '#d946ef', text: 'text-fuchsia-700' },
     'question-item': { label: 'Butir Soal', icon: 'list-ol', bg: 'bg-teal-50', border: 'border-teal-100', color: '#14b8a6', text: 'text-teal-700' },
 };
 
 /**
  * @param {string}  slug        - course slug
- * @param {string}  type        - activity type key (pre-test | post-test | task | meeting | video | literature)
+ * @param {string}  type        - activity type key (pre-test | post-test | task | meeting | video | literature | questionnaire)
  * @param {string}  title       - page title (e.g. "Tambah Pre Test / Kuis")
  * @param {string}  description - short description
  * @param {boolean} isEdit      - true when editing existing activity

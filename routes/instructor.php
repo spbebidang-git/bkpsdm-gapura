@@ -75,6 +75,10 @@ Route::prefix('/instructor')
                         Route::resource('h5p', \App\Http\Controllers\Instructor\Course\H5p\H5pController::class);
                         # SCORM
                         Route::resource('scorm', \App\Http\Controllers\Instructor\Course\Scorm\ScormController::class);
+                        # Kuesioner
+                        Route::get('questionnaire/{activityId}/result', [\App\Http\Controllers\Instructor\Course\Questionnaire\QuestionnaireController::class, 'result'])->name('questionnaire.result');
+                        Route::get('questionnaire/{activityId}/export', [\App\Http\Controllers\Instructor\Course\Questionnaire\QuestionnaireController::class, 'export'])->name('questionnaire.export');
+                        Route::resource('questionnaire', \App\Http\Controllers\Instructor\Course\Questionnaire\QuestionnaireController::class);
                     });
             });
 

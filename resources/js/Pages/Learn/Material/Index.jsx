@@ -221,6 +221,25 @@ const Index = ({ course, progress, activities, activity, activity_id, question_r
             router.post(route('participant.learn.store', { course: slug, schedule: schedule.id, activity: activity_id }), formattedAnswers);
         }
 
+        // store kuesioner
+        if (activity.type == 'questionnaire') {
+            // Dikirim utuh sebagai objek berkunci id pertanyaan — bentuknya
+            // bersarang (pilihan jamak & skala), bukan daftar rata.
+            router.post(
+                route('participant.learn.store', { course: slug, schedule: schedule.id, activity: activity_id }),
+                { answers },
+                {
+                    onError: () => {
+                        toast.error("Masih ada pertanyaan yang belum terisi dengan benar.", {
+                            position: "top-center",
+                            autoClose: 5000,
+                            theme: "colored",
+                        });
+                    },
+                }
+            );
+        }
+
         // store h5p / scorm
         if (activity.type == 'h5p' || activity.type == 'scorm') {
             localStorage.removeItem(timedActivityStorageKey);

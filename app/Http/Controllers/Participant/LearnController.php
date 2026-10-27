@@ -112,8 +112,8 @@ class LearnController extends Controller
 
             $stored = false;
 
-            // Handle Pre-Test, Post-Test, Task
-            if (!empty($request->all()) && ($activity->type == 'pre-test' || $activity->type == 'post-test' || $activity->type == 'task')) {
+            // Handle Pre-Test, Post-Test, Task, Kuesioner
+            if (!empty($request->all()) && in_array($activity->type, ['pre-test', 'post-test', 'task', 'questionnaire'])) {
                 $stored = $this->activity->storeActivity($this->participantId, $course->id, $activity->id, $request->all());
             }
 
@@ -143,6 +143,11 @@ class LearnController extends Controller
 
             return to_route('participant.learn.result.index', [$course->slug, $schedule->id, $activity->id]);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Kesalahan per pertanyaan (mis. kuesioner) harus sampai ke form,
+            // bukan ditimpa pesan galat umum.
+            DB::rollBack();
+            throw $e;
         } catch (\Throwable $th) {
             DB::rollBack();
             Log::error('LearnController@store Error: ' . $th->getMessage());

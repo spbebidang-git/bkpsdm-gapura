@@ -18,6 +18,7 @@ const TYPE_LABEL = {
     literature: "Literatur",
     h5p: "H5P Interaktif",
     scorm: "SCORM",
+    questionnaire: "Kuesioner",
 };
 
 const typeBadgeClass = (type) =>
@@ -30,6 +31,7 @@ const typeBadgeClass = (type) =>
         video: "bg-indigo-100 text-indigo-700",
         h5p: "bg-emerald-100 text-emerald-700",
         scorm: "bg-rose-100 text-rose-700",
+        questionnaire: "bg-cyan-100 text-cyan-700",
     }[type] || "bg-gray-100 text-gray-600");
 
 const Import = ({ categories, employee_status, local_samples = [] }) => {

@@ -108,6 +108,12 @@ const Activity = ({ slug, type }) => {
                                 description="Unggah paket SCORM (.zip, SCORM 1.2/2004) ekspor dari Articulate, iSpring, dll."
                             />
                         </Link>
+                        <Link href={`/instructor/course/${slug}/activity/questionnaire/create`} className="block">
+                            <CardActivity
+                                title="Kuesioner"
+                                description="Survei yang diisi peserta di aplikasi. Jawabannya terekap otomatis dan bisa diunduh."
+                            />
+                        </Link>
                     </div>
                 )}
 

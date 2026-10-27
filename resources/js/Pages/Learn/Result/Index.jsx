@@ -2,6 +2,19 @@ import Learn from "@/Layouts/Participant/Learn";
 import { router } from "@inertiajs/react";
 import { toast } from "react-toastify";
 
+// Istilah yang ditampilkan ke peserta (bukan nama tipe internal).
+const ACTIVITY_LABEL = {
+    "pre-test": "pre test",
+    "post-test": "post test",
+    task: "tugas",
+    meeting: "pertemuan daring",
+    video: "video",
+    literature: "materi",
+    h5p: "modul interaktif",
+    scorm: "modul interaktif",
+    questionnaire: "kuesioner",
+};
+
 // const handleSubmit = (e, slug, activityId) => {
 //     e.preventDefault();
 
@@ -225,7 +238,7 @@ const Index = ({
                             </div>
                             <div className="text-center text-lg sm:text-xl text-gray-700 font-semibold mb-5 leading-snug">
                                 <b>Selamat</b>, kamu telah menyelesaikan <br className="hidden sm:block" />{" "}
-                                {activity.type} ini.
+                                {ACTIVITY_LABEL[activity.type] ?? activity.type} ini.
                             </div>
                         </div>
                     </div>

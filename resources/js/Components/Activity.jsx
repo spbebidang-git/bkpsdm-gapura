@@ -2,6 +2,7 @@ import { router, usePage } from "@inertiajs/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import H5pPlayer from "@/Components/H5pPlayer";
+import QuestionnaireForm from "@/Components/QuestionnaireForm";
 import ScormPlayer from "@/Components/ScormPlayer";
 
 const isExternalVideoEmbed = (url = "") => /(?:youtube\.com|youtu\.be|vimeo\.com)/i.test(url);
@@ -143,7 +144,7 @@ const ControlledVideo = ({ src, onCompleted, activityId, resume }) => {
     );
 };
 
-const Activity = ({ id, type, data, slug, question_result, status, answer, setAnswers, file, setFile, schedule, onVideoCompleted }) => {
+const Activity = ({ id, type, data, slug, question_result, status, answer, answers, setAnswers, file, setFile, schedule, onVideoCompleted }) => {
     const [submitted, setSubmitted] = useState(status);
 
     console.log(123 + status)
@@ -655,6 +656,21 @@ const Activity = ({ id, type, data, slug, question_result, status, answer, setAn
             <div className="h-full min-h-0 p-1 sm:p-2">
                 <ScormPlayer path={data.scorm_path} />
             </div>
+        )
+    }
+
+    if (type === 'questionnaire') {
+        return (
+            <QuestionnaireForm
+                questions={data.questions ?? []}
+                intro={data.intro}
+                isAnonymous={data.is_anonymous}
+                isAnswered={data.is_answered}
+                savedAnswers={data.answers ?? {}}
+                answers={answers ?? {}}
+                setAnswers={setAnswers}
+                errors={errors}
+            />
         )
     }
 

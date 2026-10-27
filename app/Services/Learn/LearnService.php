@@ -61,10 +61,24 @@ class LearnService
             ];
         }
 
+        $item = $learn->learnItems->first();
+
+        // Baris tanpa jawaban tersimpan (response NULL) menghasilkan false saat
+        // di-unserialize; diperlakukan sebagai belum menjawab, bukan error.
+        $response = $item && $item->response ? unserialize($item->response) : false;
+
+        if (!is_array($response)) {
+            return [
+                'score' => 0,
+                'correct' => 0,
+                'wrong' => 0
+            ];
+        }
+
         return [
-            'score' => $learn->learnItems->first() ? $this->getTotalScore(unserialize($learn->learnItems->first()->response)) : 0,
-            'correct' => $learn->learnItems->first() ? $this->getCorrectAnswer(unserialize($learn->learnItems->first()->response)) : 0,
-            'wrong' => $learn->learnItems->first() ? $this->getWrongAnswer(unserialize($learn->learnItems->first()->response)) : 0
+            'score' => $this->getTotalScore($response),
+            'correct' => $this->getCorrectAnswer($response),
+            'wrong' => $this->getWrongAnswer($response)
         ];
     }
 

@@ -30,7 +30,7 @@ class MbzParser
         'quiz'            => 'pre-test',
         'assign'          => 'task',
         'assignment'      => 'task',
-        'questionnaire'   => 'task',
+        'questionnaire'   => 'questionnaire',
         'bigbluebuttonbn' => 'meeting',
         'zoom'            => 'meeting',
         'h5pactivity'     => 'h5p',
@@ -61,24 +61,40 @@ class MbzParser
 
     /**
      * Tipe pertanyaan mod_questionnaire (type_id) -> label untuk instruktur.
-     * 99 = page break & 100 = teks seksi, keduanya bukan pertanyaan.
+     * Nomornya mengikuti konstanta QUES* plugin mod_questionnaire
+     * (classes/question/question.php): id 7 memang tidak ada, rate = 8,
+     * date = 9, numeric = 10. 99 = page break & 100 = teks seksi,
+     * keduanya bukan pertanyaan.
      */
     const QUESTIONNAIRE_PAGEBREAK = 99;
     const QUESTIONNAIRE_SECTION   = 100;
     const QUESTIONNAIRE_TYPE = [
-        1 => 'Ya/Tidak',
-        2 => 'Isian singkat',
-        3 => 'Esai',
-        4 => 'Pilihan ganda',
-        5 => 'Pilihan jamak',
-        6 => 'Dropdown',
-        7 => 'Skala penilaian',
-        8 => 'Tanggal',
-        9 => 'Angka',
+        1  => 'Ya/Tidak',
+        2  => 'Isian singkat',
+        3  => 'Esai',
+        4  => 'Pilihan ganda',
+        5  => 'Pilihan jamak',
+        6  => 'Dropdown',
+        8  => 'Skala penilaian',
+        9  => 'Tanggal',
+        10 => 'Angka',
     ];
 
-    /** Maksimal pilihan jawaban yang ikut ditulis ke deskripsi tugas. */
-    const QUESTIONNAIRE_MAX_CHOICES = 8;
+    /**
+     * type_id mod_questionnaire -> kunci tipe aktivitas Kuesioner aplikasi
+     * (lihat QuestionnaireQuestion::TYPES). Tipe yang tak dikenal jadi 'text'.
+     */
+    const QUESTIONNAIRE_TYPE_KEY = [
+        1  => 'yesno',
+        2  => 'text',
+        3  => 'essay',
+        4  => 'radio',
+        5  => 'check',
+        6  => 'drop',
+        8  => 'rate',
+        9  => 'date',
+        10 => 'numeric',
+    ];
 
     /**
      * Modul yang bukan aktivitas peserta sehingga tidak perlu muncul di daftar
@@ -217,15 +233,17 @@ class MbzParser
                     }
                 }
 
-                // Kuesioner Moodle tidak punya padanan di aplikasi; pertanyaannya
-                // dituangkan ke deskripsi Tugas agar peserta tetap menjawabnya.
+                // Kuesioner Moodle (mod_questionnaire) dipindahkan apa adanya
+                // ke tipe aktivitas Kuesioner: peserta mengisinya di aplikasi.
                 $formQuestions = [];
+                $formAnonymous = false;
                 if ($supported && $moduleName === 'questionnaire') {
-                    [$formQuestions, $intro] = $this->resolveQuestionnaire($work, $directory);
+                    [$formQuestions, $intro, $formAnonymous] = $this->resolveQuestionnaire($work, $directory);
                     $count = count(array_filter($formQuestions, fn ($q) => !$q['is_section']));
                     $note = $count > 0
-                        ? "{$count} pertanyaan kuesioner terbaca — dibuat sebagai Tugas (jawaban diunggah peserta)."
-                        : 'Kuesioner diimpor sebagai Tugas — lengkapi instruksinya.';
+                        ? "{$count} pertanyaan kuesioner terbaca — form-nya dibuat otomatis"
+                            . ($formAnonymous ? ' (anonim).' : '.')
+                        : 'Kuesioner tanpa pertanyaan di backup — pertanyaannya dilengkapi lewat Edit.';
                 }
 
                 $activities[] = [
@@ -243,6 +261,7 @@ class MbzParser
                     'question_count' => count($questions),
                     'questions'      => $questions,
                     'form_questions' => $formQuestions,
+                    'form_anonymous' => $formAnonymous,
                 ];
             }
 
@@ -567,11 +586,11 @@ class MbzParser
     }
 
     /**
-     * Baca questionnaire.xml sebuah aktivitas kuesioner Moodle.
-     * Aplikasi tidak punya tipe survei, jadi yang diambil hanya daftar
-     * pertanyaannya untuk ditulis ulang sebagai instruksi Tugas.
+     * Baca questionnaire.xml sebuah aktivitas kuesioner Moodle: daftar
+     * pertanyaan beserta tipe, kewajiban, dan pilihan jawabannya, untuk dibuat
+     * ulang sebagai aktivitas Kuesioner aplikasi.
      *
-     * @return array{0: array, 1: ?string}  [questions, intro]
+     * @return array{0: array, 1: ?string, 2: bool}  [questions, intro, isAnonymous]
      */
     protected function resolveQuestionnaire(string $workDir, string $directory): array
     {
@@ -580,15 +599,18 @@ class MbzParser
             . DIRECTORY_SEPARATOR . 'questionnaire.xml';
 
         if (!is_file($path)) {
-            return [[], null];
+            return [[], null, false];
         }
 
         $doc = @simplexml_load_file($path);
         if ($doc === false || !isset($doc->questionnaire)) {
-            return [[], null];
+            return [[], null, false];
         }
 
         $intro = $this->cleanText((string) $doc->questionnaire->intro) ?: null;
+
+        // <respondenttype> Moodle: "anonymous" atau "fullname".
+        $isAnonymous = strtolower(trim((string) $doc->questionnaire->respondenttype)) === 'anonymous';
 
         $questions = [];
         foreach ($doc->questionnaire->surveys->survey->questions->question ?? [] as $question) {
@@ -605,6 +627,8 @@ class MbzParser
                 continue;
             }
 
+            $typeKey = self::QUESTIONNAIRE_TYPE_KEY[$typeId] ?? 'text';
+
             $choices = [];
             foreach ($question->quest_choices->quest_choice ?? [] as $choice) {
                 $value = $this->cleanText((string) $choice->content);
@@ -618,17 +642,44 @@ class MbzParser
                 'name'       => $name,
                 'text'       => $text !== '' ? $text : $name,
                 'type'       => self::QUESTIONNAIRE_TYPE[$typeId] ?? 'Isian',
+                'type_key'   => $typeKey,
+                'length'     => $this->questionnaireLimit(
+                    $typeKey,
+                    (int) $question->length,
+                    (int) $question->precise
+                ),
                 'required'   => strtolower($this->questionnaireValue((string) $question->required)) === 'y',
                 'is_section' => $typeId === self::QUESTIONNAIRE_SECTION,
-                'choices'    => array_slice($choices, 0, self::QUESTIONNAIRE_MAX_CHOICES),
-                'choice_total' => count($choices),
+                'choices'    => $choices,
             ];
         }
 
         // Urutan di XML acak; tampilan Moodle mengikuti <position>.
         usort($questions, fn ($a, $b) => $a['position'] <=> $b['position']);
 
-        return [$questions, $intro];
+        return [$questions, $intro, $isAnonymous];
+    }
+
+    /**
+     * Arti kolom <length> dan <precise> mod_questionnaire berbeda per tipe
+     * (lihat classes/question/*.php), sedangkan aplikasi hanya menyimpan satu
+     * angka batas per pertanyaan:
+     *
+     *   text    length = lebar kotak, precise = maksimal karakter  -> precise
+     *   numeric length = maksimal digit, precise = jumlah desimal  -> length
+     *   rate    length = jumlah tingkat skala                      -> length
+     *   essay   length = jumlah baris, precise = format jawaban    -> 0 (bebas)
+     *   lainnya tidak dipakai                                      -> 0
+     */
+    protected function questionnaireLimit(string $typeKey, int $length, int $precise): int
+    {
+        $limit = match ($typeKey) {
+            'text'    => $precise,
+            'numeric', 'rate' => $length,
+            default   => 0,
+        };
+
+        return max(0, $limit);
     }
 
     /** Moodle menulis nilai kosong sebagai "$@NULL@$". */

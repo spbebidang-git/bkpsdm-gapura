@@ -62,6 +62,11 @@ const ListActivity = ({
                 setDescription("Mengerjakan Modul Interaktif");
                 setIcon("book-open");
                 break;
+            case "questionnaire":
+                setTitle("Kuesioner");
+                setDescription("Mengisi Kuesioner");
+                setIcon("clipboard");
+                break;
             default:
                 setTitle("");
                 setDescription("");

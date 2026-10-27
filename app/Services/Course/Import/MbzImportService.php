@@ -13,6 +13,7 @@ use App\Models\Course\Question\QuestionVariant;
 use App\Models\Course\Schedule;
 use App\Models\Course\Task;
 use App\Services\Course\Activity\H5pService;
+use App\Services\Course\Activity\QuestionnaireService;
 use App\Services\Course\Activity\ScormService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
@@ -41,12 +42,18 @@ class MbzImportService
     protected MbzParser $parser;
     protected H5pService $h5p;
     protected ScormService $scorm;
+    protected QuestionnaireService $questionnaire;
 
-    public function __construct(MbzParser $parser, H5pService $h5p, ScormService $scorm)
-    {
+    public function __construct(
+        MbzParser $parser,
+        H5pService $h5p,
+        ScormService $scorm,
+        QuestionnaireService $questionnaire
+    ) {
         $this->parser = $parser;
         $this->h5p = $h5p;
         $this->scorm = $scorm;
+        $this->questionnaire = $questionnaire;
     }
 
     /**
@@ -385,6 +392,16 @@ class MbzImportService
                     'duration'    => 0,
                 ]);
                 break;
+
+            case 'questionnaire':
+                $this->questionnaire->createFromMbz([
+                    'activity_id'    => $activity->id,
+                    'title'          => $data['title'],
+                    'intro'          => $data['intro'] ?? null,
+                    'is_anonymous'   => $data['form_anonymous'] ?? false,
+                    'form_questions' => $data['form_questions'] ?? [],
+                ]);
+                break;
         }
     }
 
@@ -392,59 +409,15 @@ class MbzImportService
     const TASK_DESCRIPTION_LIMIT = 8000;
 
     /**
-     * Susun deskripsi Tugas. Untuk kuesioner Moodle, daftar pertanyaannya
-     * ditulis ulang sebagai teks biasa (kolom description bukan HTML) sehingga
-     * peserta tetap tahu apa yang harus dijawab lewat unggahan PDF.
+     * Susun deskripsi Tugas hasil impor. Moodle hanya menyediakan intro
+     * aktivitasnya; selebihnya dilengkapi instruktur. (Kuesioner Moodle kini
+     * punya tipe aktivitasnya sendiri, bukan lagi Tugas + unggahan PDF.)
      */
     protected function taskDescription(array $data, string $fallback): string
     {
-        $questions = $data['form_questions'] ?? [];
-
-        if (empty($questions)) {
-            return !empty($data['intro'])
-                ? Str::limit($data['intro'], self::TASK_DESCRIPTION_LIMIT, '')
-                : $fallback;
-        }
-
-        $lines = [];
-
-        if (!empty($data['intro'])) {
-            $lines[] = $data['intro'];
-            $lines[] = '';
-        }
-
-        $lines[] = 'Jawab pertanyaan berikut, lalu unggah jawaban Anda dalam satu file PDF.';
-        $lines[] = '';
-
-        $number = 0;
-        foreach ($questions as $question) {
-            // Teks seksi hanya pengantar di Moodle — tidak ikut dinomori.
-            if ($question['is_section']) {
-                $lines[] = $question['text'];
-                $lines[] = '';
-                continue;
-            }
-
-            $number++;
-            $suffix = $question['required'] ? ' (wajib)' : '';
-            $lines[] = "{$number}. {$question['text']} [{$question['type']}{$suffix}]";
-
-            foreach ($question['choices'] as $choice) {
-                $lines[] = "   - {$choice}";
-            }
-
-            $sisa = ($question['choice_total'] ?? 0) - count($question['choices']);
-            if ($sisa > 0) {
-                $lines[] = "   - … dan {$sisa} pilihan lainnya";
-            }
-
-            $lines[] = '';
-        }
-
-        $lines[] = 'Catatan instruktur: kuesioner ini diimpor dari Moodle sebagai Tugas — '
-            . 'sesuaikan instruksinya bila perlu.';
-
-        return Str::limit(implode("\n", $lines), self::TASK_DESCRIPTION_LIMIT, "\n…");
+        return !empty($data['intro'])
+            ? Str::limit($data['intro'], self::TASK_DESCRIPTION_LIMIT, '')
+            : $fallback;
     }
 
     /**

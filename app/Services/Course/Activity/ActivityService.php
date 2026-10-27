@@ -10,7 +10,7 @@ use App\Models\Learn\Learn;
 
 class ActivityService
 {
-    protected $question, $task, $interactive, $literature, $h5p, $scorm;
+    protected $question, $task, $interactive, $literature, $h5p, $scorm, $questionnaire;
 
     public function  __construct(
         QuestionService $questionService,
@@ -18,7 +18,8 @@ class ActivityService
         InteractiveService $interactiveService,
         LiteratureService $literatureService,
         H5pService $h5pService,
-        ScormService $scormService
+        ScormService $scormService,
+        QuestionnaireService $questionnaireService
     ) {
         $this->question = $questionService;
         $this->task = $taskService;
@@ -26,6 +27,7 @@ class ActivityService
         $this->literature = $literatureService;
         $this->h5p = $h5pService;
         $this->scorm = $scormService;
+        $this->questionnaire = $questionnaireService;
     }
 
     public function getActivityByCourse($courseId)
@@ -169,6 +171,10 @@ class ActivityService
         if ($activity->type === 'scorm') {
             return $this->scorm->getScorm($activity);
         }
+
+        if ($activity->type === 'questionnaire') {
+            return $this->questionnaire->getQuestionnaire($activity);
+        }
     }
 
     public function getDetailActivityParticipant($participantId, $activityId)
@@ -206,6 +212,10 @@ class ActivityService
         if ($activity->type === 'scorm') {
             return $this->scorm->getScorm($activity);
         }
+
+        if ($activity->type === 'questionnaire') {
+            return $this->questionnaire->getQuestionnaire($activity, $participantId);
+        }
     }
 
     public function storeActivity($participantId, $courseId, $activityId, $request)
@@ -242,6 +252,10 @@ class ActivityService
 
         if ($activity->type == 'scorm') {
             return $this->scorm->storeScorm($participantId, $courseId, $activityId, $request);
+        }
+
+        if ($activity->type == 'questionnaire') {
+            return $this->questionnaire->storeQuestionnaire($participantId, $courseId, $activityId, $request);
         }
     }
 

@@ -241,7 +241,8 @@ const Show = ({ course, activities }) => {
                                                     ${item.type === 'pre-test' || item.type === 'post-test' ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' :
                                                         item.type === 'meeting' ? 'bg-orange-50 text-orange-700 border border-orange-100' :
                                                             item.type === 'task' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
-                                                                'bg-gray-100 text-gray-700 border border-gray-200'}
+                                                                item.type === 'questionnaire' ? 'bg-cyan-50 text-cyan-700 border border-cyan-100' :
+                                                                    'bg-gray-100 text-gray-700 border border-gray-200'}
                                                 `}>
                                                     {item.type === 'pre-test'
                                                         ? 'Pre-Test / Kuis'
@@ -251,7 +252,9 @@ const Show = ({ course, activities }) => {
                                                                 ? 'H5P Interaktif'
                                                                 : item.type === 'scorm'
                                                                     ? 'SCORM'
-                                                                    : item.type}
+                                                                    : item.type === 'questionnaire'
+                                                                        ? 'Kuesioner'
+                                                                        : item.type}
                                                 </span>
                                             </td>
 
@@ -321,6 +324,20 @@ const Show = ({ course, activities }) => {
                                                         >
                                                             <button className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors border border-blue-200/50">
                                                                 Hasil Tugas
+                                                            </button>
+                                                        </Link>
+                                                    )}
+
+                                                    {/* Rekap Kuesioner */}
+                                                    {item.type === "questionnaire" && (
+                                                        <Link
+                                                            href={route("instructor.course.activity.questionnaire.result", {
+                                                                course: course.slug,
+                                                                activityId: item.id,
+                                                            })}
+                                                        >
+                                                            <button className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold bg-cyan-50 hover:bg-cyan-100 text-cyan-700 rounded-lg transition-colors border border-cyan-200/50">
+                                                                Rekap
                                                             </button>
                                                         </Link>
                                                     )}
