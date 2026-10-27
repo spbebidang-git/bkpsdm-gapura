@@ -19,7 +19,7 @@ use Illuminate\Validation\ValidationException;
  * Tipe pertanyaannya mengikuti mod_questionnaire Moodle (yesno, text, essay,
  * radio, check, drop, rate, date, numeric + section sebagai teks pengantar)
  * supaya kuesioner dari backup .mbz bisa dipindahkan apa adanya. Berbeda dari
- * pre-test/post-test, jawaban kuesioner TIDAK dinilai — yang dibutuhkan
+ * pre-test/post-test, jawaban kuesioner TIDAK dinilai - yang dibutuhkan
  * instruktur adalah rekapnya.
  */
 class QuestionnaireService

@@ -50,7 +50,7 @@ const ListActivity = ({
                 setDescription("Membaca Materi");
                 setIcon("book"); // Misalnya ikon untuk materi adalah 'book'
                 break;
-            // Istilah teknis (H5P/SCORM) tidak ditampilkan ke peserta —
+            // Istilah teknis (H5P/SCORM) tidak ditampilkan ke peserta -
             // keduanya sama-sama disebut "Modul Interaktif".
             case "h5p":
                 setTitle("Modul Interaktif");

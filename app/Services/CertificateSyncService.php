@@ -71,7 +71,7 @@ class CertificateSyncService
 
         // Jika 401 (token stale), force refresh dan retry
         if ($response->status() === 401) {
-            Log::warning('[CertificateSyncService] Token 401 — force refresh dan retry.');
+            Log::warning('[CertificateSyncService] Token 401 - force refresh dan retry.');
             $token    = $this->tokenService->forceRefresh();
             $response = Http::withHeaders([
                 'apikey' => env('API_KEY'),

@@ -265,7 +265,7 @@ class H5pService
      * peserta boleh mengulang mundur, tetapi tidak boleh melompat maju.
      *
      * Setelan ini milik paket (content.json -> override.preventSkippingMode),
-     * bukan pemutar, dan paket dari Moodle tidak konsisten — sebagian 'none',
+     * bukan pemutar, dan paket dari Moodle tidak konsisten - sebagian 'none',
      * sebagian 'forward'. Jadi nilainya diseragamkan saat paket diekstrak.
      *
      * @return bool true bila berkas memang diubah.

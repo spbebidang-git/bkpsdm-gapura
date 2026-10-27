@@ -6,7 +6,7 @@ use RuntimeException;
 use Symfony\Component\Process\Process;
 
 /**
- * Membaca file Moodle Backup (.mbz) — yang sebenarnya adalah arsip tar.gz —
+ * Membaca file Moodle Backup (.mbz) - yang sebenarnya adalah arsip tar.gz -
  * dan mengubah metadata-nya menjadi struktur yang dimengerti aplikasi.
  *
  * Performa: metadata (moodle_backup.xml, files.xml, seluruh inforef.xml)
@@ -170,7 +170,7 @@ class MbzParser
                 $sectionId  = (string) $activity->sectionid;
                 $directory  = (string) $activity->directory;
 
-                // Bank soal bukan aktivitas peserta — soalnya sudah ikut
+                // Bank soal bukan aktivitas peserta - soalnya sudah ikut
                 // terbaca lewat kuis yang merujuknya, jadi tidak perlu
                 // ditampilkan sebagai aktivitas yang "dilewati".
                 if (in_array($moduleName, self::HIDDEN_MODULES, true)) {
@@ -192,9 +192,9 @@ class MbzParser
                 if (!$supported) {
                     $note = self::UNSUPPORTED_REASON[$moduleName]
                         ?? "Modul '{$moduleName}' belum didukung.";
-                    $warnings[] = "Dilewati: \"{$title}\" ({$moduleName}) — {$note}";
+                    $warnings[] = "Dilewati: \"{$title}\" ({$moduleName}) - {$note}";
                 } elseif ($moduleName === 'quiz') {
-                    $note = 'Terdeteksi sebagai kuis — tinjau apakah pre-test atau post-test.';
+                    $note = 'Terdeteksi sebagai kuis - tinjau apakah pre-test atau post-test.';
                 }
 
                 $fileRef = null;
@@ -202,23 +202,23 @@ class MbzParser
                     $fileRef = $this->resolveActivityFile($work, $directory, $files);
                     if ($fileRef !== null && $this->isVideoFile($fileRef)) {
                         $appType = 'video';
-                        $note = 'File video ditemukan — akan diimpor sebagai Presentasi Video.';
+                        $note = 'File video ditemukan - akan diimpor sebagai Presentasi Video.';
                     }
                 } elseif ($supported && $appType === 'scorm') {
                     $fileRef = $this->resolveActivityFile($work, $directory, $files, 'zip');
                     if ($fileRef !== null) {
-                        $note = 'Paket SCORM ditemukan — akan diekstrak otomatis.';
+                        $note = 'Paket SCORM ditemukan - akan diekstrak otomatis.';
                     } else {
-                        $note = 'Paket SCORM tidak ada di backup — aktivitas tetap dibuat agar file .zip dapat langsung diunggah lewat Edit.';
-                        $warnings[] = "Paket SCORM tidak ditemukan: \"{$title}\" — aktivitas upload akan tetap dibuat.";
+                        $note = 'Paket SCORM tidak ada di backup - aktivitas tetap dibuat agar file .zip dapat langsung diunggah lewat Edit.';
+                        $warnings[] = "Paket SCORM tidak ditemukan: \"{$title}\" - aktivitas upload akan tetap dibuat.";
                     }
                 } elseif ($supported && $appType === 'h5p') {
                     $fileRef = $this->resolveActivityFile($work, $directory, $files, 'h5p');
                     if ($fileRef !== null) {
-                        $note = 'Paket H5P ditemukan — akan dimuat otomatis.';
+                        $note = 'Paket H5P ditemukan - akan dimuat otomatis.';
                     } else {
-                        $note = 'Paket H5P tidak ada di backup — aktivitas tetap dibuat agar file .h5p dapat langsung diunggah lewat Edit.';
-                        $warnings[] = "Paket H5P tidak ditemukan: \"{$title}\" — aktivitas upload akan tetap dibuat.";
+                        $note = 'Paket H5P tidak ada di backup - aktivitas tetap dibuat agar file .h5p dapat langsung diunggah lewat Edit.';
+                        $warnings[] = "Paket H5P tidak ditemukan: \"{$title}\" - aktivitas upload akan tetap dibuat.";
                     }
                 }
 
@@ -229,7 +229,7 @@ class MbzParser
                     [$questions, $intro] = $this->resolveQuizQuestions($work, $directory, $questionBank);
                     if (!empty($questions)) {
                         $label = $appType === 'post-test' ? 'post-test' : 'pre-test';
-                        $note = count($questions) . " soal terbaca — akan mengisi {$label} otomatis.";
+                        $note = count($questions) . " soal terbaca - akan mengisi {$label} otomatis.";
                     }
                 }
 
@@ -241,9 +241,9 @@ class MbzParser
                     [$formQuestions, $intro, $formAnonymous] = $this->resolveQuestionnaire($work, $directory);
                     $count = count(array_filter($formQuestions, fn ($q) => !$q['is_section']));
                     $note = $count > 0
-                        ? "{$count} pertanyaan kuesioner terbaca — form-nya dibuat otomatis"
+                        ? "{$count} pertanyaan kuesioner terbaca - form-nya dibuat otomatis"
                             . ($formAnonymous ? ' (anonim).' : '.')
-                        : 'Kuesioner tanpa pertanyaan di backup — pertanyaannya dilengkapi lewat Edit.';
+                        : 'Kuesioner tanpa pertanyaan di backup - pertanyaannya dilengkapi lewat Edit.';
                 }
 
                 $activities[] = [

@@ -234,7 +234,7 @@ const Import = ({ categories, employee_status, local_samples = [] }) => {
                         </span>
                         {s.t}
                     </div>
-                    {i < 2 && <span className="text-gray-300">—</span>}
+                    {i < 2 && <span className="text-gray-300">-</span>}
                 </div>
             ))}
         </div>
@@ -244,7 +244,7 @@ const Import = ({ categories, employee_status, local_samples = [] }) => {
         <App>
             <Stepper />
 
-            {/* STEP 1 — Upload */}
+            {/* STEP 1 - Upload */}
             {step === 1 && (
                 <div className="max-w-4xl mx-auto bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden mb-8">
                     <h4 className="p-6 sm:p-8 bg-gray-50/50 border-b border-gray-100 text-center text-xl font-extrabold text-gray-800">
@@ -327,7 +327,7 @@ const Import = ({ categories, employee_status, local_samples = [] }) => {
                             </button>
                         </div>
 
-                        {/* Jalur pintas testing — pakai file contoh di server tanpa unggah */}
+                        {/* Jalur pintas testing - pakai file contoh di server tanpa unggah */}
                         {local_samples.length > 0 && (
                             <div className="mt-6 pt-6 border-t border-dashed border-gray-200">
                                 <p className="text-xs font-semibold text-gray-400 mb-2">
@@ -352,7 +352,7 @@ const Import = ({ categories, employee_status, local_samples = [] }) => {
                                     ))}
                                 </div>
                                 <p className="text-xs text-gray-400 mt-3">
-                                    File besar disalin lalu dibaca langsung di server — paket
+                                    File besar disalin lalu dibaca langsung di server - paket
                                     full bisa butuh satu sampai beberapa menit.
                                 </p>
                             </div>
@@ -361,7 +361,7 @@ const Import = ({ categories, employee_status, local_samples = [] }) => {
                 </div>
             )}
 
-            {/* STEP 2 — Review */}
+            {/* STEP 2 - Review */}
             {step === 2 && group && (
                 <div className="max-w-4xl mx-auto mb-8">
                     {result.groups.length > 1 && (
@@ -404,7 +404,7 @@ const Import = ({ categories, employee_status, local_samples = [] }) => {
                                     <p className="text-sm font-bold text-gray-700 mb-2">
                                         [{m.module_label}]{" "}
                                         <span className="font-normal text-gray-400">
-                                            — {m.original_name}
+                                            - {m.original_name}
                                         </span>
                                     </p>
                                     <ul className="space-y-2">
@@ -466,7 +466,7 @@ const Import = ({ categories, employee_status, local_samples = [] }) => {
                 </div>
             )}
 
-            {/* STEP 3 — Configure */}
+            {/* STEP 3 - Configure */}
             {step === 3 && group && (
                 <form onSubmit={handleSubmit}>
                     <div className="max-w-4xl mx-auto bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden mb-8">

@@ -19,7 +19,7 @@
                         @php $results = Session::get('import_results'); @endphp
                         <div class="alert alert-info mb-4">
                             <h6 class="alert-heading fw-bold mb-2">
-                                <i class="bx bx-check-circle me-1"></i>Hasil Import — {{ Session::get('import_course') }}
+                                <i class="bx bx-check-circle me-1"></i>Hasil Import - {{ Session::get('import_course') }}
                             </h6>
                             <div class="row text-center">
                                 <div class="col-3">
@@ -67,7 +67,7 @@
                             </label>
                             <select name="course_id" id="course_id"
                                 class="form-select @error('course_id') is-invalid @enderror" required>
-                                <option value="">— Pilih Kursus —</option>
+                                <option value="">- Pilih Kursus -</option>
                                 @foreach ($courses as $course)
                                     <option value="{{ $course->id }}"
                                         {{ old('course_id') == $course->id ? 'selected' : '' }}>
@@ -105,7 +105,7 @@
                             @error('file')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                            <div class="form-text">Format: .xlsx, .xls, .csv — kolom <code>nip</code>, <code>nama</code> — Maksimal 5MB</div>
+                            <div class="form-text">Format: .xlsx, .xls, .csv - kolom <code>nip</code>, <code>nama</code> - Maksimal 5MB</div>
                         </div>
 
                         {{-- Auto-create stub users --}}
@@ -183,7 +183,7 @@
                     <div class="alert alert-warning small mb-0">
                         <i class="bx bx-error-circle me-1"></i>
                         <strong>Perhatian:</strong> Pastikan data NIP sudah benar sebelum import.
-                        Import diproses di background — refresh halaman untuk melihat hasil.
+                        Import diproses di background - refresh halaman untuk melihat hasil.
                     </div>
                 </div>
             </div>

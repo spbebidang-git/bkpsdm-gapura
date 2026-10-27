@@ -64,7 +64,7 @@ const QuestionnaireBuilder = ({ questions = [], onChange, error = null }) => {
                         Daftar Pertanyaan <span className="text-red-500">*</span>
                     </label>
                     <p className="text-xs text-gray-500">
-                        {questions.length} baris — teks bagian tidak ikut dinomori.
+                        {questions.length} baris - teks bagian tidak ikut dinomori.
                     </p>
                 </div>
                 <button
@@ -139,7 +139,7 @@ const QuestionnaireBuilder = ({ questions = [], onChange, error = null }) => {
                                         value={question.content}
                                         placeholder={
                                             isSection
-                                                ? "Contoh: Bagian B — Penilaian Materi"
+                                                ? "Contoh: Bagian B - Penilaian Materi"
                                                 : "Tulis pertanyaannya"
                                         }
                                         onChange={(e) => update(index, { content: e.target.value })}

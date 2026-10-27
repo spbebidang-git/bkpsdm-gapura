@@ -30,7 +30,7 @@ class PurgeMbzTemp extends Command
         $dir = storage_path('app' . DIRECTORY_SEPARATOR . MbzImportService::TMP_DIR);
 
         if (!is_dir($dir)) {
-            $this->info('Folder sesi impor belum ada — tidak ada yang dibersihkan.');
+            $this->info('Folder sesi impor belum ada - tidak ada yang dibersihkan.');
 
             return self::SUCCESS;
         }

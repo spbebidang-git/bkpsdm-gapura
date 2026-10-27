@@ -70,7 +70,7 @@ const Edit = ({ slug, activity }) => {
                         {!activity?.has_package && (
                             <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                                 Aktivitas H5P sudah dibuat dari Moodle, tetapi paketnya tidak ada di backup.
-                                Unggah file <strong>.h5p</strong> di bawah lalu simpan—tidak perlu membuat
+                                Unggah file <strong>.h5p</strong> di bawah lalu simpan-tidak perlu membuat
                                 aktivitas H5P baru.
                             </div>
                         )}

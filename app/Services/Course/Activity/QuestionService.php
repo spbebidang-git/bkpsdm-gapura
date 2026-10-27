@@ -70,7 +70,7 @@ class QuestionService
 
     /**
      * Petakan item soal ke format frontend. Jumlah opsi fleksibel
-     * (a, b, c, d, e, ...) — tidak dipaksa 4, agar soal impor Moodle
+     * (a, b, c, d, e, ...) - tidak dipaksa 4, agar soal impor Moodle
      * dengan 2/3/5 pilihan tetap tampil. Penilaian berbasis is_correct
      * (lihat calculateScore), bukan jumlah/urutan opsi.
      */
@@ -103,7 +103,7 @@ class QuestionService
             ? $question->questionVariant->where('id', $preTestVariantId)->first()
             : null;
 
-        // Belum ada varian soal (mis. kuis belum diisi) — kembalikan kosong
+        // Belum ada varian soal (mis. kuis belum diisi) - kembalikan kosong
         // agar tidak error di sisi peserta.
         if (!$questionVariant) {
             return [
@@ -203,7 +203,7 @@ class QuestionService
             ? $question->questionVariant->where('id', $preTestVariantId)->first()
             : null;
 
-        // Belum ada varian soal (mis. kuis belum diisi) — kembalikan kosong
+        // Belum ada varian soal (mis. kuis belum diisi) - kembalikan kosong
         // agar tidak error di sisi peserta.
         if (!$questionVariant) {
             return [

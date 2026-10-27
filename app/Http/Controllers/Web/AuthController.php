@@ -59,12 +59,12 @@ class AuthController
 
         $input = trim($request->username);
 
-        // RULE 1 — Admin & Instructor (Login via Email)
+        // RULE 1 - Admin & Instructor (Login via Email)
         if (filter_var($input, FILTER_VALIDATE_EMAIL)) {
             return $this->loginAdminInstructor($request, $input);
         }
 
-        // RULE 2 — Participant (Login via NIP)
+        // RULE 2 - Participant (Login via NIP)
         return $this->loginParticipant($request, $input);
     }
 
@@ -123,7 +123,7 @@ class AuthController
 
             return to_route('sign-in.index')->withErrors(['email_or_username' => 'Kredensial salah atau SSO tidak merespon.']);
         }
-        // CASE 2 — User Baru (First-time provisioning)
+        // CASE 2 - User Baru (First-time provisioning)
         if ($this->handleSSOFirstLogin($request, $nip)) {
             return to_route('home');
         }

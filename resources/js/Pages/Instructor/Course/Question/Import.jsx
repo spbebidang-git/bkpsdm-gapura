@@ -44,7 +44,7 @@ export default function Import({ course, activity }) {
     return (
         <App>
 
-            {/* ALERT — DITAMBAHKAN SESUAI PERMINTAAN */}
+            {/* ALERT - DITAMBAHKAN SESUAI PERMINTAAN */}
             <div className="max-w-2xl mx-auto mb-6">
                 <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg text-sm">
                     <strong>Perhatian:</strong> Proses <span className="font-semibold">import soal hanya dapat dilakukan satu kali</span>,

@@ -581,7 +581,7 @@ progress {
   color: rgba(67, 89, 113, 0.6);
 }
 .blockquote-footer::before {
-  content: "— ";
+  content: "- ";
 }
 
 .img-fluid {

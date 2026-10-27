@@ -44,14 +44,14 @@ class AuthController
         $input = $request->username;
 
         /**
-         * RULE 1 — Admin & Instructor → login via Laravel email ONLY
+         * RULE 1 - Admin & Instructor → login via Laravel email ONLY
          */
         if ($this->isAdminOrInstructor($input)) {
             return $this->loginAdminInstructor($request, $input);
         }
 
         /**
-         * RULE 2 — Participant → login via NIP ONLY (SSO first)
+         * RULE 2 - Participant → login via NIP ONLY (SSO first)
          */
         return $this->loginParticipant($request, $input);
     }
@@ -86,7 +86,7 @@ class AuthController
     }
 
     /**
-     * LOGIN PARTICIPANT — NIP only, SSO first, fallback Laravel
+     * LOGIN PARTICIPANT - NIP only, SSO first, fallback Laravel
      */
     private function loginParticipant(Request $request, $nip)
     {
@@ -100,7 +100,7 @@ class AuthController
         $userMeta = find_user_by_nip($nip);
 
         /**
-         * CASE 1 — Sudah ada user di Laravel
+         * CASE 1 - Sudah ada user di Laravel
          */
         if ($userMeta && $userMeta->user) {
             $user = $userMeta->user;
@@ -136,7 +136,7 @@ class AuthController
         }
 
         /**
-         * CASE 2 — user belum ada → first-time SSO provisioning
+         * CASE 2 - user belum ada → first-time SSO provisioning
          */
         if ($this->handleSSOFirstLogin($request, $nip)) {
             Log::info("LOGIN PARTICIPANT: First time SSO provisioning success for NIP {$nip}");

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('app:post-certificate-command')->hourly();
 Schedule::command('app:set-url-certificate-command')->hourlyAt(30);
-// Sisa sesi impor .mbz bisa ratusan MB per berkas — sapu yang ditinggalkan.
+// Sisa sesi impor .mbz bisa ratusan MB per berkas - sapu yang ditinggalkan.
 Schedule::command('mbz:purge-temp')->dailyAt('03:15');
 Schedule::command('db:backup')->daily();
 Schedule::command('db:backup --weekly')->weekly();

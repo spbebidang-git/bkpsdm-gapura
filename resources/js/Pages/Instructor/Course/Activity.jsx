@@ -71,7 +71,7 @@ const Activity = ({ slug, type }) => {
                     </p>
                 </div>
 
-                {/* Cards — Semua Kegiatan */}
+                {/* Cards - Semua Kegiatan */}
                 {!activeSection && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                         <CardActivity
@@ -117,7 +117,7 @@ const Activity = ({ slug, type }) => {
                     </div>
                 )}
 
-                {/* Cards — Pertanyaan */}
+                {/* Cards - Pertanyaan */}
                 {activeSection === 'question' && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto">
                         <Link href={`/instructor/course/${slug}/activity/pre-test/create`} className="block">
@@ -135,7 +135,7 @@ const Activity = ({ slug, type }) => {
                     </div>
                 )}
 
-                {/* Cards — Interaktif */}
+                {/* Cards - Interaktif */}
                 {activeSection === 'interactive' && (
                     <div className={`grid gap-4 ${type === 'unschedule' ? 'grid-cols-1 max-w-xs' : 'grid-cols-1 sm:grid-cols-2 max-w-xl'} mx-auto`}>
                         {type !== 'unschedule' && (

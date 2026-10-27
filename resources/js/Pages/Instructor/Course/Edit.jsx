@@ -90,7 +90,7 @@ const Edit = ({ course, categories, employee_status, selected_employee_status, s
         formData.append("jam_pelajaran", values.jam_pelajaran);
         formData.append("status", values.status);
 
-        // Selalu kirim jadwal dari state — localStorage dulu bisa nempel jadwal course lain
+        // Selalu kirim jadwal dari state - localStorage dulu bisa nempel jadwal course lain
         if (values.type === "schedule" && data.length > 0) {
             formData.append("schedules", JSON.stringify(data));
         }

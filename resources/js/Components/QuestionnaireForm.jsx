@@ -5,7 +5,7 @@ import { useEffect } from "react";
  * Moodle sehingga kuesioner hasil impor .mbz tampil seperti aslinya.
  *
  * Bentuk state `answers`: { [questionId]: { value } | { choice_id } |
- * { choice_ids: [] } | { rates: { [choiceId]: nilai } } } — sama dengan yang
+ * { choice_ids: [] } | { rates: { [choiceId]: nilai } } } - sama dengan yang
  * diharapkan QuestionnaireService di sisi server.
  */
 const DEFAULT_RATE_SCALE = 5;
@@ -113,7 +113,7 @@ const QuestionnaireForm = ({
                 )}
                 {isAnswered && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
-                        Sudah pernah diisi — boleh diperbarui
+                        Sudah pernah diisi - boleh diperbarui
                     </span>
                 )}
             </div>

@@ -35,7 +35,7 @@ if (!function_exists('get_user_meta')) {
 
 /**
  * Bersihkan NIP untuk payload SSO: digit only, unicode lookalike → ASCII.
- * Panjang bebas (min 1) — format NIP bervariasi, jangan hardcode 9/16/18.
+ * Panjang bebas (min 1) - format NIP bervariasi, jangan hardcode 9/16/18.
  */
 if (!function_exists('normalize_nip')) {
     function normalize_nip($nip): ?string

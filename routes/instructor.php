@@ -22,7 +22,7 @@ Route::prefix('/instructor')
                 Route::get('/create', [\App\Http\Controllers\Instructor\CourseController::class, 'create'])->name('create');
                 Route::post('/', [\App\Http\Controllers\Instructor\CourseController::class, 'store'])->name('store');
 
-                # Import kursus dari Moodle Backup (.mbz) — harus sebelum route {course:slug}
+                # Import kursus dari Moodle Backup (.mbz) - harus sebelum route {course:slug}
                 Route::get('/import', [\App\Http\Controllers\Instructor\Course\ImportController::class, 'index'])->name('import.index');
                 Route::post('/import/analyze', [\App\Http\Controllers\Instructor\Course\ImportController::class, 'analyze'])->name('import.analyze');
                 Route::post('/import/analyze-local', [\App\Http\Controllers\Instructor\Course\ImportController::class, 'analyzeLocal'])->name('import.analyze-local');

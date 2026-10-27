@@ -34,11 +34,11 @@ class H5pDisableForwardSkip extends Command
 
             if ($h5p->enforceNoForwardSkipping($package->folder)) {
                 $changed++;
-                $this->line("  diubah  : {$package->folder} — {$title}");
+                $this->line("  diubah  : {$package->folder} - {$title}");
                 continue;
             }
 
-            $this->line("  dilewati: {$package->folder} — {$title}");
+            $this->line("  dilewati: {$package->folder} - {$title}");
         }
 
         $this->info("Selesai. {$changed} dari {$packages->count()} paket diubah.");

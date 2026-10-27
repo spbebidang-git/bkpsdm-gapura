@@ -61,7 +61,7 @@ const Edit = ({ slug, activity }) => {
                             <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                                 Kuesioner ini sudah diisi <b>{activity.total_response}</b> peserta.
                                 Menghapus atau mengganti pertanyaan juga menghapus jawaban yang
-                                menempel padanya — unduh rekapnya lebih dulu bila masih diperlukan.
+                                menempel padanya - unduh rekapnya lebih dulu bila masih diperlukan.
                             </div>
                         )}
 

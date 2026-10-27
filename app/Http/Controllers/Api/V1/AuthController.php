@@ -50,7 +50,7 @@ class AuthController
     }
 
     /**
-     * Logout — revoke token yang sedang digunakan.
+     * Logout - revoke token yang sedang digunakan.
      */
     public function logout(Request $request): JsonResponse
     {

@@ -29,7 +29,7 @@ const Show = ({ course, schedules, reviews = [], rating }) => {
         }
     };
 
-    // Aktivasi kelas — cek can_enter dari server sebelum POST
+    // Aktivasi kelas - cek can_enter dari server sebelum POST
     const handleActivation = (e, item) => {
         e.preventDefault();
 
@@ -72,7 +72,7 @@ const Show = ({ course, schedules, reviews = [], rating }) => {
             });
     };
 
-    // Lihat kelas — cek can_enter lalu navigasi SPA dengan Inertia
+    // Lihat kelas - cek can_enter lalu navigasi SPA dengan Inertia
     const handleLihatKelas = (e, item) => {
         e.preventDefault();
 

@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 /**
  * Menyajikan halaman terisolasi untuk memutar paket H5P, serta menyalurkan
  * file konten paket lewat route yang mendukung HTTP Range. Range penting
- * agar video (HTML5 <video> / H5P InteractiveVideo) bisa diputar & di-seek —
+ * agar video (HTML5 <video> / H5P InteractiveVideo) bisa diputar & di-seek -
  * server statis PHP built-in (artisan serve) tidak mendukung Range.
  */
 class H5pViewController
@@ -129,7 +129,7 @@ class H5pViewController
         // di-cache lama dan tidak membebani PHP pada kunjungan berikutnya.
         // Pengecualian: manifes paket bisa diubah di tempat (mis. mengunci
         // navigasi maju lewat preventSkippingMode), jadi harus selalu divalidasi
-        // ulang — kalau tidak, peserta memakai setelan lama berbulan-bulan.
+        // ulang - kalau tidak, peserta memakai setelan lama berbulan-bulan.
         $isManifest = in_array(strtolower(basename($realFull)), ['content.json', 'h5p.json'], true);
         $response->headers->set(
             'Cache-Control',

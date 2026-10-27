@@ -15,7 +15,7 @@ class PostCertificateCommand extends Command
 
     protected $description = 'Mengirim data sertifikat peserta dari pelatihan yang selesai ke SSO (chunk per batch).';
 
-    /** Max NIP per request ke SSO — hindari 500 body/timeout. */
+    /** Max NIP per request ke SSO - hindari 500 body/timeout. */
     protected int $chunkSize = 50;
 
     protected TokenService $tokenService;
@@ -191,7 +191,7 @@ class PostCertificateCommand extends Command
                             $this->warn("Batch HTTP {$response->status()} tapi body tidak confirm sukses: " . json_encode($bodyMsg));
                         }
 
-                        // Batch gagal — isolasi: kirim 1 NIP per request biar 1 busuk tidak gagalkan 49 lainnya
+                        // Batch gagal - isolasi: kirim 1 NIP per request biar 1 busuk tidak gagalkan 49 lainnya
                         $status = $response->status();
                         $body = mb_substr($response->body(), 0, 300);
                         $this->recordHttpSample('batch', $courseIdKey, $batchNo, $status, $body, $listNip, $dates);
@@ -202,7 +202,7 @@ class PostCertificateCommand extends Command
                             'body' => $body,
                             'peserta' => $listNip,
                         ]);
-                        $this->warn("Batch {$batchNo}/{$totalChunks} HTTP {$status} — fallback per-NIP. Body: {$body}");
+                        $this->warn("Batch {$batchNo}/{$totalChunks} HTTP {$status} - fallback per-NIP. Body: {$body}");
                         $this->rememberError("HTTP {$status}: {$body}");
 
                         foreach ($chunk as $i => $entry) {
@@ -465,7 +465,7 @@ class PostCertificateCommand extends Command
         ]);
 
         if ($response->status() === 401) {
-            Log::warning('[PostCertificate] Token 401 — force refresh dan retry.');
+            Log::warning('[PostCertificate] Token 401 - force refresh dan retry.');
             $token = $this->tokenService->forceRefresh();
             $response = $this->httpPost($url, $payload, $token);
         }
@@ -508,7 +508,7 @@ class PostCertificateCommand extends Command
     /**
      * Cek apakah SSO benar-benar terima data.
      * HTTP 2xx = default sukses; gagal hanya kalau body eksplisit bilang error.
-     * (SSO lama sering 200 padahal tolak — tangkap keyword gagal.)
+     * (SSO lama sering 200 padahal tolak - tangkap keyword gagal.)
      */
     private function isSsoSuccess($response): bool
     {

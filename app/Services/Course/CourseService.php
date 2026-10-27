@@ -311,7 +311,7 @@ class CourseService
                     'quota' => $item['quota'] ?? null,
                 ];
 
-                // Only update real DB rows — never insert frontend Date.now() ids as PK
+                // Only update real DB rows - never insert frontend Date.now() ids as PK
                 $dbId = isset($item['id']) && in_array((int) $item['id'], $existingIds, true)
                     ? (int) $item['id']
                     : null;
@@ -392,12 +392,12 @@ class CourseService
 
         $allowedStatuses = $course->employeeStatus->pluck('title')->toArray();
         // dd($employeeStatus, $allowedStatuses);
-        // No restrictions configured — allow all.
+        // No restrictions configured - allow all.
         if (empty($allowedStatuses)) {
             return true;
         }
 
-        // Case-insensitive + trim — SSO returns " Pns ", DB stores "PNS"
+        // Case-insensitive + trim - SSO returns " Pns ", DB stores "PNS"
         return in_array(strtoupper(trim($employeeStatus)), array_map(fn($s) => strtoupper(trim($s)), $allowedStatuses));
     }
 }

@@ -127,7 +127,7 @@ class ImportController
 
             if (count($perModul) > 1) {
                 $samples['aset-per-modul'] = [
-                    'label' => 'Versi Per Modul — gabung semua (' . count($perModul) . ' file, '
+                    'label' => 'Versi Per Modul - gabung semua (' . count($perModul) . ' file, '
                         . $this->humanSize(array_sum(array_map('filesize', $perModul))) . ')',
                     'paths' => $perModul,
                 ];

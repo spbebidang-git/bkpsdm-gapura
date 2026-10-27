@@ -24,9 +24,9 @@ use RuntimeException;
  * Orkestrasi impor kursus Moodle (.mbz) ke aplikasi.
  *
  * Alur:
- *  1. analyze()  — simpan tiap file ke area temporer (dapat token), parse,
+ *  1. analyze()  - simpan tiap file ke area temporer (dapat token), parse,
  *                  kelompokkan per original_course_id, kembalikan preview.
- *  2. import()   — berdasarkan token + konfigurasi instruktur, buat Course
+ *  2. import()   - berdasarkan token + konfigurasi instruktur, buat Course
  *                  beserta aktivitas yang diratakan + prefix "[Modul X]".
  *
  * Struktur modul mengikuti Opsi B (ratakan + prefix) karena aplikasi tidak
@@ -115,7 +115,7 @@ class MbzImportService
                 continue;
             }
 
-            // File sumber TIDAK disalin — paket full bisa ratusan MB dan
+            // File sumber TIDAK disalin - paket full bisa ratusan MB dan
             // salinannya hanya menumpuk di storage. Token cukup menunjuk
             // ke berkas aslinya lewat file penunjuk kecil.
             $token = Str::uuid()->toString();
@@ -249,7 +249,7 @@ class MbzImportService
                     continue;
                 }
 
-                // Lewati kuis yang tidak punya soal di backup — di kursus terbit
+                // Lewati kuis yang tidak punya soal di backup - di kursus terbit
                 // pre-test kosong hanya membingungkan peserta.
                 if (
                     in_array($activity['app_type'], ['pre-test', 'post-test'], true)
@@ -307,7 +307,7 @@ class MbzImportService
         Schedule::create(['course_id' => $course->id]);
 
         // Bersihkan sesi impor. Untuk token penunjuk, hanya penunjuknya yang
-        // dibuang — berkas .mbz di folder inbox server tetap utuh.
+        // dibuang - berkas .mbz di folder inbox server tetap utuh.
         foreach (array_keys($mbzPaths) as $token) {
             $this->releaseToken($token);
         }
@@ -642,7 +642,7 @@ class MbzImportService
         $slug = $base;
         $i = 1;
         // Sertakan data terhapus (soft delete) karena slug ber-unique index
-        // di level DB — baris trashed masih menempati slug tersebut.
+        // di level DB - baris trashed masih menempati slug tersebut.
         while (Course::withTrashed()->where('slug', $slug)->exists()) {
             $slug = $base . '-' . (++$i);
         }
@@ -682,8 +682,8 @@ class MbzImportService
     }
 
     /**
-     * Berkas .mbz untuk sebuah token: salinan unggahan, atau — bila token
-     * berupa penunjuk — berkas asli di folder inbox server.
+     * Berkas .mbz untuk sebuah token: salinan unggahan, atau - bila token
+     * berupa penunjuk - berkas asli di folder inbox server.
      */
     protected function resolveToken(string $token): ?string
     {
@@ -728,7 +728,7 @@ class MbzImportService
     }
 
     /**
-     * Lepas sebuah token: salinan unggahan dihapus, penunjuk dihapus — tetapi
+     * Lepas sebuah token: salinan unggahan dihapus, penunjuk dihapus - tetapi
      * berkas .mbz milik server TIDAK pernah ikut terhapus.
      */
     protected function releaseToken(string $token): void

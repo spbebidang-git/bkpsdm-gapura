@@ -13,7 +13,7 @@ class Schedule extends Model
 {
     use HasFactory, SoftDeletes;
 
-    // ponytail: no datetime cast on time_* — it stamped today's date onto time-only columns
+    // ponytail: no datetime cast on time_* - it stamped today's date onto time-only columns
     protected $casts = [
         'date' => 'date:Y-m-d',
     ];
