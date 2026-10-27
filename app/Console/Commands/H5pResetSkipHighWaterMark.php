@@ -39,7 +39,7 @@ class H5pResetSkipHighWaterMark extends Command
         foreach ($states as $state) {
             $title = $state->activity->title ?? ('activity #' . $state->activity_id);
             $label = "learn #{$state->learn_id} — {$title}";
-            $changes = $h5p->clampSkipHighWaterMark($state);
+            $changes = $h5p->clampRuntimeSkipHighWaterMark($state);
 
             if ($changes === []) {
                 $this->line("  dilewati: {$label}");

@@ -7,6 +7,7 @@ use App\Models\Course\H5p;
 use App\Models\Course\Scorm;
 use App\Models\Learn\ActivityRuntimeState;
 use App\Models\Learn\Learn;
+use App\Services\Course\Activity\H5pService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -99,7 +100,7 @@ class ActivityRuntimeStateController
         return response()->json(['success' => true]);
     }
 
-    public function h5p(Request $request, string $folder): JsonResponse
+    public function h5p(Request $request, string $folder, H5pService $h5pService): JsonResponse
     {
         abort_unless((bool) preg_match('/^h5p_[0-9a-f]+$/', $folder), 404);
 
@@ -137,6 +138,16 @@ class ActivityRuntimeStateController
         } else {
             abort_unless(is_string($data), 422, 'Data runtime H5P tidak valid.');
             abort_if(strlen($data) > 5 * 1024 * 1024, 422, 'Data runtime H5P terlalu besar.');
+
+            // Jangan pernah menyimpan izin melompat maju. Mode navigasi
+            // 'forward' mengizinkan seek sampai maxTimeReached, jadi nilai itu
+            // dikunci agar tidak mendahului posisi tonton: peserta tetap bisa
+            // melanjutkan dari titik terakhir, tetapi tidak melewatinya.
+            if ($dataType === 'state') {
+                $clamped = $h5pService->clampSkipHighWaterMark($data);
+                $data = $clamped['state'] ?? $data;
+            }
+
             $contentUserData[$subContentId][$dataType] = $data;
         }
 
