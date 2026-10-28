@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | API Routes - Kominfo Integration
 |--------------------------------------------------------------------------
-| Every v1 endpoint requires a Bearer token via Sanctum.
+| All v1 endpoints use POST. Data endpoints require a Bearer token via Sanctum.
+| Filters and pagination are accepted in the JSON request body.
 | POST /api/v1/login {username=NIP, password} → SSO → Admin → Sanctum token.
 |
 | Throttle: login 10/min, authenticated endpoints 60/min. Cookies are disabled
@@ -37,29 +38,29 @@ Route::prefix('v1')
 
         // Courses (Pelatihan)
         Route::controller(CourseController::class)->prefix('courses')->name('courses.')->group(function () {
-            Route::get('/', 'index')->name('index');
-            Route::get('/{slug}', 'show')->name('show');
-            Route::get('/{slug}/participants', 'participants')->name('participants');
-            Route::get('/{slug}/statistics', 'statistics')->name('statistics');
-            Route::get('/{slug}/results', 'results')->name('results');
+            Route::post('/', 'index')->name('index');
+            Route::post('/{slug}', 'show')->name('show');
+            Route::post('/{slug}/participants', 'participants')->name('participants');
+            Route::post('/{slug}/statistics', 'statistics')->name('statistics');
+            Route::post('/{slug}/results', 'results')->name('results');
         });
 
         // Categories (Kategori)
         Route::controller(CategoryController::class)->prefix('categories')->name('categories.')->group(function () {
-            Route::get('/', 'index')->name('index');
-            Route::get('/{id}/courses', 'courses')->name('courses');
+            Route::post('/', 'index')->name('index');
+            Route::post('/{id}/courses', 'courses')->name('courses');
         });
 
         // Participants (Peserta)
         Route::controller(ParticipantController::class)->prefix('participants')->name('participants.')->group(function () {
-            Route::get('/', 'index')->name('index');
-            Route::get('/{id}', 'show')->name('show');
+            Route::post('/', 'index')->name('index');
+            Route::post('/{id}', 'show')->name('show');
         });
 
         // Statistics (Statistik)
         Route::controller(StatisticController::class)->prefix('statistics')->name('statistics.')->group(function () {
-            Route::get('/overview', 'overview')->name('overview');
-            Route::get('/yearly', 'yearly')->name('yearly');
-            Route::get('/employee-status', 'employeeStatus')->name('employee-status');
+            Route::post('/overview', 'overview')->name('overview');
+            Route::post('/yearly', 'yearly')->name('yearly');
+            Route::post('/employee-status', 'employeeStatus')->name('employee-status');
         });
     });

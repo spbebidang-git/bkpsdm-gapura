@@ -2,7 +2,6 @@ import ActivityCrudFormLayout from '@/Components/Admin/Course/ActivityCrudFormLa
 import { CrudFormSection } from '@/Components/Admin/CrudPrimitives';
 import FormInput from '@/Components/FormInput';
 import FormLabel from '@/Components/FormLabel';
-import FormSelect from '@/Components/FormSelect';
 import FormTextArea from '@/Components/FormTextArea';
 import { useForm } from '@inertiajs/react';
 import type { FormEvent } from 'react';
@@ -11,13 +10,8 @@ import 'react-quill-new/dist/quill.snow.css';
 
 type TaskActivity = {
     id: number | string; title: string; description: string; instruction: string;
-    value: string | number; is_calculated: boolean | number | string;
+    value: string | number;
 } | null;
-
-const typeOptions = [
-    { value: '0', label: 'Tidak' },
-    { value: '1', label: 'Ya' },
-];
 
 export default function TaskForm({ slug, activity = null }: { slug: string; activity?: TaskActivity }) {
     const isEdit = Boolean(activity);
@@ -27,7 +21,6 @@ export default function TaskForm({ slug, activity = null }: { slug: string; acti
         description: activity?.description ?? '',
         instruction: activity?.instruction ?? '',
         value: activity?.value ?? '',
-        is_calculated: activity?.is_calculated ? '1' : '0',
     });
     const handleChange = (event: any) => {
         const { id, type, value, checked } = event.target;
@@ -49,12 +42,10 @@ export default function TaskForm({ slug, activity = null }: { slug: string; acti
                         placeholder="Contoh: Tugas Bab 1" small="Judul harus singkat dan jelas. Contoh: 'Tugas Bab 1' atau 'Analisis Studi Kasus'." />
                 </div>
             </CrudFormSection>
-            <CrudFormSection title="Pengaturan penilaian" icon="bx-slider-alt" description="Tentukan bobot tugas dan cara penilaiannya.">
+            <CrudFormSection title="Pengaturan penilaian" icon="bx-slider-alt" description="Tentukan bobot nilai untuk tugas ini.">
                 <div className="course-test-fields course-test-score-fields">
                     <FormInput id="value" label="Bobot Nilai" isRequired type="number" value={data.value} onChange={handleChange} error={errors.value}
                         placeholder="Contoh: 10, 20, 100" small="Masukkan bobot nilai untuk tugas ini." />
-                    <FormSelect id="is_calculated" label="Nilai Otomatis?" value={data.is_calculated} onChange={handleChange} error={errors.is_calculated}
-                        emptyOption={null} options={typeOptions} small="Pilih 'Ya' jika tugas dinilai otomatis oleh sistem, 'Tidak' jika dinilai instruktur." />
                 </div>
             </CrudFormSection>
             <CrudFormSection title="Instruksi tugas" icon="bx-message-detail" description="Berikan aturan penulisan, format pengumpulan, atau panduan teknis.">

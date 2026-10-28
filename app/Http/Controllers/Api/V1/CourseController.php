@@ -40,7 +40,7 @@ class CourseController extends Controller
             $query->where('title', 'like', '%' . $request->search . '%');
         }
 
-        $perPage = min($request->get('per_page', 15), 100);
+        $perPage = min($request->input('per_page', 15), 100);
         $courses = $query->latest()->paginate($perPage);
 
         return CourseResource::collection($courses)->additional([
@@ -89,7 +89,7 @@ class CourseController extends Controller
 
         $learns = $course->learns()
             ->with('participant')
-            ->paginate($request->get('per_page', 15));
+            ->paginate($request->input('per_page', 15));
 
         $learns->getCollection()->transform(function ($learn) {
             $participant = $learn->participant;
@@ -165,7 +165,7 @@ class CourseController extends Controller
         $learns = $course->learns()
             ->with(['participant', 'learnItems'])
             ->whereNotNull('finished_at')
-            ->paginate($request->get('per_page', 15));
+            ->paginate($request->input('per_page', 15));
 
         $learns->getCollection()->transform(function ($learn) {
             $participant = $learn->participant;

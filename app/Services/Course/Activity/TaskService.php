@@ -17,7 +17,7 @@ class TaskService
 
     public function createTask($data)
     {
-        return $this->tasks->create($data);
+        return $this->tasks->create(array_merge($data, ['is_calculated' => false]));
     }
 
     public function getTask($participantId, $activity)
@@ -42,7 +42,7 @@ class TaskService
 
         $task->update([
             'description' => $request['description'],
-            'is_calculated' => $request['is_calculated'],
+            'is_calculated' => false,
         ]);
 
         return true;
@@ -57,7 +57,6 @@ class TaskService
             'title' => $activity->title,
             'value' => $activity->value,
             'description' => $task?->description ?? '',
-            'is_calculated' => $task?->is_calculated ?? false,
             'instruction' => $activity->instruction,
         ];
     }

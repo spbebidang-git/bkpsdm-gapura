@@ -29,7 +29,7 @@ class CategoryController extends Controller
     /**
      * Daftar course per kategori
      */
-    public function courses(int $id, Request $request)
+    public function courses(string $id, Request $request)
     {
         $category = Category::find($id);
 
@@ -44,7 +44,7 @@ class CategoryController extends Controller
             ->with(['employeeStatus', 'opds'])
             ->where('status', 'publish')
             ->latest()
-            ->paginate($request->get('per_page', 15));
+            ->paginate($request->input('per_page', 15));
 
         return CourseResource::collection($courses)->additional([
             'success' => true,

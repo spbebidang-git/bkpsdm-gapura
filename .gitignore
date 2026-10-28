@@ -36,3 +36,9 @@ yarn-error.log
 
 # Offline backup recovery identities must never enter Git.
 *.agekey
+
+# Word documents and Postman exports
+*.[dD][oO][cC][xX]
+*.postman_collection.json
+*.postman_environment.json
+*.postman_globals.json

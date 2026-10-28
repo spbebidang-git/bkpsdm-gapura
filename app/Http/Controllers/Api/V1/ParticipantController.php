@@ -34,7 +34,7 @@ class ParticipantController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        $perPage = min($request->get('per_page', 15), 100);
+        $perPage = min($request->input('per_page', 15), 100);
         $participants = $query->latest()->paginate($perPage);
 
         return ParticipantResource::collection($participants)->additional([
@@ -46,7 +46,7 @@ class ParticipantController extends Controller
     /**
      * Detail pengguna + riwayat pelatihan
      */
-    public function show(int $id)
+    public function show(string $id)
     {
         $participant = User::role('participant')->find($id);
 

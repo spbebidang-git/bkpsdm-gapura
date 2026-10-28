@@ -173,14 +173,14 @@ class CourseVisibilityTest extends TestCase
         $pns = EmployeeStatus::create(['title' => 'PNS']);
         $course = $this->course('private', [$a->id, $b->id], $pns);
         $url = route('api.v1.courses.show', $course->slug);
-        $this->getJson($url)->assertUnauthorized();
+        $this->postJson($url)->assertUnauthorized();
         Role::findOrCreate('super_admin', 'web');
         $admin = User::factory()->create();
         $admin->assignRole('super_admin');
         \Laravel\Sanctum\Sanctum::actingAs($admin, []);
-        $this->getJson($url)->assertForbidden();
+        $this->postJson($url)->assertForbidden();
         \Laravel\Sanctum\Sanctum::actingAs($admin, ['api:read']);
-        $this->getJson($url)->assertOk()->assertJsonPath('data.visibility', 'private')
+        $this->postJson($url)->assertOk()->assertJsonPath('data.visibility', 'private')
             ->assertJsonCount(2, 'data.opds')->assertJsonCount(2, 'data.opd_ids');
     }
 

@@ -111,8 +111,7 @@ class User extends Authenticatable
 
     public function schedules()
     {
-        return $this->belongsToMany(Schedule::class, 'schedule_user', 'participant_id')
-            ->withPivot('pre_test_variant_id', 'post_test_variant_id');
+        return $this->belongsToMany(Schedule::class, 'schedule_user', 'participant_id');
     }
 
     /**

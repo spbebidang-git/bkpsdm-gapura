@@ -55,7 +55,6 @@ class TaskController
             $this->task->createTask([
                 'activity_id' => $activity->id,
                 'description' => $request->description,
-                'is_calculated' => $request->is_calculated,
             ]);
 
             DB::commit();
@@ -98,7 +97,6 @@ class TaskController
             $this->task->updateTask([
                 'activity_id' => $task->id,
                 'description' => $request->description,
-                'is_calculated' => $request->is_calculated,
             ]);
 
             DB::commit();
