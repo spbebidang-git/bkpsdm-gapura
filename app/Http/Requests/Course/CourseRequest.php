@@ -84,6 +84,13 @@ abstract class CourseRequest extends FormRequest
                 }
             }
 
+            if ($this->input('status') === 'publish') {
+                $course = $this->route('course');
+                if (! $course || ! $course->activities()->exists()) {
+                    $validator->errors()->add('status', 'Tambahkan minimal satu kegiatan sebelum memublikasikan kelas.');
+                }
+            }
+
             if ($this->input('type') === 'schedule' && $this->input('status') === 'publish') {
                 $course = $this->route('course');
                 if (! $course || $course->schedules()->count() === 0) {

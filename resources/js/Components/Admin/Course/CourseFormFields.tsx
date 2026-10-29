@@ -81,7 +81,7 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
                 </div>
             </CrudFormSection>
             <CrudFormSection title="Pengaturan kelas" description="Tentukan tipe, durasi, dan publikasi." icon="bx-slider-alt">
-                <FormSelect id="visibility" label="Visibilitas kelas" isRequired value={values.visibility} onChange={handleChange} error={errors.visibility} options={[{ value: 'public', label: 'Publik — semua OPD' }, { value: 'private', label: 'Privat — OPD tertentu' }]} small="Informasi kelas publik dapat dilihat tanpa login. Mengikuti kegiatan tetap memerlukan login dan status pegawai yang sesuai." />
+                <FormSelect id="visibility" label="Visibilitas kelas" isRequired value={values.visibility} onChange={handleChange} error={errors.visibility} options={[{ value: 'public', label: 'Knowledge Management System (KMS)' }, { value: 'private', label: 'Learning Management System (LMS)' }]} small="Informasi kelas publik dapat dilihat tanpa login. Mengikuti kegiatan tetap memerlukan login dan status pegawai yang sesuai." />
                 {values.visibility === 'private' && <fieldset className="course-opd-picker">
                     <legend className="form-label">OPD sasaran <span aria-hidden="true">*</span></legend>
                     {targetOpds.length > 0 ? <>

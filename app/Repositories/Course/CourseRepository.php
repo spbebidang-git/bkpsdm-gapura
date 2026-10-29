@@ -99,6 +99,7 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
                             });
                     });
             })
+            ->when($filters['visibility'] ?? null, fn ($query, $visibility) => $query->where('visibility', $visibility))
             ->when($filters['search'] ?? null, fn ($query, $search) => $query->where('title', 'like', "%{$search}%"))
             ->when($filters['category'] ?? null, fn ($query, $categoryId) => $query->where('category_id', $categoryId))
             ->when($filters['employee_status'] ?? null, fn ($query, $employeeStatus) => $query->whereHas(

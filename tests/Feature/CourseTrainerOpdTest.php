@@ -46,6 +46,36 @@ class CourseTrainerOpdTest extends TestCase
         ];
     }
 
+    public function test_publication_requires_at_least_one_non_deleted_activity(): void
+    {
+        $this->admin();
+        $opd = $this->opd('publish');
+        $trainer = Trainer::create(['name' => 'Pemateri', 'opd_id' => $opd->id]);
+
+        foreach (['unschedule', 'schedule'] as $type) {
+            $course = Course::factory()->draft()->create(['access_mode' => $type === 'schedule' ? 'scheduled' : 'open']);
+            $course->schedules()->create([]);
+            $payload = [...$this->payload($course, $trainer, [$opd->id]), 'type' => $type, 'status' => 'publish'];
+            $url = route('admin.course.update', $course->slug);
+
+            $this->putJson($url, $payload)->assertUnprocessable()->assertJsonValidationErrors('status');
+            $this->assertSame('draft', $course->fresh()->status);
+
+            $activity = \App\Models\Course\Activity\Activity::create([
+                'course_id' => $course->id, 'type' => 'video', 'title' => 'Materi',
+            ]);
+            $activity->delete();
+            $this->putJson($url, $payload)->assertUnprocessable()->assertJsonValidationErrors('status');
+            $activity->restore();
+            $this->put($url, $payload)->assertSessionHasNoErrors();
+            $this->assertSame('publish', $course->fresh()->status);
+        }
+
+        $this->postJson(route('admin.course.store'), [
+            ...$payload, 'thumbnail' => UploadedFile::fake()->image('kelas.jpg'),
+        ])->assertUnprocessable()->assertJsonValidationErrors('status');
+    }
+
     public function test_private_targets_are_limited_to_selected_trainer_opds_and_public_clears_targets(): void
     {
         $admin = $this->admin();

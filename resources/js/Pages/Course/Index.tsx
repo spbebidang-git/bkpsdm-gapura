@@ -5,20 +5,22 @@ import { useEffect, useRef, useState } from "react";
 import "../../../css/public-course-index.css";
 
 const employeeStatuses = ["CPNS", "PNS", "PPPK", "PPPK Paruh Waktu"];
-const emptyFilters = { search: "", employee_status: "", category: "" };
-
-const filterChip = (active: boolean) => `inline-flex min-h-9 items-center justify-center rounded-[10px] border px-3 py-1.5 font-poppins text-[11px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${active ? 'border-primary bg-primary text-white' : 'border-primary/30 bg-white text-primary hover:border-primary hover:bg-[#E6F3F3]'}`;
+const emptyFilters = { search: "", employee_status: "", category: "", visibility: "" };
 
 export default function CourseIndex({
     courses = [],
     categories = [],
     filters = {},
-    bannerUrl = null,
 }) {
     const [form, setForm] = useState({ ...emptyFilters, ...filters });
     const [loading, setLoading] = useState(false);
     const pendingSearch = useRef(null);
     const cancelRequest = useRef(null);
+
+    useEffect(() => {
+        clearTimeout(pendingSearch.current);
+        setForm({ ...emptyFilters, ...filters });
+    }, [filters]);
 
     useEffect(
         () => () => {
@@ -61,21 +63,35 @@ export default function CourseIndex({
     };
 
     const resetFilters = () => {
-        setForm(emptyFilters);
-        applyFilters(emptyFilters);
+        const values = { ...emptyFilters, visibility: form.visibility };
+        setForm(values);
+        applyFilters(values);
     };
-    const hasActiveFilters = Object.values(form).some(Boolean);
-    const hasAppliedFilters = Object.values(filters).some(Boolean);
+    const pageTitle = form.visibility === 'public'
+        ? 'Knowledge Management System (KMS)'
+        : form.visibility === 'private'
+            ? 'Learning Management System (LMS)'
+            : 'Materi Pilihan';
+    const hasActiveFilters = Boolean(form.search || form.category || form.employee_status);
+    const hasAppliedFilters = Boolean((filters as typeof emptyFilters).search || (filters as typeof emptyFilters).category || (filters as typeof emptyFilters).employee_status);
 
     return (
         <App>
-            <Head title="Materi Pilihan" />
+            <Head title={pageTitle} />
             <section className="public-course-index">
                 <div className="course-index-content">
-                    <div className="course-index-banner" role={bannerUrl ? undefined : 'img'} aria-label={bannerUrl ? undefined : 'Banner kelas GAPURA'}>
-                        {bannerUrl && <img src={bannerUrl} alt="Pelatihan GAPURA" className="h-full w-full object-cover" />}
+                    <div className="course-index-heading">
+                        <div>
+                            <p className="course-index-eyebrow">MATERI PILIHAN</p>
+                            <h1 className="max-w-3xl font-poppins text-2xl font-semibold leading-tight tracking-tight text-[#075D5E] sm:text-3xl">{pageTitle}</h1>
+                            <p className="mt-3 max-w-xl font-inter text-sm leading-6 text-[#66778C]">{form.visibility === 'public' ? 'Jelajahi pengetahuan dan temukan materi untuk mengembangkan kompetensi Anda.' : form.visibility === 'private' ? 'Temukan kelas pembelajaran yang tersedia sesuai OPD dan status kepegawaian Anda.' : 'Temukan pengetahuan dan kelas pembelajaran untuk mengembangkan kompetensi Anda.'}</p>
+                        </div>
                     </div>
-                    <h1 className="mb-6 mt-10 text-center font-poppins text-2xl font-semibold text-[#075D5E] sm:mt-12 sm:text-3xl">Daftar kelas</h1>
+                    <div className="course-index-tabs" aria-label="Jenis materi">
+                        <button type="button" aria-pressed={form.visibility === 'public'} onClick={() => updateFilter('visibility', 'public')} className={form.visibility === 'public' ? 'is-active' : ''}>KMS <span>Pengetahuan</span></button>
+                        <button type="button" aria-pressed={form.visibility === 'private'} onClick={() => updateFilter('visibility', 'private')} className={form.visibility === 'private' ? 'is-active' : ''}>LMS <span>Pembelajaran</span></button>
+                    </div>
+                    <div className="course-index-layout">
                     <form
                         id="course-filters"
                         role="search"
@@ -86,21 +102,12 @@ export default function CourseIndex({
                         }}
                         className="course-index-filters"
                     >
-                        <fieldset>
-                            <legend className="sr-only">Kategori kelas</legend>
-                            <div className="flex flex-wrap justify-center gap-2">
-                                <button type="button" aria-pressed={!form.category} onClick={() => updateFilter('category', '')} className={filterChip(!form.category)}>Semua kategori</button>
-                                {categories.map((category) => <button key={category.id} type="button" aria-pressed={String(form.category) === String(category.id)} onClick={() => updateFilter('category', category.id)} className={filterChip(String(form.category) === String(category.id))}>{category.title}</button>)}
-                            </div>
-                        </fieldset>
-                        <fieldset className="mt-3">
-                            <legend className="sr-only">Status pegawai</legend>
-                            <div className="flex flex-wrap justify-center gap-2">
-                                <button type="button" aria-pressed={!form.employee_status} onClick={() => updateFilter('employee_status', '')} className={filterChip(!form.employee_status)}>Semua status pegawai</button>
-                                {employeeStatuses.map((status) => <button key={status} type="button" aria-pressed={form.employee_status === status} onClick={() => updateFilter('employee_status', status)} className={filterChip(form.employee_status === status)}>{status}</button>)}
-                            </div>
-                        </fieldset>
-                        <div className="mx-auto mt-5 flex max-w-[720px] gap-2">
+                        <div className="course-index-filter-header">
+                            <div><h2>Temukan materi Anda</h2><p>Cari judul atau pilih filter yang sesuai.</p></div>
+                            {hasActiveFilters && <button type="button" onClick={resetFilters} className="course-index-reset">Reset filter</button>}
+                        </div>
+                        <div className="course-index-search flex w-full gap-2">
+                            <svg className="course-index-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 4.5 4.5" strokeLinecap="round" /></svg>
                             <label htmlFor="course-search" className="sr-only">Cari kelas</label>
                             <input
                                 id="course-search"
@@ -109,40 +116,36 @@ export default function CourseIndex({
                                 value={form.search}
                                 onChange={(event) => updateFilter('search', event.target.value)}
                                 placeholder="Cari judul kelas…"
-                                className="h-11 min-w-0 flex-1 rounded-[10px] border border-transparent bg-[#E6F3F3] px-4 font-inter text-sm text-[#1A2B3F] placeholder:text-[#66778C] focus:border-primary focus:ring-2 focus:ring-primary/10"
+                                className="h-12 min-w-0 flex-1 rounded-xl border border-[#DCE7E2] bg-[#F6FAF9] pl-11 pr-4 font-inter text-sm text-[#1A2B3F] placeholder:text-[#66778C] focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/10"
                             />
-                            <button type="submit" className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-[10px] bg-primary px-4 font-poppins text-sm font-semibold text-white transition hover:bg-[#075D5E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"><i className="bx bx-search text-lg" aria-hidden="true" />Cari</button>
                         </div>
+                        <div className="course-index-filter-group" role="group" aria-labelledby="course-category-label">
+                            <h3 id="course-category-label">Kategori</h3>
+                            <div className="course-index-filter-options">
+                                <button type="button" aria-pressed={!form.category} onClick={() => updateFilter('category', '')}>Semua kategori</button>
+                                {categories.map((category) => <button key={category.id} type="button" aria-pressed={String(form.category) === String(category.id)} onClick={() => updateFilter('category', category.id)}>{category.title}</button>)}
+                            </div>
+                        </div>
+                        <div className="course-index-filter-group" role="group" aria-labelledby="course-status-label">
+                            <h3 id="course-status-label">Status pegawai</h3>
+                            <div className="course-index-filter-options">
+                                <button type="button" aria-pressed={!form.employee_status} onClick={() => updateFilter('employee_status', '')}>Semua status pegawai</button>
+                                {employeeStatuses.map((status) => <button key={status} type="button" aria-pressed={form.employee_status === status} onClick={() => updateFilter('employee_status', status)}>{status}</button>)}
+                            </div>
+                        </div>
+
                     </form>
 
-                    <div className="mt-8">
+                    <div className="course-index-results">
                         <div className="mb-5 flex min-h-9 items-center justify-between gap-4">
                             <p
                                 role="status"
                                 aria-live="polite"
                                 className="font-inter text-sm text-[#66778C]"
                             >
-                                {loading ? (
-                                    "Mencari kelas…"
-                                ) : (
-                                    <>
-                                        <strong className="font-poppins font-semibold text-[#075D5E]">
-                                            {courses.length} kelas
-                                        </strong>{" "}
-                                        {hasAppliedFilters
-                                            ? "sesuai pencarian Anda"
-                                            : "tersedia untuk Anda"}
-                                    </>
-                                )}
+                                {loading ? 'Mencari kelas…' : hasAppliedFilters ? 'Materi sesuai pilihan Anda' : 'Pilihan materi untuk Anda'}
                             </p>
-                            <button
-                                type="button"
-                                disabled={!hasActiveFilters}
-                                onClick={resetFilters}
-                                className="shrink-0 rounded-[10px] border border-[#D0D9E6] bg-white px-3.5 py-2 font-poppins text-sm font-semibold text-primary transition duration-200 hover:border-primary/40 hover:bg-primary-mist/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 disabled:invisible"
-                            >
-                                Reset filter
-                            </button>
+
                         </div>
 
                         <div
@@ -154,7 +157,7 @@ export default function CourseIndex({
                             }
                         >
                             {courses.length > 0 ? (
-                                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+                                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:gap-6">
                                     {courses.map((course) => (
                                         <PublicCourseCard
                                             key={course.id}
@@ -190,12 +193,13 @@ export default function CourseIndex({
                                             onClick={resetFilters}
                                             className="mt-6 rounded-[10px] bg-[linear-gradient(90deg,#019B91_0%,#018083_100%)] px-5 py-3 font-poppins text-sm font-semibold text-white transition duration-200 hover:opacity-90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                                         >
-                                            Lihat semua kelas
+                                            Reset pencarian
                                         </button>
                                     )}
                                 </div>
                             )}
                         </div>
+                    </div>
                     </div>
                 </div>
             </section>

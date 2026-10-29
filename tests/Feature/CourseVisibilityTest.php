@@ -45,6 +45,23 @@ class CourseVisibilityTest extends TestCase
         return $course;
     }
 
+    public function test_catalog_filters_public_and_private_classes_for_eligible_participants(): void
+    {
+        $opd = $this->opd('filter');
+        $status = EmployeeStatus::create(['title' => 'PNS']);
+        $user = $this->participant($opd, $status);
+        $public = $this->course('public', [], $status);
+        $private = $this->course('private', [$opd->id], $status);
+
+        foreach (['public' => $public, 'private' => $private] as $visibility => $course) {
+            $this->actingAs($user)->get(route('course.index', ['visibility' => $visibility]))
+                ->assertInertia(fn (Assert $page) => $page
+                    ->where('filters.visibility', $visibility)
+                    ->has('courses', 1)
+                    ->where('courses.0.id', $course->id));
+        }
+    }
+
     public function test_guests_only_see_public_published_classes_and_cannot_open_private_urls(): void
     {
         $opd = $this->opd('001');

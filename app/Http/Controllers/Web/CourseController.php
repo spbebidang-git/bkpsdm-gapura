@@ -28,6 +28,7 @@ class CourseController extends Controller
     {
         $filters = $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
+            'visibility' => ['nullable', Rule::in(['public', 'private'])],
             'employee_status' => ['nullable', 'string', Rule::in(['CPNS', 'PNS', 'PPPK', 'PPPK Paruh Waktu'])],
             'category' => ['nullable', 'string', 'exists:categories,id'],
         ]);
