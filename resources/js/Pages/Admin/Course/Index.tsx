@@ -90,7 +90,9 @@ export default function Index() {
         <AdminLayout title="Kelas" hideTitle>
             <Head title="Kelas" />
             <div className="course-index">
-                <CrudPageHeader title="Kelas" description="Kelola kelas, jadwal, dan cakupan pengguna." className="course-index-header" />
+                <CrudPageHeader title="Kelas" description="Kelola kelas, jadwal, dan cakupan pengguna." className="course-index-header" actions={
+                    <Link href={route('admin.course.create')} className="course-index-create"><i className="bx bx-plus" aria-hidden />Tambah kelas</Link>
+                } />
                 <DataTable
                     url={route('admin.course.index')}
                     columns={columns}
@@ -100,7 +102,7 @@ export default function Index() {
                     className="course-index-table admin-crud-table"
                     searchPlaceholder="Cari judul kelas..."
                     emptyTitle={hasFilters ? 'Tidak ada kelas yang sesuai' : 'Belum ada kelas'}
-                    emptyDescription={hasFilters ? 'Ubah filter status atau tipe untuk melihat kelas lainnya.' : 'Kelas yang disusun pemateri akan ditampilkan di sini.'}
+                    emptyDescription={hasFilters ? 'Ubah filter status atau tipe untuk melihat kelas lainnya.' : 'Buat kelas pertama untuk mulai menyusun pembelajaran.'}
                     toolbarFilters={
                         <div className="course-index-filters">
                             <label><span className="sr-only">Filter status</span><select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">Semua status</option><option value="publish">Aktif</option><option value="draft">Draft</option></select></label>
