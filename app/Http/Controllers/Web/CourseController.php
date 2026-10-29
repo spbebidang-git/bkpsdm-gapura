@@ -181,19 +181,23 @@ class CourseController extends Controller
                 return response()->json(['status' => 409, 'message' => $message, 'data' => false], 409);
             }
 
-            $variant = $this->course->generatePrePostTestVariant($participantId, $course);
+            $this->course->generatePrePostTestVariant($participantId, $course);
 
             $schedule->participants()->syncWithoutDetaching([$participantId]);
 
 
             DB::commit();
 
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Kelas berhasil diaktifkan.']);
+            }
+
             return to_route('course.show', $course->slug);
-            // return response(null);
         } catch (\Throwable $th) {
             DB::rollBack();
+            report($th);
 
-            return response('Something went wrong.', 200);
+            return response()->json(['message' => 'Aktivasi kelas belum berhasil. Silakan coba lagi dalam beberapa saat.'], 500);
         }
     }
 }

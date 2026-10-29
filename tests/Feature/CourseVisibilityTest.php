@@ -123,6 +123,46 @@ class CourseVisibilityTest extends TestCase
         $this->assertDatabaseHas('enrollments', ['course_id' => $public->id, 'participant_id' => $eligible->id]);
     }
 
+    public function test_json_activation_returns_success_without_redirecting_to_course_detail(): void
+    {
+        $status = EmployeeStatus::create(['title' => 'PNS']);
+        $course = $this->course('public', [], $status);
+        $user = $this->participant(null, $status);
+        $schedule = $course->schedules->first();
+        $url = route('course.store', [$course->slug, $schedule->id]);
+
+        $this->actingAs($user)->postJson($url)
+            ->assertOk()->assertHeaderMissing('Location')
+            ->assertJson(['message' => 'Kelas berhasil diaktifkan.']);
+        $enrollment = Enrollment::sole();
+
+        // Retrying a completed request must preserve the original access period.
+        $this->postJson($url)->assertOk();
+        $this->assertDatabaseCount('enrollments', 1);
+        $this->assertSame($enrollment->access_ends_at->toDateTimeString(), $enrollment->fresh()->access_ends_at->toDateTimeString());
+        $this->assertSame(1, $schedule->participants()->whereKey($user->id)->count());
+        $this->get(route('course.show', $course->slug))->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('schedules.0.is_active', 1));
+    }
+
+    public function test_activation_failure_rolls_back_and_returns_an_error_status(): void
+    {
+        $status = EmployeeStatus::create(['title' => 'PNS']);
+        $course = $this->course('public', [], $status);
+        $user = $this->participant(null, $status);
+        $schedule = $course->schedules->first();
+        $this->partialMock(CourseService::class, function ($mock) {
+            $mock->shouldReceive('generatePrePostTestVariant')->once()
+                ->andThrow(new \RuntimeException('Variant generation failed'));
+        });
+
+        $this->actingAs($user)->postJson(route('course.store', [$course->slug, $schedule->id]))
+            ->assertStatus(500)
+            ->assertJson(['message' => 'Aktivasi kelas belum berhasil. Silakan coba lagi dalam beberapa saat.']);
+        $this->assertDatabaseCount('enrollments', 0);
+        $this->assertSame(0, $schedule->participants()->count());
+    }
+
     public function test_existing_participants_keep_access_after_profile_changes_without_extending_expiry(): void
     {
         $a = $this->opd('001'); $b = $this->opd('002');

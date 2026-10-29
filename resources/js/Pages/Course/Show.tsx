@@ -89,7 +89,7 @@ export default function CourseShow({ course, schedules = [], reviews = [], ratin
             return;
         }
         setLoadingScheduleId(schedule.id);
-        axios.post(`/course/${course.slug}/${schedule.id}`)
+        axios.post(`/course/${course.slug}/${schedule.id}`, {}, { headers: { Accept: 'application/json' } })
             .then(() => {
                 setActiveSchedules((current) => [...current, schedule.id]);
                 showCourseActivationToast({ tone: 'success', title: 'Kelas berhasil diaktifkan', message: 'Materi sudah siap. Mulai belajar dan lanjutkan progres Anda di Kelas Saya.', action: { label: 'Buka kelas saya', href: '/my-course' } }, `success-${schedule.id}`);
