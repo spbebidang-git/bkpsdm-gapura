@@ -17,19 +17,19 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class RatingController
 {
-    protected $activity, $course, $participantId, $learn, $user;
+    protected $activity, $course, $learn, $user;
 
     public function __construct(UserService $userService)
     {
-        $this->participantId = Auth::user()->id;
         $this->user = $userService;
     }
 
     public function index(Course $course, $scheduleId)
     {
+        $participantId = Auth::id();
         return Inertia::render('Participant/Rating/Index', [
             'course' => $course,
-            'progress' => Learn::where('participant_id', $this->participantId)->where('course_id', $course->id)->first()->progress ?? '0 %',
+            'progress' => Learn::where('participant_id', $participantId)->where('course_id', $course->id)->first()->progress ?? '0 %',
             'schedule_id' => $scheduleId,
             'initial_activity' =>  $course->activities->first() ? $course->activities->first()->id : 0,
         ]);
@@ -37,6 +37,7 @@ class RatingController
 
     public function store(Request $request, Course $course, $scheduleId)
     {
+        $participantId = $request->user()->id;
         $request->validate([
             'rating' => 'required|numeric|min:1|max:5',
             'description' => 'nullable|string|max:1000'
@@ -51,11 +52,11 @@ class RatingController
             $course->reviews()->create([
                 'star' => $request->rating,
                 'description' => $request->input('description') ?? '',
-                'user_id' => $this->participantId,
+                'user_id' => $participantId,
             ]);
 
             # Set Finished At
-            $learn = Learn::where('participant_id', $this->participantId)
+            $learn = Learn::where('participant_id', $participantId)
                 ->where('course_id', $course->id)
                 ->first();
 
@@ -85,7 +86,7 @@ class RatingController
             //         'tahun' => Carbon::now()->year,
             //         'tgl_mulai' => Carbon::parse($learn->created_at)->format('Y-m-d'),
             //         'tgl_selesai' => Carbon::parse($learn->finished_at)->format('Y-m-d'),
-            //         'peserta' => get_user_meta($this->participantId, 'nip')
+            //         'peserta' => get_user_meta($participantId, 'nip')
             //     ]);
 
             // if (!$response->successful()) {

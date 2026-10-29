@@ -136,7 +136,7 @@ class Course extends Model
 
     public function totalParticipant(): Attribute
     {
-        return Attribute::get(fn() => $this->enrollments()->whereNotNull('schedule_id')->count());
+        return Attribute::get(fn() => $this->enrollments()->distinct()->count('participant_id'));
     }
 
     public function totalPassed(): Attribute
@@ -146,10 +146,11 @@ class Course extends Model
 
     public function efektifitas(): Attribute
     {
-        if ($this->total_passed <= 0) {
-            return Attribute::get(fn() => 0);
-        }
-        return Attribute::get(fn() => round(($this->total_passed / $this->total_participant) * 100, 1));
+        return Attribute::get(function () {
+            $participants = $this->total_participant;
+
+            return $participants > 0 ? round(($this->total_passed / $participants) * 100, 1) : 0;
+        });
     }
 
     public function getStar(): Attribute

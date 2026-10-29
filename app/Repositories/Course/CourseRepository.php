@@ -72,19 +72,17 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
         $time = $now->format('H:i:s');
 
         $query = $this->query()
+            ->select('courses.*')
             ->with(['category', 'employeeStatus', 'opds'])
             ->withCount([
                 'learns as total_passed_count' => fn ($query) => $query->whereNotNull('finished_at'),
                 'reviews as rating_count',
             ])
             ->withSum('reviews as rating_total', 'star')
-            ->select('courses.*')
             ->selectSub(function ($query) {
                 $query->from('enrollments')
-                    ->join('schedules', 'schedules.id', '=', 'enrollments.schedule_id')
                     ->whereColumn('enrollments.course_id', 'courses.id')
                     ->whereNull('enrollments.deleted_at')
-                    ->whereNull('schedules.deleted_at')
                     ->selectRaw('count(distinct enrollments.participant_id)');
             }, 'total_participant_count')
             ->where('status', 'publish')
@@ -120,19 +118,17 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
         $now = Carbon::instance($at);
 
         return $this->query()
+            ->select('courses.*')
             ->with(['category', 'employeeStatus', 'opds'])
             ->withCount([
                 'learns as total_passed_count' => fn ($query) => $query->whereNotNull('finished_at'),
                 'reviews as rating_count',
             ])
             ->withSum('reviews as rating_total', 'star')
-            ->select('courses.*')
             ->selectSub(function ($query) {
                 $query->from('enrollments')
-                    ->join('schedules', 'schedules.id', '=', 'enrollments.schedule_id')
                     ->whereColumn('enrollments.course_id', 'courses.id')
                     ->whereNull('enrollments.deleted_at')
-                    ->whereNull('schedules.deleted_at')
                     ->selectRaw('count(distinct enrollments.participant_id)');
             }, 'total_participant_count')
             ->where('status', 'publish')
