@@ -2,13 +2,17 @@ import DataTable from '@/Components/Admin/DataTable';
 import { confirmDelete } from '@/Components/Admin/ConfirmDelete';
 import { CrudPageHeader } from '@/Components/Admin/CrudPrimitives';
 import AdminLayout from '@/Layouts/Admin/App';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import '@/../css/admin-course-index.css';
 
 const actionClass = 'course-index-action';
 
 export default function Index() {
+    const permissions = usePage().props.auth?.user?.permissions ?? [];
+    const canCreate = permissions.includes('course.create');
+    const canEdit = permissions.includes('course.edit');
+    const canDelete = permissions.includes('course.delete');
     const [status, setStatus] = useState('');
     const [type, setType] = useState('');
     const [refreshKey, setRefreshKey] = useState(0);
@@ -78,12 +82,12 @@ export default function Index() {
                 <div className="flex items-center justify-end gap-1">
                     {row.original.type === 'schedule' && <Link href={route('admin.course.schedules.index', getValue())} className={`${actionClass} is-schedule`} aria-label={`Kelola jadwal ${row.original.title}`} title="Kelola jadwal"><i className="bx bx-calendar" aria-hidden /><span className="course-index-action-label">Jadwal</span></Link>}
                     <Link href={route('admin.course.activities.index', getValue())} className={`${actionClass} is-activity`} aria-label={`Kelola kegiatan ${row.original.title}`} title="Kelola kegiatan"><i className="bx bx-list-check" aria-hidden /><span className="course-index-action-label">Kegiatan</span></Link>
-                    <Link href={route('admin.course.edit', getValue())} className={`${actionClass} is-edit`} aria-label={`Edit kelas ${row.original.title}`} title="Edit"><i className="bx bx-edit-alt" aria-hidden /><span className="course-index-action-label">Edit</span></Link>
-                    <button type="button" className={`${actionClass} is-delete`} aria-label={`Hapus kelas ${row.original.title}`} title="Hapus" onClick={() => deleteCourse(getValue(), row.original.title)}><i className="bx bx-trash" aria-hidden /><span className="course-index-action-label">Hapus</span></button>
+                    {canEdit && <Link href={route('admin.course.edit', getValue())} className={`${actionClass} is-edit`} aria-label={`Edit kelas ${row.original.title}`} title="Edit"><i className="bx bx-edit-alt" aria-hidden /><span className="course-index-action-label">Edit</span></Link>}
+                    {canDelete && <button type="button" className={`${actionClass} is-delete`} aria-label={`Hapus kelas ${row.original.title}`} title="Hapus" onClick={() => deleteCourse(getValue(), row.original.title)}><i className="bx bx-trash" aria-hidden /><span className="course-index-action-label">Hapus</span></button>}
                 </div>
             ),
         },
-    ], []);
+    ], [canEdit, canDelete]);
     const hasFilters = Boolean(status || type);
 
     return (
@@ -91,7 +95,7 @@ export default function Index() {
             <Head title="Kelas" />
             <div className="course-index">
                 <CrudPageHeader title="Kelas" description="Kelola kelas, jadwal, dan cakupan pengguna." className="course-index-header" actions={
-                    <Link href={route('admin.course.create')} className="course-index-create"><i className="bx bx-plus" aria-hidden />Tambah kelas</Link>
+                    canCreate ? <Link href={route('admin.course.create')} className="course-index-create"><i className="bx bx-plus" aria-hidden />Tambah kelas</Link> : null
                 } />
                 <DataTable
                     url={route('admin.course.index')}
@@ -102,7 +106,7 @@ export default function Index() {
                     className="course-index-table admin-crud-table"
                     searchPlaceholder="Cari judul kelas..."
                     emptyTitle={hasFilters ? 'Tidak ada kelas yang sesuai' : 'Belum ada kelas'}
-                    emptyDescription={hasFilters ? 'Ubah filter status atau tipe untuk melihat kelas lainnya.' : 'Buat kelas pertama untuk mulai menyusun pembelajaran.'}
+                    emptyDescription={hasFilters ? 'Ubah filter status atau tipe untuk melihat kelas lainnya.' : canCreate ? 'Buat kelas pertama untuk mulai menyusun pembelajaran.' : 'Pemateri belum menyusun kelas apa pun.'}
                     toolbarFilters={
                         <div className="course-index-filters">
                             <label><span className="sr-only">Filter status</span><select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">Semua status</option><option value="publish">Aktif</option><option value="draft">Draft</option></select></label>

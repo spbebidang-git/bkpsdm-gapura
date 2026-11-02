@@ -2,11 +2,13 @@
 
 namespace App\Services\Course\Activity;
 
+use App\Models\Learning\LearnItem;
 use App\Repositories\Course\Activity\Assessment\Contracts\QuestionRepositoryInterface;
 use App\Repositories\Course\Activity\Assessment\Contracts\QuestionVariantRepositoryInterface;
 use App\Repositories\Course\Activity\Contracts\ActivityRepositoryInterface;
 use App\Repositories\Course\Activity\Contracts\InteractiveRepositoryInterface;
 use App\Repositories\Learning\Contracts\LearnRepositoryInterface;
+use Illuminate\Support\Facades\DB;
 
 class ActivityService
 {
@@ -69,11 +71,13 @@ class ActivityService
     public function getActivityByParticipant($participantId, $courseId)
     {
         $enrollmentId = request()->attributes->get('participant_enrollment')?->id;
-        $lockedActivities = \App\Models\Learning\LearnItem::query()
+        $lockedActivities = LearnItem::query()
             ->whereNotNull('locked_at')
             ->whereHas('learn', function ($query) use ($participantId, $courseId, $enrollmentId) {
                 $query->where('participant_id', $participantId)->where('course_id', $courseId);
-                if ($enrollmentId) $query->where('enrollment_id', $enrollmentId);
+                if ($enrollmentId) {
+                    $query->where('enrollment_id', $enrollmentId);
+                }
             })->pluck('activity_id')->map(fn ($id) => (string) $id)->all();
 
         return $this->activities->getByCourse($courseId, ['learnItem'])
@@ -246,5 +250,15 @@ class ActivityService
         });
 
         return $index > 0 ? $activities[$index - 1] : null;
+    }
+
+    public function findForCourse(string $courseId, string $activityId)
+    {
+        return $this->activities->findForCourse($courseId, $activityId);
+    }
+
+    public function deleteActivity($activity): void
+    {
+        DB::transaction(fn () => $this->activities->delete($activity));
     }
 }

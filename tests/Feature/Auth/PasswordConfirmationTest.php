@@ -11,6 +11,6 @@ class PasswordConfirmationTest extends TestCase
 
     public function test_password_confirmation_endpoints_are_not_exposed(): void
     {
-        $this->get('/confirm-password')->assertNotFound();
+        $this->get('/confirm-password')->assertRedirect(route('login'));
     }
 }

@@ -17,14 +17,14 @@ class HelpTest extends TestCase
     {
         parent::setUp();
 
-        Role::findOrCreate('Admin');
-        Role::findOrCreate('Participant');
+        Role::findOrCreate('super_admin', 'web');
+        Role::findOrCreate('participant', 'web');
     }
 
     protected function admin(): User
     {
         $admin = User::factory()->create();
-        $admin->assignRole('Admin');
+        $admin->assignRole('super_admin');
 
         return $admin;
     }
@@ -38,9 +38,9 @@ class HelpTest extends TestCase
     public function test_participant_is_redirected_away_from_admin_help(): void
     {
         $participant = User::factory()->create();
-        $participant->assignRole('Participant');
+        $participant->assignRole('participant');
 
-        $this->actingAs($participant)->get('/admin/help')->assertRedirect(route('home'));
+        $this->actingAs($participant)->get('/admin/help')->assertRedirect(route('participant.dashboard'));
     }
 
     public function test_admin_can_view_help_index_page(): void

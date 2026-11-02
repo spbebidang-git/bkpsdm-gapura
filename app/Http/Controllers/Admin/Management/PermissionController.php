@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers\Admin\Management;
 
+use App\Http\Requests\Admin\PermissionStoreRequest;
+use App\Http\Requests\Admin\PermissionUpdateRequest;
 use App\Services\System\PermissionService;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Permission;
 use Throwable;
@@ -31,9 +32,9 @@ class PermissionController
         return Inertia::render('Admin/Management/Permission/Form', ['permission' => null]);
     }
 
-    public function store(Request $request)
+    public function store(PermissionStoreRequest $request)
     {
-        $validated = $request->validate(['name' => 'required|string'], [], ['name' => 'Nama hak akses']);
+        $validated = $request->validated();
 
         try {
             $this->permissions->createPermission($validated);
@@ -54,9 +55,9 @@ class PermissionController
         ]);
     }
 
-    public function update(Request $request, Permission $permission)
+    public function update(PermissionUpdateRequest $request, Permission $permission)
     {
-        $validated = $request->validate(['name' => 'required|string'], [], ['name' => 'Nama hak akses']);
+        $validated = $request->validated();
 
         try {
             $this->permissions->updatePermission($permission, $validated);

@@ -4,19 +4,31 @@ namespace App\Services\Course;
 
 use App\Helper\UploadMedia;
 use App\Models\Course\Course;
+use App\Models\Course\Schedule;
+use App\Models\Identity\User;
+use App\Models\Learning\Enrollment;
 use App\Repositories\Course\Activity\Assessment\Contracts\QuestionRepositoryInterface;
 use App\Repositories\Course\Activity\Assessment\Contracts\QuestionVariantRepositoryInterface;
 use App\Repositories\Course\Activity\Contracts\ActivityRepositoryInterface;
+use App\Repositories\Course\Contracts\CategoryRepositoryInterface;
 use App\Repositories\Course\Contracts\CourseRepositoryInterface;
 use App\Repositories\Course\Contracts\ScheduleRepositoryInterface;
+use App\Repositories\Identity\Contracts\EmployeeStatusRepositoryInterface;
+use App\Repositories\Learning\Contracts\EnrollmentRepositoryInterface;
+use App\Repositories\Learning\Contracts\LearnRepositoryInterface;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
-use App\Models\Identity\User;
+use Illuminate\Support\Facades\Log;
 
 class CourseService
 {
     public function __construct(
         private readonly CourseRepositoryInterface $courses,
+        private readonly CategoryRepositoryInterface $categories,
+        private readonly EmployeeStatusRepositoryInterface $statuses,
+        private readonly LearnRepositoryInterface $learns,
+        private readonly EnrollmentRepositoryInterface $enrollments,
         private readonly ScheduleRepositoryInterface $schedules,
         private readonly ActivityRepositoryInterface $activities,
         private readonly QuestionRepositoryInterface $questions,
@@ -28,12 +40,12 @@ class CourseService
         return $this->courses->isVisible($course, $user);
     }
 
-    public function participantSchedule(Course $course, int|string $participantId): ?\App\Models\Course\Schedule
+    public function participantSchedule(Course $course, int|string $participantId): ?Schedule
     {
         return $this->schedules->firstForParticipantAndCourse($course->id, $participantId);
     }
 
-    public function orderedActivities(Course $course): \Illuminate\Database\Eloquent\Collection
+    public function orderedActivities(Course $course): Collection
     {
         return $this->activities->getByCourse($course->id);
     }
@@ -137,14 +149,16 @@ class CourseService
 
     public function getByParticipant($participantId)
     {
-        $enrollments = \App\Models\Learning\Enrollment::withTrashed()
+        $enrollments = Enrollment::withTrashed()
             ->where('participant_id', $participantId)->get()->groupBy('course_id');
+
         return $this->schedules->getByParticipant($participantId)
             ->filter(fn ($row) => $row->course !== null)
             ->map(function ($row) use ($enrollments) {
                 $courseEnrollments = $enrollments->get($row->course->id, collect());
                 $enrollment = $courseEnrollments->first(fn ($item) => ! $item->trashed());
                 $wasArchived = $courseEnrollments->contains(fn ($item) => $item->trashed());
+
                 return [
                     'id' => $row->course->id,
                     'type' => $row->course->type,
@@ -197,6 +211,11 @@ class CourseService
         return $this->courses->findVisibleBySlug($slug, $user, ['reviews', 'opds', 'employeeStatus']);
     }
 
+    public function findBrowseableBySlug($slug)
+    {
+        return $this->courses->findBrowseableBySlug($slug, ['reviews', 'opds', 'employeeStatus']);
+    }
+
     public function createCourse($data)
     {
         return DB::transaction(function () use ($data) {
@@ -219,7 +238,7 @@ class CourseService
 
             $this->courses->syncEmployeeStatuses($course, $data['employee_status']);
             $this->courses->syncTrainers($course, $data['trainers'] ?? []);
-            $course->opds()->sync(($data['visibility'] ?? 'private') === 'private' ? ($data['opd_ids'] ?? []) : []);
+            $this->courses->syncAudienceOpds($course, ($data['visibility'] ?? 'private') === 'private' ? ($data['opd_ids'] ?? []) : []);
 
             $this->ensureOpenCourseSchedule($course);
 
@@ -248,7 +267,7 @@ class CourseService
 
             $this->courses->syncEmployeeStatuses($course, $data['employee_status']);
             $this->courses->syncTrainers($course, $data['trainers'] ?? []);
-            $course->opds()->sync(($data['visibility'] ?? 'private') === 'private' ? ($data['opd_ids'] ?? []) : []);
+            $this->courses->syncAudienceOpds($course, ($data['visibility'] ?? 'private') === 'private' ? ($data['opd_ids'] ?? []) : []);
 
             if (isset($data['thumbnail'])) {
                 if (is_file_exists(Course::$directoryImage.$course->thumbnail)) {
@@ -367,7 +386,50 @@ class CourseService
 
     public function checkEmployeeStatusCourse($userId, $course)
     {
-        $user = \App\Models\Identity\User::find($userId);
+        $user = User::find($userId);
+
         return $user && app(CourseAudience::class)->matchesStatus($course, $user);
+    }
+
+    public function resetParticipantLearning(Course $course, User $participant, string $actorId): void
+    {
+        DB::transaction(function () use ($course, $participant): void {
+            $enrollment = $this->enrollments->lockByParticipantAndCourse($participant->id, $course->id);
+            abort_unless($enrollment, 404);
+            $learn = $this->learns->lockForParticipantCourse($participant->id, $course->id);
+            $this->learns->deleteWithItems($learn);
+            $this->enrollments->delete($enrollment);
+        });
+        Log::channel('audit')->info('Progres belajar pengguna direset oleh superadmin.', [
+            'event' => 'admin.participant_learning.reset',
+            'actor_id' => $actorId,
+            'participant_id' => $participant->id,
+            'course_id' => $course->id,
+        ]);
+    }
+
+    public function assignedTrainerIds(Course $course): array
+    {
+        return $this->courses->assignedTrainerIds($course);
+    }
+
+    public function categoryOptions()
+    {
+        return $this->categories->all();
+    }
+
+    public function employeeStatusOptions()
+    {
+        return $this->statuses->getAllOrderedByTitle();
+    }
+
+    public function completedParticipants(string $courseId)
+    {
+        return $this->learns->getCompletedByCourse($courseId);
+    }
+
+    public function ongoingParticipants(string $courseId)
+    {
+        return $this->learns->getOngoingByCourse($courseId);
     }
 }

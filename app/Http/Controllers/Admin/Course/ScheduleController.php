@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Admin\Course;
 
+use App\Http\Requests\Course\ScheduleRequest;
 use App\Models\Course\Course;
 use App\Models\Course\Schedule;
 use App\Models\Identity\User;
-use App\Http\Requests\Course\ScheduleRequest;
+use App\Services\Course\CourseAudience;
 use App\Services\Course\ScheduleService;
+use Carbon\Carbon;
 use Inertia\Inertia;
 
 class ScheduleController
@@ -20,6 +22,7 @@ class ScheduleController
 
         $schedules = $this->schedules->forCourse($course);
         $hasMultiple = $schedules->count() > 1;
+
         return Inertia::render('Admin/Course/Schedules', [
             'course' => ['id' => $course->id, 'slug' => $course->slug, 'title' => $course->title, 'status' => $course->status],
             'schedules' => $schedules->map(fn (Schedule $schedule) => $this->present($schedule, $course->status === 'publish' && ! $hasMultiple)),
@@ -59,20 +62,21 @@ class ScheduleController
     private function present(Schedule $schedule, bool $lastPublished): array
     {
         $registered = $this->schedules->participantCount($schedule);
+
         return ['id' => $schedule->id, 'date' => $schedule->getRawOriginal('date'), 'time_from' => $this->time($schedule->getRawOriginal('time_from')), 'time_to' => $this->time($schedule->getRawOriginal('time_to')), 'quota' => $schedule->getRawOriginal('quota'), 'participant_count' => $registered, 'can_edit_details' => $registered === 0, 'can_delete' => $registered === 0 && ! $lastPublished];
     }
 
     private function time(?string $value): ?string
     {
-        return $value ? \Carbon\Carbon::parse($value)->format('H:i') : null;
+        return $value ? Carbon::parse($value)->format('H:i') : null;
     }
 
     private function assertCourseAccess(Course $course): void
     {
         $user = request()->user();
         if ($user instanceof User && $user->hasRole('trainer') && ! $user->hasAnyRole(['super_admin', 'administrator'])) {
-            abort_unless(app(\App\Services\Course\CourseAudience::class)->canManage($course, $user), 403);
-            abort_unless($course->trainers()->where('user_id', $user->id)->exists(), 403);
+            abort_unless(app(CourseAudience::class)->canManage($course, $user), 403);
+            abort_unless($this->schedules->hasTrainer($course, $user->id), 403);
         }
     }
 }

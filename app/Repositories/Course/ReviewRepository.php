@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Course;
 
+use App\Models\Course\Course;
 use App\Models\Course\Review;
 use App\Repositories\Course\Contracts\ReviewRepositoryInterface;
 use App\Repositories\EloquentRepository;
@@ -27,5 +28,10 @@ class ReviewRepository extends EloquentRepository implements ReviewRepositoryInt
             ->when($star, fn ($query) => $query->where('star', $star))
             ->latest()
             ->get();
+    }
+
+    public function courseOptions()
+    {
+        return Course::query()->select('id', 'title')->orderBy('title')->get();
     }
 }

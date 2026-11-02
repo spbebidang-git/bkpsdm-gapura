@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Admin\Management;
 
+use App\Http\Requests\Admin\RoleRequest;
 use App\Services\System\RoleService;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use InvalidArgumentException;
 use Spatie\Permission\Models\Role;
@@ -38,9 +38,9 @@ class RoleController
         return $this->form();
     }
 
-    public function store(Request $request)
+    public function store(RoleRequest $request)
     {
-        $validated = $this->validateRole($request);
+        $validated = $request->validated();
 
         try {
             $this->roles->createRole($validated);
@@ -51,9 +51,9 @@ class RoleController
         return to_route('admin.management.role.index')->with('success', 'Role baru berhasil dibuat.');
     }
 
-    public function update(Request $request, Role $role)
+    public function update(RoleRequest $request, Role $role)
     {
-        $validated = $this->validateRole($request, $role);
+        $validated = $request->validated();
 
         try {
             $this->roles->updateRole($role, $validated);
@@ -80,17 +80,5 @@ class RoleController
         $data = $this->roles->getFormData($role);
 
         return Inertia::render('Admin/Management/Role/Form', $data);
-    }
-
-    private function validateRole(Request $request, ?Role $role = null): array
-    {
-        return $request->validate([
-            'name' => [
-                'required', 'string', 'max:50', 'alpha_dash',
-                'unique:roles,name'.($role ? ','.$role->id : ''),
-            ],
-            'permissions' => ['nullable', 'array'],
-            'permissions.*' => ['integer', 'exists:permissions,id'],
-        ], [], ['name' => 'Nama peran']);
     }
 }

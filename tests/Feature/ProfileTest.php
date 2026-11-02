@@ -15,14 +15,14 @@ class ProfileTest extends TestCase
     {
         parent::setUp();
 
-        Role::findOrCreate('Admin');
-        Role::findOrCreate('Participant');
+        Role::findOrCreate('administrator', 'web');
+        Role::findOrCreate('participant', 'web');
     }
 
     public function test_admin_can_update_the_local_admin_profile(): void
     {
         $admin = User::factory()->create();
-        $admin->assignRole('Admin');
+        $admin->assignRole('administrator');
 
         $response = $this->actingAs($admin)->patch('/profile', [
             'name' => 'Admin Baru',
@@ -36,7 +36,7 @@ class ProfileTest extends TestCase
     public function test_participant_cannot_change_prestige_owned_profile_fields(): void
     {
         $participant = User::factory()->create();
-        $participant->assignRole('Participant');
+        $participant->assignRole('participant');
 
         $this->actingAs($participant)->patch('/profile', [
             'name' => 'Tidak Boleh',

@@ -15,4 +15,8 @@ interface ActivityRepositoryInterface extends BaseRepositoryInterface
     public function getNext(int|string $courseId, int|string $activityId): ?Activity;
 
     public function getPrevious(int|string $courseId, int|string $activityId): ?Activity;
+
+    public function findForCourse(string $courseId, string $activityId): Activity;
+
+    public function assessmentExists(string $courseId, string $activityId): bool;
 }

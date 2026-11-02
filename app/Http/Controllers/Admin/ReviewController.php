@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Services\Course\Review\ReviewService;
-use App\Models\Course\Course;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -26,7 +25,7 @@ class ReviewController
         }
 
         return Inertia::render('Admin/Review/Index', [
-            'courses' => Course::query()->select('id', 'title')->orderBy('title')->get(),
+            'courses' => $this->review->courseOptions(),
             'filters' => ['course_id' => $courseId ? (string) $courseId : '', 'star' => $star ? (string) $star : ''],
         ]);
     }

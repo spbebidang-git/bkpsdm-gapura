@@ -73,7 +73,7 @@ class AdminValidationLocaleTest extends TestCase
         $errors = $validator->errors();
         $this->assertSame('Alamat email harus berupa alamat email yang valid.', $errors->first('email'));
         $this->assertSame('Nama pengguna tidak boleh lebih dari 3 karakter.', $errors->first('name'));
-        $this->assertSame('Kuota peserta minimal 1.', $errors->first('quota'));
+        $this->assertSame('Kuota pengguna minimal 1.', $errors->first('quota'));
         $this->assertSame('Tanggal harus berupa tanggal yang valid.', $errors->first('date'));
         $this->assertSame('Pilihan jawaban 1 wajib diisi.', $errors->first('options.option1'));
         $this->assertSame('Peran harus berisi minimal 1 item.', $errors->first('roles'));
@@ -89,8 +89,8 @@ class AdminValidationLocaleTest extends TestCase
         $presence->shouldReceive('getCount')->with('opds', 'id', 999, null, null, [])->andReturn(0);
         $validator = Validator::make(['code' => 'OPD-1', 'opd_id' => 999], ['code' => 'unique:opds,code', 'opd_id' => 'exists:opds,id']);
         $validator->setPresenceVerifier($presence);
-        $this->assertSame('Kode OPD sudah digunakan.', $validator->errors()->first('code'));
-        $this->assertSame('OPD yang dipilih tidak valid.', $validator->errors()->first('opd_id'));
+        $this->assertSame('Kode OPD/Unit Kerja sudah digunakan.', $validator->errors()->first('code'));
+        $this->assertSame('OPD/Unit Kerja yang dipilih tidak valid.', $validator->errors()->first('opd_id'));
     }
 
     public function test_locale_is_restored_when_validation_throws(): void

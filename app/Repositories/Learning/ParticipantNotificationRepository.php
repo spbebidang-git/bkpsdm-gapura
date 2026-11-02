@@ -10,7 +10,10 @@ use Illuminate\Database\Eloquent\Collection;
 
 class ParticipantNotificationRepository extends EloquentRepository implements ParticipantNotificationRepositoryInterface
 {
-    public function __construct(ParticipantNotification $model) { parent::__construct($model); }
+    public function __construct(ParticipantNotification $model)
+    {
+        parent::__construct($model);
+    }
 
     public function unreadCount(int|string $participantId): int
     {
@@ -34,5 +37,10 @@ class ParticipantNotificationRepository extends EloquentRepository implements Pa
     {
         $this->query()->where('participant_id', $participantId)->whereNull('read_at')
             ->when($id, fn ($query) => $query->whereKey($id))->update(['read_at' => now()]);
+    }
+
+    public function insertOnce(array $attributes): void
+    {
+        $this->query()->insertOrIgnore($attributes);
     }
 }

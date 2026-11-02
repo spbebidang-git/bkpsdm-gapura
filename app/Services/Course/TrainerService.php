@@ -6,11 +6,12 @@ use App\Helper\UploadMedia;
 use App\Models\Course\Trainer;
 use App\Models\Identity\User;
 use App\Repositories\Course\Contracts\TrainerRepositoryInterface;
-use App\Repositories\Identity\Contracts\UserRepositoryInterface;
 use App\Repositories\Identity\Contracts\OpdRepositoryInterface;
+use App\Repositories\Identity\Contracts\UserRepositoryInterface;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Validation\ValidationException;
 
 class TrainerService
@@ -24,6 +25,7 @@ class TrainerService
     public function getForAdmin(): Collection
     {
         $this->syncUsersWithTrainerRole();
+
         return $this->trainers->getLatestForAdmin();
     }
 
@@ -31,14 +33,15 @@ class TrainerService
     public function getForForm(): Collection
     {
         $this->syncUsersWithTrainerRole();
+
         return $this->trainers->getAllOrderedByName();
     }
 
     private function syncUsersWithTrainerRole(): void
     {
         $this->users->trainersWithoutProfile()->each(function (User $user) {
-                $this->getOrCreateForUser($user);
-            });
+            $this->getOrCreateForUser($user);
+        });
     }
 
     public function getEligibleUsers(): Collection
@@ -62,7 +65,10 @@ class TrainerService
     public function getOrCreateForUser(User $user): Trainer
     {
         $trainer = $this->trainers->getOrCreateForUser($user);
-        if ($user->opd_id) $this->trainers->syncOpds($trainer, [$user->opd_id], false);
+        if ($user->opd_id) {
+            $this->trainers->syncOpds($trainer, [$user->opd_id], false);
+        }
+
         return $trainer;
     }
 
@@ -74,7 +80,9 @@ class TrainerService
             return DB::transaction(function () use ($attributes) {
                 $user = $this->users->lock($attributes['user_id']);
                 $opdIds = collect($attributes['opd_ids'] ?? [])->map(fn ($id) => (int) $id)->unique();
-                if ($user?->opd_id) $opdIds->push((int) $user->opd_id);
+                if ($user?->opd_id) {
+                    $opdIds->push((int) $user->opd_id);
+                }
                 $opdIds = $opdIds->unique()->values();
                 $opdIsActive = $opdIds->isNotEmpty() && $this->opds->countActiveByIds($opdIds->all()) === $opdIds->count();
                 if (! $user || ! $opdIsActive || $user->hasAnyRole(['trainer', 'super_admin'])
@@ -87,6 +95,7 @@ class TrainerService
                 $trainer = $this->getOrCreateForUser($user);
                 $this->users->assignRole($user, 'trainer');
                 $this->trainers->syncOpds($trainer, $opdIds->all());
+
                 return $trainer;
             });
         }
@@ -106,6 +115,7 @@ class TrainerService
                 }
                 $trainer = $this->getOrCreateForUser($user);
                 $this->trainers->syncOpds($trainer, $attributes['opd_ids']);
+
                 return $trainer;
             });
         }
@@ -143,7 +153,7 @@ class TrainerService
                     $this->users->update($user, ['image' => UploadMedia::file($attributes['photo'], User::$directoryImage)]);
                 }
 
-                return $trainer->fresh(['user.opd', 'user.metas']);
+                return $this->trainers->refreshForAdmin($trainer, ['user.opd', 'user.metas']);
             });
         }
 
@@ -161,14 +171,15 @@ class TrainerService
                 if (($attributes['photo'] ?? null) instanceof UploadedFile) {
                     $this->users->update($user, ['image' => UploadMedia::file($attributes['photo'], User::$directoryImage)]);
                 } elseif ($trainer->photo && is_file_exists(Trainer::$directoryImage.$trainer->photo)) {
-                    \Illuminate\Support\Facades\File::ensureDirectoryExists(public_path(User::$directoryImage));
+                    File::ensureDirectoryExists(public_path(User::$directoryImage));
                     $filename = $trainer->getKey().'_'.basename($trainer->photo);
-                    \Illuminate\Support\Facades\File::copy(public_path(Trainer::$directoryImage.$trainer->photo), public_path(User::$directoryImage.$filename));
+                    File::copy(public_path(Trainer::$directoryImage.$trainer->photo), public_path(User::$directoryImage.$filename));
                     $this->users->update($user, ['image' => $filename]);
                 }
                 $this->trainers->update($trainer, ['user_id' => $user->id]);
                 $this->trainers->syncOpds($trainer, $attributes['opd_ids']);
-                return $trainer->fresh(['user']);
+
+                return $this->trainers->refreshForAdmin($trainer, ['user']);
             });
         }
 
@@ -192,9 +203,32 @@ class TrainerService
             $trainer = $this->trainers->lock($id);
             if ($trainer->user_id) {
                 $user = $this->users->lock($trainer->user_id);
-                if ($user) $this->users->removeRole($user, 'trainer');
+                if ($user) {
+                    $this->users->removeRole($user, 'trainer');
+                }
             }
+
             return $this->trainers->delete($trainer);
         });
+    }
+
+    public function opdOptions(bool $activeOnly = true): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->opds->options($activeOnly);
+    }
+
+    public function loadForAdmin(Trainer $trainer): void
+    {
+        $this->trainers->loadForAdmin($trainer);
+    }
+
+    public function activeOpdIdsForUser(string $userId): array
+    {
+        return $this->trainers->activeOpdIdsForUser($userId);
+    }
+
+    public function forCourseForm(User $user): Trainer
+    {
+        return $this->trainers->loadCourseForm($this->getOrCreateForUser($user));
     }
 }

@@ -20,4 +20,12 @@ interface TrainerRepositoryInterface extends BaseRepositoryInterface
     public function lock(int|string $id): Trainer;
 
     public function syncOpds(Trainer $trainer, array $ids, bool $detach = true): void;
+
+    public function loadForAdmin(Trainer $trainer): void;
+
+    public function activeOpdIdsForUser(string $userId): array;
+
+    public function loadCourseForm(Trainer $trainer): Trainer;
+
+    public function refreshForAdmin(Trainer $trainer, array $relations): Trainer;
 }

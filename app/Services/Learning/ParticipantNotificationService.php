@@ -4,8 +4,9 @@ namespace App\Services\Learning;
 
 use App\Models\Learning\Enrollment;
 use App\Models\Learning\Learn;
-use App\Models\Learning\NotificationMessageTemplate;
-use App\Models\Learning\ParticipantNotification;
+use App\Repositories\Course\Contracts\CourseRepositoryInterface;
+use App\Repositories\Learning\Contracts\NotificationMessageTemplateRepositoryInterface;
+use App\Repositories\Learning\Contracts\ParticipantNotificationRepositoryInterface;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -13,10 +14,14 @@ class ParticipantNotificationService
 {
     private array $templateCache = [];
 
+    public function __construct(private readonly ParticipantNotificationRepositoryInterface $notifications, private readonly CourseRepositoryInterface $courses, private readonly NotificationMessageTemplateRepositoryInterface $templates) {}
+
     public function create(string $eventKey, string $type, string $participantId, array $data): void
     {
-        if (! config('participant.notifications_enabled', true)) return;
-        ParticipantNotification::query()->insertOrIgnore([
+        if (! config('participant.notifications_enabled', true)) {
+            return;
+        }
+        $this->notifications->insertOnce([
             'id' => (string) Str::ulid(),
             'participant_id' => $participantId,
             'event_key' => $eventKey,
@@ -33,9 +38,11 @@ class ParticipantNotificationService
             throw ValidationException::withMessages(['event_key' => 'Notifikasi pengguna sedang dinonaktifkan.']);
         }
 
-        $course = \App\Models\Course\Course::query()->findOrFail($courseId);
+        $course = $this->courses->findOrFail($courseId);
         $copy = $this->copy($eventKey, $course->title);
-        if (! $copy) throw ValidationException::withMessages(['event_key' => 'Jenis notifikasi tidak tersedia.']);
+        if (! $copy) {
+            throw ValidationException::withMessages(['event_key' => 'Jenis notifikasi tidak tersedia.']);
+        }
 
         $this->create('admin-test:'.Str::ulid(), $copy['type'], $participantId, [
             'title' => $copy['title'],
@@ -50,10 +57,14 @@ class ParticipantNotificationService
     public function completed(Learn $learn): void
     {
         $course = $learn->course;
-        if (! $course) return;
+        if (! $course) {
+            return;
+        }
 
         $copy = $this->copy('completed', $course->title);
-        if (! $copy) return;
+        if (! $copy) {
+            return;
+        }
 
         $this->create('learn:'.$learn->id.':completed', $copy['type'], $learn->participant_id, [
             'title' => $copy['title'],
@@ -68,10 +79,14 @@ class ParticipantNotificationService
     public function certificate(Learn $learn): void
     {
         $course = $learn->course;
-        if (! $course || ! $this->validCertificateUrl($learn->url_certificate)) return;
+        if (! $course || ! $this->validCertificateUrl($learn->url_certificate)) {
+            return;
+        }
 
         $copy = $this->copy('certificate', $course->title);
-        if (! $copy) return;
+        if (! $copy) {
+            return;
+        }
 
         $this->create('learn:'.$learn->id.':certificate', $copy['type'], $learn->participant_id, [
             'title' => $copy['title'],
@@ -92,10 +107,14 @@ class ParticipantNotificationService
     public function deadline(Enrollment $enrollment, string $kind): void
     {
         $course = $enrollment->course;
-        if (! $course) return;
+        if (! $course) {
+            return;
+        }
 
         $copy = $this->copy($kind, $course->title);
-        if (! $copy) return;
+        if (! $copy) {
+            return;
+        }
 
         $this->create('enrollment:'.$enrollment->id.':'.$kind, $copy['type'], $enrollment->participant_id, [
             'title' => $copy['title'],
@@ -113,9 +132,11 @@ class ParticipantNotificationService
     {
         if (! array_key_exists($eventKey, $this->templateCache)) {
             $default = config("notification_messages.{$eventKey}");
-            if (! is_array($default)) return null;
+            if (! is_array($default)) {
+                return null;
+            }
 
-            $stored = NotificationMessageTemplate::query()->find($eventKey);
+            $stored = $this->templates->find($eventKey);
             $this->templateCache[$eventKey] = [
                 'type' => $default['type'],
                 'title' => $stored?->title ?? $default['title'],

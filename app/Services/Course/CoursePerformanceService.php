@@ -84,4 +84,9 @@ class CoursePerformanceService
             })->values();
         });
     }
+
+    public function dashboard($user): array
+    {
+        return [...$this->reports->adminDashboardCounts($user), 'popularCourses' => Cache::remember('admin.dashboard.popularCourses.'.($user?->id ?? 'all'), 3600, fn () => $this->reports->popularCourses($user))];
+    }
 }

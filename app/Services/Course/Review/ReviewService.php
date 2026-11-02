@@ -27,4 +27,9 @@ class ReviewService
     {
         return $this->reviews->delete($id);
     }
+
+    public function courseOptions()
+    {
+        return $this->reviews->courseOptions();
+    }
 }

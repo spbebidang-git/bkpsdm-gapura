@@ -51,7 +51,30 @@ class TrainerRepository extends EloquentRepository implements TrainerRepositoryI
 
     public function syncOpds(Trainer $trainer, array $ids, bool $detach = true): void
     {
-        if ($detach) $trainer->opds()->sync($ids);
-        else $trainer->opds()->syncWithoutDetaching($ids);
+        if ($detach) {
+            $trainer->opds()->sync($ids);
+        } else {
+            $trainer->opds()->syncWithoutDetaching($ids);
+        }
+    }
+
+    public function loadForAdmin(Trainer $trainer): void
+    {
+        $trainer->loadMissing(['user.opd', 'user.metas', 'opds']);
+    }
+
+    public function activeOpdIdsForUser(string $userId): array
+    {
+        return Trainer::activeOpdIdsForUser($userId);
+    }
+
+    public function loadCourseForm(Trainer $trainer): Trainer
+    {
+        return $trainer->load(['opds', 'user.opd']);
+    }
+
+    public function refreshForAdmin(Trainer $trainer, array $relations): Trainer
+    {
+        return $trainer->fresh($relations);
     }
 }

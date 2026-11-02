@@ -2,6 +2,7 @@
 
 namespace App\Services\Reporting;
 
+use App\Repositories\Reporting\Contracts\LearningReportRepositoryInterface;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Crypt;
 
@@ -16,16 +17,16 @@ class LearningReportService
         'literature',
     ];
 
-    public function __construct(private readonly ?\App\Repositories\Reporting\Contracts\LearningReportRepositoryInterface $reports = null) {}
+    public function __construct(private readonly ?LearningReportRepositoryInterface $reports = null) {}
 
     public function query(array $filters = []): Builder
     {
-        return ($this->reports ?? app(\App\Repositories\Reporting\Contracts\LearningReportRepositoryInterface::class))->query($filters);
+        return ($this->reports ?? app(LearningReportRepositoryInterface::class))->query($filters);
     }
 
     public function summary(array $filters = []): array
     {
-        $rows = $this->query($filters)->get();
+        $rows = $this->rows($filters);
         $participants = $rows->groupBy('enrollment_id');
         $total = $participants->count();
         $notStarted = 0;
@@ -165,6 +166,7 @@ class LearningReportService
         }
 
         $decoded = @unserialize($response, ['allowed_classes' => false]);
+
         return is_string($decoded) && $decoded !== '' ? basename($decoded) : null;
     }
 
@@ -181,5 +183,80 @@ class LearningReportService
     private function average(array $scores): ?float
     {
         return count($scores) ? round(array_sum($scores) / count($scores), 2) : null;
+    }
+
+    public function reportCourses(array $filters)
+    {
+        return ($this->reports ?? app(LearningReportRepositoryInterface::class))->reportCourses($filters);
+    }
+
+    public function reportParticipants(array $filters)
+    {
+        return ($this->reports ?? app(LearningReportRepositoryInterface::class))->reportParticipants($filters);
+    }
+
+    public function detailCourses($rows)
+    {
+        return ($this->reports ?? app(LearningReportRepositoryInterface::class))->detailCourses($rows);
+    }
+
+    public function detailParticipants($rows)
+    {
+        return ($this->reports ?? app(LearningReportRepositoryInterface::class))->detailParticipants($rows);
+    }
+
+    public function groups(array $filters, string $groupBy)
+    {
+        $rows = $this->rows($filters)
+            ->map(fn ($row) => $this->decorate($row));
+
+        $groups = $rows->groupBy($groupBy === 'course' ? 'course_id' : 'participant_id')
+            ->map(function ($items, $key) use ($groupBy) {
+                $scores = $items->pluck('score')->filter(fn ($score) => $score !== null)->values();
+                $preScores = $items->where('activity_type', 'pre-test')->pluck('score')->filter(fn ($score) => $score !== null)->values();
+                $postScores = $items->where('activity_type', 'post-test')->pluck('score')->filter(fn ($score) => $score !== null)->values();
+                $done = $items->where('status', 'done')->whereNotNull('activity_id')->count();
+                $total = $items->whereNotNull('activity_id')->count();
+                $first = $items->first();
+                $enrollments = $items->unique('enrollment_id');
+
+                return [
+                    'group_id' => $key,
+                    'course_id' => $first['course_id'],
+                    'participant_id' => $first['participant_id'],
+                    'label' => $groupBy === 'course' ? $first['course_title'] : $first['participant_name'],
+                    'secondary' => $groupBy === 'course'
+                        ? $items->pluck('schedule_title')->unique()->join(', ')
+                        : ($first['nip'] !== '-' ? $first['nip'] : $first['jabatan']),
+                    'course_count' => $items->pluck('course_id')->unique()->count(),
+                    'participant_count' => $items->pluck('participant_id')->unique()->count(),
+                    'activity_count' => $total,
+                    'done_count' => $done,
+                    'completed_count' => $enrollments->filter(fn ($item) => $item['finished_at'] !== null || $item['enrollment_status'] === 'completed')->count(),
+                    'completion' => $total ? round(($done / $total) * 100, 1) : 0,
+                    'avg_score' => $scores->isNotEmpty() ? round($scores->avg(), 2) : null,
+                    'avg_pre_test' => $preScores->isNotEmpty() ? round($preScores->avg(), 2) : null,
+                    'avg_post_test' => $postScores->isNotEmpty() ? round($postScores->avg(), 2) : null,
+                    'updated_at' => $items->pluck('activity_updated_at')->filter()->max(),
+                ];
+            })
+            ->values();
+
+        return $groups;
+    }
+
+    public function trainerCourseIds($user): array
+    {
+        return ($this->reports ?? app(LearningReportRepositoryInterface::class))->trainerCourseIds($user);
+    }
+
+    public function activityQuery(array $filters)
+    {
+        return ($this->reports ?? app(LearningReportRepositoryInterface::class))->activityQuery($filters);
+    }
+
+    public function rows(array $filters)
+    {
+        return ($this->reports ?? app(LearningReportRepositoryInterface::class))->rows($filters);
     }
 }

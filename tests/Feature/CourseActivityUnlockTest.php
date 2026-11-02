@@ -22,8 +22,8 @@ class CourseActivityUnlockTest extends TestCase
 
         $administrator = User::factory()->create();
         $role = Role::findOrCreate('administrator', 'web');
-        $role->givePermissionTo(Permission::findOrCreate('course.update', 'web'));
-        $role->givePermissionTo(Permission::findOrCreate('course.activity.manage', 'web'));
+        $role->givePermissionTo(Permission::findOrCreate('course.edit', 'web'));
+        $role->givePermissionTo(Permission::findOrCreate('course.activity.view', 'web'));
         $administrator->assignRole($role);
 
         $course = Course::factory()->draft()->create(['is_locked' => true]);

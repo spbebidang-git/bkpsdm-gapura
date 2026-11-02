@@ -2,8 +2,8 @@
 
 namespace App\Repositories\Reporting\Contracts;
 
-use Illuminate\Support\Collection;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Collection;
 
 interface LearningReportRepositoryInterface
 {
@@ -16,4 +16,22 @@ interface LearningReportRepositoryInterface
     public function getParticipantCountsByCourse(): Collection;
 
     public function findScheduleActivationDate(int|string $scheduleId, int|string $participantId): mixed;
+
+    public function adminDashboardCounts($user): array;
+
+    public function popularCourses($user);
+
+    public function reportCourses(array $filters);
+
+    public function reportParticipants(array $filters);
+
+    public function detailCourses($rows);
+
+    public function detailParticipants($rows);
+
+    public function trainerCourseIds($user): array;
+
+    public function activityQuery(array $filters);
+
+    public function rows(array $filters);
 }

@@ -1,9 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\BulkCertificateController;
 use App\Http\Controllers\Admin\CoursePerformanceController;
 use App\Http\Controllers\Admin\ImportLearnController;
 use App\Http\Controllers\Admin\ResultController;
-use App\Jobs\BulkCertificateJob;
 use Illuminate\Support\Facades\Route;
 
 // 5. Extras — additional routes
@@ -26,8 +26,4 @@ Route::controller(ImportLearnController::class)->prefix('import-learn')->name('i
 });
 
 // Bulk certificate helper (unnamed). Access: super_admin, administrator (`certificate.manage`)
-Route::get('bulk-certificate/{courseId}', function ($courseId) {
-    BulkCertificateJob::dispatch($courseId);
-
-    return back()->with('success', 'Pengiriman sertifikat dijadwalkan.');
-});
+Route::get('bulk-certificate/{courseId}', BulkCertificateController::class);

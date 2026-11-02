@@ -4,7 +4,6 @@ namespace Tests\Feature\Auth;
 
 use App\Models\Identity\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -16,46 +15,18 @@ class PasswordUpdateTest extends TestCase
     {
         parent::setUp();
 
-        Role::findOrCreate('Admin');
+        Role::findOrCreate('administrator', 'web');
     }
 
-    public function test_password_can_be_updated(): void
+    public function test_password_update_endpoint_is_not_exposed(): void
     {
         $user = User::factory()->create();
-        $user->assignRole('Admin');
+        $user->assignRole('administrator');
 
-        $response = $this
-            ->actingAs($user)
-            ->from('/profile')
-            ->put('/password', [
-                'current_password' => 'password',
-                'password' => 'new-password',
-                'password_confirmation' => 'new-password',
-            ]);
-
-        $response
-            ->assertSessionHasNoErrors()
-            ->assertRedirect('/profile');
-
-        $this->assertTrue(Hash::check('new-password', $user->refresh()->password));
-    }
-
-    public function test_correct_password_must_be_provided_to_update_password(): void
-    {
-        $user = User::factory()->create();
-        $user->assignRole('Admin');
-
-        $response = $this
-            ->actingAs($user)
-            ->from('/profile')
-            ->put('/password', [
-                'current_password' => 'wrong-password',
-                'password' => 'new-password',
-                'password_confirmation' => 'new-password',
-            ]);
-
-        $response
-            ->assertSessionHasErrors('current_password')
-            ->assertRedirect('/profile');
+        $this->actingAs($user)->put('/password', [
+            'current_password' => 'password',
+            'password' => 'new-password',
+            'password_confirmation' => 'new-password',
+        ])->assertNotFound();
     }
 }

@@ -2,21 +2,25 @@
 
 namespace App\Http\Controllers\Admin\Course\Question;
 
+use App\Http\Requests\Admin\PostTestStoreRequest;
+use App\Http\Requests\Admin\PostTestUpdateRequest;
 use App\Models\Course\Activity\Activity;
 use App\Models\Course\Course;
 use App\Services\Course\Activity\ActivityService;
+use App\Services\Course\Activity\AdminActivityService;
 use App\Services\Course\Activity\QuestionService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class PostTestController
 {
-    protected $activity, $question;
+    protected $activity;
+
+    protected $question;
 
     public function __construct(
         ActivityService $activityService,
-        QuestionService $questionService
+        QuestionService $questionService,
+        private readonly AdminActivityService $management,
     ) {
         $this->activity = $activityService;
         $this->question = $questionService;
@@ -25,48 +29,18 @@ class PostTestController
     public function create(Course $course)
     {
         return Inertia::render('Instructor/Course/PostTest/Create', [
-            'slug' => $course->slug
+            'slug' => $course->slug,
         ]);
     }
 
-    public function store(Request $request, Course $course)
+    public function store(PostTestStoreRequest $request, Course $course)
     {
-        $request->validate([
-            'title' => 'required|string',
-            'description' => 'required|string',
-            'value' => 'required|numeric',
-            'timer' => 'required|numeric|min:1',
-            'min_score' => 'required|numeric',
-            'is_loop' => 'boolean'
-        ]);
-
         try {
-            DB::beginTransaction();
-
-            # Insert Activity
-            $activity = $this->activity->createActivity([
-                'course_id' => $course->id,
-                'type' => 'post-test',
-                'title' => $request->title,
-                'value' => $request->value,
-                'timer' => $request->timer * 60,
-                'instruction' => $request->instruction,
-            ]);
-
-            # Insert Pre Test
-            $this->question->createQuestion([
-                'activity_id' => $activity->id,
-                'description' => $request->description,
-                'type' => 'post',
-                'min_score' => $request->min_score,
-                'is_loop' => $request->is_loop
-            ]);
-
-            DB::commit();
+            $this->management->storePostTest($request->validated() + $request->only(['instruction', 'is_loop']), $course);
 
             return to_route('admin.course.activities.index', $course->slug)->with('success', 'Post-Test berhasil ditambahkan.');
         } catch (\Throwable $th) {
-            DB::rollBack();
+
             return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
@@ -79,43 +53,14 @@ class PostTestController
         ]);
     }
 
-    public function update(Course $course, Activity $post_test, Request $request)
+    public function update(Course $course, Activity $post_test, PostTestUpdateRequest $request)
     {
-        // dd($request->all());
-        $request->validate([
-            'title' => 'required|string',
-            'description' => 'required|string',
-            'value' => 'required|numeric',
-            'timer' => 'required|numeric|min:1',
-            'min_score' => 'required|numeric'
-        ]);
 
         try {
-            DB::beginTransaction();
-
-            # Update Activity
-            $activity = $this->activity->updateActivity([
-                'activity_id' => $post_test->id,
-                'title' => $request->title,
-                'value' => $request->value,
-                'timer' => $request->timer * 60,
-                'instruction' => $request->instruction,
-            ]);
-
-            # Update Pre Test
-            $this->question->updateQuestion([
-                'activity_id' => $post_test->id,
-                'type' => 'post',
-                'description' => $request->description,
-                'min_score' => $request->min_score,
-                'is_loop' => $request->is_loop
-            ]);
-
-            DB::commit();
+            $this->management->updatePostTest($course, $post_test, $request->validated() + $request->only(['instruction', 'is_loop']));
 
             return to_route('admin.course.activities.index', $course->slug)->with('success', 'Post-Test berhasil diperbarui.');
         } catch (\Throwable $th) {
-            DB::rollBack();
 
             return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }

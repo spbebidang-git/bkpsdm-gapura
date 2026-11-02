@@ -2,10 +2,10 @@
 
 namespace App\Services\Identity;
 
+use App\Models\Identity\Opd;
+use App\Repositories\Identity\Contracts\OpdRepositoryInterface;
 use App\Repositories\Identity\Contracts\UserMetaRepositoryInterface;
 use App\Repositories\Identity\Contracts\UserRepositoryInterface;
-use App\Repositories\Identity\Contracts\OpdRepositoryInterface;
-use App\Models\Identity\Opd;
 use Illuminate\Support\Facades\Log;
 
 class UserService
@@ -18,7 +18,7 @@ class UserService
 
     public function getParticipant()
     {
-        return $this->users->queryByRole('participant', ['roles', 'metas'])->orderBy('id');
+        return $this->users->adminParticipants();
     }
 
     public function getInstructor()
@@ -90,12 +90,19 @@ class UserService
     {
         $code = $this->firstScalar($data, config('services.kedaton.employee_opd_code_fields', []));
         $name = $this->firstScalar($data, config('services.kedaton.employee_opd_name_fields', []));
-        if (! $code) return null;
+        if (! $code) {
+            return null;
+        }
         $opd = $this->opds->firstOrCreateByCode(trim($code),
             ['name' => trim($name ?: $code), 'is_active' => true, 'synced_at' => now()]);
-        if ($opd->trashed()) $this->opds->restore($opd);
-        if ($name) $this->opds->update($opd, ['name' => trim($name), 'is_active' => true, 'synced_at' => now()]);
+        if ($opd->trashed()) {
+            $this->opds->restore($opd);
+        }
+        if ($name) {
+            $this->opds->update($opd, ['name' => trim($name), 'is_active' => true, 'synced_at' => now()]);
+        }
         $this->users->update($userId, ['opd_id' => $opd->id]);
+
         return $opd;
     }
 
@@ -103,14 +110,19 @@ class UserService
     {
         foreach ($keys as $key) {
             $value = $data[$key] ?? null;
-            if (is_scalar($value) && trim((string) $value) !== '') return trim((string) $value);
+            if (is_scalar($value) && trim((string) $value) !== '') {
+                return trim((string) $value);
+            }
         }
         foreach (['data', 'user', 'pegawai', 'employee'] as $nested) {
             if (is_array($data[$nested] ?? null)) {
                 $found = $this->firstScalar($data[$nested], $keys);
-                if ($found !== null) return $found;
+                if ($found !== null) {
+                    return $found;
+                }
             }
         }
+
         return null;
     }
 

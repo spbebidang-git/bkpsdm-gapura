@@ -59,4 +59,9 @@ class OpdRepository extends EloquentRepository implements OpdRepositoryInterface
     {
         return $this->query()->whereIn('id', $ids)->where('is_active', true)->count();
     }
+
+    public function options(bool $activeOnly = true, array $columns = ['id', 'name']): Collection
+    {
+        return $this->query()->when($activeOnly, fn ($q) => $q->where('is_active', true))->orderBy('name')->get($columns);
+    }
 }

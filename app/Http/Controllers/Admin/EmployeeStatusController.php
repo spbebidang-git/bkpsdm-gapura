@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Requests\Admin\EmployeeStatusStoreRequest;
+use App\Http\Requests\Admin\EmployeeStatusUpdateRequest;
 use App\Models\Identity\EmployeeStatus;
 use App\Services\Identity\EmployeeStatusService;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -22,6 +22,7 @@ class EmployeeStatusController
                 ->addIndexColumn()
                 ->make();
         }
+
         return Inertia::render('Admin/EmployeeStatus/Index');
     }
 
@@ -30,11 +31,9 @@ class EmployeeStatusController
         return Inertia::render('Admin/EmployeeStatus/Form', ['employeeStatus' => null]);
     }
 
-    public function store(Request $request)
+    public function store(EmployeeStatusStoreRequest $request)
     {
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255', 'unique:employee_status,title'],
-        ], [], ['title' => 'Nama status pegawai']);
+        $validated = $request->validated();
 
         $this->statuses->createStatus($validated);
 
@@ -46,11 +45,9 @@ class EmployeeStatusController
         return Inertia::render('Admin/EmployeeStatus/Form', ['employeeStatus' => $employeeStatus]);
     }
 
-    public function update(Request $request, EmployeeStatus $employeeStatus)
+    public function update(EmployeeStatusUpdateRequest $request, EmployeeStatus $employeeStatus)
     {
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255', Rule::unique('employee_status', 'title')->ignore($employeeStatus->id)],
-        ], [], ['title' => 'Nama status pegawai']);
+        $validated = $request->validated();
 
         $this->statuses->updateStatus($employeeStatus, $validated);
 

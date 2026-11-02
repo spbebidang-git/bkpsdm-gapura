@@ -4,12 +4,13 @@ namespace App\Repositories\Course;
 
 use App\Models\Course\Course;
 use App\Models\Course\Trainer;
+use App\Models\Identity\User;
 use App\Repositories\Course\Contracts\CourseRepositoryInterface;
 use App\Repositories\EloquentRepository;
+use App\Services\Course\CourseAudience;
 use Carbon\Carbon;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Collection;
-use App\Models\Identity\User;
 
 class CourseRepository extends EloquentRepository implements CourseRepositoryInterface
 {
@@ -41,7 +42,7 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
     public function isVisible(Course $course, ?User $user): bool
     {
         return $this->query()->whereKey($course->id)
-            ->where(fn ($query) => app(\App\Services\Course\CourseAudience::class)->viewable($query, $user))
+            ->where(fn ($query) => app(CourseAudience::class)->viewable($query, $user))
             ->exists();
     }
 
@@ -62,7 +63,7 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
     public function findVisibleBySlug(string $slug, ?User $user = null, array $relations = []): ?Course
     {
         return $this->query()->with($relations)->where('slug', $slug)
-            ->where(fn ($q) => app(\App\Services\Course\CourseAudience::class)->viewable($q, $user))->first();
+            ->where(fn ($q) => app(CourseAudience::class)->viewable($q, $user))->first();
     }
 
     public function getPublishedAvailable(?DateTimeInterface $at = null, ?int $limit = null, array $filters = [], ?User $user = null): Collection
@@ -86,7 +87,6 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
                     ->selectRaw('count(distinct enrollments.participant_id)');
             }, 'total_participant_count')
             ->where('status', 'publish')
-            ->where(fn ($query) => $this->applyAudience($query, $user))
             ->where(function ($query) use ($date, $time) {
                 $query->where('access_mode', '!=', 'scheduled')
                     ->orWhereHas('schedules', function ($scheduleQuery) use ($date, $time) {
@@ -103,8 +103,13 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
             ->when($filters['employee_status'] ?? null, fn ($query, $employeeStatus) => $query->whereHas(
                 'employeeStatus',
                 fn ($statusQuery) => $statusQuery->where('title', $employeeStatus)
-            ))
-            ->orderBy('id');
+            ));
+
+        // Batasi katalog sesuai audiens: tamu hanya kelas publik, peserta juga
+        // mendapat kelas privat yang menyasar OPD dan status kepegawaiannya.
+        app(CourseAudience::class)->visible($query, $user);
+
+        $query->orderBy('id');
 
         if ($limit !== null) {
             $query->limit($limit);
@@ -132,7 +137,7 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
                     ->selectRaw('count(distinct enrollments.participant_id)');
             }, 'total_participant_count')
             ->where('status', 'publish')
-            ->where(fn ($query) => $this->applyAudience($query, $user))
+            ->where('visibility', 'public')
             ->where(function ($query) use ($now) {
                 $query->where('access_mode', '!=', 'scheduled')
                     ->orWhereHas('schedules', function ($scheduleQuery) use ($now) {
@@ -154,15 +159,18 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
 
         if ($instructorId !== null) {
             $query->whereHas('trainers', fn ($trainer) => $trainer->where('user_id', $instructorId));
-            if (! Trainer::activeOpdIdsForUser($instructorId)) $query->whereRaw('1 = 0');
+            if (! Trainer::activeOpdIdsForUser($instructorId)) {
+                $query->whereRaw('1 = 0');
+            }
         }
 
         return $query->orderByDesc('courses.updated_at')->orderByDesc('courses.id')->get();
     }
 
-    private function applyAudience($query, ?User $user): void
+    public function findBrowseableBySlug(string $slug, array $relations = []): ?Course
     {
-        app(\App\Services\Course\CourseAudience::class)->visible($query, $user);
+        return $this->query()->with($relations)->where('slug', $slug)
+            ->where('status', 'publish')->first();
     }
 
     public function getByParticipant(int|string $participantId): Collection
@@ -204,5 +212,30 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
     public function syncTrainers(Course $course, array $trainerIds): void
     {
         $course->trainers()->sync($trainerIds);
+    }
+
+    public function certificateCourses()
+    {
+        return $this->query()->whereHas('learns', fn ($q) => $q->whereNotNull('finished_at'))->orderBy('title')->get(['id', 'title']);
+    }
+
+    public function importCourses()
+    {
+        return $this->query()->where('access_mode', 'scheduled')->where('status', 'publish')->orderBy('title')->get(['id', 'title']);
+    }
+
+    public function assignedTrainerIds(Course $course): array
+    {
+        return $course->trainers()->pluck('trainers.id')->all();
+    }
+
+    public function syncAudienceOpds(Course $course, array $ids): void
+    {
+        $course->opds()->sync($ids);
+    }
+
+    public function hasTrainer(Course $course, string $userId): bool
+    {
+        return $course->trainers()->where('user_id', $userId)->exists();
     }
 }

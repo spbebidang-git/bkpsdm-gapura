@@ -70,7 +70,7 @@ class LiteratureService
             $literature->content = UploadMedia::file($request['content'], $directory);
         }
 
-        $literature->save();
+        $this->literatures->update($literature, $literature->getDirty());
         if (isset($oldFilePath) && $oldFilePath) {
             DB::afterCommit(fn () => File::delete($oldFilePath));
         }

@@ -2,22 +2,25 @@
 
 namespace App\Http\Controllers\Admin\Course\Interactive;
 
+use App\Http\Requests\Admin\OnlineMeetingStoreRequest;
+use App\Http\Requests\Admin\OnlineMeetingUpdateRequest;
 use App\Models\Course\Activity\Activity;
-use Inertia\Inertia;
-use Illuminate\Http\Request;
 use App\Models\Course\Course;
-use App\Models\Course\Activity\Interactive;
 use App\Services\Course\Activity\ActivityService;
-use Illuminate\Support\Facades\DB;
+use App\Services\Course\Activity\AdminActivityService;
 use App\Services\Course\Activity\InteractiveService;
+use Inertia\Inertia;
 
 class OnlineMeetingController
 {
-    protected $activity, $interactive;
+    protected $activity;
+
+    protected $interactive;
 
     public function __construct(
         ActivityService $activityService,
-        InteractiveService $interactiveService
+        InteractiveService $interactiveService,
+        private readonly AdminActivityService $management,
     ) {
         $this->activity = $activityService;
         $this->interactive = $interactiveService;
@@ -26,48 +29,17 @@ class OnlineMeetingController
     public function create(Course $course)
     {
         return Inertia::render('Instructor/Course/Meeting/Create', [
-            'slug' => $course->slug
+            'slug' => $course->slug,
         ]);
     }
 
-    public function store(Request $request, Course $course)
+    public function store(OnlineMeetingStoreRequest $request, Course $course)
     {
-        $request->validate([
-            'title' => 'required|string',
-            'description' => 'required|string',
-            'value' => 'required|numeric',
-            'url' => 'required|string',
-            'duration' => 'required|numeric|min:0.1',
-        ], [
-            'duration.min' => 'Durasi pertemuan minimal 0,1 menit (6 detik).',
-        ]);
-
         try {
-            DB::beginTransaction();
-
-            # Insert Activity
-            $activity = $this->activity->createActivity([
-                'course_id' => $course->id,
-                'type' => 'meeting',
-                'title' => $request->title,
-                'value' => $request->value,
-                'instruction' => $request->instruction,
-            ]);
-
-            # Insert Pre Test
-            $this->interactive->createInteractive([
-                'activity_id' => $activity->id,
-                'type' => 'meeting',
-                'description' => $request->description,
-                'url' => $request->url,
-                'duration' => (int) round($request->duration * 60)
-            ]);
-
-            DB::commit();
+            $this->management->storeOnlineMeeting($request->validated() + $request->only(['instruction', 'repeatable', 'show_result']), $course);
 
             return to_route('admin.course.activities.index', $course->slug)->with('success', 'Pertemuan daring berhasil ditambahkan.');
         } catch (\Throwable $th) {
-            DB::rollBack();
 
             return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }
@@ -81,43 +53,13 @@ class OnlineMeetingController
         ]);
     }
 
-    public function update(Course $course, Activity $meeting, Request $request)
+    public function update(Course $course, Activity $meeting, OnlineMeetingUpdateRequest $request)
     {
-        $request->validate([
-            'title' => 'required|string',
-            'description' => 'required|string',
-            'value' => 'required|numeric',
-            'url' => 'required|string',
-            'duration' => 'required|numeric|min:0.1',
-        ], [
-            'duration.min' => 'Durasi pertemuan minimal 0,1 menit (6 detik).',
-        ]);
-
         try {
-            DB::beginTransaction();
-
-            # Update Activity
-            $activity = $this->activity->updateActivity([
-                'activity_id' => $meeting->id,
-                'title' => $request->title,
-                'value' => $request->value,
-                'instruction' => $request->instruction,
-            ]);
-
-            # Update Pre Test
-            $this->interactive->updateInteractive([
-                'activity_id' => $meeting->id,
-                'type' => 'meeting',
-                'description' => $request->description,
-                'url' => $request->url,
-                'duration' => (int) round($request->duration * 60)
-            ]);
-
-            DB::commit();
+            $this->management->updateOnlineMeeting($course, $meeting, $request->validated() + $request->only(['instruction', 'repeatable', 'show_result']));
 
             return to_route('admin.course.activities.index', $course->slug)->with('success', 'Pertemuan daring berhasil diperbarui.');
         } catch (\Throwable $th) {
-            DB::rollBack();
 
             return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }
@@ -126,18 +68,10 @@ class OnlineMeetingController
     public function endMeeting(Course $course, $activityId)
     {
         try {
-            DB::beginTransaction();
-
-            $interactive = Interactive::where('activity_id', $activityId)->first();
-
-            $interactive->end_meeting = 1;
-            $interactive->save();
-
-            DB::commit();
+            $this->management->endMeetingOnlineMeeting($course, $activityId);
 
             return to_route('admin.course.activities.index', $course->slug)->with('success', 'Pertemuan daring berhasil diakhiri.');
         } catch (\Throwable $th) {
-            DB::rollBack();
 
             return to_route('admin.course.activities.index', $course->slug)->with('danger', 'Terjadi kesalahan saat menyimpan data.');
         }

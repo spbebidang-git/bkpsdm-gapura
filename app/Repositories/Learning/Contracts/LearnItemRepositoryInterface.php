@@ -17,4 +17,6 @@ interface LearnItemRepositoryInterface extends BaseRepositoryInterface
         int|string $activityId,
         array $attributes,
     ): LearnItem;
+
+    public function taskResults(string $activityId): Collection;
 }

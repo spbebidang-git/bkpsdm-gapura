@@ -6,6 +6,7 @@ use App\Models\Course\Course;
 use App\Models\Course\Schedule;
 use App\Repositories\Course\Contracts\CourseRepositoryInterface;
 use App\Repositories\Course\Contracts\ScheduleRepositoryInterface;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -66,6 +67,11 @@ class ScheduleService
 
     private function time(?string $value): ?string
     {
-        return $value ? \Carbon\Carbon::parse($value)->format('H:i') : null;
+        return $value ? Carbon::parse($value)->format('H:i') : null;
+    }
+
+    public function hasTrainer(Course $course, string $userId): bool
+    {
+        return $this->courses->hasTrainer($course, $userId);
     }
 }

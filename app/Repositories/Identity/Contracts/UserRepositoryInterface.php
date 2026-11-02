@@ -38,4 +38,18 @@ interface UserRepositoryInterface extends BaseRepositoryInterface
     public function putMeta(User $user, string $key, string $value): void;
 
     public function removeRole(User $user, string $role): void;
+
+    public function deleteMeta(User $user, string $key): void;
+
+    public function hasRoles(User $user): bool;
+
+    public function loadParticipant(User $user): User;
+
+    public function orderParticipantMeta(Builder $query, string $key, string $order): void;
+
+    public function adminParticipants(): Builder;
+
+    public function notificationParticipants();
+
+    public function isParticipant(string $id): bool;
 }

@@ -57,4 +57,19 @@ class ResultService
             ];
         })->values();
     }
+
+    public function courseTable()
+    {
+        return $this->results->courseTable();
+    }
+
+    public function participantOptions()
+    {
+        return $this->results->participantOptions();
+    }
+
+    public function activityOptions(string $courseId)
+    {
+        return $this->results->activityOptions($courseId);
+    }
 }

@@ -62,7 +62,7 @@ class CourseVisibilityTest extends TestCase
         }
     }
 
-    public function test_guests_only_see_public_published_classes_and_cannot_open_private_urls(): void
+    public function test_guests_see_only_public_classes_in_catalog_and_home(): void
     {
         $opd = $this->opd('001');
         $status = EmployeeStatus::create(['title' => 'PNS']);
@@ -75,7 +75,7 @@ class CourseVisibilityTest extends TestCase
         $this->get(route('home'))->assertInertia(fn (Assert $page) => $page
             ->has('courses', 1)->where('courses.0.id', $public->id));
         $this->get(route('course.show', $public->slug))->assertOk();
-        $this->get(route('course.show', $private->slug))->assertNotFound();
+        $this->get(route('course.show', $private->slug))->assertOk();
         $this->get(route('course.show', $draft->slug))->assertNotFound();
         $activity = Activity::create(['course_id' => $public->id, 'type' => 'video', 'title' => 'Materi']);
         $this->get(route('participant.learn.instruction.index', [$public->slug, $public->schedules->first()->id, $activity->id]))
@@ -92,7 +92,7 @@ class CourseVisibilityTest extends TestCase
         $public = $this->course('public', [], $pns);
         foreach ([[$a, $pns, true], [$b, $pns, true], [$c, $pns, false], [$a, $pppk, false], [null, $pns, false], [$a, null, false]] as [$opd, $status, $allowed]) {
             $user = $this->participant($opd, $status);
-            $this->actingAs($user)->get(route('course.show', $private->slug))->assertStatus($allowed ? 200 : 404);
+            $this->actingAs($user)->get(route('course.show', $private->slug))->assertOk();
             $this->assertSame($allowed, app(CourseAudience::class)->canEnroll($private, $user));
             $ids = app(CourseService::class)->getAllCourse(user: $user)->pluck('id');
             $this->assertSame($allowed, $ids->contains($private->id));

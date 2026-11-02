@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\HelpStoreRequest;
+use App\Http\Requests\Admin\HelpUpdateRequest;
 use App\Models\Support\Help;
 use App\Services\Support\HelpService;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -30,14 +31,8 @@ class HelpController extends Controller
         return Inertia::render('Admin/Help/Form', ['help' => null]);
     }
 
-    public function store(Request $request)
+    public function store(HelpStoreRequest $request)
     {
-        $request->validate([
-            'question' => 'required|string|max:255',
-            'answer' => 'required|string',
-            'is_active' => 'nullable|boolean',
-        ]);
-
         $this->helps->create([
             'question' => $request->question,
             'answer' => $request->answer,
@@ -59,14 +54,8 @@ class HelpController extends Controller
         ]);
     }
 
-    public function update(Request $request, Help $help)
+    public function update(HelpUpdateRequest $request, Help $help)
     {
-        $request->validate([
-            'question' => 'required|string|max:255',
-            'answer' => 'required|string',
-            'is_active' => 'nullable|boolean',
-        ]);
-
         $this->helps->update($help, [
             'question' => $request->question,
             'answer' => $request->answer,

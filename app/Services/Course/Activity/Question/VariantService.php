@@ -2,13 +2,17 @@
 
 namespace App\Services\Course\Activity\Question;
 
+use App\Models\Course\Course;
 use App\Repositories\Course\Activity\Assessment\Contracts\QuestionRepositoryInterface;
 use App\Repositories\Course\Activity\Assessment\Contracts\QuestionVariantRepositoryInterface;
+use App\Repositories\Course\Activity\Contracts\ActivityRepositoryInterface;
+use Illuminate\Support\Facades\DB;
 
 class VariantService
 {
     public function __construct(
         private readonly QuestionRepositoryInterface $questions,
+        private readonly ActivityRepositoryInterface $activities,
         private readonly QuestionVariantRepositoryInterface $variants,
     ) {}
 
@@ -97,5 +101,33 @@ class VariantService
             'emptyVariants' => $variants->where('question_items_count', 0)
                 ->pluck('variant')->toArray(),
         ];
+    }
+
+    public function assertActivity(Course $course, string $activityId): void
+    {
+        abort_unless($this->activities->assessmentExists($course->id, $activityId), 404);
+    }
+
+    public function canImport(string $activityId): bool
+    {
+        $question = $this->questions->findByActivity($activityId);
+        abort_unless($question, 404);
+
+        return ! $question->has_imported && $this->variants->getByQuestion($question->id)->isEmpty();
+    }
+
+    public function updateVariant($variant, array $data): void
+    {
+        DB::transaction(fn () => $this->variants->update($variant, $data));
+    }
+
+    public function deleteVariant($variant): void
+    {
+        DB::transaction(fn () => $this->variants->delete($variant));
+    }
+
+    public function storeVariant(string $activityId, array $data): void
+    {
+        DB::transaction(fn () => $this->createVariant($activityId, $data));
     }
 }

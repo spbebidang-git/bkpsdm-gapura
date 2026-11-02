@@ -11,6 +11,6 @@ class EmailVerificationTest extends TestCase
 
     public function test_email_verification_endpoints_are_not_exposed(): void
     {
-        $this->get('/verify-email')->assertNotFound();
+        $this->get('/verify-email')->assertRedirect(route('login'));
     }
 }

@@ -3,12 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\TrainerRequest;
 use App\Models\Course\Trainer;
-use App\Models\Identity\Opd;
-use App\Models\Identity\User;
 use App\Services\Course\TrainerService;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -19,11 +16,12 @@ class TrainerController extends Controller
     public function index()
     {
         if (request()->ajax() && ! request()->header('X-Inertia')) {
-            $activeOpdIds = Opd::where('is_active', true)->pluck('id')->map(fn ($id) => (int) $id)->all();
+            $activeOpdIds = $this->trainers->opdOptions()->pluck('id')->map(fn ($id) => (int) $id)->all();
             $trainers = $this->trainers->getForAdmin();
             if (request()->filled('opd_id')) {
                 $trainers = $trainers->filter(fn ($trainer) => in_array((int) request('opd_id'), $trainer->organization_ids, true))->values();
             }
+
             return DataTables::of($trainers)
                 ->addIndexColumn()
                 ->addColumn('photo_url', fn ($row) => $row->photo_src)
@@ -41,7 +39,7 @@ class TrainerController extends Controller
         }
 
         return Inertia::render('Admin/Trainer/Index', [
-            'opds' => Opd::orderBy('name')->get(['id', 'name']),
+            'opds' => $this->trainers->opdOptions(false),
             'canEditLinkedUser' => request()->user()?->hasAnyRole(['super_admin', 'administrator']) ?? false,
         ]);
     }
@@ -54,13 +52,13 @@ class TrainerController extends Controller
             'trainer' => null,
             'mode' => $mode,
             'users' => $mode === 'user' ? $this->trainers->getEligibleUsers() : [],
-            'opds' => Opd::where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'opds' => $this->trainers->opdOptions(),
         ]);
     }
 
-    public function store(Request $request)
+    public function store(TrainerRequest $request)
     {
-        $data = $this->validateTrainer($request);
+        $data = $request->validated();
 
         $this->trainers->create($data);
 
@@ -74,9 +72,9 @@ class TrainerController extends Controller
         if ($trainer->user_id) {
             abort_unless(request()->user()?->hasAnyRole(['super_admin', 'administrator']), 403);
 
-            $trainer->loadMissing(['user.opd', 'user.metas', 'opds']);
+            $this->trainers->loadForAdmin($trainer);
             $user = $trainer->user;
-            $activeOpds = Opd::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+            $activeOpds = $this->trainers->opdOptions();
 
             return Inertia::render('Admin/Trainer/Form', [
                 'opds' => $activeOpds,
@@ -97,7 +95,8 @@ class TrainerController extends Controller
             ]);
         }
 
-        $activeOpds = Opd::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        $activeOpds = $this->trainers->opdOptions();
+
         return Inertia::render('Admin/Trainer/Form', [
             'opds' => $activeOpds,
             'trainer' => [
@@ -107,7 +106,7 @@ class TrainerController extends Controller
                 'photo' => $trainer->photo,
                 'photo_src' => $trainer->photo_src,
                 'source' => $trainer->user_id ? 'sso' : 'local',
-            'user_id' => $trainer->user_id,
+                'user_id' => $trainer->user_id,
                 'nip' => $trainer->user?->nip,
                 'opd' => $trainer->organization_name,
                 'opd_id' => $trainer->organization_id,
@@ -116,9 +115,9 @@ class TrainerController extends Controller
         ]);
     }
 
-    public function update(Request $request, Trainer $trainer)
+    public function update(TrainerRequest $request, Trainer $trainer)
     {
-        $data = $this->validateTrainer($request, $trainer);
+        $data = $request->validated();
 
         $this->trainers->update($trainer, $data);
 
@@ -130,35 +129,5 @@ class TrainerController extends Controller
         $this->trainers->delete($trainer->id);
 
         return to_route('admin.trainer.index')->with('success', 'Pemateri berhasil dihapus.');
-    }
-
-    protected function validateTrainer(Request $request, ?Trainer $trainer = null): array
-    {
-        if (! $request->filled('opd_ids') && $request->filled('opd_id')) {
-            $request->merge(['opd_ids' => [(int) $request->input('opd_id')]]);
-        }
-        if ($trainer?->user_id) {
-            abort_unless($request->user()?->hasAnyRole(['super_admin', 'administrator']), 403);
-        }
-        $source = $request->input('source');
-        $isUser = $source === 'user';
-        $isRegistration = $isUser && ! $trainer;
-        $localAccount = $source === 'local';
-        $editingLocalAccount = $trainer?->user?->usesLocalAuthentication() ?? false;
-
-        return $request->validate([
-            'source' => ['required', Rule::in($trainer?->user_id ? ['user'] : ($trainer ? ['local'] : ['local', 'user']))],
-            'user_id' => $isRegistration ? ['required', 'ulid', Rule::exists('users', 'id')->whereNull('deleted_at')]
-                : ['prohibited'],
-            'name' => $isRegistration ? ['prohibited'] : ['required', 'string', 'max:255'],
-            'jabatan' => $isRegistration ? ['prohibited'] : ['nullable', 'string', 'max:255'],
-            'opd_ids' => ['required', 'array', 'min:1'],
-            'opd_ids.*' => ['required', 'integer', 'distinct', Rule::exists('opds', 'id')->whereNull('deleted_at')->where('is_active', true)],
-            'photo' => $isRegistration ? ['prohibited'] : ['nullable', 'image', 'max:2048', 'mimes:png,jpg,jpeg'],
-            'email' => $localAccount ? ['required', 'email', 'max:255', Rule::unique('users', 'email')]
-                : ($editingLocalAccount ? ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($trainer->user_id)] : ['prohibited']),
-            'password' => $localAccount ? ['required', 'string', 'min:8', 'confirmed']
-                : ($editingLocalAccount ? ['nullable', 'string', 'min:8', 'confirmed'] : ['prohibited']),
-        ], [], ['source' => 'Sumber pemateri', 'user_id' => 'Pengguna', 'name' => 'Nama pemateri', 'jabatan' => 'Jabatan', 'photo' => 'Foto pemateri', 'opd_ids' => 'OPD pemateri']);
     }
 }

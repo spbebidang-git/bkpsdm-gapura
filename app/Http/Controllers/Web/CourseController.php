@@ -44,15 +44,19 @@ class CourseController extends Controller
 
     public function show($course)
     {
-        $course = $this->course->findBySlug($course, request()->user());
+        $course = $this->course->findBrowseableBySlug($course);
         abort_unless($course, 404);
         if ($this->participantId) {
             app(ParticipantEnrollmentService::class)->archiveExpired((string) $this->participantId, (string) $course->id);
         }
         $course->loadMissing(['trainers.user.metas']);
         $reviews = $course->reviews ? $course->reviews->load('user') : [];
+        $canEnroll = $this->participantId
+            ? app(\App\Services\Course\CourseAudience::class)->canEnroll($course, request()->user())
+            : false;
 
         return Inertia::render('Course/Show', [
+            'can_enroll' => $canEnroll,
             'course' => [
                 'id' => $course->id,
                 'type' => $course->type,

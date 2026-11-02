@@ -49,7 +49,7 @@ Route::get('course', [CourseController::class, 'index'])->name('course.index');
 Route::prefix('course')
     ->name('course.')
     ->group(function () {
-        // Access: super_admin, administrator, trainer (`course.create`)
+        // Access: super_admin, trainer (`course.create`). Administrator hanya edit.
         Route::controller(CourseController::class)->group(function () {
             Route::get('/create', 'create')->name('create');
             Route::post('/', 'store')->name('store');
@@ -61,17 +61,17 @@ Route::prefix('course')
             // Access: super_admin, administrator, trainer (`course.view`)
             Route::get('/{course:slug}', 'show')->name('show');
 
-            // Access: super_admin, administrator, trainer (`course.update`)
+            // Access: super_admin, administrator, trainer (`course.edit`)
             Route::get('/{course:slug}/edit', 'edit')->name('edit');
             Route::put('/{course:slug}', 'update')->name('update');
             Route::post('/{course:slug}/lock', 'lock')->name('lock');
             Route::post('/{course:slug}/unlock', 'unlock')->name('unlock');
 
-            // Access: super_admin, administrator (`course.delete`)
+            // Access: super_admin (`course.delete`). Administrator tidak boleh menghapus.
             Route::delete('/{course:slug}', 'destroy')->name('destroy');
         });
 
-        // Schedules. index: `course.view`; writes: `course.update`. Access: super_admin, administrator, trainer
+        // Schedules. index: `course.view`; writes: `course.edit`. Access: super_admin, administrator, trainer
         Route::controller(ScheduleController::class)->prefix('/{course:slug}/schedules')->name('schedules.')->group(function () {
             Route::get('/', 'index')->name('index');
             Route::post('/', 'store')->name('store');
@@ -79,10 +79,11 @@ Route::prefix('course')
             Route::delete('/{schedule}', 'destroy')->name('destroy');
         });
 
-        // Access: super_admin, administrator, trainer (`course.activity.manage`)
+        // Access: super_admin, administrator, trainer (`course.activity.view`)
         Route::get('/{course:slug}/activities', [ActivityController::class, 'management'])->name('activities.index');
 
-        // Activity management. Access: super_admin, administrator, trainer (`course.activity.manage`)
+        // Activity management. Access: super_admin, administrator, trainer (`course.activity.view`);
+        // menambah/menghapus kegiatan butuh `course.activity.create`/`delete` (administrator tidak punya).
         Route::prefix('/{course:slug}/activity')
             ->name('activity.')
             ->middleware('course.lock')

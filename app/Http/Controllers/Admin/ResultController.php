@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Course\Activity\Activity;
 use App\Models\Course\Course;
-use App\Models\Identity\User;
 use App\Services\Reporting\ResultService;
 use Inertia\Inertia;
 use Yajra\DataTables\Facades\DataTables;
@@ -16,7 +14,7 @@ class ResultController
     public function index()
     {
         if (request()->ajax() && ! request()->header('X-Inertia')) {
-            return DataTables::of(Course::query()->select('id', 'title', 'slug', 'updated_at'))
+            return DataTables::of($this->resultService->courseTable())
                 ->addIndexColumn()
                 ->make();
         }
@@ -58,8 +56,8 @@ class ResultController
 
         return Inertia::render('Admin/Result/Show', [
             'course' => ['id' => $course->id, 'title' => $course->title, 'slug' => $course->slug],
-            'names' => User::role('participant')->select('id', 'name')->get(),
-            'activities' => Activity::where('course_id', $course->id)->get(['id', 'title']),
+            'names' => $this->resultService->participantOptions(),
+            'activities' => $this->resultService->activityOptions($course->id),
             'filters' => $filters,
         ]);
     }

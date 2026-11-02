@@ -21,12 +21,11 @@ class CertificateSyncService
     {
         $validator = app(ParticipantNotificationService::class);
         $targets = $this->learns->getForCertificateSync($courseId, $learnId, $onlyHasUrl)
-            ->loadMissing('participant.metas')
             ->filter(fn ($learn) => $learn->finished_at && $learn->is_post_certificate && $learn->prestige_certificate_registered_at
                 && (! $onlyMissing || ! $validator->validCertificateUrl($learn->url_certificate)));
         $groups = $targets->filter(function ($learn) {
             if (! filled($learn->course?->prestige_certificate_code)) {
-                Log::warning('Kode sertifikat belum tersedia; pengambilan dilewati.', ['event' => 'certificate.pull.code_missing','course_id' => $learn->course_id, 'learn_id' => $learn->id]);
+                Log::warning('Kode sertifikat belum tersedia; pengambilan dilewati.', ['event' => 'certificate.pull.code_missing', 'course_id' => $learn->course_id, 'learn_id' => $learn->id]);
 
                 return false;
             }
@@ -75,7 +74,7 @@ class CertificateSyncService
                     throw new RuntimeException('Format kegiatan sertifikat Prestige tidak valid.');
                 }
                 if (isset($row['kode']) && trim((string) $row['kode']) !== (string) $code) {
-                    Log::warning('Kode kegiatan respons berbeda; pengambilan dilewati.', ['event' => 'certificate.pull.code_mismatch','kode' => $code]);
+                    Log::warning('Kode kegiatan respons berbeda; pengambilan dilewati.', ['event' => 'certificate.pull.code_mismatch', 'kode' => $code]);
 
                     continue;
                 }
@@ -91,7 +90,7 @@ class CertificateSyncService
                     $matches = $byNip->get($nip, collect());
                     if ($matches->count() !== 1) {
                         if ($matches->count() > 1) {
-                            Log::warning('Pengguna kegiatan ambigu; pembaruan dilewati.', ['event' => 'certificate.pull.ambiguous','kode' => $code]);
+                            Log::warning('Pengguna kegiatan ambigu; pembaruan dilewati.', ['event' => 'certificate.pull.ambiguous', 'kode' => $code]);
                         }
 
                         continue;
@@ -100,7 +99,7 @@ class CertificateSyncService
                     $certificate = trim($certificate);
                     if (isset($updates[$learn->id]) && $updates[$learn->id] !== $certificate) {
                         $conflicts[$learn->id] = true;
-                        Log::warning('URL sertifikat konflik; pembaruan dilewati.', ['event' => 'certificate.pull.conflict','kode' => $code, 'learn_id' => $learn->id]);
+                        Log::warning('URL sertifikat konflik; pembaruan dilewati.', ['event' => 'certificate.pull.conflict', 'kode' => $code, 'learn_id' => $learn->id]);
                     }
                     $updates[$learn->id] = $certificate;
                 }

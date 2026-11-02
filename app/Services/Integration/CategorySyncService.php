@@ -132,4 +132,9 @@ class CategorySyncService
 
         return array_values(array_filter($json, 'is_array'));
     }
+
+    public function adminTable()
+    {
+        return $this->categories->adminTable();
+    }
 }

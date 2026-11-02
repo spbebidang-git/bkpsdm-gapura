@@ -42,7 +42,7 @@ type Schedule = {
 type Review = { name: string; star: number; description: string | null; created_at: string };
 type Rating = { star?: number; value?: string | number; total?: number };
 type Trainer = { id: string; name: string; position: string | null; photo: string };
-type PageProps = { course: Course; schedules?: Schedule[]; reviews?: Review[]; rating?: Rating; trainers?: Trainer[] };
+type PageProps = { course: Course; schedules?: Schedule[]; reviews?: Review[]; rating?: Rating; trainers?: Trainer[]; can_enroll?: boolean };
 
 const primaryButton = 'inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-[linear-gradient(90deg,#019B91_0%,#018083_100%)] px-5 font-poppins text-sm font-semibold text-white transition duration-200 hover:opacity-90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60';
 
@@ -57,7 +57,7 @@ function formatDate(value) {
     return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-export default function CourseShow({ course, schedules = [], reviews = [], rating = {}, trainers = [] }: PageProps) {
+export default function CourseShow({ course, schedules = [], reviews = [], rating = {}, trainers = [], can_enroll = false }: PageProps) {
     const { auth } = usePage().props as { auth: { user?: unknown } };
     const [activeSchedules, setActiveSchedules] = useState<string[]>([]);
     const [loadingScheduleId, setLoadingScheduleId] = useState<string | null>(null);
@@ -69,6 +69,10 @@ export default function CourseShow({ course, schedules = [], reviews = [], ratin
     const ratingValue = Number(rating.value || rating.star || 0).toFixed(1);
     const employeeStatuses = [...new Set((course.employee_status || '').split(',').map((status) => status.trim()).filter(Boolean))];
     const teaserVideoUrl = getYouTubeEmbedUrl(course.teaser_video);
+    const requirementText = [
+        course.visibility !== 'public' && course.opd_name ? `OPD ${course.opd_name}` : null,
+        employeeStatuses.length ? `status pegawai ${employeeStatuses.join(', ')}` : null,
+    ].filter(Boolean).join(' dan ');
 
     const scrollToSection = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
@@ -220,7 +224,7 @@ export default function CourseShow({ course, schedules = [], reviews = [], ratin
                                 {schedules.map((schedule, index) => {
                                     const isActive = activeSchedules.includes(schedule.id) || schedule.is_active;
                                     const isLoading = loadingScheduleId === schedule.id;
-                                    return <article key={schedule.id} className="rounded-[10px] border border-[#E8ECF1] bg-[#F6FAF9] p-4">{course.type === 'schedule' && <p className="mb-3 font-poppins text-xs font-semibold uppercase tracking-[0.06em] text-[#018083]">Jadwal {index + 1}</p>}<dl className="space-y-3 font-inter text-sm"><ScheduleRow icon="calendar" label="Tanggal" value={formatDate(schedule.date)} /><ScheduleRow icon="time-five" label="Waktu" value={schedule.time && schedule.time !== 'Tidak Terjadwal' ? `${schedule.time} WIB` : 'Fleksibel'} /><ScheduleRow icon="group" label="Kuota" value={schedule.quota || course.quota || 'Tidak Terbatas'} /></dl>{isActive ? <button type="button" onClick={(event) => handleViewCourse(event, schedule)} className={`${primaryButton} mt-5`}>Lihat kelas<box-icon name="right-arrow-alt" color="#FFFFFF" size="20px" /></button> : <form onSubmit={(event) => handleActivation(event, schedule)}><button type="submit" disabled={isLoading} className={`${primaryButton} mt-5`}>{isLoading && <box-icon name="loader-alt" animation="spin" color="#FFFFFF" size="18px" />}{isLoading ? 'Mengaktifkan...' : 'Aktifkan kelas'}{!isLoading && <box-icon name="right-arrow-alt" color="#FFFFFF" size="20px" />}</button></form>}{!schedule.can_enter && course.type === 'schedule' && <p className="mt-2 text-center font-inter text-xs leading-5 text-[#8496B0]">Aktivasi tersedia ketika jadwal dimulai.</p>}</article>;
+                                    return <article key={schedule.id} className="rounded-[10px] border border-[#E8ECF1] bg-[#F6FAF9] p-4">{course.type === 'schedule' && <p className="mb-3 font-poppins text-xs font-semibold uppercase tracking-[0.06em] text-[#018083]">Jadwal {index + 1}</p>}<dl className="space-y-3 font-inter text-sm"><ScheduleRow icon="calendar" label="Tanggal" value={formatDate(schedule.date)} /><ScheduleRow icon="time-five" label="Waktu" value={schedule.time && schedule.time !== 'Tidak Terjadwal' ? `${schedule.time} WIB` : 'Fleksibel'} /><ScheduleRow icon="group" label="Kuota" value={schedule.quota || course.quota || 'Tidak Terbatas'} /></dl>{isActive ? <button type="button" onClick={(event) => handleViewCourse(event, schedule)} className={`${primaryButton} mt-5`}>Lihat kelas<box-icon name="right-arrow-alt" color="#FFFFFF" size="20px" /></button> : auth.user && !can_enroll ? <div className="mt-5"><button type="button" disabled className={`${primaryButton} cursor-not-allowed`}>Tidak memenuhi syarat<box-icon name="lock-alt" color="#FFFFFF" size="20px" /></button>{requirementText && <p className="mt-2 text-center font-inter text-xs leading-5 text-[#8496B0]">Kelas ini hanya untuk {requirementText}.</p>}</div> : <form onSubmit={(event) => handleActivation(event, schedule)}><button type="submit" disabled={isLoading} className={`${primaryButton} mt-5`}>{isLoading && <box-icon name="loader-alt" animation="spin" color="#FFFFFF" size="18px" />}{isLoading ? 'Mengaktifkan...' : 'Aktifkan kelas'}{!isLoading && <box-icon name="right-arrow-alt" color="#FFFFFF" size="20px" />}</button></form>}{!schedule.can_enter && course.type === 'schedule' && <p className="mt-2 text-center font-inter text-xs leading-5 text-[#8496B0]">Aktivasi tersedia ketika jadwal dimulai.</p>}</article>;
                                 })}
                                 {schedules.length === 0 && <div className="rounded-[12px] border border-dashed border-[#C2C9D6] bg-[#FAFCFB] px-5 py-8 text-center"><box-icon name="calendar-x" color="#8496B0" size="30px" /><p className="mt-2 font-poppins text-sm font-semibold text-[#075D5E]">Belum ada jadwal</p><p className="mt-1 font-inter text-xs leading-5 text-[#8496B0]">Silakan kembali untuk melihat jadwal terbaru.</p></div>}
                             </div>

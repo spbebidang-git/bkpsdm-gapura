@@ -126,7 +126,7 @@ class InteractiveService
     {
         $interactive = $this->interactives->findByActivity($request['activity_id']);
 
-        $interactive->update([
+        $this->interactives->update($interactive, [
             'description' => $request['description'],
             'url' => $request['url'],
             'duration' => $request['duration'],
@@ -148,5 +148,11 @@ class InteractiveService
             'url' => $interactive?->url ?? '',
             'duration' => $interactive?->duration ?? 0,
         ];
+    }
+
+    public function endMeeting(string $activityId): void
+    {
+        $interactive = $this->interactives->findByActivity($activityId);
+        $this->interactives->update($interactive, ['end_meeting' => 1]);
     }
 }

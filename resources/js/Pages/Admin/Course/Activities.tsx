@@ -2,7 +2,7 @@ import { confirmDelete } from '@/Components/Admin/ConfirmDelete';
 import { CrudPageHeader } from '@/Components/Admin/CrudPrimitives';
 import AdminLayout from '@/Layouts/Admin/App';
 import { flexRender, getCoreRowModel, getFilteredRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import Swal from 'sweetalert2';
 import '@/../css/admin-course-index.css';
@@ -33,6 +33,12 @@ function ActivityAction({ href, onClick, icon, label, title, variant = 'is-activ
 }
 
 export default function Activities({ course, activities = [], canUnlock = false }) {
+    const user = usePage().props.auth?.user;
+    const can = (permission: string) => Boolean(user?.is_super_admin) || Boolean(user?.permissions?.includes(permission));
+    const canCreate = can('course.activity.create');
+    const canEdit = can('course.activity.edit');
+    const canDelete = can('course.activity.delete');
+    const canEditCourse = can('course.edit');
     const [dataActivities, setDataActivities] = useState(activities);
     const [globalFilter, setGlobalFilter] = useState('');
     const [searchInput, setSearchInput] = useState('');
@@ -130,15 +136,15 @@ export default function Activities({ course, activities = [], canUnlock = false 
                     {!course.is_locked && assessment && <ActivityAction href={`/admin/course/${course.slug}/activity/variant/${item.id}`} icon="bx-layer" label="Variasi" title={item.title} />}
                     {!course.is_locked && item.type === 'meeting' && item.end_meeting === 0 && <ActivityAction onClick={() => handleEndMeeting(item.id)} icon="bx-stop-circle" label="Akhiri sesi" title={item.title} variant="is-schedule" />}
                     {item.type === 'task' && <ActivityAction href={route('admin.course.activity.result', { course: course.slug, activityId: item.id })} icon="bx-bar-chart-alt-2" label="Hasil" title={item.title} />}
-                    {!course.is_locked && <>
+                    {!course.is_locked && canEdit && <>
                         <ActivityAction href={`/admin/course/${course.slug}/activity/${item.type}/${item.id}/edit`} icon="bx-edit-alt" label="Edit" title={item.title} variant="is-edit" />
-                        <ActivityAction onClick={() => confirmDelete(`/admin/course/${course.slug}/activity/${item.id}`, { message: `Aktivitas “${item.title}” akan dihapus.` })} icon="bx-trash" label="Hapus" title={item.title} variant="is-delete" />
+                        {canDelete && <ActivityAction onClick={() => confirmDelete(`/admin/course/${course.slug}/activity/${item.id}`, { message: `Aktivitas “${item.title}” akan dihapus.` })} icon="bx-trash" label="Hapus" title={item.title} variant="is-delete" />}
                     </>}
                     {course.is_locked && item.type !== 'task' && <span className="course-activities-no-action" aria-label="Kegiatan terkunci">—</span>}
                 </div>;
             },
         },
-    ], [course.slug, course.is_locked]);
+    ], [course.slug, course.is_locked, canEdit, canDelete]);
 
     const table = useReactTable({
         data: dataActivities,
@@ -163,8 +169,8 @@ export default function Activities({ course, activities = [], canUnlock = false 
         <div className="course-index course-activities-page">
             <CrudPageHeader title={course.title} description="Kelola aktivitas pembelajaran dan evaluasi kelas." className="course-index-header" actions={<>
                 <Link href={route('admin.course.index')} className="course-activities-secondary"><i className="bx bx-left-arrow-alt" aria-hidden />Kembali</Link>
-                <Link href={route('admin.course.edit', course.slug)} className="course-activities-secondary"><i className="bx bx-edit-alt" aria-hidden />Edit kelas</Link>
-                {!course.is_locked && <Link href={createHref} className="course-index-create"><i className="bx bx-plus" aria-hidden />Tambah kegiatan</Link>}
+                {canEditCourse && <Link href={route('admin.course.edit', course.slug)} className="course-activities-secondary"><i className="bx bx-edit-alt" aria-hidden />Edit kelas</Link>}
+                {!course.is_locked && canCreate && <Link href={createHref} className="course-index-create"><i className="bx bx-plus" aria-hidden />Tambah kegiatan</Link>}
             </>} />
             <section className="admin-table-frame course-index-table admin-crud-table course-activities-table" aria-labelledby="activity-list-title">
                 <div className="admin-table-toolbar course-activities-toolbar">
@@ -232,7 +238,7 @@ export default function Activities({ course, activities = [], canUnlock = false 
                                             ? `Tidak ada aktivitas yang cocok dengan “${globalFilter}”.`
                                             : course.is_locked ? 'Kelas ini belum memiliki aktivitas dan kegiatan sudah terkunci.' : 'Tambahkan materi, pertemuan, tugas, atau evaluasi untuk menyusun pembelajaran kelas.'}
                                     </p>
-                                    {!globalFilter && !course.is_locked && <Link href={createHref} className="course-index-create mt-2"><i className="bx bx-plus" aria-hidden />Tambah kegiatan</Link>}
+                                    {!globalFilter && !course.is_locked && canCreate && <Link href={createHref} className="course-index-create mt-2"><i className="bx bx-plus" aria-hidden />Tambah kegiatan</Link>}
                                 </td>
                             </tr>}
                         </tbody>

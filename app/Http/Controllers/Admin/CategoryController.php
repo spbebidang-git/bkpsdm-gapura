@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Course\Category;
 use App\Services\Integration\CategorySyncService;
 use Inertia\Inertia;
 use Yajra\DataTables\Facades\DataTables;
 
 class CategoryController
 {
-    public function index()
+    public function index(CategorySyncService $categories)
     {
         if (request()->ajax() && ! request()->header('X-Inertia')) {
-            $query = Category::query()->orderBy('title');
+            $query = $categories->adminTable();
 
             return DataTables::of($query)
                 ->editColumn('synced_at', fn ($row) => $row->synced_at?->format('d/m/Y H:i') ?? '-')

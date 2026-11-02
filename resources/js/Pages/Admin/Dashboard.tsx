@@ -68,6 +68,8 @@ export default function Dashboard({
     result?: Performance[];
 }) {
     const user = usePage().props.auth?.user;
+    const permissions = user?.permissions ?? [];
+    const canCreateCourse = Boolean(user?.is_super_admin) || permissions.includes('course.create');
     const firstName = (user?.name || 'Admin').trim().split(' ')[0];
     const courses = (Array.isArray(popularCourses) ? popularCourses : []).slice(0, 6);
     const evaluations = Array.isArray(result) ? result : [];
@@ -101,9 +103,9 @@ export default function Dashboard({
                         <h2 id="welcome-title">Selamat datang kembali, {firstName}.</h2>
                         <p>Dukung ASN terus bertumbuh. Kelola pelatihan dan pantau perkembangan belajar pengguna dari sini.</p>
                     </div>
-                    <Link href={route('admin.course.create')} className="dashboard-create">
+                    {canCreateCourse && <Link href={route('admin.course.create')} className="dashboard-create">
                         <i className="bx bx-plus" aria-hidden="true" />Buat kelas baru<i className="bx bx-right-arrow-alt" aria-hidden="true" />
-                    </Link>
+                    </Link>}
                 </section>
 
                 <section aria-labelledby="summary-title" className="dashboard-summary">

@@ -45,4 +45,14 @@ class ActivityRepository extends EloquentRepository implements ActivityRepositor
             ->takeUntil(fn (Activity $activity) => (string) $activity->id === (string) $activityId)
             ->last();
     }
+
+    public function findForCourse(string $courseId, string $activityId): Activity
+    {
+        return $this->query()->where('course_id', $courseId)->findOrFail($activityId);
+    }
+
+    public function assessmentExists(string $courseId, string $activityId): bool
+    {
+        return $this->query()->whereKey($activityId)->where('course_id', $courseId)->whereIn('type', ['pre-test', 'post-test'])->exists();
+    }
 }

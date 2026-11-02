@@ -2,10 +2,13 @@
 
 namespace App\Repositories\Reporting;
 
+use App\Models\Course\Course;
+use App\Models\Identity\User;
+use App\Models\Learning\Learn;
 use App\Repositories\Reporting\Contracts\LearningReportRepositoryInterface;
 use Illuminate\Database\ConnectionInterface;
-use Illuminate\Support\Collection;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Collection;
 
 class LearningReportRepository implements LearningReportRepositoryInterface
 {
@@ -179,5 +182,107 @@ class LearningReportRepository implements LearningReportRepositoryInterface
             ->where('schedule_id', $scheduleId)
             ->where('participant_id', $participantId)
             ->first();
+    }
+
+    public function adminDashboardCounts($user): array
+    {
+        $courseScope = Course::query();
+        if ($user?->hasRole('trainer')) {
+            $courseScope->whereHas('trainers', fn ($query) => $query->where('user_id', $user->id));
+        }
+        $totalCourses = $courseScope->count();
+        $totalParticipants = User::role('participant')->count();
+        $totalFinished = Learn::whereNotNull('finished_at')->count();
+
+        return compact('totalCourses', 'totalParticipants', 'totalFinished');
+    }
+
+    public function popularCourses($user)
+    {
+        $query = Course::select('courses.id', 'courses.title')
+            ->join('enrollments', function ($join) {
+                $join->on('enrollments.course_id', '=', 'courses.id')->whereNull('enrollments.deleted_at');
+            })
+            ->leftJoin('learns', function ($join) {
+                $join->on('learns.enrollment_id', '=', 'enrollments.id')
+                    ->whereNotNull('learns.finished_at')->whereNull('learns.deleted_at');
+            })
+            ->groupBy('courses.id', 'courses.title')
+            ->selectRaw('
+                    COUNT(DISTINCT enrollments.participant_id) as participants,
+                    COUNT(DISTINCT learns.participant_id) as completion
+                ')
+            ->orderByDesc('participants')
+            ->limit(10);
+
+        if ($user?->hasRole('trainer')) {
+            $query->whereExists(function ($subquery) use ($user) {
+                $subquery->selectRaw('1')->from('course_trainer')
+                    ->join('trainers', 'trainers.id', '=', 'course_trainer.trainer_id')
+                    ->whereColumn('course_trainer.course_id', 'courses.id')
+                    ->where('trainers.user_id', $user->id);
+            });
+        }
+
+        return $query->get()
+            ->map(function ($course) {
+                $participants = (int) $course->participants;
+                $completion = (int) $course->completion;
+                $completionRate = $participants > 0
+                    ? round(($completion / $participants) * 100, 2)
+                    : 0;
+
+                return [
+                    'name' => $course->title,
+                    'participants' => $participants,
+                    'completion' => $completionRate,
+                ];
+            });
+    }
+
+    public function reportCourses(array $filters)
+    {
+        return Course::query()
+            ->when(isset($filters['course_ids']), fn ($query) => $query->whereIn('id', $filters['course_ids']))
+            ->select('id', 'title')
+            ->orderBy('title')
+            ->get();
+    }
+
+    public function reportParticipants(array $filters)
+    {
+        return User::role('participant')
+            ->when(isset($filters['course_ids']), fn ($query) => $query->whereHas('enrollments', fn ($enrollments) => $enrollments->whereIn('course_id', $filters['course_ids'])))
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+    }
+
+    public function detailCourses($rows)
+    {
+        return Course::query()
+            ->whereIn('id', $rows->pluck('course_id')->unique())
+            ->orderBy('title')->get(['id', 'title']);
+    }
+
+    public function detailParticipants($rows)
+    {
+        return User::query()->whereIn('id', $rows->pluck('participant_id')->unique())
+            ->orderBy('name')->get(['id', 'name']);
+    }
+
+    public function trainerCourseIds($user): array
+    {
+        return Course::query()->whereHas('trainers', fn ($query) => $query->where('user_id', $user->id))->pluck('id')->all();
+    }
+
+    public function activityQuery(array $filters)
+    {
+        return $this->query($filters)->whereNotNull('activities.id');
+    }
+
+    public function rows(array $filters)
+    {
+        return $this->query($filters)->get();
     }
 }

@@ -4,6 +4,7 @@ namespace App\Repositories\Learning\Contracts;
 
 use App\Models\Learning\Learn;
 use App\Repositories\Contracts\BaseRepositoryInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 
 interface LearnRepositoryInterface extends BaseRepositoryInterface
@@ -33,4 +34,14 @@ interface LearnRepositoryInterface extends BaseRepositoryInterface
         int|string|null $learnId = null,
         bool $onlyHasUrl = false,
     ): Collection;
+
+    public function lockForParticipantCourse(string $participantId, string $courseId): Learn;
+
+    public function certificateQuery(array $filters): Builder;
+
+    public function filterCertificateColumn($query, string $relation, string $field, string $keyword): void;
+
+    public function lockById(string $id): ?Learn;
+
+    public function completeActiveEnrollment(Learn $learn): void;
 }

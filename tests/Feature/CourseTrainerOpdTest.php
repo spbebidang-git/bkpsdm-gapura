@@ -123,7 +123,7 @@ class CourseTrainerOpdTest extends TestCase
     {
         $a = $this->opd('001'); $b = $this->opd('002');
         $role = Role::findOrCreate('trainer', 'web');
-        foreach (['course.create', 'course.update', 'course.view', 'course.activity.manage'] as $permission) {
+        foreach (['course.create', 'course.edit', 'course.view', 'course.activity.view', 'course.activity.create', 'course.activity.edit'] as $permission) {
             $role->givePermissionTo(Permission::findOrCreate($permission, 'web'));
         }
         $user = User::factory()->create(['opd_id' => $a->id]);

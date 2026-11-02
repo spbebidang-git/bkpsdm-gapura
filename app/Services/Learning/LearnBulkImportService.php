@@ -2,20 +2,23 @@
 
 namespace App\Services\Learning;
 
-use App\Services\Learning\LearnLifecycleService;
-use App\Services\Learning\ParticipantEnrollmentService;
+use App\Repositories\Identity\Contracts\UserRepositoryInterface;
+use App\Repositories\Learning\Contracts\LearnBulkImportRepositoryInterface;
+use App\Services\Identity\UserMetaService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use App\Repositories\Learning\Contracts\LearnBulkImportRepositoryInterface;
 
 class LearnBulkImportService
 {
     protected $courseId;
+
     protected $finishedAt;
+
     protected bool $createMissingUsers;
+
     protected $results = [
         'success' => 0,
         'skipped' => 0,
@@ -24,7 +27,7 @@ class LearnBulkImportService
         'errors' => [],
     ];
 
-    public function __construct(private readonly LearnBulkImportRepositoryInterface $importData) {}
+    public function __construct(private readonly LearnBulkImportRepositoryInterface $importData, private readonly UserRepositoryInterface $users, private readonly UserMetaService $metas) {}
 
     public function run(Collection $rows, string $courseId, string $finishedAt, bool $createMissingUsers = false): array
     {
@@ -32,6 +35,7 @@ class LearnBulkImportService
         $this->finishedAt = $finishedAt;
         $this->createMissingUsers = $createMissingUsers;
         $this->collection($rows);
+
         return $this->results;
     }
 
@@ -41,6 +45,7 @@ class LearnBulkImportService
 
         if ($activities->isEmpty()) {
             $this->results['errors'][] = 'Kelas tidak memiliki kegiatan.';
+
             return;
         }
 
@@ -77,12 +82,14 @@ class LearnBulkImportService
                 if ($nip === '') {
                     $this->results['failed']++;
                     $this->results['errors'][] = "Baris {$rowNumber}: NIP kosong.";
+
                     continue;
                 }
 
                 if (isset($seenNips[$nip])) {
                     $this->results['skipped']++;
                     $this->results['errors'][] = "Baris {$rowNumber}: NIP '{$nip}' duplikat (sudah diproses baris {$seenNips[$nip]}).";
+
                     continue;
                 }
                 $seenNips[$nip] = $rowNumber;
@@ -90,10 +97,11 @@ class LearnBulkImportService
                 $userId = $nipToUserId[$nip] ?? null;
                 $user = $userId ? $users->get($userId) : null;
 
-                if (!$user) {
-                    if (!$this->createMissingUsers) {
+                if (! $user) {
+                    if (! $this->createMissingUsers) {
                         $this->results['failed']++;
                         $this->results['errors'][] = "Baris {$rowNumber}: NIP '{$nip}' tidak ditemukan.";
+
                         continue;
                     }
 
@@ -108,6 +116,7 @@ class LearnBulkImportService
                 if ($existingLearn && $existingLearn->finished_at) {
                     $this->results['skipped']++;
                     $this->results['errors'][] = "Baris {$rowNumber}: {$user->email} sudah menyelesaikan kelas ini.";
+
                     continue;
                 }
 
@@ -133,11 +142,11 @@ class LearnBulkImportService
 
                 foreach ($activities as $activity) {
                     $this->importData->putLearnItem((string) $learn->id, (string) $activity->id, [
-                            'title' => $activity->title,
-                            'type' => $activity->type,
-                            'response' => null,
-                            'status' => 'done',
-                        ]
+                        'title' => $activity->title,
+                        'type' => $activity->type,
+                        'response' => null,
+                        'status' => 'done',
+                    ]
                     );
                 }
 
@@ -146,14 +155,14 @@ class LearnBulkImportService
             } catch (\Throwable $th) {
                 DB::rollBack();
                 $this->results['failed']++;
-                $this->results['errors'][] = "Baris {$rowNumber}: " . $th->getMessage();
+                $this->results['errors'][] = "Baris {$rowNumber}: ".$th->getMessage();
                 Log::error('Baris impor pembelajaran gagal.', ['event' => 'learn.import.row_failed', 'row_number' => $rowNumber, 'exception' => $th]);
             }
         }
     }
 
     /**
-     * @return \Illuminate\Support\Collection<string, int> nip => user_id
+     * @return Collection<string, int> nip => user_id
      */
     protected function resolveNipsToUserIds(Collection $nips): Collection
     {
@@ -192,9 +201,9 @@ class LearnBulkImportService
             'nip' => $nip,
         ]);
 
-        $user->assignRole('participant');
-        update_user_meta($user->id, 'nip', $nip);
-        update_user_meta($user->id, 'status_pegawai', '-');
+        $this->users->assignRole($user, 'participant');
+        $this->metas->put($user->id, 'nip', $nip);
+        $this->metas->put($user->id, 'status_pegawai', '-');
 
         return (object) ['id' => $user->id, 'email' => $user->email];
     }
@@ -203,15 +212,15 @@ class LearnBulkImportService
     {
         $slug = Str::slug($name, '.');
         if ($slug === '') {
-            $slug = 'user.' . $nip;
+            $slug = 'user.'.$nip;
         }
 
-        $email = $slug . '@gresikkab.go.id';
+        $email = $slug.'@gresikkab.go.id';
         if (! $this->importData->emailExists($email)) {
             return $email;
         }
 
-        $email = $slug . '.' . $nip . '@gresikkab.go.id';
+        $email = $slug.'.'.$nip.'@gresikkab.go.id';
         if (! $this->importData->emailExists($email)) {
             return $email;
         }

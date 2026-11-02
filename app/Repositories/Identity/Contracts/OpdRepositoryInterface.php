@@ -25,4 +25,6 @@ interface OpdRepositoryInterface extends BaseRepositoryInterface
     public function firstOrCreateByCode(string $code, array $attributes): Opd;
 
     public function countActiveByIds(array $ids): int;
+
+    public function options(bool $activeOnly = true, array $columns = ['id', 'name']): Collection;
 }

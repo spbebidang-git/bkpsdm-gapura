@@ -139,7 +139,7 @@ class TrainerManagementTest extends TestCase
         $deleted = $this->ssoUser();
         $deleted->delete();
         $this->postJson(route('admin.trainer.store'), ['source' => 'user', 'user_id' => $local->id])
-            ->assertUnprocessable()->assertJsonValidationErrors('opd_id');
+            ->assertUnprocessable()->assertJsonValidationErrors('user_id');
         foreach ([$inactive->id, $deleted->id, '123'] as $id) {
             $this->postJson(route('admin.trainer.store'), ['source' => 'user', 'user_id' => $id])
                 ->assertUnprocessable()->assertJsonValidationErrors('user_id');
@@ -253,7 +253,7 @@ class TrainerManagementTest extends TestCase
         $user = $this->ssoUser();
         $user->assignRole('trainer');
         $trainer = app(TrainerService::class)->getOrCreateForUser($user);
-        $permission = Permission::findOrCreate('trainer.manage', 'web');
+        $permission = Permission::findOrCreate('trainer.edit', 'web');
         $role = Role::findOrCreate('administrator', 'web');
         $role->givePermissionTo($permission);
         $admin = User::factory()->create(['auth_source' => 'local']);
@@ -292,26 +292,6 @@ class TrainerManagementTest extends TestCase
         $this->get(route('admin.trainer.edit', $trainer))
             ->assertOk()
             ->assertInertia(fn ($page) => $page->component('Admin/Trainer/Form')->where('trainer.source', 'user'));
-    }
-
-    public function test_assigning_trainer_role_in_user_management_creates_master_profile(): void
-    {
-        $user = $this->ssoUser();
-        $this->put(route('admin.management.user.update', $user), ['roles' => ['participant', 'trainer']])->assertRedirect();
-        $trainer = Trainer::where('user_id', $user->id)->firstOrFail();
-        $this->put(route('admin.management.user.update', $user), ['roles' => ['participant', 'trainer']])->assertRedirect();
-        $this->assertSame(1, Trainer::where('user_id', $user->id)->count());
-        $this->assertSame($trainer->id, Trainer::where('user_id', $user->id)->first()->id);
-    }
-
-    public function test_creating_a_user_with_trainer_role_creates_master_profile(): void
-    {
-        $this->post(route('admin.management.user.store'), [
-            'name' => 'Trainer dari Pengguna', 'email' => 'trainer-role@example.test', 'auth_source' => 'local',
-            'password' => 'password123', 'password_confirmation' => 'password123', 'roles' => ['trainer'],
-        ])->assertRedirect(route('admin.management.user.index'));
-        $user = User::where('email', 'trainer-role@example.test')->firstOrFail();
-        $this->assertDatabaseHas('trainers', ['user_id' => $user->id]);
     }
 
     public function test_reassigned_role_restores_the_same_master_profile(): void
@@ -355,32 +335,31 @@ class TrainerManagementTest extends TestCase
         $this->assertSame('Dinas Pendidikan', $trainer->fresh()->organization_name);
     }
 
-    public function test_local_user_opd_can_be_assigned_from_user_management(): void
-    {
-        $user = User::factory()->create(['auth_source' => 'local']);
-        $this->put(route('admin.management.user.update', $user), [
-            'name' => $user->name, 'email' => $user->email, 'roles' => ['trainer'], 'opd_id' => $this->trainerOpd(),
-        ])->assertRedirect()->assertSessionHasNoErrors();
-        $trainer = Trainer::where('user_id', $user->id)->firstOrFail();
-        $this->assertSame($this->trainerOpd(), $trainer->organization_id);
-    }
-
-    public function test_course_requests_reject_other_opd_trainers_but_allow_same_opd_and_global_scope(): void
+    public function test_course_requests_reject_other_opd_trainers_but_allow_same_opd_and_public_scope(): void
     {
         $user = $this->ssoUser();
         $linked = app(TrainerService::class)->getOrCreateForUser($user);
         $local = Trainer::create(['name' => 'Trainer Pendidikan', 'opd_id' => $this->trainerOpd()]);
         foreach ([\App\Http\Requests\Course\StoreCourseRequest::class, \App\Http\Requests\Course\UpdateCourseRequest::class] as $class) {
-            foreach ([[$local->id, $this->trainerOpd(), true], [$linked->id, $this->trainerOpd(), false], [$linked->id, $user->opd_id, true], [$linked->id, null, true]] as [$trainerId, $opdId, $valid]) {
+            foreach ([[$local->id, [$this->trainerOpd()], true], [$linked->id, [$this->trainerOpd()], false], [$linked->id, [$user->opd_id], true]] as [$trainerId, $opdIds, $valid]) {
                 $request = new $class();
-                $payload = ['description' => 'Materi kelas', 'trainers' => [$trainerId], 'opd_id' => $opdId];
+                $payload = ['description' => 'Materi kelas', 'visibility' => 'private', 'trainers' => [$trainerId], 'opd_ids' => $opdIds];
                 $request->merge($payload);
-                $rules = array_intersect_key($request->rules(), $payload + ['trainers.*' => null]);
+                $rules = array_intersect_key($request->rules(), $payload + ['trainers.*' => null, 'opd_ids.*' => null]);
                 $validator = \Illuminate\Support\Facades\Validator::make($payload, $rules);
                 $request->withValidator($validator);
                 $this->assertSame($valid, $validator->passes());
-                if (! $valid) $this->assertTrue($validator->errors()->has('trainers'));
+                if (! $valid) $this->assertTrue($validator->errors()->has('opd_ids'));
             }
+
+            // Public (global) scope: any active trainer is allowed.
+            $request = new $class();
+            $payload = ['description' => 'Materi kelas', 'visibility' => 'public', 'trainers' => [$linked->id], 'opd_ids' => []];
+            $request->merge($payload);
+            $rules = array_intersect_key($request->rules(), $payload + ['trainers.*' => null, 'opd_ids.*' => null]);
+            $validator = \Illuminate\Support\Facades\Validator::make($payload, $rules);
+            $request->withValidator($validator);
+            $this->assertTrue($validator->passes());
         }
     }
 

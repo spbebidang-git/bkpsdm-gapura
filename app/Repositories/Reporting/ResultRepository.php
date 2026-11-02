@@ -2,6 +2,9 @@
 
 namespace App\Repositories\Reporting;
 
+use App\Models\Course\Activity\Activity;
+use App\Models\Course\Course;
+use App\Models\Identity\User;
 use App\Repositories\Reporting\Contracts\ResultRepositoryInterface;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Support\Collection;
@@ -50,5 +53,20 @@ class ResultRepository implements ResultRepositoryInterface
             ])
             ->selectRaw("COALESCE(jabatan_meta.value, '-') as jabatan")
             ->get();
+    }
+
+    public function courseTable()
+    {
+        return Course::query()->select('id', 'title', 'slug', 'updated_at');
+    }
+
+    public function participantOptions()
+    {
+        return User::role('participant')->select('id', 'name')->get();
+    }
+
+    public function activityOptions(string $courseId)
+    {
+        return Activity::where('course_id', $courseId)->get(['id', 'title']);
     }
 }

@@ -3,12 +3,15 @@
 namespace App\Services\Course;
 
 use App\Models\Course\Course;
-use App\Models\Course\Trainer;
 use App\Models\Identity\User;
+use App\Repositories\Course\Contracts\CourseRepositoryInterface;
+use App\Repositories\Course\Contracts\TrainerRepositoryInterface;
 use Illuminate\Database\Eloquent\Builder;
 
 class CourseAudience
 {
+    public function __construct(private readonly TrainerRepositoryInterface $trainers, private readonly CourseRepositoryInterface $courses) {}
+
     public function registered(Builder $query, User $user): void
     {
         $query->where(function (Builder $registered) use ($user) {
@@ -25,26 +28,36 @@ class CourseAudience
     public function employeeStatus(User $user): ?string
     {
         $status = $user->employeeStatus?->title ?? get_user_meta($user->id, 'status_pegawai');
+
         return filled($status) ? mb_strtoupper(trim($status)) : null;
     }
 
     public function matchesStatus(Course $course, User $user): bool
     {
         $statuses = $course->employeeStatus->pluck('title')->map(fn ($title) => mb_strtoupper(trim($title)));
-        if ($statuses->isEmpty()) return $course->visibility === 'public';
+        if ($statuses->isEmpty()) {
+            return $course->visibility === 'public';
+        }
         $status = $this->employeeStatus($user);
+
         return $status !== null && $statuses->contains($status);
     }
 
     public function visible(Builder $query, ?User $user): void
     {
-        if ($user?->hasAnyRole(['super_admin', 'administrator'])) return;
+        if ($user?->hasAnyRole(['super_admin', 'administrator'])) {
+            return;
+        }
         $query->where(function (Builder $audience) use ($user) {
             $audience->where('courses.visibility', 'public');
-            if (! $user) return;
+            if (! $user) {
+                return;
+            }
             $audience->orWhere(fn ($q) => $this->registered($q, $user));
             $status = $this->employeeStatus($user);
-            if (! $user->opd?->is_active || ! $status) return;
+            if (! $user->opd?->is_active || ! $status) {
+                return;
+            }
             $audience->orWhere(function ($private) use ($user, $status) {
                 $private->where('courses.visibility', 'private')
                     ->whereHas('opds', fn ($q) => $q->where('opds.id', $user->opd_id)->where('is_active', true))
@@ -53,19 +66,31 @@ class CourseAudience
         });
     }
 
+    public function browseable(Builder $query): void
+    {
+        $query->where('courses.status', 'publish');
+    }
+
     public function viewable(Builder $query, ?User $user): void
     {
         $query->where(function ($published) use ($user) {
             $published->where('courses.status', 'publish');
-            if ($user) $published->orWhere(fn ($q) => $this->registered($q, $user));
+            if ($user) {
+                $published->orWhere(fn ($q) => $this->registered($q, $user));
+            }
         });
         $this->visible($query, $user);
     }
 
     public function canEnroll(Course $course, User $user): bool
     {
-        if ($this->isRegistered($course, $user)) return true;
-        if ($course->status !== 'publish' || ! $this->matchesStatus($course, $user)) return false;
+        if ($this->isRegistered($course, $user)) {
+            return true;
+        }
+        if ($course->status !== 'publish' || ! $this->matchesStatus($course, $user)) {
+            return false;
+        }
+
         return $course->visibility === 'public'
             || ($course->visibility === 'private' && $user->opd?->is_active
                 && $course->opds()->where('opds.id', $user->opd_id)->where('is_active', true)->exists());
@@ -74,7 +99,7 @@ class CourseAudience
     public function canManage(Course $course, User $user): bool
     {
         return $user->hasAnyRole(['super_admin', 'administrator'])
-            || (Trainer::activeOpdIdsForUser($user->id)
-                && $course->trainers()->where('user_id', $user->id)->exists());
+            || ($this->trainers->activeOpdIdsForUser($user->id)
+                && $this->courses->hasTrainer($course, $user->id));
     }
 }

@@ -34,4 +34,9 @@ class LearnItemRepository extends EloquentRepository implements LearnItemReposit
             $attributes,
         );
     }
+
+    public function taskResults(string $activityId): Collection
+    {
+        return $this->query()->with('learn.participant.metas')->where('activity_id', $activityId)->get();
+    }
 }

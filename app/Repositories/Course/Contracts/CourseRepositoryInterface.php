@@ -3,10 +3,10 @@
 namespace App\Repositories\Course\Contracts;
 
 use App\Models\Course\Course;
+use App\Models\Identity\User;
 use App\Repositories\Contracts\BaseRepositoryInterface;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Collection;
-use App\Models\Identity\User;
 
 interface CourseRepositoryInterface extends BaseRepositoryInterface
 {
@@ -19,6 +19,8 @@ interface CourseRepositoryInterface extends BaseRepositoryInterface
     public function getFeaturedPublishedCourses(DateTimeInterface $at, int $limit = 6, ?User $user = null): Collection;
 
     public function findVisibleBySlug(string $slug, ?User $user = null, array $relations = []): ?Course;
+
+    public function findBrowseableBySlug(string $slug, array $relations = []): ?Course;
 
     public function getForInstructor(int|string|null $instructorId = null): Collection;
 
@@ -43,4 +45,14 @@ interface CourseRepositoryInterface extends BaseRepositoryInterface
     public function findMany(array $ids): Collection;
 
     public function isVisible(Course $course, ?User $user): bool;
+
+    public function certificateCourses();
+
+    public function importCourses();
+
+    public function assignedTrainerIds(Course $course): array;
+
+    public function syncAudienceOpds(Course $course, array $ids): void;
+
+    public function hasTrainer(Course $course, string $userId): bool;
 }

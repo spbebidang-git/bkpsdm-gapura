@@ -5,6 +5,7 @@ namespace App\Repositories\Course;
 use App\Models\Course\Category;
 use App\Repositories\Course\Contracts\CategoryRepositoryInterface;
 use App\Repositories\EloquentRepository;
+use Illuminate\Database\Eloquent\Builder;
 
 class CategoryRepository extends EloquentRepository implements CategoryRepositoryInterface
 {
@@ -38,5 +39,10 @@ class CategoryRepository extends EloquentRepository implements CategoryRepositor
             ->where('code', '!=', '')
             ->whereNotIn('code', $codes)
             ->delete();
+    }
+
+    public function adminTable(): Builder
+    {
+        return $this->query()->orderBy('title');
     }
 }

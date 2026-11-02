@@ -2,12 +2,12 @@
 
 namespace App\Repositories\Identity;
 
+use App\Models\Course\Trainer;
 use App\Models\Identity\User;
 use App\Repositories\EloquentRepository;
 use App\Repositories\Identity\Contracts\UserRepositoryInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use App\Models\Course\Trainer;
 
 class UserRepository extends EloquentRepository implements UserRepositoryInterface
 {
@@ -75,8 +75,8 @@ class UserRepository extends EloquentRepository implements UserRepositoryInterfa
     public function eligibleTrainerUsers(): Collection
     {
         return $this->query()->where(fn ($query) => $query
-                ->where('auth_source', User::AUTH_SOURCE_LOCAL)
-                ->orWhereHas('opd', fn ($opd) => $opd->where('is_active', true)))
+            ->where('auth_source', User::AUTH_SOURCE_LOCAL)
+            ->orWhereHas('opd', fn ($opd) => $opd->where('is_active', true)))
             ->whereNotIn('id', Trainer::query()->whereNotNull('user_id')->select('user_id'))
             ->whereDoesntHave('roles', fn ($query) => $query->whereIn('name', ['trainer', 'super_admin']))
             ->with(['opd', 'metas'])->orderBy('name')->get();
@@ -95,5 +95,45 @@ class UserRepository extends EloquentRepository implements UserRepositoryInterfa
     public function removeRole(User $user, string $role): void
     {
         $user->removeRole($role);
+    }
+
+    public function deleteMeta(User $user, string $key): void
+    {
+        $user->metas()->where('key', $key)->delete();
+    }
+
+    public function hasRoles(User $user): bool
+    {
+        return $user->roles()->exists();
+    }
+
+    public function loadParticipant(User $user): User
+    {
+        return $user->load(['metas', 'employeeStatus']);
+    }
+
+    public function orderParticipantMeta(Builder $query, string $key, string $order): void
+    {
+        $dir = strtolower($order) === 'desc' ? 'desc' : 'asc';
+        if ($key === 'status_pegawai') {
+            $query->orderByRaw('coalesce((select title from employee_status where employee_status.id = users.employee_status_id limit 1), (select value from user_meta where user_meta.user_id = users.id and user_meta.key = ? limit 1)) '.$dir, [$key]);
+        } else {
+            $query->orderByRaw('(select value from user_meta where user_meta.user_id = users.id and user_meta.key = ? limit 1) '.$dir, [$key]);
+        }
+    }
+
+    public function adminParticipants(): Builder
+    {
+        return $this->queryByRole('participant', ['roles', 'metas', 'employeeStatus', 'opd'])->orderBy('id');
+    }
+
+    public function notificationParticipants()
+    {
+        return $this->queryByRole('participant')->get(['id', 'name', 'nip']);
+    }
+
+    public function isParticipant(string $id): bool
+    {
+        return $this->queryByRole('participant')->whereKey($id)->exists();
     }
 }

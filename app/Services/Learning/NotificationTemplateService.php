@@ -18,6 +18,7 @@ class NotificationTemplateService
     public function templates()
     {
         $stored = $this->templates->allByEventKey();
+
         return collect(config('notification_messages', []))->map(fn (array $template, string $key) => [
             'event_key' => $key, 'label' => $template['label'], 'group' => $template['group'],
             'title' => $stored->get($key)?->title ?? $template['title'],
@@ -27,7 +28,7 @@ class NotificationTemplateService
 
     public function participants()
     {
-        return $this->users->queryByRole('participant')->get(['id', 'name', 'nip']);
+        return $this->users->notificationParticipants();
     }
 
     public function courses()
@@ -37,7 +38,7 @@ class NotificationTemplateService
 
     public function assertParticipant(string $id): void
     {
-        abort_unless($this->users->queryByRole('participant')->whereKey($id)->exists(), 422);
+        abort_unless($this->users->isParticipant($id), 422);
     }
 
     public function save(array $data): void
