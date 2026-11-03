@@ -34,7 +34,7 @@ class CourseController extends Controller
         ]);
 
         return Inertia::render('Course/Index', [
-            'courses' => $this->course->getAllCourse($filters, $request->user()),
+            'courses' => $this->course->getAllCourse($filters, $request->user(), restrictToAudience: false),
             'categories' => \App\Models\Course\Category::query()
                 ->orderBy('title')
                 ->get(['id', 'title']),

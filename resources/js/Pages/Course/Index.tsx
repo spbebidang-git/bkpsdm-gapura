@@ -105,7 +105,7 @@ export default function CourseIndex({
                         <div>
                             <p className="course-index-eyebrow">MATERI PILIHAN</p>
                             <h1 className="max-w-3xl font-poppins text-2xl font-semibold leading-tight tracking-tight text-[#075D5E] sm:text-3xl">{pageTitle}</h1>
-                            <p className="mt-3 max-w-xl font-inter text-sm leading-6 text-[#66778C]">{form.visibility === 'public' ? 'Jelajahi pengetahuan dan temukan materi untuk mengembangkan kompetensi Anda.' : form.visibility === 'private' ? 'Temukan kelas pembelajaran yang tersedia sesuai OPD dan status kepegawaian Anda.' : 'Temukan pengetahuan dan kelas pembelajaran untuk mengembangkan kompetensi Anda.'}</p>
+                            <p className="mt-3 max-w-xl font-inter text-sm leading-6 text-[#66778C]">{form.visibility === 'public' ? 'Jelajahi pengetahuan dan temukan materi untuk mengembangkan kompetensi Anda.' : form.visibility === 'private' ? 'Jelajahi semua kelas pembelajaran yang tersedia di seluruh OPD. Aktivasi kelas akan divalidasi sesuai OPD dan status kepegawaian Anda.' : 'Temukan pengetahuan dan kelas pembelajaran untuk mengembangkan kompetensi Anda.'}</p>
                         </div>
                     </div>
                     <div className="course-index-tabs" aria-label="Jenis materi">

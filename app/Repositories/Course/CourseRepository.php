@@ -66,7 +66,7 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
             ->where(fn ($q) => app(CourseAudience::class)->viewable($q, $user))->first();
     }
 
-    public function getPublishedAvailable(?DateTimeInterface $at = null, ?int $limit = null, array $filters = [], ?User $user = null): Collection
+    public function getPublishedAvailable(?DateTimeInterface $at = null, ?int $limit = null, array $filters = [], ?User $user = null, bool $restrictToAudience = true): Collection
     {
         $now = $at ? Carbon::instance($at) : now();
         $date = $now->toDateString();
@@ -107,7 +107,11 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
 
         // Batasi katalog sesuai audiens: tamu hanya kelas publik, peserta juga
         // mendapat kelas privat yang menyasar OPD dan status kepegawaiannya.
-        app(CourseAudience::class)->visible($query, $user);
+        // Katalog publik ("Materi Pilihan") menonaktifkan pembatasan ini agar
+        // seluruh kelas privat tetap bisa dijelajahi; pembatas ada di aktivasi.
+        if ($restrictToAudience) {
+            app(CourseAudience::class)->visible($query, $user);
+        }
 
         $query->orderBy('id');
 

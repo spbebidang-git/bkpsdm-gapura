@@ -14,7 +14,7 @@ interface CourseRepositoryInterface extends BaseRepositoryInterface
 
     public function findPublishedBySlug(string $slug, array $relations = []): ?Course;
 
-    public function getPublishedAvailable(?DateTimeInterface $at = null, ?int $limit = null, array $filters = [], ?User $user = null): Collection;
+    public function getPublishedAvailable(?DateTimeInterface $at = null, ?int $limit = null, array $filters = [], ?User $user = null, bool $restrictToAudience = true): Collection;
 
     public function getFeaturedPublishedCourses(DateTimeInterface $at, int $limit = 6, ?User $user = null): Collection;
 

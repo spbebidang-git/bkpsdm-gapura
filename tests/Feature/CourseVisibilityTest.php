@@ -62,7 +62,7 @@ class CourseVisibilityTest extends TestCase
         }
     }
 
-    public function test_guests_see_only_public_classes_in_catalog_and_home(): void
+    public function test_guests_see_all_published_classes_in_catalog_but_only_public_on_home(): void
     {
         $opd = $this->opd('001');
         $status = EmployeeStatus::create(['title' => 'PNS']);
@@ -71,7 +71,9 @@ class CourseVisibilityTest extends TestCase
         $draft = $this->course('public', [], $status);
         $draft->update(['status' => 'draft']);
         $this->get(route('course.index'))->assertInertia(fn (Assert $page) => $page
-            ->has('courses', 1)->where('courses.0.id', $public->id));
+            ->has('courses', 2));
+        $this->get(route('course.index', ['visibility' => 'private']))->assertInertia(fn (Assert $page) => $page
+            ->has('courses', 1)->where('courses.0.id', $private->id));
         $this->get(route('home'))->assertInertia(fn (Assert $page) => $page
             ->has('courses', 1)->where('courses.0.id', $public->id));
         $this->get(route('course.show', $public->slug))->assertOk();
@@ -81,6 +83,32 @@ class CourseVisibilityTest extends TestCase
         $this->get(route('participant.learn.instruction.index', [$public->slug, $public->schedules->first()->id, $activity->id]))
             ->assertRedirect();
         $this->assertDatabaseCount('enrollments', 0);
+    }
+
+    public function test_catalog_lists_private_classes_regardless_of_login_or_opd_while_browse_stays_scoped(): void
+    {
+        $a = $this->opd('001'); $b = $this->opd('002');
+        $pns = EmployeeStatus::create(['title' => 'PNS']);
+        $forA = $this->course('private', [$a->id], $pns);
+        $forB = $this->course('private', [$b->id], $pns);
+
+        // Tamu (belum login) tetap melihat semua kelas privat di katalog.
+        $this->get(route('course.index', ['visibility' => 'private']))
+            ->assertInertia(fn (Assert $page) => $page->has('courses', 2));
+
+        // Peserta OPD A juga melihat kelas privat untuk OPD lain di katalog;
+        // pembatasnya diterapkan saat aktivasi, bukan saat menjelajah.
+        $user = $this->participant($a, $pns);
+        $this->actingAs($user)->get(route('course.index', ['visibility' => 'private']))
+            ->assertInertia(fn (Assert $page) => $page->has('courses', 2));
+        $this->actingAs($user)->get(route('course.show', $forB->slug))->assertOk();
+        $this->assertFalse(app(CourseAudience::class)->canEnroll($forB->fresh(), $user));
+
+        // Halaman Jelajah Kelas pengguna tetap difilter sesuai OPD masing-masing
+        // (controller browse memakai getAllCourse dengan pembatasan audiens bawaan).
+        $browseIds = app(CourseService::class)
+            ->getAllCourse(['visibility' => 'private'], $user)->pluck('id');
+        $this->assertSame([$forA->id], $browseIds->all());
     }
 
     public function test_private_requires_both_status_and_any_of_the_target_opds(): void

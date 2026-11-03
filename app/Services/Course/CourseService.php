@@ -114,9 +114,9 @@ class CourseService
     //         });
     // }
 
-    public function getAllCourse(array $filters = [], ?User $user = null)
+    public function getAllCourse(array $filters = [], ?User $user = null, bool $restrictToAudience = true)
     {
-        return $this->courses->getPublishedAvailable(Carbon::now(), filters: $filters, user: $user)
+        return $this->courses->getPublishedAvailable(Carbon::now(), filters: $filters, user: $user, restrictToAudience: $restrictToAudience)
             ->map(function ($row) {
                 $ratingCount = (int) $row->rating_count;
                 $rating = $ratingCount > 0
