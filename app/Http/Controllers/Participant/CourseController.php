@@ -9,6 +9,7 @@ use App\Services\Learning\ParticipantEnrollmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class CourseController
@@ -39,6 +40,24 @@ class CourseController
             return redirect()->route('home')
                 ->with('danger', 'Terjadi kesalahan saat memuat daftar kelas. Silakan coba lagi.');
         }
+    }
+
+    public function browse(Request $request)
+    {
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:100'],
+            'visibility' => ['nullable', Rule::in(['public', 'private'])],
+            'employee_status' => ['nullable', 'string', Rule::in(['CPNS', 'PNS', 'PPPK', 'PPPK Paruh Waktu'])],
+            'category' => ['nullable', 'string', 'exists:categories,id'],
+        ]);
+
+        return Inertia::render('Course/Browse', [
+            'courses' => $this->course->getAllCourse($filters, $request->user()),
+            'categories' => \App\Models\Course\Category::query()
+                ->orderBy('title')
+                ->get(['id', 'title']),
+            'filters' => $filters,
+        ]);
     }
 
     public function show(Course $course)

@@ -44,7 +44,7 @@ export default function Index({ courses = [] }: { courses: Course[] }) {
         <div className="my-courses">
             <header className="my-courses-header">
                 <div><h1>Kelas Saya</h1><p>Semua pelatihan Anda, dalam satu ruang belajar.</p></div>
-                <Link className="my-courses-explore" href={route('course.index')}><Icon name="compass" />Jelajahi kelas<Icon name="right-arrow-alt" size="18px" /></Link>
+                <Link className="my-courses-explore" href={route('participant.browse')}><Icon name="compass" />Jelajahi kelas<Icon name="right-arrow-alt" size="18px" /></Link>
             </header>
             <section className="my-courses-collection" aria-label="Daftar kelas Anda">
                 <div className="my-courses-toolbar">
@@ -52,7 +52,7 @@ export default function Index({ courses = [] }: { courses: Course[] }) {
                     <div className="my-courses-search"><label htmlFor="participant-course-search" className="sr-only">Cari judul kelas</label><Icon name="search" /><input id="participant-course-search" type="search" value={query} onChange={event => setQuery(event.target.value)} placeholder="Cari judul kelas…" /></div>
                 </div>
                 <div className="my-courses-results"><p aria-live="polite">Menampilkan <strong>{visible.length}</strong> dari {courses.length} kelas</p>{(query || filter !== 'all') && <button type="button" onClick={reset}>Reset filter<Icon name="reset" size="15px" /></button>}</div>
-                {courses.length === 0 ? <ParticipantEmpty title="Belum ada kelas" description="Temukan pelatihan untuk mengembangkan kompetensi Anda. Kelas yang diikuti akan tampil di sini." action={<ParticipantButton href={route('course.index')}>Jelajahi kelas</ParticipantButton>} /> : visible.length === 0 ? <ParticipantEmpty title="Kelas tidak ditemukan" description="Coba judul lain atau ubah filter status kelas." action={<ParticipantButton variant="secondary" onClick={reset}>Reset pencarian dan filter</ParticipantButton>} /> : <div className="my-courses-grid">{visible.map(item => {
+                {courses.length === 0 ? <ParticipantEmpty title="Belum ada kelas" description="Temukan pelatihan untuk mengembangkan kompetensi Anda. Kelas yang diikuti akan tampil di sini." action={<ParticipantButton href={route('participant.browse')}>Jelajahi kelas</ParticipantButton>} /> : visible.length === 0 ? <ParticipantEmpty title="Kelas tidak ditemukan" description="Coba judul lain atau ubah filter status kelas." action={<ParticipantButton variant="secondary" onClick={reset}>Reset pencarian dan filter</ParticipantButton>} /> : <div className="my-courses-grid">{visible.map(item => {
                     const scheduled = item.type === 'schedule' || item.type === 'scheduled';
                     const completed = item.finished_at != null;
                     const detailUrl = route('participant.course.show', { course: item.slug });

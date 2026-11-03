@@ -39,6 +39,9 @@ Route::middleware(['auth', CheckRoleAuthMiddleware::class, IsParticipantMiddlewa
         // Overview. Access: participant
         Route::get('dashboard', DashboardController::class)->name('dashboard');
 
+        // Browse courses ("Jelajah Kelas"). Access: participant
+        Route::get('/browse', [CourseController::class, 'browse'])->name('browse');
+
         // My Courses. Access: participant
         Route::controller(CourseController::class)->prefix('my-course')->name('course.')->group(function () {
             Route::get('/', 'index')->name('index');
