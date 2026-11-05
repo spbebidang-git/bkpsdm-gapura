@@ -45,9 +45,9 @@ class PostCertificateCommand extends Command
 
             $this->info('[PostCertificate] Token berhasil diambil.');
 
-
             $query = Learn::with(['course.category', 'course.schedules', 'participant.metas'])
-                ->whereNull('prestige_certificate_registered_at');
+                ->whereNull('prestige_certificate_registered_at')
+                ->whereHas('course', fn ($course) => $course->where('modality', 'lms'));
 
             $courseId = $this->option('course');
             $learnId = $this->option('learn');

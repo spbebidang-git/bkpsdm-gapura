@@ -2,10 +2,11 @@
 
 namespace App\Http\Requests\Course;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Validator;
-use Illuminate\Validation\Rule;
+use App\Models\Course\Course;
 use App\Models\Course\Trainer;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 abstract class CourseRequest extends FormRequest
 {
@@ -14,10 +15,28 @@ abstract class CourseRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $course = $this->route('course');
+        $modality = $this->input('modality') ?? ($course instanceof Course ? $course->modality : 'lms');
+
+        $this->merge(['modality' => $modality]);
+
+        if ($modality === 'kms') {
+            $this->merge([
+                'visibility' => 'public',
+                'type' => 'unschedule',
+                'jam_pelajaran' => 0,
+                'opd_ids' => [],
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
-            'type' => ['required', 'string'],
+            'modality' => ['nullable', Rule::in(['kms', 'lms'])],
+            'type' => ['required', Rule::in(['schedule', 'unschedule'])],
             'category' => ['required', 'string', Rule::exists('categories', 'id')->whereNull('deleted_at')],
             'employee_status' => ['required', 'array', 'min:1'],
             'employee_status.*' => ['exists:employee_status,id'],
@@ -28,7 +47,8 @@ abstract class CourseRequest extends FormRequest
             'teaser_video' => ['nullable', 'string', 'regex:%^https://(www\.)?youtube\.com/embed/[\w-]+(\?.*)?$%i'],
             'expired' => ['nullable', 'required_if:type,unschedule', 'numeric', 'min:0'],
             'status' => ['required', 'string'],
-            'jam_pelajaran' => ['required', 'numeric', 'min:0'],
+            'jam_pelajaran' => ['required_unless:modality,kms', 'numeric', 'min:0'],
+            'opd_id' => ['required_if:modality,kms', Rule::exists('opds', 'id')->whereNull('deleted_at')->where('is_active', true)],
             'trainers' => $this->isRestrictedTrainer() ? ['exclude'] : ['required', 'array', 'min:1'],
             'trainers.*' => ['string', 'distinct', Rule::exists('trainers', 'id')->whereNull('deleted_at')],
             'visibility' => ['required', Rule::in(['public', 'private'])],
@@ -66,7 +86,9 @@ abstract class CourseRequest extends FormRequest
                 if ($this->isRestrictedTrainer()) {
                     $trainerIds = Trainer::where('user_id', $this->user()->id)->pluck('id')->all();
                     $course = $this->route('course');
-                    if ($course) $trainerIds = array_merge($trainerIds, $course->trainers()->pluck('trainers.id')->all());
+                    if ($course) {
+                        $trainerIds = array_merge($trainerIds, $course->trainers()->pluck('trainers.id')->all());
+                    }
                 }
 
                 $trainers = Trainer::with(['user.opd', 'opd', 'opds'])->whereIn('id', $trainerIds)->get();
@@ -103,6 +125,7 @@ abstract class CourseRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'modality' => 'Jenis sistem',
             'type' => 'Jenis kelas',
             'category' => 'Kategori',
             'employee_status' => 'Status pengguna',
@@ -115,6 +138,7 @@ abstract class CourseRequest extends FormRequest
             'expired' => 'Masa kedaluwarsa',
             'status' => 'Status publikasi',
             'jam_pelajaran' => 'Jam pelajaran',
+            'opd_id' => 'OPD pemilik',
             'visibility' => 'Visibilitas kelas',
             'opd_ids' => 'OPD sasaran',
             'opd_ids.*' => 'OPD sasaran',

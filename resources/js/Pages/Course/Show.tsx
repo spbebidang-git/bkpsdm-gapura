@@ -142,7 +142,7 @@ export default function CourseShow({ course, schedules = [], reviews = [], ratin
                             <nav aria-label="Breadcrumb" className="mb-6 flex flex-wrap items-center gap-2 font-poppins text-xs text-[#BDE8E2]">
                                 <Link href="/" className="hover:text-white">Beranda</Link>
                                 <i className="bx bx-chevron-right" aria-hidden="true" />
-                                <Link href={route('course.index')} className="hover:text-white">Materi pilihan</Link>
+                                <Link href={route('course.kms')} className="hover:text-white">Materi pilihan</Link>
                                 <i className="bx bx-chevron-right" aria-hidden="true" />
                                 <span aria-current="page" className="text-white">Detail kelas</span>
                             </nav>

@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import type { Course } from '@/types/domain';
 
-export default function PublicCourseCard({ course, variant = 'default', fontFamily = 'mixed', showDescription = false }: { course: Course; variant?: 'default' | 'home'; fontFamily?: 'mixed' | 'poppins'; showDescription?: boolean }) {
+export default function PublicCourseCard({ course, variant = 'default', fontFamily = 'mixed', showDescription = false, showRating = true }: { course: Course; variant?: 'default' | 'home'; fontFamily?: 'mixed' | 'poppins'; showDescription?: boolean; showRating?: boolean }) {
     const category = typeof course.category === 'string' ? course.category : course.category?.name;
     const rating = Number(course.star || 0).toFixed(1);
     const totalParticipant = Number(course.total_participant || 0).toLocaleString('id-ID');
@@ -34,7 +34,7 @@ export default function PublicCourseCard({ course, variant = 'default', fontFami
                     </div>}
 
                     <div className="mt-auto px-3 pb-2 pt-3">
-                        <dl className={`grid grid-cols-3 divide-x divide-[#E8ECF1] border-y border-[#E8ECF1] py-3 text-center ${metaFont}`}>
+                        <dl className={`grid divide-x divide-[#E8ECF1] border-y border-[#E8ECF1] py-3 text-center ${metaFont} ${showRating ? 'grid-cols-3' : 'grid-cols-2'}`}>
                             <div className="flex min-w-0 flex-col gap-1 px-1">
                                 <dt className="order-2 text-[10px] leading-4 text-[#66778C]">Pengguna</dt>
                                 <dd className="flex flex-wrap items-center justify-center gap-1 text-sm font-semibold leading-5 tabular-nums text-[#075D5E]">
@@ -49,13 +49,13 @@ export default function PublicCourseCard({ course, variant = 'default', fontFami
                                     <span className="break-all">{totalPassed}</span>
                                 </dd>
                             </div>
-                            <div className="flex min-w-0 flex-col gap-1 px-1">
+                            {showRating && <div className="flex min-w-0 flex-col gap-1 px-1">
                                 <dt className="order-2 text-[10px] leading-4 text-[#66778C]">Penilaian</dt>
                                 <dd className="flex items-center justify-center gap-1 text-sm font-semibold leading-5 tabular-nums text-[#075D5E]">
                                     <i className="bx bxs-star text-base font-normal text-[#F68104]" aria-hidden="true" />
                                     <span>{rating}</span>
                                 </dd>
-                            </div>
+                            </div>}
                         </dl>
                         <div className="mt-3 flex justify-center">
                             <span className="inline-flex min-h-9 items-center justify-center rounded-[10px] border border-[#39A9A1] px-5 py-1.5 font-poppins text-xs font-semibold text-primary transition-colors group-hover:bg-primary group-hover:text-white">Lihat kelas</span>
@@ -91,7 +91,7 @@ export default function PublicCourseCard({ course, variant = 'default', fontFami
                         </div>
                     ) : <p className={`mb-5 mt-2 text-sm leading-6 ${isHome ? 'text-[#66778C]' : 'text-[#66716c]'} ${bodyFont}`}>{isHome ? (course.employee_status || 'Pelatihan pengembangan kompetensi ASN') : 'Pelatihan untuk pengembangan kompetensi ASN.'}</p>}
 
-                    <div className={`mt-auto grid grid-cols-3 gap-2 border-t border-[#e6efee] pt-4 text-xs text-[#66716c] ${metaFont}`}>
+                    <div className={`mt-auto grid gap-2 border-t border-[#e6efee] pt-4 text-xs text-[#66716c] ${metaFont} ${showRating ? 'grid-cols-3' : 'grid-cols-2'}`}>
                         <div className="flex items-center gap-2">
                             <span className="grid h-7 w-7 place-items-center rounded-[10px] bg-primary-mist" aria-hidden="true"><box-icon name="group" size="15px" color="#018083" /></span>
                             <span className="min-w-0"><strong className="block text-sm text-[#173b3a]">{totalParticipant}</strong>Pengguna</span>
@@ -100,10 +100,10 @@ export default function PublicCourseCard({ course, variant = 'default', fontFami
                             <span className="grid h-7 w-7 place-items-center rounded-[10px] bg-[#eaf7ee]" aria-hidden="true"><box-icon name="check-circle" size="15px" color="#246a3c" /></span>
                             <span className="min-w-0"><strong className="block text-sm text-[#173b3a]">{totalPassed}</strong>Lulus</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        {showRating && <div className="flex items-center gap-2">
                             <span className="grid h-7 w-7 place-items-center rounded-[10px] bg-secondary-soft" aria-hidden="true"><box-icon type="solid" name="star" size="14px" color="#f68104" /></span>
                             <span><strong className="block text-sm text-[#173b3a]">{rating}</strong>Penilaian</span>
-                        </div>
+                        </div>}
                     </div>
                 </div>
             </Link>

@@ -48,6 +48,7 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
         return { ...current, trainers: nextTrainers };
     });
     const selectedStatuses = new Set((values.employee_status || []).map(String));
+    const isKms = values.modality === 'kms';
     const statusOptions = employeeStatuses.map((status) => ({ id: status?.id ?? status, title: status?.title ?? String(status) }));
     const { containerRef: descriptionRef, visibleError: descriptionError, dismissError: dismissDescriptionError } = useTransientFieldError(errors.description);
     const { containerRef: statusRef, visibleError: statusError, dismissError: dismissStatusError } = useTransientFieldError(errors.employee_status);
@@ -81,8 +82,10 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
                 </div>
             </CrudFormSection>
             <CrudFormSection title="Pengaturan kelas" description="Tentukan tipe, durasi, dan publikasi." icon="bx-slider-alt">
-                <FormSelect id="visibility" label="Visibilitas kelas" isRequired value={values.visibility} onChange={handleChange} error={errors.visibility} options={[{ value: 'public', label: 'Knowledge Management System (KMS)' }, { value: 'private', label: 'Learning Management System (LMS)' }]} small="Informasi kelas publik dapat dilihat tanpa login. Mengikuti kegiatan tetap memerlukan login dan status pegawai yang sesuai." />
-                {values.visibility === 'private' && <fieldset className="course-opd-picker">
+                <FormSelect id="modality" label="Jenis sistem" isRequired value={values.modality} onChange={handleChange} error={errors.modality} options={[{ value: 'lms', label: 'Learning Management System (LMS)' }, { value: 'kms', label: 'Knowledge Management System (KMS)' }]} small="LMS mendukung seluruh kegiatan, sertifikat, dan JP. KMS hanya berisi literatur dan video, tanpa sertifikat dan JP." />
+                {!isKms && <FormSelect id="visibility" label="Visibilitas kelas" isRequired value={values.visibility} onChange={handleChange} error={errors.visibility} options={[{ value: 'public', label: 'Publik — semua OPD' }, { value: 'private', label: 'Privat — OPD sasaran' }]} small="Informasi kelas publik dapat dilihat tanpa login. Mengikuti kegiatan tetap memerlukan login dan status pegawai yang sesuai." />}
+                {isKms && <FormSelect id="opd_id" label="OPD pemilik" isRequired value={values.opd_id} onChange={handleChange} error={errors.opd_id} options={opds.filter((opd) => opd.is_active !== false).map((opd) => ({ value: opd.id, label: opd.name }))} emptyOption="Pilih OPD pemilik" />}
+                {!isKms && values.visibility === 'private' && <fieldset className="course-opd-picker">
                     <legend className="form-label">OPD sasaran <span aria-hidden="true">*</span></legend>
                     {targetOpds.length > 0 ? <>
                         <div className="course-opd-picker-grid" role="group" aria-label="Pilih OPD sasaran kelas">
@@ -99,8 +102,8 @@ export default function CourseFormFields({ values, setValues, handleChange, erro
                     <ErrorMessage message={errors.opd_ids || Object.entries(errors).find(([key]) => key.startsWith('opd_ids.'))?.[1] as string} />
                 </fieldset>}
                 <div className="course-form-fields-grid course-form-settings-grid">
-                <FormSelect id="type" label="Tipe kelas" isRequired value={values.type} onChange={handleChange} error={errors.type} disabled={typeLocked} options={[{ value: 'unschedule', label: 'Mandiri' }, { value: 'schedule', label: 'Terjadwal' }]} emptyOption="Pilih tipe kelas" small={typeLocked ? 'Tipe kelas ditetapkan saat kelas dibuat.' : values.type === 'schedule' ? 'Pengguna mengikuti kelas sesuai jadwal kegiatan.' : values.type === 'unschedule' ? 'Pengguna belajar sesuai waktu masing-masing.' : null} />
-                <FormInput id="jam_pelajaran" label="Jam pelajaran (JP)" type="number" min="0" isRequired value={values.jam_pelajaran} onChange={handleChange} error={errors.jam_pelajaran} placeholder="Contoh: 8" />
+                <FormSelect id="type" label="Tipe kelas" isRequired value={values.type} onChange={handleChange} error={errors.type} disabled={typeLocked || isKms} options={[{ value: 'unschedule', label: 'Mandiri' }, { value: 'schedule', label: 'Terjadwal' }]} emptyOption="Pilih tipe kelas" small={isKms ? 'KMS selalu mandiri.' : typeLocked ? 'Tipe kelas ditetapkan saat kelas dibuat.' : values.type === 'schedule' ? 'Pengguna mengikuti kelas sesuai jadwal kegiatan.' : values.type === 'unschedule' ? 'Pengguna belajar sesuai waktu masing-masing.' : null} />
+                {!isKms && <FormInput id="jam_pelajaran" label="Jam pelajaran (JP)" type="number" min="0" isRequired value={values.jam_pelajaran} onChange={handleChange} error={errors.jam_pelajaran} placeholder="Contoh: 8" />}
                 {values.type !== 'schedule' && <FormInput id="expired" label="Masa akses (jam)" type="number" min="0" isRequired value={values.expired} onChange={handleChange} error={errors.expired} placeholder="Contoh: 72" small="Dihitung sejak pengguna memulai kelas." />}
                 </div>
                 <div className="course-form-divider">

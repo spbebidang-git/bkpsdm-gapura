@@ -15,6 +15,7 @@ export default function Index() {
     const canDelete = permissions.includes('course.delete');
     const [status, setStatus] = useState('');
     const [type, setType] = useState('');
+    const [modality, setModality] = useState('');
     const [refreshKey, setRefreshKey] = useState(0);
 
     const deleteCourse = (slug: string, title: string) => confirmDelete(route('admin.course.destroy', slug), {
@@ -55,6 +56,14 @@ export default function Index() {
             },
         },
         {
+            accessorKey: 'modality',
+            header: 'Sistem',
+            cell: ({ getValue }) => {
+                const kms = String(getValue() || 'lms') === 'kms';
+                return <span className={`course-index-status ${kms ? 'is-published' : ''}`}><i className={`bx ${kms ? 'bx-book-open' : 'bx-graduation'}`} aria-hidden />{kms ? 'KMS' : 'LMS'}</span>;
+            },
+        },
+        {
             accessorKey: 'status',
             header: 'Status',
             cell: ({ getValue }) => {
@@ -88,7 +97,7 @@ export default function Index() {
             ),
         },
     ], [canEdit, canDelete]);
-    const hasFilters = Boolean(status || type);
+    const hasFilters = Boolean(status || type || modality);
 
     return (
         <AdminLayout title="Kelas" hideTitle>
@@ -100,7 +109,7 @@ export default function Index() {
                 <DataTable
                     url={route('admin.course.index')}
                     columns={columns}
-                    params={{ course_status: status, course_type: type }}
+                    params={{ course_status: status, course_type: type, course_modality: modality }}
                     refreshKey={refreshKey}
                     dataLabel="kelas"
                     className="course-index-table admin-crud-table"
@@ -111,7 +120,8 @@ export default function Index() {
                         <div className="course-index-filters">
                             <label><span className="sr-only">Filter status</span><select value={status} onChange={(event) => setStatus(event.target.value)}><option value="">Semua status</option><option value="publish">Aktif</option><option value="draft">Draft</option></select></label>
                             <label><span className="sr-only">Filter tipe kelas</span><select value={type} onChange={(event) => setType(event.target.value)}><option value="">Semua tipe</option><option value="schedule">Terjadwal</option><option value="unschedule">Mandiri</option></select></label>
-                            {hasFilters && <button type="button" className="course-index-reset" onClick={() => { setStatus(''); setType(''); }}>Reset filter</button>}
+                            <label><span className="sr-only">Filter sistem</span><select value={modality} onChange={(event) => setModality(event.target.value)}><option value="">Semua sistem</option><option value="kms">KMS</option><option value="lms">LMS</option></select></label>
+                            {hasFilters && <button type="button" className="course-index-reset" onClick={() => { setStatus(''); setType(''); setModality(''); }}>Reset filter</button>}
                         </div>
                     }
                 />

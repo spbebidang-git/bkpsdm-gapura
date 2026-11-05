@@ -6,6 +6,8 @@ interface CountdownTimerProps {
     currentSeconds?: number;
     onTimeout?: () => void;
     resetTrigger?: any;
+    /** Simpan sisa waktu di localStorage agar timer lanjut setelah refresh. Default: reset saat keluar. */
+    persist?: boolean;
     variant?: 'danger' | 'muted';
     display?: 'clock' | 'minutes';
 }
@@ -16,6 +18,7 @@ const CountdownTimer = ({
     currentSeconds,
     onTimeout,
     resetTrigger,
+    persist = false,
     display = 'clock'
 }: CountdownTimerProps) => {
     const isControlled = typeof currentSeconds === 'number';
@@ -25,8 +28,10 @@ const CountdownTimer = ({
 
     // Fungsi untuk mereset timer ke awal
     const resetTimer = () => {
-        const now = Math.floor(Date.now() / 1000);
-        localStorage.setItem(storageKey, now.toString());
+        if (persist) {
+            const now = Math.floor(Date.now() / 1000);
+            localStorage.setItem(storageKey, now.toString());
+        }
         setInternalTimeLeft(initialSeconds);
     };
 
@@ -36,7 +41,7 @@ const CountdownTimer = ({
         }
 
         const now = Math.floor(Date.now() / 1000);
-        const storedStartTime = localStorage.getItem(storageKey);
+        const storedStartTime = persist ? localStorage.getItem(storageKey) : null;
 
         if (storedStartTime) {
             const elapsed = now - parseInt(storedStartTime, 10);
@@ -51,7 +56,18 @@ const CountdownTimer = ({
         } else {
             resetTimer();
         }
-    }, [id, initialSeconds, isControlled, onTimeout, resetTrigger]);
+    }, [id, initialSeconds, isControlled, onTimeout, resetTrigger, persist]);
+
+    useEffect(() => {
+        if (isControlled) {
+            return;
+        }
+
+        // Timer berjalan hanya selama halaman kelas terbuka; keluar = sisa waktu dihapus.
+        return () => {
+            if (!persist) localStorage.removeItem(storageKey);
+        };
+    }, [isControlled, persist, storageKey]);
 
     useEffect(() => {
         if (isControlled) {
@@ -59,7 +75,7 @@ const CountdownTimer = ({
         }
 
         if (timeLeft <= 0) {
-            localStorage.removeItem(storageKey);
+            if (!persist) localStorage.removeItem(storageKey);
             return;
         }
 
@@ -68,7 +84,7 @@ const CountdownTimer = ({
                 const newTime = prevTime - 1;
                 if (newTime <= 0) {
                     clearInterval(timer);
-                    localStorage.removeItem(storageKey);
+                    if (!persist) localStorage.removeItem(storageKey);
                     if (onTimeout) onTimeout();
                     return 0;
                 }
@@ -77,7 +93,7 @@ const CountdownTimer = ({
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [isControlled, onTimeout, storageKey, timeLeft]);
+    }, [isControlled, onTimeout, persist, storageKey, timeLeft]);
 
     const formatTime = (time) => {
         const minutes = Math.floor(time / 60).toString().padStart(2, '0');

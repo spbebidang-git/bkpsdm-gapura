@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\Course\Category;
 use App\Models\Course\Course;
-use App\Services\Learning\ParticipantEnrollmentService;
 use App\Models\Course\Schedule;
-use App\Models\Learning\Learn;
+use App\Services\Course\CourseAudience;
 use App\Services\Course\CourseService;
+use App\Services\Learning\ParticipantEnrollmentService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +18,9 @@ use Inertia\Inertia;
 
 class CourseController extends Controller
 {
-    protected $course, $participantId;
+    protected $course;
+
+    protected $participantId;
 
     public function __construct(CourseService $courseService)
     {
@@ -26,16 +30,40 @@ class CourseController extends Controller
 
     public function index(Request $request)
     {
+        return $this->renderCatalog($request, 'kms');
+    }
+
+    public function lms(Request $request)
+    {
+        return $this->renderCatalog($request, 'lms');
+    }
+
+    public function kms(Request $request)
+    {
+        return $this->renderCatalog($request, 'kms');
+    }
+
+    protected function renderCatalog(Request $request, string $modality)
+    {
         $filters = $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
             'visibility' => ['nullable', Rule::in(['public', 'private'])],
+            'modality' => ['nullable', Rule::in(['kms', 'lms'])],
+            'opd_id' => ['nullable', 'string', 'exists:opds,id'],
             'employee_status' => ['nullable', 'string', Rule::in(['CPNS', 'PNS', 'PPPK', 'PPPK Paruh Waktu'])],
             'category' => ['nullable', 'string', 'exists:categories,id'],
         ]);
 
-        return Inertia::render('Course/Index', [
-            'courses' => $this->course->getAllCourse($filters, $request->user(), restrictToAudience: false),
-            'categories' => \App\Models\Course\Category::query()
+        $filters['modality'] = $modality;
+
+        $isKms = $modality === 'kms';
+
+        return Inertia::render($isKms ? 'Course/Kms' : 'Course/Lms', [
+            'courses' => $isKms && empty($filters['opd_id'])
+                ? []
+                : $this->course->getAllCourse($filters, $request->user(), restrictToAudience: false),
+            'kms' => $isKms ? $this->course->kmsEntryOptions() : null,
+            'categories' => $isKms ? null : Category::query()
                 ->orderBy('title')
                 ->get(['id', 'title']),
             'filters' => $filters,
@@ -52,16 +80,17 @@ class CourseController extends Controller
         $course->loadMissing(['trainers.user.metas']);
         $reviews = $course->reviews ? $course->reviews->load('user') : [];
         $canEnroll = $this->participantId
-            ? app(\App\Services\Course\CourseAudience::class)->canEnroll($course, request()->user())
+            ? app(CourseAudience::class)->canEnroll($course, request()->user())
             : false;
 
         return Inertia::render('Course/Show', [
             'can_enroll' => $canEnroll,
             'course' => [
                 'id' => $course->id,
+                'modality' => $course->modality ?? 'lms',
                 'type' => $course->type,
                 'title' => $course->title,
-                'employee_status' => $course->employeeStatus->pluck('title')->map(fn($t) => trim($t))->join(', '),
+                'employee_status' => $course->employeeStatus->pluck('title')->map(fn ($t) => trim($t))->join(', '),
                 'short_description' => $course->short_description,
                 'description' => $course->description,
                 'teaser_video' => $course->teaser_video,
@@ -77,42 +106,45 @@ class CourseController extends Controller
             'schedules' => $course->schedules
                 ->filter(function ($row) {
                     $dateRaw = $row->getRawOriginal('date');
-                    if (!$dateRaw) {
+                    if (! $dateRaw) {
                         return true; // unschedule
                     }
 
                     $previouslyEnrolled = $this->participantId
                         ? $row->participants()->where('participant_id', $this->participantId)->exists()
                         : false;
-                    if ($previouslyEnrolled) return true;
+                    if ($previouslyEnrolled) {
+                        return true;
+                    }
 
-                    $now  = now();
-                    $date = \Carbon\Carbon::parse($dateRaw)->startOfDay();
+                    $now = now();
+                    $date = Carbon::parse($dateRaw)->startOfDay();
 
                     // Tanggal sudah lewat → sembunyikan
-                    if ($date->isPast() && !$date->isToday()) {
+                    if ($date->isPast() && ! $date->isToday()) {
                         return false;
                     }
 
                     // Tanggal hari ini tapi jam selesai sudah lewat → sembunyikan
                     $timeToRaw = $row->getRawOriginal('time_to');
                     if ($date->isToday() && $timeToRaw) {
-                        $timeTo = \Carbon\Carbon::parse($dateRaw . ' ' . $timeToRaw);
+                        $timeTo = Carbon::parse($dateRaw.' '.$timeToRaw);
+
                         return $timeTo->greaterThan($now);
                     }
 
                     return true;
                 })
                 ->map(function ($row) {
-                    $dateRaw     = $row->getRawOriginal('date');
+                    $dateRaw = $row->getRawOriginal('date');
                     $timeFromRaw = $row->getRawOriginal('time_from');
-                    $timeToRaw   = $row->getRawOriginal('time_to');
-                    $now         = now();
+                    $timeToRaw = $row->getRawOriginal('time_to');
+                    $now = now();
 
-                    $date  = $dateRaw ? \Carbon\Carbon::parse($dateRaw)->startOfDay() : null;
+                    $date = $dateRaw ? Carbon::parse($dateRaw)->startOfDay() : null;
                     // Combine date+time so can_enter does not inherit "today" from a time-only cast
                     $start = ($dateRaw && $timeFromRaw)
-                        ? \Carbon\Carbon::parse($dateRaw . ' ' . $timeFromRaw)
+                        ? Carbon::parse($dateRaw.' '.$timeFromRaw)
                         : null;
 
                     $canEnter = ! $date || (
@@ -129,19 +161,19 @@ class CourseController extends Controller
                     );
                     $hasActiveAccess = $scheduleId?->isAccessActive() ?? false;
 
-                    $timeFromLabel = $timeFromRaw ? \Carbon\Carbon::parse($timeFromRaw)->format('H:i') : null;
-                    $timeToLabel   = $timeToRaw ? \Carbon\Carbon::parse($timeToRaw)->format('H:i') : null;
+                    $timeFromLabel = $timeFromRaw ? Carbon::parse($timeFromRaw)->format('H:i') : null;
+                    $timeToLabel = $timeToRaw ? Carbon::parse($timeToRaw)->format('H:i') : null;
 
                     return [
-                        'id'          => $row->id,
-                        'date'        => $dateRaw ? \Carbon\Carbon::parse($dateRaw)->format('Y-m-d') : $row->date,
-                        'date_raw'    => $dateRaw,
-                        'time'        => ($timeFromLabel && $timeToLabel) ? "{$timeFromLabel}-{$timeToLabel}" : $row->time,
-                        'time_from'   => $timeFromLabel,
-                        'quota'       => $row->quota,
-                        'can_enter'   => (bool) ($canEnter || ($previouslyEnrolled && ! $hasActiveAccess)),
+                        'id' => $row->id,
+                        'date' => $dateRaw ? Carbon::parse($dateRaw)->format('Y-m-d') : $row->date,
+                        'date_raw' => $dateRaw,
+                        'time' => ($timeFromLabel && $timeToLabel) ? "{$timeFromLabel}-{$timeToLabel}" : $row->time,
+                        'time_from' => $timeFromLabel,
+                        'quota' => $row->quota,
+                        'can_enter' => (bool) ($canEnter || ($previouslyEnrolled && ! $hasActiveAccess)),
                         'start_label' => $timeFromLabel,
-                        'is_active'   => $hasActiveAccess ? 1 : 0,
+                        'is_active' => $hasActiveAccess ? 1 : 0,
                     ];
                 })
                 ->values(),
@@ -150,7 +182,7 @@ class CourseController extends Controller
                     'name' => $row->user->name,
                     'star' => $row->star,
                     'description' => $row->description,
-                    'created_at' => \Carbon\Carbon::parse($row->created_at)->diffForhumans()
+                    'created_at' => Carbon::parse($row->created_at)->diffForhumans(),
                 ];
             }),
             'trainers' => $course->trainers->map(fn ($trainer) => [
@@ -159,14 +191,14 @@ class CourseController extends Controller
                 'position' => $trainer->jabatan,
                 'photo' => $trainer->photo_src,
             ])->values(),
-            'rating' => $course->getRating()
+            'rating' => $course->getRating(),
         ]);
     }
 
     public function store(Request $request, Course $course, Schedule $schedule)
     {
         abort_unless((string) $schedule->course_id === (string) $course->id, 404);
-        if (! app(\App\Services\Course\CourseAudience::class)->canEnroll($course, $request->user())) {
+        if (! app(CourseAudience::class)->canEnroll($course, $request->user())) {
             return response()->json(['message' => 'OPD atau status kepegawaian Anda tidak memenuhi syarat kelas ini.'], 403);
         }
 
@@ -182,13 +214,13 @@ class CourseController extends Controller
             if ($enrollment->status !== 'active' || $enrollment->schedule_id !== $expectedScheduleId) {
                 DB::rollBack();
                 $message = $enrollment->status !== 'active' ? 'Akses kelas ini telah berakhir.' : 'Anda sudah terdaftar pada sesi kelas yang lain.';
+
                 return response()->json(['status' => 409, 'message' => $message, 'data' => false], 409);
             }
 
             $this->course->generatePrePostTestVariant($participantId, $course);
 
             $schedule->participants()->syncWithoutDetaching([$participantId]);
-
 
             DB::commit();
 

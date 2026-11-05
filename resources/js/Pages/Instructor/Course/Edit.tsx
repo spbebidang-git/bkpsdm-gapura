@@ -18,7 +18,7 @@ export default function Edit({
 }) {
     const { errors = {} } = usePage().props;
     const isTrainerAccount = Boolean(isTrainer);
-    const currentType = course.type || (course.access_mode === 'scheduled' ? 'schedule' : 'unschedule');
+    const currentType = course.modality === 'kms' ? 'unschedule' : (course.type || (course.access_mode === 'scheduled' ? 'schedule' : 'unschedule'));
     const hasSchedules = (course.schedules || []).length > 0;
     const currentThumbnail = course.thumbnail_url || course.thumbnail_src || (
         course.thumbnail === 'default-class.jpg'
@@ -30,6 +30,7 @@ export default function Edit({
     const [thumbnailPreview, setThumbnailPreview] = useState(currentThumbnail);
     const [processing, setProcessing] = useState(false);
     const [values, setValues] = useState({
+        modality: course.modality || 'lms',
         type: currentType,
         category: course.category_id || '',
         title: course.title || '',
@@ -44,6 +45,7 @@ export default function Edit({
         trainers: selectedTrainers,
         visibility: course.visibility || 'private',
         opd_ids: (course.opds || []).map((opd) => String(opd.id)),
+        opd_id: course.opd_id || '',
     });
 
     const handleChange = (e) => {
@@ -59,6 +61,7 @@ export default function Edit({
         }
         setValues((v) => ({
             ...v,
+            ...(id === 'modality' && value === 'kms' ? { type: 'unschedule', visibility: 'public', opd_ids: [] } : {}),
             ...(id === 'visibility' && value === 'public' ? { opd_ids: [] } : {}),
             [id]: inputType === 'file' ? files?.[0] ?? null : value,
         }));
@@ -80,12 +83,14 @@ export default function Edit({
         if (processing) return;
         const formData = new FormData();
         formData.append('_method', 'PUT');
+        formData.append('modality', values.modality);
         formData.append('type', values.type);
         formData.append('category', values.category);
         values.employee_status.forEach((id) => formData.append('employee_status[]', id));
         values.trainers.forEach((id) => formData.append('trainers[]', id));
         formData.append('visibility', values.visibility);
         if (values.visibility === 'private') values.opd_ids.forEach((id) => formData.append('opd_ids[]', id));
+        if (values.modality === 'kms') formData.append('opd_id', values.opd_id);
         formData.append('title', values.title);
         formData.append('short_description', values.short_description);
         formData.append('description', values.description);

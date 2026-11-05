@@ -11,6 +11,7 @@ const Create = ({ categories = [], employee_status = [], trainers = [], opds = [
     const [thumbnailPreview, setThumbnailPreview] = useState(null);
     const [processing, setProcessing] = useState(false);
     const [values, setValues] = useState({
+        modality: 'lms',
         type: '',
         category: '',
         title: '',
@@ -25,6 +26,7 @@ const Create = ({ categories = [], employee_status = [], trainers = [], opds = [
         trainers: [],
         visibility: 'private',
         opd_ids: [] as string[],
+        opd_id: '',
     });
 
     const handleChange = (e) => {
@@ -40,6 +42,7 @@ const Create = ({ categories = [], employee_status = [], trainers = [], opds = [
         }
         setValues((v) => ({
             ...v,
+            ...(id === 'modality' && value === 'kms' ? { type: 'unschedule', visibility: 'public', opd_ids: [] } : {}),
             ...(id === 'type' && value === 'schedule' ? { status: 'draft' } : {}),
             ...(id === 'visibility' && value === 'public' ? { opd_ids: [] } : {}),
             [id]: inputType === 'file' ? files?.[0] ?? null : value,
@@ -61,12 +64,14 @@ const Create = ({ categories = [], employee_status = [], trainers = [], opds = [
         e.preventDefault();
         if (processing) return;
         const formData = new FormData();
+        formData.append('modality', values.modality);
         formData.append('type', values.type);
         formData.append('category', values.category);
         values.employee_status.forEach((id) => formData.append('employee_status[]', id));
         values.trainers.forEach((id) => formData.append('trainers[]', id));
         formData.append('visibility', values.visibility);
         if (values.visibility === 'private') values.opd_ids.forEach((id) => formData.append('opd_ids[]', id));
+        if (values.modality === 'kms') formData.append('opd_id', values.opd_id);
         formData.append('title', values.title);
         formData.append('short_description', values.short_description);
         formData.append('description', values.description);

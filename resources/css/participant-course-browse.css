@@ -32,3 +32,9 @@
     .browse-courses-categories button { font-size: 10px; padding: 10px 6px; gap: 5px; }
 }
 @media (prefers-reduced-motion: reduce) { .browse-courses * { transition: none !important; } }
+
+/* Entry KMS */
+.browse-courses-kms-opd { display: grid; gap: 6px; padding: 0 0 16px; }
+.browse-courses-kms-opd label { font-family: Poppins, sans-serif; font-size: 12px; font-weight: 600; color: #526176; }
+.browse-courses-kms-opd select { min-height: 44px; width: 100%; max-width: 340px; padding: 0 12px; border: 1px solid var(--course-border); border-radius: 8px; background: #F6FAF9; font-size: 13px; color: #1A2B3F; }
+.browse-courses-kms-opd select:focus { border-color: var(--course-primary); outline: none; box-shadow: 0 0 0 3px #01808318; }

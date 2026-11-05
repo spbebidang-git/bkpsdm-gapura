@@ -3,10 +3,11 @@ import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useEffect, useRef, useState } from "react";
 import "../../../css/participant-course-browse.css";
 
-const emptyFilters = { search: "", employee_status: "", category: "", visibility: "" };
+const emptyFilters = { search: "", employee_status: "", category: "", visibility: "", modality: "lms", opd_id: "" };
 
 type BrowseCourse = {
     id: string;
+    modality?: 'kms' | 'lms';
     type: string;
     title: string;
     slug: string;
@@ -16,18 +17,24 @@ type BrowseCourse = {
     employee_status?: string;
     visibility?: 'public' | 'private';
     opd_name?: string | null;
+    owner_opd_id?: string | null;
+    owner_opd_name?: string | null;
     total_participant?: number | string;
     total_passed?: number | string;
     star?: number | string;
 };
 
+type EntryOption = { id: string; title?: string; name?: string; courses_count: number };
+
 export default function CourseBrowse({
     courses = [],
     categories = [],
+    kms = { categories: [], opds: [] },
     filters = {},
 }: {
     courses?: BrowseCourse[];
     categories?: { id: number | string; title: string }[];
+    kms?: { categories?: EntryOption[]; opds?: EntryOption[] };
     filters?: Partial<typeof emptyFilters>;
 }) {
     const { auth } = usePage().props as { auth?: { user?: { opd?: { name?: string } | null } | null } };
@@ -84,7 +91,7 @@ export default function CourseBrowse({
     };
 
     const resetFilters = () => {
-        const values = { ...emptyFilters, visibility: form.visibility };
+        const values = { ...emptyFilters, modality: form.modality };
         setForm(values);
         applyFilters(values);
     };
@@ -95,12 +102,13 @@ export default function CourseBrowse({
             <BrowseCatalog
                 courses={courses}
                 categories={categories}
+                kms={kms}
                 form={form}
                 loading={loading}
                 participantOpd={participantOpd}
                 onUpdateFilter={updateFilter}
                 onReset={resetFilters}
-                hasAppliedFilters={Boolean(filters.search || filters.category || filters.employee_status)}
+                hasAppliedFilters={Boolean(filters.search || filters.category || filters.employee_status || filters.opd_id)}
             />
         </ParticipantApp>
     );
@@ -109,6 +117,7 @@ export default function CourseBrowse({
 function BrowseCatalog({
     courses,
     categories,
+    kms = {},
     form,
     loading,
     participantOpd,
@@ -118,6 +127,7 @@ function BrowseCatalog({
 }: {
     courses: BrowseCourse[];
     categories: { id: number | string; title: string }[];
+    kms?: { categories?: EntryOption[]; opds?: EntryOption[] };
     form: typeof emptyFilters;
     loading: boolean;
     participantOpd: string | null;
@@ -125,7 +135,10 @@ function BrowseCatalog({
     onReset: () => void;
     hasAppliedFilters: boolean;
 }) {
-    const hasActiveFilters = Boolean(form.search || form.category);
+    const isKms = form.modality === 'kms';
+    const kmsCategories = kms.categories ?? [];
+    const kmsOpds = kms.opds ?? [];
+    const hasActiveFilters = Boolean(form.search || form.category || form.opd_id);
 
     return (
         <div className="browse-courses">
@@ -134,15 +147,46 @@ function BrowseCatalog({
                     <p className="participant-eyebrow">Jelajah Kelas</p>
                     <h1>Jelajah Kelas</h1>
                     <p>
-                        {participantOpd
-                            ? `Temukan kelas pembelajaran yang tersedia untuk OPD ${participantOpd}.`
-                            : 'Temukan kelas pembelajaran yang tersedia untuk Anda.'}
+                        {isKms
+                            ? 'Jelajahi materi literatur dan video dari seluruh OPD.'
+                            : participantOpd
+                                ? `Temukan kelas pembelajaran yang tersedia untuk OPD ${participantOpd}.`
+                                : 'Temukan kelas pembelajaran yang tersedia untuk Anda.'}
                     </p>
                 </div>
             </header>
 
-            <section className="browse-courses-collection" aria-label="Daftar kelas yang tersedia">
+            {isKms && <section className="browse-courses-collection" aria-label="Kategori dan OPD materi">
                 <div className="browse-courses-toolbar">
+                    <div role="group" aria-label="Filter kategori" className="browse-courses-categories">
+                        <button type="button" aria-pressed={!form.category} onClick={() => onUpdateFilter('category', '')} className={!form.category ? 'is-active' : ''}>Semua kategori</button>
+                        {kmsCategories.map((category) => (
+                            <button key={category.id} type="button" aria-pressed={String(form.category) === String(category.id)} onClick={() => onUpdateFilter('category', category.id)} className={String(form.category) === String(category.id) ? 'is-active' : ''}>{category.title}</button>
+                        ))}
+                    </div>
+                    <div className="browse-courses-search">
+                        <label htmlFor="browse-kms-search" className="sr-only">Cari judul materi</label>
+                        <box-icon name="search" color="currentColor" size="18px" aria-hidden="true" />
+                        <input
+                            id="browse-kms-search"
+                            type="search"
+                            value={form.search}
+                            onChange={(event) => onUpdateFilter('search', event.target.value)}
+                            placeholder="Cari judul materi…"
+                        />
+                    </div>
+                </div>
+                <div className="browse-courses-kms-opd">
+                    <label htmlFor="browse-kms-opd">OPD pemilik</label>
+                    <select id="browse-kms-opd" value={form.opd_id} onChange={(event) => onUpdateFilter('opd_id', event.target.value)}>
+                        <option value="">Semua OPD</option>
+                        {kmsOpds.map((opd) => <option key={opd.id} value={opd.id}>{opd.name} ({opd.courses_count})</option>)}
+                    </select>
+                </div>
+            </section>}
+
+            <section className="browse-courses-collection" aria-label="Daftar kelas yang tersedia">
+                {!isKms && <div className="browse-courses-toolbar">
                     <div role="group" aria-label="Filter kategori" className="browse-courses-categories">
                         <button type="button" aria-pressed={!form.category} onClick={() => onUpdateFilter('category', '')} className={!form.category ? 'is-active' : ''}>Semua kategori</button>
                         {categories.map((category) => (
@@ -160,7 +204,7 @@ function BrowseCatalog({
                             placeholder="Cari judul kelas…"
                         />
                     </div>
-                </div>
+                </div>}
 
                 <div className="browse-courses-results">
                     <p aria-live="polite">
@@ -230,7 +274,7 @@ function BrowseCard({ course }: { course: BrowseCourse }) {
                 <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-[6px] bg-[#FFF3E5] px-2 py-1 text-[10px] text-[#AD5700]">{course.category || 'Pelatihan ASN'}</span>
                     <span className="ml-auto text-[11px] text-primary">
-                        {course.visibility === 'public' ? 'Publik · Semua OPD' : `Privat · ${course.opd_name || 'OPD tertentu'}`}
+                        {course.modality === 'kms' ? `KMS · ${course.owner_opd_name || 'Semua OPD'}` : course.visibility === 'public' ? 'LMS · Publik' : `LMS · Privat · ${course.opd_name || 'OPD tertentu'}`}
                     </span>
                 </div>
 

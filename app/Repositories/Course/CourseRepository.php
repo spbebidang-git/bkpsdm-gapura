@@ -2,8 +2,10 @@
 
 namespace App\Repositories\Course;
 
+use App\Models\Course\Category;
 use App\Models\Course\Course;
 use App\Models\Course\Trainer;
+use App\Models\Identity\Opd;
 use App\Models\Identity\User;
 use App\Repositories\Course\Contracts\CourseRepositoryInterface;
 use App\Repositories\EloquentRepository;
@@ -74,7 +76,7 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
 
         $query = $this->query()
             ->select('courses.*')
-            ->with(['category', 'employeeStatus', 'opds'])
+            ->with(['category', 'employeeStatus', 'opds', 'opd'])
             ->withCount([
                 'learns as total_passed_count' => fn ($query) => $query->whereNotNull('finished_at'),
                 'reviews as rating_count',
@@ -97,6 +99,8 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
                             });
                     });
             })
+            ->when($filters['modality'] ?? null, fn ($query, $modality) => $query->where('modality', $modality))
+            ->when($filters['opd_id'] ?? null, fn ($query, $opdId) => $query->where('opd_id', $opdId))
             ->when($filters['visibility'] ?? null, fn ($query, $visibility) => $query->where('visibility', $visibility))
             ->when($filters['search'] ?? null, fn ($query, $search) => $query->where('title', 'like', "%{$search}%"))
             ->when($filters['category'] ?? null, fn ($query, $categoryId) => $query->where('category_id', $categoryId))
@@ -141,6 +145,7 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
                     ->selectRaw('count(distinct enrollments.participant_id)');
             }, 'total_participant_count')
             ->where('status', 'publish')
+            ->where('modality', 'lms')
             ->where('visibility', 'public')
             ->where(function ($query) use ($now) {
                 $query->where('access_mode', '!=', 'scheduled')
@@ -220,7 +225,44 @@ class CourseRepository extends EloquentRepository implements CourseRepositoryInt
 
     public function certificateCourses()
     {
-        return $this->query()->whereHas('learns', fn ($q) => $q->whereNotNull('finished_at'))->orderBy('title')->get(['id', 'title']);
+        return $this->query()
+            ->where('modality', 'lms')
+            ->whereHas('learns', fn ($q) => $q->whereNotNull('finished_at'))
+            ->orderBy('title')
+            ->get(['id', 'title']);
+    }
+
+    /** Opsi pintu masuk KMS: kategori dan OPD pemilik yang punya kelas KMS terbit. */
+    public function kmsEntryOptions(): array
+    {
+        $countKms = fn (callable $scope) => Course::query()
+            ->where('modality', 'kms')
+            ->where('status', 'publish')
+            ->where($scope)
+            ->count();
+
+        $categories = Category::query()
+            ->whereHas('courses', fn ($q) => $q->where('modality', 'kms')->where('status', 'publish'))
+            ->orderBy('title')
+            ->get(['id', 'title'])
+            ->map(fn ($row) => [
+                'id' => $row->id,
+                'title' => $row->title,
+                'courses_count' => $countKms(fn ($q) => $q->where('category_id', $row->id)),
+            ])->values()->all();
+
+        $opds = Opd::query()
+            ->where('is_active', true)
+            ->whereHas('courses', fn ($q) => $q->where('modality', 'kms')->where('status', 'publish'))
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn ($row) => [
+                'id' => $row->id,
+                'name' => $row->name,
+                'courses_count' => $countKms(fn ($q) => $q->where('opd_id', $row->id)),
+            ])->values()->all();
+
+        return ['categories' => $categories, 'opds' => $opds];
     }
 
     public function importCourses()

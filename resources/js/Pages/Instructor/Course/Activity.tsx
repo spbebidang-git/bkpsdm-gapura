@@ -18,9 +18,10 @@ function ActivityChoice({ title, description, icon, href, onClick }: ChoiceProps
         : <button type="button" onClick={onClick} className="activity-picker-choice">{content}</button>;
 }
 
-export default function Activity({ slug, type }: { slug: string; type: string }) {
+export default function Activity({ slug, type, modality = 'lms' }: { slug: string; type: string; modality?: string }) {
     const [activeSection, setActiveSection] = useState<Section>(null);
     const nested = activeSection !== null;
+    const isKms = modality === 'kms';
     const sectionTitle = activeSection === 'question' ? 'Jenis evaluasi' : activeSection === 'interactive' ? 'Jenis interaktif' : 'Jenis aktivitas';
     const description = activeSection === 'question' ? 'Pilih evaluasi untuk mengukur pemahaman pengguna.'
         : activeSection === 'interactive' ? 'Pilih metode interaktif untuk menyampaikan pembelajaran.'
@@ -38,11 +39,15 @@ export default function Activity({ slug, type }: { slug: string; type: string })
                     <li className={nested ? 'is-current' : ''} aria-current={nested ? 'step' : undefined}><span className="activity-picker-step-number">2</span>{nested ? activeSection === 'question' ? 'Evaluasi' : 'Interaktif' : 'Pilihan lanjutan'}</li>
                 </ol>
                 <div className="activity-picker-choices" key={activeSection || 'all'}>
-                    {!activeSection && <>
+                    {!activeSection && !isKms && <>
                         <ActivityChoice title="Pertanyaan" description="Buat pre-test, kuis, atau post-test untuk mengukur pemahaman pengguna." icon="bx-list-check" onClick={() => setActiveSection('question')} />
                         <ActivityChoice title="Tugas" description="Tetapkan instruksi dan bobot tugas untuk pengguna." icon="bx-task" href={createHref('task')} />
                         <ActivityChoice title="Interaktif" description="Tambahkan pertemuan daring atau presentasi video." icon="bx-video" onClick={() => setActiveSection('interactive')} />
                         <ActivityChoice title="Literatur" description="Unggah materi PDF yang dapat dibaca pengguna." icon="bx-book-open" href={createHref('literature')} />
+                    </>}
+                    {!activeSection && isKms && <>
+                        <ActivityChoice title="Literatur" description="Unggah materi PDF yang dapat dibaca pengguna." icon="bx-book-open" href={createHref('literature')} />
+                        <ActivityChoice title="Presentasi video" description="Unggah video dan atur durasi belajar pengguna." icon="bx-play-circle" href={createHref('video')} />
                     </>}
                     {activeSection === 'question' && <>
                         <ActivityChoice title="Pre-Test / Kuis" description="Ukur pemahaman awal pengguna sebelum materi dimulai." icon="bx-list-check" href={createHref('pre-test')} />

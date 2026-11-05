@@ -16,7 +16,7 @@ import type { ReactNode } from 'react';
  *   <Button variant="success" type="submit" loading={processing}>Simpan</Button>
  *   <Button href="/sign-in" pill>Sign In</Button>
  *   <Button variant="primary" radius="sm">Simpan</Button>
- *   <Button href="/course" size="lg" radius="xl">Lihat semua kelas</Button>
+ *   <Button href="/course/lms" size="lg" radius="xl">Lihat semua kelas</Button>
  */
 
 const focusRing =

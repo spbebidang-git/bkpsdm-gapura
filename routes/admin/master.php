@@ -94,8 +94,8 @@ Route::prefix('course')
                 });
 
                 // Pre/Post test
-                Route::resource('pre-test', PreTestController::class);
-                Route::resource('post-test', PostTestController::class);
+                Route::resource('pre-test', PreTestController::class)->middleware('course.activity:pre-test');
+                Route::resource('post-test', PostTestController::class)->middleware('course.activity:post-test');
 
                 // Question import
                 Route::controller(ImportQuestionController::class)->prefix('{activity}/import-question')->name('import-question.')->group(function () {
@@ -121,11 +121,11 @@ Route::prefix('course')
 
                 // Task
                 Route::get('task/{activityId}/result', [TaskController::class, 'result'])->name('result');
-                Route::resource('task', TaskController::class);
+                Route::resource('task', TaskController::class)->middleware('course.activity:task');
 
                 // Interactive: meeting + video
                 Route::post('/{activityId}/meeting/end-meeting/', [OnlineMeetingController::class, 'endMeeting'])->name('meeting.end-meeting');
-                Route::resource('meeting', OnlineMeetingController::class);
+                Route::resource('meeting', OnlineMeetingController::class)->middleware('course.activity:meeting');
                 Route::resource('video', PresentationVideoController::class);
 
                 // Literature

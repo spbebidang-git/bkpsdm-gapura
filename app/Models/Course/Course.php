@@ -2,12 +2,12 @@
 
 namespace App\Models\Course;
 
+use App\Models\Concerns\TracksModifier;
 use App\Models\Course\Activity\Activity;
 use App\Models\Identity\EmployeeStatus;
 use App\Models\Identity\Opd;
 use App\Models\Learning\Enrollment;
 use App\Models\Learning\Learn;
-use App\Models\Concerns\TracksModifier;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -22,14 +22,24 @@ class Course extends Model
         'PNS',
         'CPNS',
         'PPPK',
-        'THL'
+        'THL',
     ];
 
     public static $directoryImage = 'assets/media/images/courses/';
 
     protected $guarded = [];
 
-    protected $attributes = ['visibility' => 'private', 'status' => 'draft'];
+    protected $attributes = ['visibility' => 'private', 'status' => 'draft', 'modality' => 'lms'];
+
+    public function isKms(): bool
+    {
+        return ($this->attributes['modality'] ?? 'lms') === 'kms';
+    }
+
+    public function allowsActivityType(string $type): bool
+    {
+        return ! $this->isKms() || in_array($type, ['literature', 'video'], true);
+    }
 
     public function opds()
     {
@@ -39,6 +49,7 @@ class Course extends Model
     public function audienceData(): array
     {
         $opds = $this->visibility === 'public' ? collect() : $this->opds;
+
         return [
             'visibility' => $this->visibility,
             'opd_ids' => $opds->pluck('id')->all(),
@@ -95,15 +106,15 @@ class Course extends Model
 
     public function thumbnailSrc(): Attribute
     {
-        if (!$this->thumbnail) {
-            return Attribute::get(fn() => asset('assets/media/images/static/default-class.jpg'));
+        if (! $this->thumbnail) {
+            return Attribute::get(fn () => asset('assets/media/images/static/default-class.jpg'));
         }
 
         if ($this->thumbnail === 'default-class.jpg') {
-            return Attribute::get(fn() => asset('assets/media/images/static/default-class.jpg'));
+            return Attribute::get(fn () => asset('assets/media/images/static/default-class.jpg'));
         }
 
-        return Attribute::get(fn() => asset(self::$directoryImage . $this->thumbnail));
+        return Attribute::get(fn () => asset(self::$directoryImage.$this->thumbnail));
     }
 
     /** BC frontend/API: schedule|unschedule dari access_mode. */
@@ -136,12 +147,12 @@ class Course extends Model
 
     public function totalParticipant(): Attribute
     {
-        return Attribute::get(fn() => $this->enrollments()->distinct()->count('participant_id'));
+        return Attribute::get(fn () => $this->enrollments()->distinct()->count('participant_id'));
     }
 
     public function totalPassed(): Attribute
     {
-        return Attribute::get(fn() => $this->learns()->where('finished_at', '!=', null)->count());
+        return Attribute::get(fn () => $this->learns()->where('finished_at', '!=', null)->count());
     }
 
     public function efektifitas(): Attribute
@@ -164,7 +175,7 @@ class Course extends Model
             $averageStar = 0;
         }
 
-        return Attribute::get(fn() => round($averageStar, 2));
+        return Attribute::get(fn () => round($averageStar, 2));
     }
 
     public function getRating()

@@ -2,11 +2,6 @@
 .course-index-content { width: 100%; max-width: 1280px; margin: 0 auto; padding: 36px 20px 56px; }
 .course-index-heading { max-width: 800px; margin-bottom: 24px; }
 .course-index-eyebrow { margin-bottom: 12px; font-family: Poppins, sans-serif; font-size: 10px; font-weight: 600; letter-spacing: .14em; color: #018083; }
-.course-index-tabs { display: inline-flex; gap: 6px; padding: 5px; border: 1px solid #DCE7E2; border-radius: 12px; margin-bottom: 24px; background: #EDF3F0; }
-.course-index-tabs button { padding: 10px 18px; border-radius: 8px; color: #66778C; font-family: Poppins, sans-serif; font-size: 13px; font-weight: 600; transition: background .15s, color .15s; }
-.course-index-tabs button span { margin-left: 6px; font-size: 11px; font-weight: 400; }
-.course-index-tabs button.is-active { color: #075D5E; background: #FFFFFF; box-shadow: 0 2px 6px rgba(15,61,62,.08); }
-.course-index-tabs button:focus-visible { outline: 2px solid #018083; outline-offset: 2px; }
 .course-index-layout { display: grid; gap: 28px; }
 .course-index-filters { display: grid; gap: 18px; align-items: end; padding: 20px; border: 1px solid #DFE9E4; border-radius: 14px; background: #FFFFFF; scroll-margin-top: 100px; }
 .course-index-search { position: relative; align-self: end; }
@@ -31,12 +26,40 @@
     .course-index-filter-group { grid-template-columns: 130px minmax(0, 1fr); align-items: start; }
 }
 @media (max-width: 639px) {
-    .course-index-tabs { display: flex; }
-    .course-index-tabs button { flex: 1; padding: 10px 12px; }
-    .course-index-tabs button span { display: block; margin: 3px 0 0; }
     .course-index-filters { padding: 16px; gap: 14px; }
     .course-index-filter-group h3 { padding-top: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
     .public-course-index a, .public-course-index button, .public-course-index input { transition: none; }
+}
+
+/* KMS: grid folder OPD */
+.kms-folder-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
+.kms-folder-toolbar .course-index-search { flex: 1 1 260px; min-width: 0; }
+.kms-folder-toolbar p { flex: 0 0 auto; font-size: 12px; color: #66778C; }
+
+.kms-folder-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.kms-folder-card { display: grid; grid-template-rows: auto 1fr auto; gap: 10px; width: 100%; padding: 16px; border: 1px solid #E3EDE8; border-radius: 14px; background: #FFFFFF; text-align: left; transition: border-color .15s, box-shadow .15s, transform .15s; }
+.kms-folder-card:hover { border-color: #01808380; box-shadow: 0 8px 24px rgba(1,128,131,.12); transform: translateY(-2px); }
+.kms-folder-card:focus-visible { outline: 2px solid #018083; outline-offset: 2px; }
+.kms-folder-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 11px; background: linear-gradient(135deg, #019B91, #016668); }
+.kms-folder-name { font-family: Poppins, sans-serif; font-size: 13px; font-weight: 600; line-height: 1.45; color: #075D5E; overflow-wrap: anywhere; }
+.kms-folder-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.kms-folder-count { font-size: 11px; font-weight: 500; color: #66778C; }
+
+/* KMS: halaman folder OPD */
+.kms-opd-back { display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 0 14px; margin-bottom: 18px; border: 1px solid rgba(1,128,131,.3); border-radius: 10px; background: #FFFFFF; font-family: Poppins, sans-serif; font-size: 12px; font-weight: 600; color: #018083; transition: background .15s, border-color .15s; }
+.kms-opd-back:hover { border-color: #018083; background: #EAF5F1; }
+.kms-opd-back:focus-visible { outline: 2px solid #018083; outline-offset: 2px; }
+
+.course-kms-empty { display: grid; justify-items: center; gap: 6px; padding: 48px 20px; border: 1px dashed #BDE8E2; border-radius: 16px; background: #FFFFFF; text-align: center; }
+.course-kms-empty h2 { font-family: Poppins, sans-serif; font-size: 16px; font-weight: 600; color: #075D5E; }
+.course-kms-empty p { max-width: 340px; font-size: 13px; line-height: 1.7; color: #66778C; }
+.course-kms-empty .course-index-reset { margin-top: 8px; }
+
+@media (min-width: 768px) {
+    .kms-folder-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+}
+@media (min-width: 1024px) {
+    .kms-folder-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }

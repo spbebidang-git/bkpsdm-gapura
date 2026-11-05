@@ -32,9 +32,13 @@ class CourseController
         if (request()->ajax() && ! request()->header('X-Inertia')) {
             return DataTables::of($this->course->getByAdmin($this->isRestrictedTrainer(request()->user()) ? request()->user()->id : null))
                 ->filter(function ($instance) {
-                    foreach (['status', 'type'] as $field) {
+                    foreach (['status', 'type', 'modality'] as $field) {
                         $value = request()->input('course_'.$field);
-                        $allowed = $field === 'status' ? ['publish', 'draft'] : ['schedule', 'unschedule'];
+                        $allowed = match ($field) {
+                            'status' => ['publish', 'draft'],
+                            'type' => ['schedule', 'unschedule'],
+                            default => ['kms', 'lms'],
+                        };
                         if (in_array($value, $allowed, true)) {
                             $instance->collection = $instance->collection->where($field, $value)->values();
                         }

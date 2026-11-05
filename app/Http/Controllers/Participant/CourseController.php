@@ -2,19 +2,24 @@
 
 namespace App\Http\Controllers\Participant;
 
+use App\Models\Course\Category;
 use App\Models\Course\Course;
+use App\Services\Course\CourseAudience;
 use App\Services\Course\CourseService;
 use App\Services\Learning\LearnService;
 use App\Services\Learning\ParticipantEnrollmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class CourseController
 {
-    protected $course, $participantId, $learn;
+    protected $course;
+
+    protected $participantId;
+
+    protected $learn;
 
     public function __construct(
         CourseService $courseService,
@@ -29,14 +34,16 @@ class CourseController
     {
         try {
             app(ParticipantEnrollmentService::class)->archiveExpired((string) $this->participantId);
+
             return Inertia::render('Participant/Course/Index', [
-                'courses' => $this->course->getByParticipant($this->participantId)
+                'courses' => $this->course->getByParticipant($this->participantId),
             ]);
         } catch (\Throwable $e) {
             \Log::error('Daftar kelas pengguna gagal dimuat.', ['event' => 'participant.course.list_failed',
-                'actor_id'  => $this->participantId,
+                'actor_id' => $this->participantId,
                 'exception' => $e,
             ]);
+
             return redirect()->route('home')
                 ->with('danger', 'Terjadi kesalahan saat memuat daftar kelas. Silakan coba lagi.');
         }
@@ -47,15 +54,21 @@ class CourseController
         $filters = $request->validate([
             'search' => ['nullable', 'string', 'max:100'],
             'visibility' => ['nullable', Rule::in(['public', 'private'])],
+            'modality' => ['nullable', Rule::in(['kms', 'lms'])],
+            'opd_id' => ['nullable', 'string', 'exists:opds,id'],
             'employee_status' => ['nullable', 'string', Rule::in(['CPNS', 'PNS', 'PPPK', 'PPPK Paruh Waktu'])],
             'category' => ['nullable', 'string', 'exists:categories,id'],
         ]);
 
+        $filters['modality'] ??= 'lms';
+        $isKms = $filters['modality'] === 'kms';
+
         return Inertia::render('Course/Browse', [
-            'courses' => $this->course->getAllCourse($filters, $request->user()),
-            'categories' => \App\Models\Course\Category::query()
+            'courses' => $this->course->getAllCourse($filters, $request->user(), restrictToAudience: ! $isKms),
+            'categories' => Category::query()
                 ->orderBy('title')
                 ->get(['id', 'title']),
+            'kms' => $this->course->kmsEntryOptions(),
             'filters' => $filters,
         ]);
     }
@@ -111,12 +124,12 @@ class CourseController
                 }
             }
 
-            # tgl aktivasi , tgl selesai , nilai post test, jam pelajaran
+            // tgl aktivasi , tgl selesai , nilai post test, jam pelajaran
             $data = [
                 'activation_date' => isset($enrollment) && $enrollment?->enrolled_at
                     ? $enrollment->enrolled_at->format('Y-m-d')
                     : null,
-                'finished_at'   => $this->learn->getFinishedAt($course->id, $this->participantId),
+                'finished_at' => $this->learn->getFinishedAt($course->id, $this->participantId),
                 'post_test_avg' => $this->learn->getPostTestAvg($course->id, $this->participantId),
                 'jam_pelajaran' => $course->jam_pelajaran,
                 'url_certificate' => $learnModel ? $learnModel->url_certificate : null,
@@ -131,23 +144,24 @@ class CourseController
 
             return Inertia::render('Participant/Course/Show', [
                 'course' => [
-                    'id'               => $course->id,
-                    'type'             => $course->type,
-                    'title'            => $course->title,
-                    'employee_status'  => $course->employeeStatus->pluck('title')->map(fn($t) => trim($t))->join(', '),
-                    'short_description'=> $course->short_description,
-                    'description'      => $course->description,
-                    'teaser_video'     => $course->teaser_video,
-                    'slug'             => $course->slug,
-                    'quota'            => $course->quota,
-                    'thumbnail'        => $course->thumbnail_src,
-                    'category'         => $course->category->title,
-                    
-                    'total_participant'=> $course->total_participant,
-                    'status'           => $course->status,
+                    'id' => $course->id,
+                    'modality' => $course->modality ?? 'lms',
+                    'type' => $course->type,
+                    'title' => $course->title,
+                    'employee_status' => $course->employeeStatus->pluck('title')->map(fn ($t) => trim($t))->join(', '),
+                    'short_description' => $course->short_description,
+                    'description' => $course->description,
+                    'teaser_video' => $course->teaser_video,
+                    'slug' => $course->slug,
+                    'quota' => $course->quota,
+                    'thumbnail' => $course->thumbnail_src,
+                    'category' => $course->category->title,
+
+                    'total_participant' => $course->total_participant,
+                    'status' => $course->status,
                     ...$course->audienceData(),
-                    'access_hours'     => $course->default_access_hours,
-                    'schedule'         => $firstSchedule ? [
+                    'access_hours' => $course->default_access_hours,
+                    'schedule' => $firstSchedule ? [
                         'date' => $course->type === 'schedule' ? $firstSchedule->date : null,
                         'time' => $course->type === 'schedule' ? $firstSchedule->time : null,
                         'quota' => $firstSchedule->quota,
@@ -166,14 +180,15 @@ class CourseController
                         'date' => $review->created_at?->format('Y-m-d'),
                     ])->values(),
                 ],
-                'learn' => $data
+                'learn' => $data,
             ]);
         } catch (\Throwable $e) {
             \Log::error('Detail kelas pengguna gagal dimuat.', ['event' => 'participant.course.show_failed',
                 'exception' => $e,
                 'course_id' => $course->id,
-                'actor_id'   => $this->participantId,
+                'actor_id' => $this->participantId,
             ]);
+
             return redirect()->route('participant.course.index')
                 ->with('danger', 'Terjadi kesalahan saat memuat halaman kelas. Silakan coba lagi.');
         }
@@ -182,7 +197,7 @@ class CourseController
     public function reactivate(Course $course)
     {
         $participantId = (string) Auth::id();
-        abort_unless(app(\App\Services\Course\CourseAudience::class)->canEnroll($course, request()->user()), 403);
+        abort_unless(app(CourseAudience::class)->canEnroll($course, request()->user()), 403);
         $enrollmentService = app(ParticipantEnrollmentService::class);
         $enrollmentService->reactivate($course, $participantId);
 

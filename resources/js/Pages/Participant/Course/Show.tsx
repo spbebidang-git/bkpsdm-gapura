@@ -7,6 +7,7 @@ import DOMPurify from 'dompurify';
 import '../../../../css/participant-course-detail.css';
 
 type CourseDetail = {
+    modality?: 'kms' | 'lms';
     title: string;
     slug: string;
     type: string;
@@ -52,7 +53,8 @@ function Icon({ name, size = '22px' }: { name: string; size?: string }) {
 export default function Show({ course, learn }: { course: CourseDetail; learn: LearningSummary }) {
     const [tab, setTab] = useState('information');
     const [reactivating, setReactivating] = useState(false);
-    const tabs = [{ id: 'information', label: 'Informasi Program', icon: 'info-circle' }, { id: 'guide', label: 'Panduan Pelatihan', icon: 'book-reader' }, { id: 'certificate', label: 'Sertifikat', icon: 'award' }, { id: 'reviews', label: 'Ulasan', icon: 'star' }];
+    const isKms = course.modality === 'kms';
+    const tabs = [{ id: 'information', label: 'Informasi Program', icon: 'info-circle' }, { id: 'guide', label: 'Panduan Pelatihan', icon: 'book-reader' }, ...(isKms ? [] : [{ id: 'certificate', label: 'Sertifikat', icon: 'award' }]), { id: 'reviews', label: 'Ulasan', icon: 'star' }];
     const completed = Boolean(learn.finished_at);
     const scheduled = course.type === 'schedule' || course.type === 'scheduled';
     const score = Number(learn.post_test_avg ?? 0);
@@ -84,7 +86,7 @@ export default function Show({ course, learn }: { course: CourseDetail; learn: L
         { icon: 'calendar-check', label: 'Tanggal aktivasi', value: formatDate(learn.activation_date) || 'Belum tercatat', note: 'Awal keikutsertaan Anda' },
         { icon: 'flag', label: 'Tanggal selesai', value: formatDate(learn.finished_at) || 'Belum selesai', note: completed ? 'Pembelajaran telah diselesaikan' : 'Selesaikan rangkaian pembelajaran' },
         { icon: 'bar-chart-alt-2', label: 'Rata-rata post-test', value: Number.isFinite(score) ? score.toLocaleString('id-ID', { maximumFractionDigits: 2 }) : '—', note: 'Nilai yang tercatat saat ini' },
-        { icon: 'time-five', label: 'Jam pelajaran', value: `${learn.jam_pelajaran ?? 0} JP`, note: 'Alokasi pembelajaran kelas' },
+        ...(isKms ? [] : [{ icon: 'time-five', label: 'Jam pelajaran', value: `${learn.jam_pelajaran ?? 0} JP`, note: 'Alokasi pembelajaran kelas' }]),
     ];
 
     return <App>
@@ -142,7 +144,7 @@ export default function Show({ course, learn }: { course: CourseDetail; learn: L
                             <div className="my-course-program-meta">
                                 <div><span>Pengajar</span>{course.trainers.length ? course.trainers.map(trainer => <div key={trainer.id} className="my-course-trainer"><img src={trainer.photo} alt="" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/assets/media/images/static/default-profile.jpg'; }} /><div><strong>{trainer.name}</strong><p>{trainer.position || 'Pengajar pelatihan'}</p></div></div>) : <strong>Belum ditetapkan</strong>}</div>
                                 <div><span>Jadwal kelas</span><strong>{scheduled ? formatDate(course.schedule?.date ?? null) || 'Belum ditetapkan' : 'Belajar sesuai ritme Anda'}</strong><p>{scheduled ? course.schedule?.time || 'Waktu belum ditetapkan' : 'Akses materi secara mandiri'}</p></div>
-                                <div><span>Alokasi belajar</span><strong>{learn.jam_pelajaran ?? 0} JP</strong><p>{course.access_hours ? `Masa akses ${course.access_hours} jam` : 'Mengikuti ketentuan kelas'}</p></div>
+                                {!isKms && <div><span>Alokasi belajar</span><strong>{learn.jam_pelajaran ?? 0} JP</strong><p>{course.access_hours ? `Masa akses ${course.access_hours} jam` : 'Mengikuti ketentuan kelas'}</p></div>}
                             </div>
                         </section>
                         <section className="my-course-about"><h2>Apa yang akan Anda pelajari?</h2><p className="my-course-section-intro">Rangkaian materi dan aktivitas dalam kelas ini.</p>{course.activities.length ? <ul className="my-course-checklist">{course.activities.map(activity => <li key={activity.id}><Icon name="check" size="18px" /><span>{activity.title}<small>{({ video: 'Video pembelajaran', literature: 'Bahan bacaan', task: 'Tugas', pre_test: 'Pre-test', post_test: 'Post-test', meeting: 'Pertemuan daring' } as Record<string, string>)[activity.type] || 'Aktivitas pembelajaran'}</small></span></li>)}</ul> : <p className="my-course-section-intro">Materi pelatihan belum tersedia.</p>}</section>
@@ -163,7 +165,7 @@ export default function Show({ course, learn }: { course: CourseDetail; learn: L
                     </section>
 
                     </>}
-                    {tab === 'certificate' && <>
+                    {tab === 'certificate' && !isKms && <>
                     <section className="my-course-certificate">
                         <div className="my-course-certificate__header"><span className="my-course-certificate__icon"><Icon name="award" size="32px" /></span><span className={`my-course-certificate__badge ${certificateAvailable ? 'is-available' : ''}`}>{certificateAvailable ? 'Tersedia' : 'Belum tersedia'}</span></div>
                         <p className="my-course-eyebrow">PENCAPAIAN ANDA</p>

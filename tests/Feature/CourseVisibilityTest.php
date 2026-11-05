@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Course\Activity\Activity;
+use App\Models\Course\Activity\Interactive;
 use App\Models\Course\Course;
-use App\Models\Course\Schedule;
 use App\Models\Identity\EmployeeStatus;
 use App\Models\Identity\Opd;
 use App\Models\Identity\User;
@@ -14,8 +14,8 @@ use App\Services\Course\CourseAudience;
 use App\Services\Course\CourseService;
 use App\Services\Learning\ParticipantEnrollmentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
+use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -33,6 +33,7 @@ class CourseVisibilityTest extends TestCase
         Role::findOrCreate('participant', 'web');
         $user = User::factory()->create(['opd_id' => $opd?->id, 'employee_status_id' => $status?->id]);
         $user->assignRole('participant');
+
         return $user;
     }
 
@@ -42,6 +43,7 @@ class CourseVisibilityTest extends TestCase
         $course->opds()->sync($opds);
         $course->employeeStatus()->sync([$status->id]);
         $course->schedules()->create([]);
+
         return $course;
     }
 
@@ -54,7 +56,7 @@ class CourseVisibilityTest extends TestCase
         $private = $this->course('private', [$opd->id], $status);
 
         foreach (['public' => $public, 'private' => $private] as $visibility => $course) {
-            $this->actingAs($user)->get(route('course.index', ['visibility' => $visibility]))
+            $this->actingAs($user)->get(route('course.lms', ['visibility' => $visibility]))
                 ->assertInertia(fn (Assert $page) => $page
                     ->where('filters.visibility', $visibility)
                     ->has('courses', 1)
@@ -70,9 +72,9 @@ class CourseVisibilityTest extends TestCase
         $private = $this->course('private', [$opd->id], $status);
         $draft = $this->course('public', [], $status);
         $draft->update(['status' => 'draft']);
-        $this->get(route('course.index'))->assertInertia(fn (Assert $page) => $page
+        $this->get(route('course.lms'))->assertInertia(fn (Assert $page) => $page
             ->has('courses', 2));
-        $this->get(route('course.index', ['visibility' => 'private']))->assertInertia(fn (Assert $page) => $page
+        $this->get(route('course.lms', ['visibility' => 'private']))->assertInertia(fn (Assert $page) => $page
             ->has('courses', 1)->where('courses.0.id', $private->id));
         $this->get(route('home'))->assertInertia(fn (Assert $page) => $page
             ->has('courses', 1)->where('courses.0.id', $public->id));
@@ -87,19 +89,20 @@ class CourseVisibilityTest extends TestCase
 
     public function test_catalog_lists_private_classes_regardless_of_login_or_opd_while_browse_stays_scoped(): void
     {
-        $a = $this->opd('001'); $b = $this->opd('002');
+        $a = $this->opd('001');
+        $b = $this->opd('002');
         $pns = EmployeeStatus::create(['title' => 'PNS']);
         $forA = $this->course('private', [$a->id], $pns);
         $forB = $this->course('private', [$b->id], $pns);
 
         // Tamu (belum login) tetap melihat semua kelas privat di katalog.
-        $this->get(route('course.index', ['visibility' => 'private']))
+        $this->get(route('course.lms', ['visibility' => 'private']))
             ->assertInertia(fn (Assert $page) => $page->has('courses', 2));
 
         // Peserta OPD A juga melihat kelas privat untuk OPD lain di katalog;
         // pembatasnya diterapkan saat aktivasi, bukan saat menjelajah.
         $user = $this->participant($a, $pns);
-        $this->actingAs($user)->get(route('course.index', ['visibility' => 'private']))
+        $this->actingAs($user)->get(route('course.lms', ['visibility' => 'private']))
             ->assertInertia(fn (Assert $page) => $page->has('courses', 2));
         $this->actingAs($user)->get(route('course.show', $forB->slug))->assertOk();
         $this->assertFalse(app(CourseAudience::class)->canEnroll($forB->fresh(), $user));
@@ -113,7 +116,9 @@ class CourseVisibilityTest extends TestCase
 
     public function test_private_requires_both_status_and_any_of_the_target_opds(): void
     {
-        $a = $this->opd('001'); $b = $this->opd('002'); $c = $this->opd('003');
+        $a = $this->opd('001');
+        $b = $this->opd('002');
+        $c = $this->opd('003');
         $pns = EmployeeStatus::create(['title' => 'PNS']);
         $pppk = EmployeeStatus::create(['title' => 'PPPK']);
         $private = $this->course('private', [$a->id, $b->id], $pns);
@@ -134,7 +139,8 @@ class CourseVisibilityTest extends TestCase
 
     public function test_enrollment_checks_status_and_schedule_before_creating_progress(): void
     {
-        $a = $this->opd('001'); $b = $this->opd('002');
+        $a = $this->opd('001');
+        $b = $this->opd('002');
         $pns = EmployeeStatus::create(['title' => 'PNS']);
         $pppk = EmployeeStatus::create(['title' => 'PPPK']);
         $public = $this->course('public', [], $pns);
@@ -193,7 +199,8 @@ class CourseVisibilityTest extends TestCase
 
     public function test_existing_participants_keep_access_after_profile_changes_without_extending_expiry(): void
     {
-        $a = $this->opd('001'); $b = $this->opd('002');
+        $a = $this->opd('001');
+        $b = $this->opd('002');
         $pns = EmployeeStatus::create(['title' => 'PNS']);
         $course = $this->course('private', [$a->id], $pns);
         $user = $this->participant($a, $pns);
@@ -202,7 +209,7 @@ class CourseVisibilityTest extends TestCase
         $enrollment = app(ParticipantEnrollmentService::class)->activate($course, $schedule, $user->id);
         $ends = $enrollment->access_ends_at->toDateTimeString();
         $activity = Activity::create(['course_id' => $course->id, 'type' => 'video', 'title' => 'Materi']);
-        \App\Models\Course\Activity\Interactive::create(['activity_id' => $activity->id, 'type' => 'video', 'url' => 'https://www.youtube.com/embed/test', 'duration' => 60]);
+        Interactive::create(['activity_id' => $activity->id, 'type' => 'video', 'url' => 'https://www.youtube.com/embed/test', 'duration' => 60]);
         $user->update(['opd_id' => $b->id, 'employee_status_id' => null]);
         $course->opds()->sync([$b->id]);
         $this->actingAs($user)->get(route('course.show', $course->slug))->assertOk();
@@ -230,7 +237,8 @@ class CourseVisibilityTest extends TestCase
         $schedule->participants()->attach($user->id, ['created_at' => $registered]);
         $learn = Learn::create(['course_id' => $course->id, 'participant_id' => $user->id, 'created_at' => $registered]);
         $migration = require database_path('migrations/2026_10_21_000003_preserve_legacy_course_registrations.php');
-        $migration->up(); $migration->up();
+        $migration->up();
+        $migration->up();
         $enrollment = Enrollment::sole();
         $this->assertSame($registered->toDateTimeString(), $enrollment->enrolled_at->toDateTimeString());
         $this->assertSame($registered->copy()->addHours(72)->toDateTimeString(), $enrollment->access_ends_at->toDateTimeString());
@@ -246,15 +254,18 @@ class CourseVisibilityTest extends TestCase
         $private = Course::factory()->create(['opd_id' => $opd->id]);
         $timestamp = $private->getRawOriginal('updated_at');
         $migration = require database_path('migrations/2026_10_21_000002_add_course_visibility_and_target_opds.php');
-        $migration->down(); $migration->up();
+        $migration->down();
+        $migration->up();
         $this->assertSame('public', $public->fresh()->visibility);
         $this->assertSame('private', $private->fresh()->visibility);
         $this->assertSame([$opd->id], $private->fresh()->opds->pluck('id')->all());
         $this->assertSame($timestamp, $private->fresh()->getRawOriginal('updated_at'));
     }
+
     public function test_admin_integration_exposes_visibility_and_all_opds_behind_token_authentication(): void
     {
-        $a = $this->opd('001'); $b = $this->opd('002');
+        $a = $this->opd('001');
+        $b = $this->opd('002');
         $pns = EmployeeStatus::create(['title' => 'PNS']);
         $course = $this->course('private', [$a->id, $b->id], $pns);
         $url = route('api.v1.courses.show', $course->slug);
@@ -262,11 +273,10 @@ class CourseVisibilityTest extends TestCase
         Role::findOrCreate('super_admin', 'web');
         $admin = User::factory()->create();
         $admin->assignRole('super_admin');
-        \Laravel\Sanctum\Sanctum::actingAs($admin, []);
+        Sanctum::actingAs($admin, []);
         $this->postJson($url)->assertForbidden();
-        \Laravel\Sanctum\Sanctum::actingAs($admin, ['api:read']);
+        Sanctum::actingAs($admin, ['api:read']);
         $this->postJson($url)->assertOk()->assertJsonPath('data.visibility', 'private')
             ->assertJsonCount(2, 'data.opds')->assertJsonCount(2, 'data.opd_ids');
     }
-
 }

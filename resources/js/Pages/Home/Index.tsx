@@ -62,7 +62,7 @@ export default function Home({ courses = [], bannerUrl = '/assets/media/images/s
                     )}
 
                     <div className="mt-9 text-center">
-                        <Button href="/course" variant="secondary" size="md" radius="lg" className="group min-h-11 w-full !rounded-[10px] !border-[#39A9A1] !bg-transparent px-6 !text-primary hover:!border-primary hover:!bg-primary hover:!text-white sm:w-auto">
+                        <Button href="/course/lms" variant="secondary" size="md" radius="lg" className="group min-h-11 w-full !rounded-[10px] !border-[#39A9A1] !bg-transparent px-6 !text-primary hover:!border-primary hover:!bg-primary hover:!text-white sm:w-auto">
                             Lihat semua kelas
                             <i className="bx bx-right-arrow-alt text-xl" aria-hidden="true" />
                         </Button>

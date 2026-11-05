@@ -61,6 +61,8 @@ Route::middleware(HandleInertiaRequests::class)->group(function () {
         // Course catalog. Access: guest + participant; enroll requires `participant`.
         Route::controller(CourseController::class)->prefix('course')->name('course.')->group(function () {
             Route::get('/', 'index')->name('index');
+            Route::get('/kms', 'kms')->name('kms');
+            Route::get('/lms', 'lms')->name('lms');
             Route::get('/{course:slug}', 'show')->name('show');
             Route::post('/{course:slug}/{schedule}', 'store')
                 ->name('store')

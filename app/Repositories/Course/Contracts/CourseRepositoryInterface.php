@@ -48,6 +48,8 @@ interface CourseRepositoryInterface extends BaseRepositoryInterface
 
     public function certificateCourses();
 
+    public function kmsEntryOptions(): array;
+
     public function importCourses();
 
     public function assignedTrainerIds(Course $course): array;

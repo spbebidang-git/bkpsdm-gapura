@@ -61,6 +61,7 @@ class CourseService
 
                 return [
                     'id' => $row->id,
+                    'modality' => $row->modality ?? 'lms',
                     'type' => $row->type,
                     'title' => $row->title,
                     'employee_status' => $row->employeeStatus->pluck('title')->map(fn ($t) => trim($t))->join(', '),
@@ -72,6 +73,8 @@ class CourseService
                     'total_participant' => (int) $row->total_participant_count,
                     'total_passed' => (int) $row->total_passed_count,
                     'status' => $row->status,
+                    'owner_opd_id' => $row->opd_id ?? null,
+                    'owner_opd_name' => $row->opd?->name,
                     ...$row->audienceData(),
                     'star' => $rating,
                 ];
@@ -125,6 +128,7 @@ class CourseService
 
                 return [
                     'id' => $row->id,
+                    'modality' => $row->modality ?? 'lms',
                     'type' => $row->type,
                     'title' => $row->title,
                     'employee_status' => $row->employeeStatus->pluck('title')->map(fn ($t) => trim($t))->join(', '),
@@ -136,6 +140,8 @@ class CourseService
                     'total_participant' => (int) $row->total_participant_count,
                     'total_passed' => (int) $row->total_passed_count,
                     'status' => $row->status,
+                    'owner_opd_id' => $row->opd_id ?? null,
+                    'owner_opd_name' => $row->opd?->name,
                     ...$row->audienceData(),
                     'star' => $rating,
                 ];
@@ -145,6 +151,12 @@ class CourseService
     public function getByInstructor($instructorId = null)
     {
         return $this->getByAdmin($instructorId);
+    }
+
+    /** Opsi pintu masuk KMS: kategori dan OPD pemilik kelas KMS terbit. */
+    public function kmsEntryOptions(): array
+    {
+        return $this->courses->kmsEntryOptions();
     }
 
     public function getByParticipant($participantId)
@@ -161,6 +173,7 @@ class CourseService
 
                 return [
                     'id' => $row->course->id,
+                    'modality' => $row->course->modality ?? 'lms',
                     'type' => $row->course->type,
                     'title' => $row->course->title,
                     'slug' => $row->course->slug,
@@ -188,6 +201,7 @@ class CourseService
             ->map(function ($row) {
                 return [
                     'id' => $row->id,
+                    'modality' => $row->modality ?? 'lms',
                     'type' => $row->type,
                     'title' => $row->title,
                     'slug' => $row->slug,
@@ -219,9 +233,12 @@ class CourseService
     public function createCourse($data)
     {
         return DB::transaction(function () use ($data) {
+            $isKms = ($data['modality'] ?? 'lms') === 'kms';
+
             $course = $this->courses->create([
                 'category_id' => $data['category'],
-                'access_mode' => Course::mapTypeToAccessMode($data['type'] ?? null),
+                'modality' => $isKms ? 'kms' : 'lms',
+                'access_mode' => $isKms ? 'open' : Course::mapTypeToAccessMode($data['type'] ?? null),
                 'title' => $data['title'],
                 'slug' => str()->slug($data['title']),
                 'short_description' => sanitize_plain_text($data['short_description']),
@@ -229,16 +246,16 @@ class CourseService
                 'thumbnail' => UploadMedia::file($data['thumbnail'], Course::$directoryImage),
                 'teaser_video' => $data['teaser_video'],
                 'default_access_hours' => $data['expired'] ?? null,
-                'jam_pelajaran' => $data['jam_pelajaran'],
+                'jam_pelajaran' => $isKms ? 0 : $data['jam_pelajaran'],
                 'status' => $data['status'],
-                'visibility' => $data['visibility'] ?? 'private',
-                'opd_id' => null,
+                'visibility' => $isKms ? 'public' : ($data['visibility'] ?? 'private'),
+                'opd_id' => $isKms ? ($data['opd_id'] ?? null) : null,
                 'updated_at' => now(),
             ]);
 
             $this->courses->syncEmployeeStatuses($course, $data['employee_status']);
             $this->courses->syncTrainers($course, $data['trainers'] ?? []);
-            $this->courses->syncAudienceOpds($course, ($data['visibility'] ?? 'private') === 'private' ? ($data['opd_ids'] ?? []) : []);
+            $this->courses->syncAudienceOpds($course, $isKms ? [] : (($data['visibility'] ?? 'private') === 'private' ? ($data['opd_ids'] ?? []) : []));
 
             $this->ensureOpenCourseSchedule($course);
 
@@ -249,25 +266,28 @@ class CourseService
     public function updateCourse($course, $data)
     {
         return DB::transaction(function () use ($course, $data) {
+            $isKms = ($data['modality'] ?? $course->modality ?? 'lms') === 'kms';
+
             $course = $this->courses->update($course, [
                 'category_id' => $data['category'],
-                'access_mode' => Course::mapTypeToAccessMode($data['type'] ?? null),
+                'modality' => $isKms ? 'kms' : 'lms',
+                'access_mode' => $isKms ? 'open' : Course::mapTypeToAccessMode($data['type'] ?? null),
                 'title' => $data['title'],
                 // 'slug' => str()->slug($data['title']),
                 'short_description' => sanitize_plain_text($data['short_description']),
                 'description' => sanitize_html($data['description']),
                 'teaser_video' => $data['teaser_video'],
                 'default_access_hours' => ($data['expired'] ?? null) == 'undefined' ? null : ($data['expired'] ?? null),
-                'jam_pelajaran' => $data['jam_pelajaran'],
+                'jam_pelajaran' => $isKms ? 0 : $data['jam_pelajaran'],
                 'status' => $data['status'],
-                'visibility' => $data['visibility'] ?? 'private',
-                'opd_id' => null,
+                'visibility' => $isKms ? 'public' : ($data['visibility'] ?? 'private'),
+                'opd_id' => $isKms ? ($data['opd_id'] ?? null) : null,
                 'updated_at' => now(),
             ]);
 
             $this->courses->syncEmployeeStatuses($course, $data['employee_status']);
             $this->courses->syncTrainers($course, $data['trainers'] ?? []);
-            $this->courses->syncAudienceOpds($course, ($data['visibility'] ?? 'private') === 'private' ? ($data['opd_ids'] ?? []) : []);
+            $this->courses->syncAudienceOpds($course, $isKms ? [] : (($data['visibility'] ?? 'private') === 'private' ? ($data['opd_ids'] ?? []) : []));
 
             if (isset($data['thumbnail'])) {
                 if (is_file_exists(Course::$directoryImage.$course->thumbnail)) {

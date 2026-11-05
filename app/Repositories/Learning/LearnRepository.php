@@ -76,7 +76,9 @@ class LearnRepository extends EloquentRepository implements LearnRepositoryInter
         int|string|null $learnId = null,
         bool $onlyHasUrl = false,
     ): Collection {
-        $query = $this->query()->with(['course', 'participant.metas']);
+        $query = $this->query()
+            ->with(['course', 'participant.metas'])
+            ->whereHas('course', fn ($course) => $course->where('modality', 'lms'));
 
         if ($learnId !== null) {
             $query->whereKey($learnId);
@@ -104,6 +106,7 @@ class LearnRepository extends EloquentRepository implements LearnRepositoryInter
         $query = Learn::query()
             ->with(['course', 'participant'])
             ->whereNotNull('finished_at')
+            ->whereHas('course', fn ($course) => $course->where('modality', 'lms'))
             ->latest('finished_at')
             ->latest('id')
             ->select('learns.*');

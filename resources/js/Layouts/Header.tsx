@@ -1,14 +1,25 @@
 import Button from "@/Components/Button";
-import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { Link, usePage } from "@inertiajs/react";
 import { useState } from "react";
+
+// /course redirects to /course/kms, so bare /course counts as KMS.
+const courseActive = (url: string, modality: "kms" | "lms") => {
+    const path = url.split("?")[0];
+    if (path === "/course") return modality === "kms";
+    return path === `/course/${modality}`;
+};
 
 const navigation = [
     { href: "/", label: "Beranda", isActive: (url: string) => url === "/" },
     {
-        href: "/course",
-        label: "Materi Pilihan",
-        isActive: (url: string) => url.startsWith("/course"),
+        href: "/course/kms",
+        label: "Knowledge Management System",
+        isActive: (url: string) => courseActive(url, "kms"),
+    },
+    {
+        href: "/course/lms",
+        label: "Learning Management System",
+        isActive: (url: string) => courseActive(url, "lms"),
     },
     {
         href: "/help",
@@ -71,24 +82,7 @@ export default function Header() {
                             <ul className="mt-4 flex flex-col rounded-xl border border-gray-100 bg-gray-50/90 p-2.5 shadow-inner md:mt-0 md:flex-row md:gap-1.5 md:border-0 md:bg-transparent md:p-0 md:shadow-none">
                                 {navigation.map((item) => (
                                     <li key={item.href}>
-                                        {item.href === "/course" ? <Menu as="div" className="relative">
-                                            {({ open }) => <>
-                                                <MenuButton className={`flex w-full items-center gap-2 rounded-lg px-3.5 py-2.5 text-[15px] transition-colors hover:bg-primary-mist/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 md:px-4 md:text-[17px] ${item.isActive(url) || open ? "font-semibold text-primary" : "font-light text-gray-600 hover:text-primary"}`}>
-                                                    <span>{item.label}</span>
-                                                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.7" className={`h-4 w-4 transition-transform duration-200 ${open ? "rotate-180" : ""}`} aria-hidden="true"><path d="m5 7.5 5 5 5-5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                                                </MenuButton>
-                                                <MenuItems transition className="z-50 mt-2 w-full origin-top rounded-2xl border border-primary/10 bg-white p-2 shadow-[0_16px_40px_rgba(15,61,62,0.14)] transition duration-150 focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0 md:absolute md:left-0 md:w-[370px]">
-                                                    {[
-                                                        { title: "Knowledge Management System (KMS)", visibility: "public" },
-                                                        { title: "Learning Management System (LMS)", visibility: "private" },
-                                                    ].map((option) => <MenuItem key={option.title}>
-                                                        <Link href={`/course?visibility=${option.visibility}`} onClick={() => setIsOpen(false)} className="flex w-full items-center gap-3 rounded-xl px-3 py-3.5 text-left text-[13px] font-medium leading-6 text-gray-700 transition-colors data-[focus]:bg-primary-mist data-[focus]:text-primary">
-                                                            <span>{option.title}</span>
-                                                        </Link>
-                                                    </MenuItem>)}
-                                                </MenuItems>
-                                            </>}
-                                        </Menu> : <Link
+                                        <Link
                                             href={item.href}
                                             onClick={() => setIsOpen(false)}
                                             className={`block px-3.5 py-2.5 text-[15px] transition-colors duration-200 md:px-4 md:text-[17px] ${item.isActive(url) ? "font-semibold text-primary" : "font-light text-gray-600 hover:text-primary"}`}
@@ -102,7 +96,7 @@ export default function Header() {
                                                     />
                                                 )}
                                             </span>
-                                        </Link>}
+                                        </Link>
                                     </li>
                                 ))}
                                 <li className="mt-2 border-t border-gray-200 pt-2 md:hidden">

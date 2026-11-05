@@ -25,6 +25,7 @@ class ActivityController
         return Inertia::render('Instructor/Course/Activity', [
             'slug' => $course->slug,
             'type' => $course->type,
+            'modality' => $course->modality ?? 'lms',
         ]);
     }
 
